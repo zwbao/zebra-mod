@@ -28,7 +28,7 @@
 2. **Code scores, the model interprets.** Rankings, ACMG points and statistics are computed by the `zebra` engine; the model never writes or adjusts a number.
 3. **Clarify, never invent.** Assembly, transcript, zygosity, inheritance, sex — missing and material means ask, or conclude conditionally.
 4. **Research-grade, not clinical.** No diagnosis delivered as fact, no dosing; next steps are questions for the care team.
-5. **Privacy by construction.** Case files stay local. A **privacy gate** in the mod refuses any outgoing call carrying a case's protected identifiers (names, birth dates, record numbers) or ID-number/phone/email patterns, and asks before raw genome files (VCF/BAM/CRAM/FASTQ) leave the machine — even in bypass-permissions mode.
+5. **Privacy, stated exactly.** Case files are written only on your machine, and zebra's own database queries carry biology (HPO ids, genes, variants, disease names), never a name, a date of birth or a record number: a **privacy gate** in the mod refuses an outgoing call that carries the case's registered identifiers or an ID-number/phone/email pattern, asks before a file from the case folder or a raw genome file (VCF/BAM/CRAM/FASTQ) leaves the machine, and closes (refusing outgoing calls) if it cannot read the case's identifier list. **What the gate cannot do:** every record you ask Claude to read — every PDF, photo and report — is sent to the model provider as part of the conversation, like any other file you open in Claude Code; the gate inspects tool calls, not the conversation. Register identifiers early (`zebra case identifiers --add`), and redact before sharing if that matters to you. Matching is best effort over encodings and spellings, not a guarantee.
 
 ## What the mod adds to Claude Code
 
@@ -36,7 +36,7 @@
 - **A research doctrine** in the system prompt (the rules above), with the active case.
 - **A case board** pane (`/zebra board`) and a status line: phenotypes, variants and their research class, hypotheses, therapy leads, open questions, evidence count — live as the case changes.
 - **`/zebra`** command: `new <dir> [title]`, `case <dir>`, `board`, `ledger`, `doctor`, `close`.
-- **11 skills** (`/zebra-mod:zebra` routes): `zebra-intake`, `zebra-diagnose`, `zebra-variant`, `zebra-reanalysis`, `zebra-s2f`, `zebra-therapy`, `zebra-stats`, `zebra-literature`, `zebra-family`, `zebra-report`.
+- **12 skills** (`/zebra-mod:zebra-start` routes): `zebra-safety` (urgent red flags and disease-specific drug, anaesthesia and procedure hazards), `zebra-intake`, `zebra-diagnose`, `zebra-variant`, `zebra-reanalysis`, `zebra-s2f`, `zebra-therapy`, `zebra-stats`, `zebra-literature`, `zebra-family`, `zebra-report`.
 - **6 subagents**: `phenotype-curator`, `variant-curator`, `s2f-analyst`, `therapy-scout`, `literature-scout`, `evidence-auditor`.
 - **The `zebra` CLI** (Python standard library only, Python ≥ 3.9): the single implementation behind every tool, usable from any shell, notebook or other agent.
 
@@ -99,7 +99,7 @@ zebra edit 1-12345678-T-C --assembly GRCh38
 hooks/register.tsx              the mod: tools, doctrine, case board, /zebra, privacy gate
 hooks/{tools,doctrine,privacy}.ts
 types/index.d.ts                the mod's state contract
-skills/<name>/SKILL.md          11 skills (vercel-labs/skills layout)
+skills/<name>/SKILL.md          12 skills (vercel-labs/skills layout)
 agents/*.md                     6 subagents
 zebra/                          Python engine (stdlib only): sources/, commands/, acmg, stats, hpo_local, vcf, s2f, editing, case
 bin/zebra                       CLI launcher

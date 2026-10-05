@@ -31,6 +31,8 @@ Write a one-page list: what happened since last visit (from the case), the 3–5
 - China: `mcp__zebra-mod__china_rare` tells whether the disease is on the national rare disease lists (第一批 2018 / 第二批 2023), which matters for specialist access and policy; drug reimbursement and hospital lists not returned by a tool are "please check with the hospital / official sources".
 - Feelings are real: acknowledge the diagnostic odyssey; do not dismiss fear with statistics; suggest support (organisations, counselling) without pushing.
 
+Hazards (drugs, anaesthesia, procedures) and urgent red flags come from `zebra-safety`; put them in the visit-preparation page.
+
 ## Never
 
 Deliver a diagnosis as fact; give a prognosis for this child; suggest dosing or stopping treatment; promise a trial or a cure; repeat names or ID numbers from records.

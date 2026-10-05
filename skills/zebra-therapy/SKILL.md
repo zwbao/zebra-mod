@@ -7,6 +7,8 @@ description: Genotype-to-therapy for a rare disease — start from the disease m
 
 A lead enters only with retrieved evidence and passes the mechanism check. No dosing, no advice to start or stop anything.
 
+Before any lead: read `zebra-safety` for this disease's drug, anaesthesia and procedure hazards, and raise them as questions for the care team.
+
 ## 1. Mechanism first
 
 From the case and `gene_card` / `disease_card` (and `zebra-variant` / `zebra-s2f` when the variant matters):

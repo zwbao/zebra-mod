@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from zebra.core import Outcome, UsageError, attempt
 from zebra.sources import opentargets as ot

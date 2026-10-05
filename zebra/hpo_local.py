@@ -40,7 +40,7 @@ ZH_URL = "https://raw.githubusercontent.com/obophenotype/hpo-translations/main/b
 _CJK = re.compile(r"[\u3400-\u9fff]")
 ROOT_PHENO = "HP:0000118"  # Phenotypic abnormality
 _PURL = re.compile(r"^http://purl\.obolibrary\.org/obo/HP_(\d{7})$")
-INDEX_VERSION = 3
+INDEX_VERSION = 4
 
 
 class HpoDataMissing(Exception):
@@ -185,8 +185,8 @@ def _parse_g2p(path: Path) -> Dict[str, List[str]]:
         for row in reader:
             did = row.get("disease_id")
             sym = row.get("gene_symbol")
-            if did and sym:
-                genes[did].add(sym)
+            if did and sym and sym.strip() not in ("-", ""):
+                genes[did].add(sym.strip())
     return {d: sorted(g) for d, g in genes.items()}
 
 
@@ -372,7 +372,6 @@ def rank(idx: Index, present: Sequence[str], excluded: Sequence[str] = (), top: 
                     best_term[di][qi] = a
     max_possible = sum(idx.ic.get(q, 0.0) for q in query) / len(query)
 
-    excl_closure = {e: idx.ancestors(e) for e in excl}
     results = []
     for di in keep:
         did = idx.disease_list[di]

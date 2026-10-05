@@ -23,6 +23,8 @@ Output: an updated case (via `mcp__zebra-mod__case_update`) and a short summary 
 8. **Write once.** One `case_update` call with all phenotypes, variants and questions.
 9. **Report back.** Board summary, then the gaps that would change the analysis (e.g. no parental samples, exome from 2019 never reanalysed, no metabolic screen, onset ages unknown) as questions for the care team.
 
+Before the summary: if any record or anything the person says describes a symptom happening now that needs care today, read `zebra-safety` and say that first.
+
 ## Quality bar
 
 - Every phenotype has a source; every HPO id came from `hpo_search`.

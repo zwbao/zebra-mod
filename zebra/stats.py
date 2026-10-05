@@ -15,6 +15,40 @@ _N = NormalDist()
 
 # ClinGen/Tavtigian 2018 odds of pathogenicity per evidence strength (prior 0.10, exponent 2).
 ODDS_PATH = {"Supporting": 2.08, "Moderate": 4.33, "Strong": 18.7, "VeryStrong": 350.0}
+# Tavtigian et al. 2020 (Hum Mutat 41:1734) point scale, used to read Bayesian points
+# back as an ACMG strength.
+POINTS_TO_STRENGTH = ((8, "VeryStrong"), (4, "Strong"), (2, "Moderate"), (1, "Supporting"))
+
+
+# ---------------------------------------------------------------- argument checks
+# Every probability and count argument is range-checked here, and the error names the
+# bound it violated, so the CLI can turn it into a usage error instead of a traceback.
+
+def _prob(name: str, value: Any, lo: float = 0.0, hi: float = 1.0,
+          lo_open: bool = False, hi_open: bool = False) -> float:
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{name} must be a number in {'(' if lo_open else '['}{lo}, {hi}{')' if hi_open else ']'}") from None
+    if not math.isfinite(v):
+        raise ValueError(f"{name} must be a finite number, not {value!r}")
+    if v < lo or (lo_open and v == lo) or v > hi or (hi_open and v == hi):
+        raise ValueError(
+            f"{name} must be in {'(' if lo_open else '['}{lo}, {hi}{')' if hi_open else ']'}, got {v!r}"
+        )
+    return v
+
+
+def _count(name: str, value: Any, maximum: Optional[int] = None) -> int:
+    try:
+        v = int(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{name} must be a whole number >= 0") from None
+    if v < 0:
+        raise ValueError(f"{name} must be >= 0, got {v}")
+    if maximum is not None and v > maximum:
+        raise ValueError(f"{name} must be <= {maximum}, got {v}")
+    return v
 
 
 # ---------------------------------------------------------------- distributions
@@ -52,7 +86,12 @@ def betainc(a: float, b: float, x: float) -> float:
         return 1.0
     lbeta = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
     if x < (a + 1) / (a + b + 2):
-        return math.exp(lbeta) * _betacf(a, b, x) / a
+        # exp(lbeta) alone underflows to 0.0 once lbeta < -745, which silently turns a
+        # representable tail probability (say 1e-170) into a hard zero. Multiply inside
+        # the exponent instead; the continued fraction is positive by construction.
+        cf = _betacf(a, b, x) / a
+        return math.exp(lbeta + math.log(cf)) if cf > 0 else 0.0
+    # Here the result is O(1), so the subtraction loses nothing worth keeping.
     return 1.0 - math.exp(lbeta) * _betacf(b, a, 1.0 - x) / b
 
 
@@ -64,16 +103,51 @@ def chi2_sf_1df(x: float) -> float:
     return math.erfc(math.sqrt(max(x, 0.0) / 2.0))
 
 
+def _poisson_tail(k: int, mu: float, upper: bool) -> float:
+    """Poisson(mu) mass over i >= k (upper) or 0 <= i <= k-1 (lower).
+
+    Summed outwards from the largest term in the range and scaled by it, so nothing
+    underflows: `exp(-mu)` on its own is 0.0 in double precision once mu > 745, which
+    is why the naive `1 - cdf` form returns p = 1.0 for every large expectation.
+    """
+    lo = k if upper else 0
+    hi: Optional[int] = None if upper else k - 1
+    star = max(lo, min(int(mu), hi)) if hi is not None else max(lo, int(mu))
+    log_star = -mu + star * math.log(mu) - math.lgamma(star + 1.0)
+    total = 1.0
+    term, i = 1.0, star
+    while i > lo:  # downwards: P(i-1)/P(i) = i / mu
+        term *= i / mu
+        i -= 1
+        if term <= 0.0:
+            break
+        total += term
+        if term < 1e-18 * total:
+            break
+    term, i = 1.0, star
+    while hi is None or i < hi:  # upwards: P(i+1)/P(i) = mu / (i+1)
+        i += 1
+        term *= mu / i
+        if term <= 0.0:
+            break
+        total += term
+        if term < 1e-18 * total:
+            break
+    return math.exp(log_star + math.log(total))
+
+
 def poisson_sf(k: int, mu: float) -> float:
-    """P(X >= k) for X ~ Poisson(mu)."""
+    """P(X >= k) for X ~ Poisson(mu), computed in log space from the shorter tail."""
     if k <= 0:
         return 1.0
-    term = math.exp(-mu)
-    cdf = term
-    for i in range(1, k):
-        term *= mu / i
-        cdf += term
-    return max(0.0, 1.0 - cdf)
+    if mu <= 0:
+        return 0.0
+    if k > mu:
+        # The answer is small: sum the upper tail directly, so no cancellation.
+        return min(1.0, _poisson_tail(k, mu, upper=True))
+    # The answer is O(1) and the lower tail is the shorter sum; the subtraction is safe
+    # because the result is not small.
+    return max(0.0, min(1.0, 1.0 - _poisson_tail(k, mu, upper=False)))
 
 
 def binom_sf(k: int, n: int, p: float) -> float:
@@ -82,10 +156,15 @@ def binom_sf(k: int, n: int, p: float) -> float:
         return 1.0
     if k > n:
         return 0.0
+    if not 0.0 <= p <= 1.0:
+        raise ValueError("p must be in [0, 1]")
     return betainc(k, n - k + 1, p)
 
 
 def wilson_ci(k: int, n: int, conf: float = 0.95) -> Tuple[float, float]:
+    n = _count("n", n)
+    k = _count("k", k, maximum=n)
+    conf = _prob("conf", conf, 0.0, 1.0, lo_open=True, hi_open=True)
     if n == 0:
         return (0.0, 1.0)
     z = _N.inv_cdf(1 - (1 - conf) / 2)
@@ -167,8 +246,12 @@ def denovo_enrichment(observed: int, trios: int, mu: float) -> Dict[str, Any]:
     mutation rate for the variant class in this gene (e.g. from the Samocha
     model or gnomAD mutation-rate tables). One-sided p = P(X >= observed).
     """
+    observed = _count("observed", observed)
     if trios <= 0 or mu <= 0:
         raise ValueError("trios and mu must be positive")
+    mu = _prob("mu", mu, 0.0, 1.0, lo_open=True)
+    if not math.isfinite(float(trios)):
+        raise ValueError("trios must be a finite whole number")
     expected = 2.0 * trios * mu
     return {
         "model": "Poisson(2 * trios * mu); one-sided P(X >= observed)",
@@ -194,9 +277,10 @@ def max_credible_af(prevalence: float, allelic: float, genetic: float, penetranc
     A variant whose filtering AF (gnomAD faf95) exceeds q_max is too common to be
     a fully penetrant cause (supports BS1).
     """
-    for name, v in (("prevalence", prevalence), ("allelic", allelic), ("genetic", genetic), ("penetrance", penetrance)):
-        if not (0 < v <= 1):
-            raise ValueError(f"{name} must be in (0, 1]")
+    prevalence = _prob("prevalence", prevalence, 0.0, 1.0, lo_open=True)
+    allelic = _prob("allelic", allelic, 0.0, 1.0, lo_open=True)
+    genetic = _prob("genetic", genetic, 0.0, 1.0, lo_open=True)
+    penetrance = _prob("penetrance", penetrance, 0.0, 1.0, lo_open=True)
     if inheritance == "monoallelic":
         q = prevalence * genetic * allelic / (2 * penetrance)
         formula = "prevalence * genetic * allelic / (2 * penetrance)"
@@ -211,6 +295,9 @@ def max_credible_af(prevalence: float, allelic: float, genetic: float, penetranc
 
 def max_tolerated_ac(max_af: float, an: int, conf: float = 0.95) -> int:
     """Largest allele count still consistent (one-sided, `conf`) with AF <= max_af among `an` alleles."""
+    max_af = _prob("max_af", max_af)
+    an = _count("an", an)
+    conf = _prob("conf", conf, 0.0, 1.0, lo_open=True, hi_open=True)
     k = 0
     while binom_sf(k + 1, an, max_af) > 1 - conf:
         k += 1
@@ -221,6 +308,8 @@ def max_tolerated_ac(max_af: float, an: int, conf: float = 0.95) -> int:
 
 def recessive_from_prevalence(prevalence: float) -> Dict[str, float]:
     """Hardy-Weinberg for a fully penetrant recessive disorder: q = sqrt(prevalence), carriers = 2pq."""
+    # prevalence must be strictly inside (0, 1): at 1 every allele is pathogenic and 2pq is 0.
+    prevalence = _prob("prevalence", prevalence, 0.0, 1.0, lo_open=True, hi_open=True)
     q = math.sqrt(prevalence)
     p = 1 - q
     return {"model": "Hardy-Weinberg, full penetrance, panmixia", "pathogenic_allele_freq": q,
@@ -229,9 +318,11 @@ def recessive_from_prevalence(prevalence: float) -> Dict[str, float]:
 
 def recessive_from_alleles(allele_freqs: Sequence[float]) -> Dict[str, Any]:
     """Genetic prevalence from summed pathogenic allele frequencies: (sum q)^2 (homozygotes + compound hets)."""
-    q = sum(allele_freqs)
-    if q >= 1:
-        raise ValueError("summed allele frequency must be < 1")
+    if not allele_freqs:
+        raise ValueError("give at least one allele frequency in [0, 1]")
+    q = sum(_prob(f"allele_freqs[{i}]", v) for i, v in enumerate(allele_freqs))
+    if not 0 < q < 1:
+        raise ValueError(f"summed allele frequency must be in (0, 1), got {q!r}")
     prev = q * q
     return {"model": "genetic prevalence = (sum of P/LP allele frequencies)^2; carriers = 2q(1-q)",
             "summed_q": q, "genetic_prevalence": prev, "one_in": 1 / prev if prev > 0 else None,

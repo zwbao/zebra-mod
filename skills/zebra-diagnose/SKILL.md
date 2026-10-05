@@ -35,6 +35,8 @@ You interpret rankings; you never re-rank by intuition. A disease the methods mi
    - Family: "possibilities the doctors may want to consider", why each fits, what test would answer it, which questions to bring. Never "your child has X".
    - Clinician: the table, scores per source, matched/unmatched features, tests, evidence ids.
 
+A worsening on a specific drug (carbamazepine in Dravet, valproate in a urea-cycle disorder) is both a diagnostic clue and a hazard: see `zebra-safety`.
+
 ## What would falsify a leading hypothesis
 
 A hallmark feature confirmed absent; inheritance incompatible with the family; the decisive test negative with adequate coverage for that mechanism. State it for each leading candidate.

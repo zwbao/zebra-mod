@@ -20,6 +20,19 @@ const list = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x.trim() !== '').map(x => x.trim()) : []
 const flag = (name: string, v: string | undefined): string[] => (v === undefined ? [] : [name, v])
 
+// What each statistics method accepts, so a params key cannot smuggle --help or --case.
+const STATS_FLAGS: Record<string, string[]> = {
+  segregation: ['ad-meioses', 'ar-affected-sibs', 'ar-unaffected-sibs'],
+  maxaf: ['prevalence', 'allelic', 'genetic', 'penetrance', 'inheritance', 'an', 'faf95'],
+  carrier: ['prevalence', 'allele-freqs'],
+  recurrence: ['mode', 'penetrance', 'mosaic', 'prior', 'unaffected-sons', 'affected-sons'],
+  fisher: ['a', 'b', 'c', 'd'],
+  burden: ['case-carriers', 'case-n', 'control-carriers', 'control-n'],
+  denovo: ['observed', 'trios', 'mu'],
+  km: ['csv', 'time-col', 'event-col', 'group-col'],
+  nof1: ['effect', 'sd-diff', 'alpha', 'power', 'treatment', 'control'],
+}
+
 const HPO = { type: 'string', pattern: '^HP:\\d{7}$' }
 const ASSEMBLY = { type: 'string', enum: ['GRCh38', 'GRCh37'], description: 'Genome build of genomic coordinates; ask when unknown.' }
 
@@ -209,6 +222,7 @@ export const TOOLS: ToolDef[] = [
       'One rare disease: identifiers across ORPHA, OMIM, MONDO, ICD; definition, prevalence, inheritance, age of onset, associated genes (Orphanet / Monarch), GeneReviews chapter, whether it is on China\'s national rare disease lists. Input: a name or an id (ORPHA:33069, OMIM:607208, MONDO:0100135).',
     inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
     argv: i => ['disease', str(i.query) ?? ''],
+    timeoutMs: 180_000,
   },
   {
     name: 'acmg',
@@ -261,6 +275,7 @@ export const TOOLS: ToolDef[] = [
       ]
     },
     timeoutMs: 600_000,
+    deferred: true,
   },
   {
     name: 'therapy_landscape',
@@ -269,6 +284,7 @@ export const TOOLS: ToolDef[] = [
     inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'disease name or MONDO/EFO id, or gene symbol' } }, required: ['query'] },
     argv: i => ['therapy', str(i.query) ?? ''],
     timeoutMs: 180_000,
+    deferred: true,
   },
   {
     name: 'trials_search',
@@ -289,6 +305,7 @@ export const TOOLS: ToolDef[] = [
       'trials', str(i.condition) ?? '',
       ...flag('--term', str(i.term)), ...flag('--country', str(i.country)), ...flag('--status', str(i.status)), ...flag('--limit', num(i.limit)),
     ],
+    deferred: true,
   },
   {
     name: 'literature_search',
@@ -310,6 +327,7 @@ export const TOOLS: ToolDef[] = [
       ...flag('--gene', str(i.gene)), ...flag('--variant', str(i.variant)), ...flag('--sort', str(i.sort)),
       ...(list(i.abstract).length ? ['--abstract', ...list(i.abstract)] : []), ...flag('--limit', num(i.limit)),
     ],
+    deferred: true,
   },
   {
     name: 'rare_stats',
@@ -324,10 +342,17 @@ export const TOOLS: ToolDef[] = [
       required: ['method'],
     },
     argv: i => {
-      const out = ['stats', str(i.method) ?? '']
+      const method = str(i.method) ?? ''
+      const allowed = STATS_FLAGS[method]
+      if (!allowed) throw new Error(`unknown method ${JSON.stringify(method)}`)
+      const out = ['stats', method]
       const params = (i.params && typeof i.params === 'object' ? i.params : {}) as Record<string, unknown>
       for (const [k, v] of Object.entries(params)) {
-        const key = `--${k.replace(/_/g, '-')}`
+        const flag = k.replace(/_/g, '-')
+        if (!allowed.includes(flag)) {
+          throw new Error(`${method} does not take ${JSON.stringify(k)}; it takes ${allowed.join(', ')}`)
+        }
+        const key = `--${flag}`
         if (Array.isArray(v)) out.push(key, ...v.map(String))
         else if (typeof v === 'boolean') {
           if (v) out.push(key)
@@ -369,8 +394,44 @@ export const TOOLS: ToolDef[] = [
   },
 ]
 
+/** The keys the tool's own schema declares: the event also carries `tool`, `tool_use_id` and more. */
+function declared(def: ToolDef, input: Record<string, unknown>): Record<string, unknown> {
+  const props = (def.inputSchema.properties ?? {}) as Record<string, unknown>
+  const out: Record<string, unknown> = {}
+  for (const key of Object.keys(props)) if (input[key] !== undefined) out[key] = input[key]
+  return out
+}
+
+/** No value the model supplies legitimately starts with "-": the CLI would read it as a flag. */
+function flagShaped(value: unknown, path = ''): string | undefined {
+  if (typeof value === 'string') {
+    return value.trimStart().startsWith('-') ? `${path || 'value'}: ${JSON.stringify(value)}` : undefined
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const hit = flagShaped(value[i], `${path}[${i}]`)
+      if (hit) return hit
+    }
+    return undefined
+  }
+  if (value && typeof value === 'object') {
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      const hit = flagShaped(v, path ? `${path}.${k}` : k)
+      if (hit) return hit
+    }
+  }
+  return undefined
+}
+
 export async function toolArgv(def: ToolDef, input: Record<string, unknown>, casePath: string | null): Promise<string[]> {
-  const argv = def.argv(input, casePath)
+  const clean = declared(def, input)
+  // `case_update` carries the person's own prose (notes, questions), where a leading
+  // dash is harmless: it is passed as one JSON argument, never as a command-line value.
+  if (def.name !== 'case_update') {
+    const shaped = flagShaped(clean)
+    if (shaped) throw new Error(`${shaped} is not a value this tool takes (it reads as a command-line flag)`)
+  }
+  const argv = def.argv(clean, casePath)
   if (argv.some(a => a === '')) throw new Error('a required argument is empty')
   return argv
 }

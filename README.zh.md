@@ -28,7 +28,7 @@
 2. **代码计分，模型解读。** 排名、ACMG 积分与统计量均由 `zebra` 引擎计算；模型不编写、不修改任何数值。
 3. **信息缺失时先澄清，绝不编造。** 基因组版本、转录本、合子状态、遗传方式、性别等关键信息缺失时，先询问，或以条件句给出结论。
 4. **研究级分析，而非临床报告。** 不以确定口吻告知诊断，不提供用药剂量；后续步骤以"供医疗团队考虑的问题"形式呈现。
-5. **隐私保护内置于设计。** 病例文件仅保存在本机。mod 内置**隐私闸门**：任何外发调用若包含病例中登记的受保护标识（姓名、出生日期、病历号）或身份证号、手机号、电子邮箱格式的内容，一律拒绝；原始基因组文件（VCF/BAM/CRAM/FASTQ）外传前须经用户确认。即使在跳过权限确认的模式下，该闸门依然生效。
+5. **隐私：如实说明边界。** 病例文件只写在本机；zebra 向公共数据库发出的查询只携带生物学信息（HPO 编号、基因、变异、疾病名），不含姓名、出生日期或病历号。mod 内置**隐私闸门**：外发调用若包含病例中登记的受保护标识，或身份证号、手机号、电子邮箱格式的内容，一律拒绝；病例目录内的文件或原始基因组文件（VCF/BAM/CRAM/FASTQ）外传前须经确认；若读不到病例的标识清单，闸门会关闭并拒绝所有外发调用。**闸门做不到的事**：你让 Claude 阅读的每一份病历（PDF、照片、报告）都会作为对话内容发送给模型服务商，这与在 Claude Code 中打开任何文件相同；闸门检查的是工具调用，不是对话本身。建议尽早登记受保护标识（`zebra case identifiers --add`），如有顾虑请在提供文件前自行脱敏。标识匹配已覆盖常见编码与写法变体，但属尽力而为，不构成保证。
 
 ## mod 为 Claude Code 增加的能力
 
@@ -36,7 +36,7 @@
 - **研究守则**写入系统提示词（即上述原则），并附当前病例信息。
 - **病例看板**面板（`/zebra board`）与状态栏：表型、变异及其研究级分类、诊断假设、治疗线索、待解决问题、证据条数，随病例更新实时刷新。
 - **`/zebra`** 命令：`new <目录> [标题]`、`case <目录>`、`board`、`ledger`、`doctor`、`close`。
-- **11 个技能**（由 `/zebra-mod:zebra` 统一分流）：`zebra-intake`、`zebra-diagnose`、`zebra-variant`、`zebra-reanalysis`、`zebra-s2f`、`zebra-therapy`、`zebra-stats`、`zebra-literature`、`zebra-family`、`zebra-report`。
+- **12 个技能**（由 `/zebra-mod:zebra-start` 统一分流）：`zebra-safety`（急症红旗与特定罕见病的用药、麻醉、操作禁忌）、`zebra-intake`、`zebra-diagnose`、`zebra-variant`、`zebra-reanalysis`、`zebra-s2f`、`zebra-therapy`、`zebra-stats`、`zebra-literature`、`zebra-family`、`zebra-report`。
 - **6 个子代理**：`phenotype-curator`、`variant-curator`、`s2f-analyst`、`therapy-scout`、`literature-scout`、`evidence-auditor`。
 - **`zebra` 命令行工具**（仅依赖 Python 标准库，Python ≥ 3.9）：所有工具背后的唯一实现，可在任意终端、笔记本或其他 agent 中使用。
 

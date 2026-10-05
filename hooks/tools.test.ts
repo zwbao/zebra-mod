@@ -11,6 +11,7 @@ const def = (name: string) => {
 describe('tool → CLI argv', () => {
   test('every tool has a unique, legal name and an object schema', () => {
     const names = TOOLS.map(t => t.name)
+    expect(names.length).toBe(15)
     expect(new Set(names).size).toBe(names.length)
     for (const t of TOOLS) {
       expect(/^[A-Za-z0-9_-]{1,64}$/.test(t.name)).toBe(true)
@@ -42,6 +43,37 @@ describe('tool → CLI argv', () => {
   test('acmg classify and suggest', async () => {
     expect(await toolArgv(def('acmg'), { mode: 'classify', codes: ['PVS1', 'PM2_Supporting'] }, null)).toEqual(['acmg', 'classify', 'PVS1', 'PM2_Supporting'])
     expect(await toolArgv(def('acmg'), { mode: 'suggest', variant: '2-166001-C-T', assembly: 'GRCh38', inheritance: 'AD' }, null)).toEqual(['acmg', 'suggest', '2-166001-C-T', '--assembly', 'GRCh38', '--inheritance', 'AD'])
+  })
+
+  test('A-P2-1 only the schema own keys reach the CLI', async () => {
+    const argv = await toolArgv(def('case_update'), {
+      tool: 'mcp__zebra-mod__case_update', tool_use_id: 'toolu_1', agentId: 'a1',
+      questions: ['parental samples?'],
+    }, '/x/case')
+    expect(argv.slice(0, 3)).toEqual(['case', 'apply', '/x/case'])
+    expect(JSON.parse(argv[4] as string)).toEqual({ questions: ['parental samples?'] })
+  })
+
+  test('F7 a value that reads as a flag is refused', async () => {
+    let message = ''
+    try {
+      await toolArgv(def('variant_card'), { variant: '--help' }, null)
+    } catch (err) {
+      message = String(err)
+    }
+    expect(message.includes('reads as a command-line flag')).toBe(true)
+  })
+
+  test('A-P1-7 rare_stats accepts only the flags its method takes', async () => {
+    let message = ''
+    try {
+      await toolArgv(def('rare_stats'), { method: 'maxaf', params: { case: '/other/case', help: true } }, null)
+    } catch (err) {
+      message = String(err)
+    }
+    expect(message.includes('does not take')).toBe(true)
+    const ok = await toolArgv(def('rare_stats'), { method: 'carrier', params: { prevalence: 0.0004 } }, null)
+    expect(ok).toEqual(['stats', 'carrier', '--prevalence', '0.0004'])
   })
 
   test('an empty required argument is refused', async () => {

@@ -45,12 +45,13 @@ _HOST_INTERVAL = {
     "spliceai-37-xwkwwwxdwq-uc.a.run.app": 2.0,
     "pangolin-38-xwkwwwxdwq-uc.a.run.app": 2.0,
     "pangolin-37-xwkwwwxdwq-uc.a.run.app": 2.0,
-    "pubcasefinder.dbcls.jp": 0.5,
+    "pubcasefinder.dbcls.jp": 6.0,  # 10 requests/minute published limit
     "clinicaltrials.gov": 0.2,
     "www.ebi.ac.uk": 0.1,
     "api.platform.opentargets.org": 0.1,
     "www.ema.europa.eu": 1.0,
-    "api.orphadata.com": 0.1,
+    "api.orphadata.com": 0.2,
+    "ftp.ncbi.nlm.nih.gov": 0.34,
     "api-v3.monarchinitiative.org": 0.1,
 }
 _last_call: Dict[str, float] = {}

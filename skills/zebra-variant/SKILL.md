@@ -5,6 +5,8 @@ description: Interpret a genetic variant for a rare disease with the ACMG/AMP fr
 
 # zebra-variant — evidence → ACMG codes → points
 
+Several variants (a compound heterozygote, a reanalysis shortlist) → one `zebra-mod:variant-curator` subagent per variant, all in one message; then reconcile phase and inheritance across them yourself.
+
 You justify codes; `zebra` does the arithmetic. Every code cites a ledger id or names the missing evidence. The result is research-grade until an accredited laboratory confirms it.
 
 ## Steps

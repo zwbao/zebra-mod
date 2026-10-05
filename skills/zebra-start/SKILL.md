@@ -1,9 +1,9 @@
 ---
-name: zebra
+name: zebra-start
 description: Start here for anything about a rare disease — unexplained symptoms and the search for a diagnosis, a genetic test report or a VUS, a known rare diagnosis and its treatments, trials or natural history, family and recurrence questions, or research analysis (exome/genome reanalysis, ACMG classification, sequence-to-function models, cohort statistics, therapy design). Routes to the zebra-mod skills. Triggers: rare disease, 罕见病, undiagnosed, 未确诊, 诊断之旅, genetic report, 基因检测报告, VUS, 意义不明变异, variant, HPO, exome, genome, WES, WGS, ACMG, splicing, ASO, gene therapy, base editing, orphan drug, 孤儿药, 罕见病目录, clinical trial, 临床试验, patient organization.
 ---
 
-# zebra — rare-disease router
+# zebra-start — rare-disease router
 
 zebra-mod gives you live-database tools (`mcp__zebra-mod__*`), a local case workspace with an evidence ledger, and these skills. Route, then follow the skill.
 
@@ -36,11 +36,13 @@ Read it from the message; ask only when it changes what you do.
 | a literature review or a specific evidence question | `zebra-literature` |
 | explain to a family; prepare a clinic visit; recurrence and family testing; patient groups; China resources | `zebra-family` |
 | a written report (clinician summary, family letter) with audited sources | `zebra-report` |
+| "is this urgent?", a symptom happening now, a drug or anaesthesia question, an upcoming procedure | `zebra-safety` (read it first, before any analysis) |
 
 Undiagnosed with records, typical chain: intake → diagnose → (variant / reanalysis / s2f) → family or report. Diagnosed, typical chain: disease_card → therapy → family.
 
 ## 4. Rules that hold in every skill
 
+0. **Urgent before interesting.** If the message describes something happening now — a seizure lasting over 5 minutes, vomiting and lethargy in a metabolic disorder, breathlessness, fainting, a stroke-like episode — say so first and point to care today (`zebra-safety`). Research continues after that, not instead of it.
 1. Evidence from tools in this session, cited (ledger id `E12`, PMID, record id); what was not retrieved is "not checked".
 2. Code scores (ranks, ACMG points, statistics); you interpret and never adjust a number.
 3. Identifiers (HPO, ORPHA, OMIM, MONDO, HGVS, rsID, NCT, PMID) only as tools returned them.
