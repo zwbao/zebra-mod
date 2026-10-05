@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.DS_Store
+# claude-code lays these on every load
+.claude-plugin/types/
+tsconfig.json
+node_modules/
+# never commit patient data
+cases/
+*.vcf
+*.vcf.gz
+*.bam
+*.cram
+docs/superpowers/
