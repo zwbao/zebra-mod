@@ -1,0 +1,32 @@
+{
+  "name": "zebra-mod",
+  "version": "0.1.0",
+  "description": "Turns Claude Code into a rare-disease research workstation: phenotype-driven diagnosis, variant interpretation (ACMG), sequence-to-function models, genotype-to-therapy, classical statistics — every answer anchored to live public databases.",
+  "author": { "name": "Zhiwei Bao", "url": "https://github.com/zwbao" },
+  "homepage": "https://github.com/zwbao/zebra-mod",
+  "repository": "https://github.com/zwbao/zebra-mod",
+  "license": "MIT",
+  "keywords": ["rare-disease", "genomics", "hpo", "acmg", "variant-interpretation", "sequence-to-function", "bioinformatics"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "python": {
+      "type": "string",
+      "title": "Python",
+      "description": "Python 3.9+ interpreter that runs the zebra CLI (standard library only)",
+      "default": "python3"
+    },
+    "doctrine": {
+      "type": "string",
+      "title": "Research doctrine",
+      "description": "Add the rare-disease research rules to the system prompt: always, only with an active case, or off",
+      "options": ["always", "case", "off"],
+      "default": "always"
+    },
+    "privacyGate": {
+      "type": "boolean",
+      "title": "Privacy gate",
+      "description": "Refuse outgoing calls that carry the case's protected identifiers or ID/phone/email patterns; ask before raw genome files leave the machine",
+      "default": true
+    }
+  }
+}

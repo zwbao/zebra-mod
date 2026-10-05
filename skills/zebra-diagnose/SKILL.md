@@ -1,0 +1,40 @@
+---
+name: zebra-diagnose
+description: Phenotype-driven differential diagnosis for a rare disease — rank diseases and genes from HPO phenotypes with three independent methods, build a discriminating-features table for the leading candidates, and say which genetic or biochemical test would detect each one (including what a negative exome misses). Use when symptoms are unexplained or a diagnosis is in doubt. Triggers: 可能是什么病, differential diagnosis, 鉴别诊断, undiagnosed, 未确诊, what test should we ask for, 该做什么检查, exome negative, 全外显子阴性.
+---
+
+# zebra-diagnose — phenotypes → differential → tests
+
+You interpret rankings; you never re-rank by intuition. A disease the methods miss enters only with retrieved evidence.
+
+## Steps
+
+1. **Profile.** `mcp__zebra-mod__case_status`. Fewer than 3 specific present phenotypes → run `zebra-intake` or ask for the striking features first. Note sex and age of onset; they gate candidates.
+2. **Rank, three ways.** `mcp__zebra-mod__phenotype_rank` with `from_case: true`, `sources: ["local","monarch","pubcasefinder"]`, `top: 20`. Each source ranks on its own:
+   - candidates high in two or three sources are the strongest signal;
+   - read `matches`: which query terms the disease explains exactly, which only through a broad ancestor (weak), which not at all;
+   - an excluded-term penalty means the disease usually has a feature the patient lacks.
+3. **Characterise the leading 5–10.** `mcp__zebra-mod__disease_card` for each: inheritance, onset, prevalence, genes, hallmark features. Inheritance and sex must fit the family (an X-linked recessive disease in a girl needs an explanation).
+4. **Discriminating table.** Rows = candidates; columns = features that separate them (present / absent / unknown in this patient, from the case and the disease cards). Unknown cells that separate the top candidates become questions for the care team (`case_update` → `questions`).
+5. **Which test finds each candidate.** Match the test to the usual mechanism:
+
+   | Mechanism | Detected by | Missed by |
+   |---|---|---|
+   | SNVs/small indels across many genes | exome or genome, trio best | single-gene tests, CMA |
+   | CNVs, aneuploidy | CMA, genome | most exome pipelines (small CNVs) |
+   | repeat expansions (FMR1, DMPK, HTT, FXN, ATXN*, C9orf72, RFC1) | targeted repeat assay, long-read | exome, CMA |
+   | imprinting / methylation (Prader-Willi, Angelman, Beckwith-Wiedemann, Silver-Russell) | methylation-specific MLPA | sequencing alone |
+   | mitochondrial DNA | mtDNA sequencing (tissue matters: muscle, urine) | blood exome |
+   | deep intronic, structural, regulatory | genome ± RNA-seq of an expressing tissue | exome |
+   | somatic mosaic (e.g. PIK3CA overgrowth, many neurocutaneous) | deep sequencing of affected tissue | blood tests |
+   | inborn errors of metabolism | plasma amino acids, acylcarnitines, urine organic acids, enzyme assays — often faster than genomics | — |
+
+   Exome negative: reanalysis if data ≥ 1 year old (`zebra-reanalysis`), trio if singleton, genome, RNA-seq, long-read, and re-phenotyping (new features appear with age).
+6. **Record.** `case_update` → `hypotheses` for each candidate kept: disease name, ids as the tools returned them, status (`leading` / `considered` / `excluded`), `support` and `against` ledger ids, a one-line note.
+7. **Say it.**
+   - Family: "possibilities the doctors may want to consider", why each fits, what test would answer it, which questions to bring. Never "your child has X".
+   - Clinician: the table, scores per source, matched/unmatched features, tests, evidence ids.
+
+## What would falsify a leading hypothesis
+
+A hallmark feature confirmed absent; inheritance incompatible with the family; the decisive test negative with adequate coverage for that mechanism. State it for each leading candidate.
