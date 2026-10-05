@@ -1,0 +1,4290 @@
+{
+ "data": {
+  "disease": {
+   "associatedTargets": {
+    "count": 2530,
+    "rows": [
+     {
+      "score": 0.8683877887777448,
+      "target": {
+       "approvedName": "dystrophin",
+       "approvedSymbol": "DMD",
+       "id": "ENSG00000198947"
+      }
+     },
+     {
+      "score": 0.5868338886074015,
+      "target": {
+       "approvedName": "nuclear receptor subfamily 3 group C member 1",
+       "approvedSymbol": "NR3C1",
+       "id": "ENSG00000113580"
+      }
+     },
+     {
+      "score": 0.5581630533410797,
+      "target": {
+       "approvedName": "nuclear receptor subfamily 3 group C member 2",
+       "approvedSymbol": "NR3C2",
+       "id": "ENSG00000151623"
+      }
+     }
+    ]
+   },
+   "dbXRefs": [
+    "DOID:11723",
+    "GARD:0006291",
+    "MEDGEN:3925",
+    "MESH:D020388",
+    "MedDRA:10013801",
+    "NANDO:1200488",
+    "NANDO:2200856",
+    "NCIT:C75482",
+    "NORD:1065",
+    "OMIM:310200",
+    "Orphanet:98896",
+    "SCTID:76670001",
+    "UMLS:C0013264",
+    "icd11.foundation:1479561744"
+   ],
+   "description": "Duchenne muscular dystrophy (DMD) is a neuromuscular disease characterized by rapidly progressive muscle weakness and wasting due to degeneration of skeletal, smooth and cardiac muscle.",
+   "drugAndClinicalCandidates": {
+    "count": 62,
+    "rows": [
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "label/2019/211970s000lbl.pdf",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2019/211970s000lbl.pdf"
+       },
+       {
+        "clinicalStage": "PHASE_4",
+        "id": "nct04708314",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT04708314"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02500381",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02500381"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03532542",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03532542"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04179409",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04179409"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct02310906",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02310906"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "golodirsen",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/GOLODIRSEN/relevant/1/"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct06606340",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ENROLLING_BY_INVITATION",
+        "url": "https://clinicaltrials.gov/study/NCT06606340"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL4297762",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "POSITIVE MODULATOR",
+          "mechanismOfAction": "Dystrophin pre-mRNA positive modulator",
+          "references": [
+           {
+            "ids": [
+             "https://www.fda.gov/news-events/press-announcements/fda-grants-accelerated-approval-first-targeted-treatment-rare-duchenne-muscular-dystrophy-mutation",
+             "https://www.nmd-journal.com/article/S0960-8966(18)30304-3/pdf",
+             "https://www.musculardystrophyuk.org/progress-in-research/background-information/what-is-exon-skipping-and-how-does-it-work/"
+            ],
+            "source": "Other",
+            "urls": [
+             "https://www.fda.gov/news-events/press-announcements/fda-grants-accelerated-approval-first-targeted-treatment-rare-duchenne-muscular-dystrophy-mutation",
+             "https://www.nmd-journal.com/article/S0960-8966(18)30304-3/pdf",
+             "https://www.musculardystrophyuk.org/progress-in-research/background-information/what-is-exon-skipping-and-how-does-it-work/"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "GOLODIRSEN"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct04371666",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT04371666"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct04632940",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT04632940"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02606136",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02606136"
+       }
+      ],
+      "drug": {
+       "drugType": "Antibody",
+       "id": "CHEMBL2109377",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Connective tissue growth factor inhibitor",
+          "references": [
+           {
+            "ids": [
+             "16740721"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/16740721"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "CCN2",
+            "id": "ENSG00000118523"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "PAMREVLUMAB"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct04184882",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT04184882"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "bocidelpar",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/BOCIDELPAR/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL5095171",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "BOCIDELPAR"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02310763",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02310763"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02907619",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02907619"
+       }
+      ],
+      "drug": {
+       "drugType": "Antibody",
+       "id": "CHEMBL3544991",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Growth/differentiation factor 8 inhibitor",
+          "references": [
+           {
+            "ids": [
+             "http://community.parentprojectmd.org/profiles/blogs/pfizer-shares-shares-update-on-phase-ii-clinical-trial-of-domagro"
+            ],
+            "source": "Other",
+            "urls": [
+             "http://community.parentprojectmd.org/profiles/blogs/pfizer-shares-shares-update-on-phase-ii-clinical-trial-of-domagro"
+            ]
+           },
+           {
+            "ids": [
+             "28881472"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/28881472"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "MSTN",
+            "id": "ENSG00000138379"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "DOMAGROZUMAB"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01995032",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01995032"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02516085",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02516085"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1431",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Mitochondrial complex I (NADH dehydrogenase) inhibitor",
+          "references": [
+           {
+            "ids": [
+             "23277337",
+             "23358356",
+             "25017630",
+             "24847880"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/23277337",
+             "http://europepmc.org/abstract/MED/23358356",
+             "http://europepmc.org/abstract/MED/25017630",
+             "http://europepmc.org/abstract/MED/24847880"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "MT-ND6",
+            "id": "ENSG00000198695"
+           },
+           {
+            "approvedSymbol": "NDUFA10",
+            "id": "ENSG00000130414"
+           },
+           {
+            "approvedSymbol": "NDUFS8",
+            "id": "ENSG00000110717"
+           },
+           {
+            "approvedSymbol": "MT-ND4L",
+            "id": "ENSG00000212907"
+           },
+           {
+            "approvedSymbol": "NDUFA6",
+            "id": "ENSG00000184983"
+           },
+           {
+            "approvedSymbol": "MT-ND1",
+            "id": "ENSG00000198888"
+           },
+           {
+            "approvedSymbol": "NDUFB6",
+            "id": "ENSG00000165264"
+           },
+           {
+            "approvedSymbol": "COXFA4",
+            "id": "ENSG00000189043"
+           },
+           {
+            "approvedSymbol": "NDUFA11",
+            "id": "ENSG00000174886"
+           },
+           {
+            "approvedSymbol": "NDUFB7",
+            "id": "ENSG00000099795"
+           },
+           {
+            "approvedSymbol": "MT-ND2",
+            "id": "ENSG00000198763"
+           },
+           {
+            "approvedSymbol": "NDUFS2",
+            "id": "ENSG00000158864"
+           },
+           {
+            "approvedSymbol": "MT-ND5",
+            "id": "ENSG00000198786"
+           },
+           {
+            "approvedSymbol": "NDUFA8",
+            "id": "ENSG00000119421"
+           },
+           {
+            "approvedSymbol": "NDUFB5",
+            "id": "ENSG00000136521"
+           },
+           {
+            "approvedSymbol": "MT-ND4",
+            "id": "ENSG00000198886"
+           },
+           {
+            "approvedSymbol": "MT-ND3",
+            "id": "ENSG00000198840"
+           },
+           {
+            "approvedSymbol": "NDUFAB1",
+            "id": "ENSG00000004779"
+           },
+           {
+            "approvedSymbol": "NDUFA1",
+            "id": "ENSG00000125356"
+           },
+           {
+            "approvedSymbol": "NDUFS4",
+            "id": "ENSG00000164258"
+           },
+           {
+            "approvedSymbol": "NDUFB3",
+            "id": "ENSG00000119013"
+           },
+           {
+            "approvedSymbol": "NDUFC1",
+            "id": "ENSG00000109390"
+           },
+           {
+            "approvedSymbol": "NDUFA2",
+            "id": "ENSG00000131495"
+           },
+           {
+            "approvedSymbol": "NDUFS5",
+            "id": "ENSG00000168653"
+           },
+           {
+            "approvedSymbol": "NDUFS7",
+            "id": "ENSG00000115286"
+           },
+           {
+            "approvedSymbol": "NDUFS6",
+            "id": "ENSG00000145494"
+           },
+           {
+            "approvedSymbol": "NDUFB1",
+            "id": "ENSG00000183648"
+           },
+           {
+            "approvedSymbol": "NDUFS3",
+            "id": "ENSG00000213619"
+           },
+           {
+            "approvedSymbol": "NDUFA3",
+            "id": "ENSG00000170906"
+           },
+           {
+            "approvedSymbol": "NDUFB4",
+            "id": "ENSG00000065518"
+           },
+           {
+            "approvedSymbol": "NDUFB8",
+            "id": "ENSG00000166136"
+           },
+           {
+            "approvedSymbol": "NDUFB2",
+            "id": "ENSG00000090266"
+           },
+           {
+            "approvedSymbol": "NDUFA7",
+            "id": "ENSG00000267855"
+           },
+           {
+            "approvedSymbol": "NDUFC2",
+            "id": "ENSG00000151366"
+           },
+           {
+            "approvedSymbol": "NDUFB10",
+            "id": "ENSG00000140990"
+           },
+           {
+            "approvedSymbol": "NDUFV2",
+            "id": "ENSG00000178127"
+           },
+           {
+            "approvedSymbol": "NDUFS1",
+            "id": "ENSG00000023228"
+           },
+           {
+            "approvedSymbol": "NDUFV1",
+            "id": "ENSG00000167792"
+           },
+           {
+            "approvedSymbol": "NDUFV3",
+            "id": "ENSG00000160194"
+           },
+           {
+            "approvedSymbol": "NDUFA5",
+            "id": "ENSG00000128609"
+           },
+           {
+            "approvedSymbol": "NDUFA9",
+            "id": "ENSG00000139180"
+           },
+           {
+            "approvedSymbol": "NDUFAF2",
+            "id": "ENSG00000164182"
+           },
+           {
+            "approvedSymbol": "NDUFAF3",
+            "id": "ENSG00000178057"
+           },
+           {
+            "approvedSymbol": "COXFA4L2",
+            "id": "ENSG00000185633"
+           },
+           {
+            "approvedSymbol": "NDUFB11",
+            "id": "ENSG00000147123"
+           },
+           {
+            "approvedSymbol": "NDUFAF4",
+            "id": "ENSG00000123545"
+           },
+           {
+            "approvedSymbol": "NDUFA13",
+            "id": "ENSG00000186010"
+           },
+           {
+            "approvedSymbol": "NDUFA12",
+            "id": "ENSG00000184752"
+           },
+           {
+            "approvedSymbol": "NDUFAF1",
+            "id": "ENSG00000137806"
+           },
+           {
+            "approvedSymbol": "NDUFB9",
+            "id": "ENSG00000147684"
+           }
+          ]
+         },
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Mitochondrial glycerol-3-phosphate dehydrogenase inhibitor",
+          "references": [
+           {
+            "ids": [
+             "23277337",
+             "23358356",
+             "25017630",
+             "24847880"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/23277337",
+             "http://europepmc.org/abstract/MED/23358356",
+             "http://europepmc.org/abstract/MED/25017630",
+             "http://europepmc.org/abstract/MED/24847880"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "GPD2",
+            "id": "ENSG00000115159"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "METFORMIN"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct01335295",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01335295"
+       }
+      ],
+      "drug": {
+       "drugType": "Unknown",
+       "id": "CHEMBL5095276",
+       "maximumClinicalStage": "PHASE_1",
+       "mechanismsOfAction": null,
+       "name": "FLAVOCOXID"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02516085",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02516085"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1485",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "ARGININE"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct05135663",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT05135663"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct05996003",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT05996003"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct04129294",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04129294"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "brogidirsen",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/BROGIDIRSEN/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL5095368",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "BROGIDIRSEN"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct01207908",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01207908"
+       }
+      ],
+      "drug": {
+       "drugType": "Protein",
+       "id": "CHEMBL1201716",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "AGONIST",
+          "mechanismOfAction": "Insulin-like growth factor I receptor agonist",
+          "references": [
+           {
+            "ids": [
+             "setid=a8b27a1b-a611-4f91-ad22-76d4b390c3ae"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=a8b27a1b-a611-4f91-ad22-76d4b390c3ae"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "IGF1R",
+            "id": "ENSG00000140443"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "MECASERMIN"
+      },
+      "maxClinicalStage": "PHASE_1_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct00018109",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00018109"
+       },
+       {
+        "clinicalStage": "PHASE_2_3",
+        "id": "nct00016653",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00016653"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00296621",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00296621"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL930",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "GLUTAMINE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "label/2024/217865orig1s000lbl.pdf",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/217865Orig1s000lbl.pdf"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct06769633",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06769633"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "givinostat hydrochloride",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/GIVINOSTAT%20HYDROCHLORIDE/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL6068400",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Histone deacetylase inhibitor",
+          "references": [
+           {
+            "ids": [
+             "label/2024/217865Orig1s000lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/217865Orig1s000lbl.pdf"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "HDAC1",
+            "id": "ENSG00000116478"
+           },
+           {
+            "approvedSymbol": "HDAC3",
+            "id": "ENSG00000171720"
+           },
+           {
+            "approvedSymbol": "HDAC6",
+            "id": "ENSG00000094631"
+           },
+           {
+            "approvedSymbol": "HDAC2",
+            "id": "ENSG00000196591"
+           },
+           {
+            "approvedSymbol": "HDAC5",
+            "id": "ENSG00000108840"
+           },
+           {
+            "approvedSymbol": "HDAC7",
+            "id": "ENSG00000061273"
+           },
+           {
+            "approvedSymbol": "HDAC8",
+            "id": "ENSG00000147099"
+           },
+           {
+            "approvedSymbol": "HDAC11",
+            "id": "ENSG00000163517"
+           },
+           {
+            "approvedSymbol": "HDAC4",
+            "id": "ENSG00000068024"
+           },
+           {
+            "approvedSymbol": "HDAC9",
+            "id": "ENSG00000048052"
+           },
+           {
+            "approvedSymbol": "HDAC10",
+            "id": "ENSG00000100429"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "GIVINOSTAT HYDROCHLORIDE"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct02964377",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02964377"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL583912",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "(-)-EPICATECHIN"
+      },
+      "maxClinicalStage": "PHASE_1_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct03936894",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "UNKNOWN",
+        "url": "https://clinicaltrials.gov/study/NCT03936894"
+       }
+      ],
+      "drug": {
+       "drugType": "Antibody",
+       "id": "CHEMBL1201834",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Interleukin-1 beta inhibitor",
+          "references": [
+           {
+            "ids": [
+             "setid=7d271f3b-e4f9-4d80-8dcf-28d49123f80e"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=7d271f3b-e4f9-4d80-8dcf-28d49123f80e"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "IL1B",
+            "id": "ENSG00000125538"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "CANAKINUMAB"
+      },
+      "maxClinicalStage": "PHASE_1_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "52b38acf4696ca3ef4240b09bde7d0e17e41554d0d6f36d04009cf61ab89f7a6",
+        "origin": "REGULATORY_AGENCY",
+        "source": "PMDA",
+        "trialOverallStatus": null,
+        "url": "https://www.pmda.go.jp/english/review-services/reviews/approved-information/drugs/0001.html"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "7f960c407ffb1ba0adfbd80ec34e269022a1afc400edf2be4962fab672ffe1f8",
+        "origin": "REGULATORY_AGENCY",
+        "source": "PMDA",
+        "trialOverallStatus": null,
+        "url": "https://www.pmda.go.jp/english/review-services/reviews/approved-information/drugs/0001.html"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "label/2020/212154s000lbl.pdf",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/212154s000lbl.pdf"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "nct04337112",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "APPROVED_FOR_MARKETING",
+        "url": "https://clinicaltrials.gov/study/NCT04337112"
+       },
+       {
+        "clinicalStage": "PHASE_4",
+        "id": "nct04687020",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT04687020"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct04060199",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04060199"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct04768062",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "UNKNOWN",
+        "url": "https://clinicaltrials.gov/study/NCT04768062"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02740972",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02740972"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03167255",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03167255"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04956289",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04956289"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02081625",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02081625"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "viltolarsen",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/VILTOLARSEN/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL4298062",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "POSITIVE MODULATOR",
+          "mechanismOfAction": "Dystrophin pre-mRNA positive modulator",
+          "references": [
+           {
+            "ids": [
+             "32519222"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/32519222"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "VILTOLARSEN"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct03777319",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03777319"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL131",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "AGONIST",
+          "mechanismOfAction": "Glucocorticoid receptor agonist",
+          "references": [
+           {
+            "ids": [
+             "2879901",
+             "19482847"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/2879901",
+             "http://europepmc.org/abstract/MED/19482847"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NR3C1",
+            "id": "ENSG00000113580"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "PREDNISOLONE"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct02704325",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "WITHDRAWN",
+        "url": "https://clinicaltrials.gov/study/NCT02704325"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1200574",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "SODIUM CHLORIDE"
+      },
+      "maxClinicalStage": "PHASE_1_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01865084",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01865084"
+       },
+       {
+        "clinicalStage": "PHASE_2_3",
+        "id": "nct05195775",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT05195775"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct06290713",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06290713"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct01580501",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01580501"
+       },
+       {
+        "clinicalStage": "EARLY_PHASE_1",
+        "id": "nct01359670",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01359670"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL779",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Phosphodiesterase 5A inhibitor",
+          "references": [
+           {
+            "ids": [
+             "setid=ff61b237-be8e-461b-8114-78c52a8ad0ae"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=ff61b237-be8e-461b-8114-78c52a8ad0ae"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "PDE5A",
+            "id": "ENSG00000138735"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "TADALAFIL"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02710591",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02710591"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL2107802",
+       "maximumClinicalStage": "PHASE_1",
+       "mechanismsOfAction": null,
+       "name": "RIMEPORIDE"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01027884",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01027884"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02814019",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02814019"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03603288",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03603288"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00654784",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00654784"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00758225",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00758225"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "emea/h/c/005123",
+        "origin": "REGULATORY_AGENCY",
+        "source": "EMA Human Drugs",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/puldysa"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct03433807",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "NO_LONGER_AVAILABLE",
+        "url": "https://clinicaltrials.gov/study/NCT03433807"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL252556",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "IDEBENONE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct00005574",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00005574"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct00451074",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00451074"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL6067485",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Bacterial 70S ribosome inhibitor",
+          "references": [
+           {
+            "ids": [
+             "9780702034718 PP. 614"
+            ],
+            "source": "ISBN",
+            "urls": [
+             "http://www.isbnsearch.org/isbn/9780702034718"
+            ]
+           }
+          ],
+          "targets": []
+         }
+        ]
+       },
+       "name": "GENTAMICIN"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct00018109",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00018109"
+       },
+       {
+        "clinicalStage": "PHASE_2_3",
+        "id": "nct00016653",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00016653"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL283800",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "CREATINE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01995032",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01995032"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL444814",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null,
+       "name": "L-CITRULLINE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2_3",
+        "id": "nct03039686",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03039686"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct02515669",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02515669"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "taldefgrobep alfa",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/TALDEFGROBEP%20ALFA/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Protein",
+       "id": "CHEMBL4297914",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null,
+       "name": "TALDEFGROBEP ALFA"
+      },
+      "maxClinicalStage": "PHASE_2_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct05126758",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT05126758"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04428476",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT04428476"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "pl131/duchenne muscular dystrophy/deramiocel",
+        "origin": "CURATED_RESOURCE",
+        "source": "INN",
+        "trialOverallStatus": null,
+        "url": "https://www.who.int/publications/m/item/inn-pl-131"
+       }
+      ],
+      "drug": {
+       "drugType": "Cell",
+       "id": "CHEMBL6068233",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null,
+       "name": "DERAMIOCEL"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "label/2021/213026lbl.pdf",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "http://www.accessdata.fda.gov/drugsatfda_docs/label/2021/213026lbl.pdf"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02500381",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02500381"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03532542",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03532542"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04179409",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04179409"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02530905",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02530905"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "casimersen",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/CASIMERSEN/relevant/1/"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct06606340",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ENROLLING_BY_INVITATION",
+        "url": "https://clinicaltrials.gov/study/NCT06606340"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL4297566",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "POSITIVE MODULATOR",
+          "mechanismOfAction": "Dystrophin pre-mRNA positive modulator",
+          "references": [
+           {
+            "ids": [
+             "https://investorrelations.sarepta.com/news-releases/news-release-details/sarepta-therapeutics-announces-fda-acceptance-casimersen-srp"
+            ],
+            "source": "Other",
+            "urls": [
+             "https://investorrelations.sarepta.com/news-releases/news-release-details/sarepta-therapeutics-announces-fda-acceptance-casimersen-srp"
+            ]
+           },
+           {
+            "ids": [
+             "label/2021/213026lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2021/213026lbl.pdf"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "CASIMERSEN"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct02196467",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "UNKNOWN",
+        "url": "https://clinicaltrials.gov/study/NCT02196467"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL3989887",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "FK506-binding protein 1A inhibitor",
+          "references": [
+           {
+            "ids": [
+             "setid=95b03516-34b0-4438-a05c-918d80f70091"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=95b03516-34b0-4438-a05c-918d80f70091"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "FKBP1A",
+            "id": "ENSG00000088832"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "TACROLIMUS"
+      },
+      "maxClinicalStage": "PHASE_1_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "d34vab/duchenne muscular dystrophy",
+        "origin": "CURATED_RESOURCE",
+        "source": "TTD",
+        "trialOverallStatus": null,
+        "url": "https://ttd.idrblab.cn/data/drug/details/D34VAB"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct05689164",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT05689164"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "fordadistrogene movaparvovec",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/FORDADISTROGENE%20MOVAPARVOVEC/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Gene",
+       "id": "CHEMBL4594336",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null,
+       "name": "FORDADISTROGENE MOVAPARVOVEC"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03354039",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03354039"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02835079",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02835079"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL83",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "MODULATOR",
+          "mechanismOfAction": "Estrogen receptor alpha modulator",
+          "references": [
+           {
+            "ids": [
+             "18819158"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/18819158"
+            ]
+           },
+           {
+            "ids": [
+             "setid=407a372d-4448-4d53-afd4-eb0e74bbc336"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=407a372d-4448-4d53-afd4-eb0e74bbc336"
+            ]
+           },
+           {
+            "ids": [
+             "Tamoxifen"
+            ],
+            "source": "Wikipedia",
+            "urls": [
+             "http://en.wikipedia.org/wiki/Tamoxifen"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "ESR1",
+            "id": "ENSG00000091831"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "TAMOXIFEN"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct07475754",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "NOT_YET_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT07475754"
+       }
+      ],
+      "drug": {
+       "drugType": "Antibody",
+       "id": "CHEMBL1201576",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "BINDING AGENT",
+          "mechanismOfAction": "B-lymphocyte antigen CD20 binding agent",
+          "references": [
+           {
+            "ids": [
+             "setid=b172773b-3905-4a1c-ad95-bab4b6126563"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=b172773b-3905-4a1c-ad95-bab4b6126563"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "MS4A1",
+            "id": "ENSG00000156738"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "RITUXIMAB"
+      },
+      "maxClinicalStage": "UNKNOWN"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct06241950",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT06241950"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "delandistrogene moxeparvovec",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/DELANDISTROGENE%20MOXEPARVOVEC/relevant/1/"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "emea/h/c/005293",
+        "origin": "REGULATORY_AGENCY",
+        "source": "EMA Human Drugs",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/elevidys"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct06270719",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ENROLLING_BY_INVITATION",
+        "url": "https://clinicaltrials.gov/study/NCT06270719"
+       }
+      ],
+      "drug": {
+       "drugType": "Gene",
+       "id": "CHEMBL4650241",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "EXOGENOUS GENE",
+          "mechanismOfAction": "Dystrophin exogenous gene",
+          "references": [
+           {
+            "ids": [
+             "https://www.fda.gov/media/169679/download"
+            ],
+            "source": "FDA",
+            "urls": [
+             "https://www.fda.gov/media/169679/download"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "DELANDISTROGENE MOXEPARVOVEC"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct02964377",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02964377"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL129482",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "(+)-EPICATECHIN"
+      },
+      "maxClinicalStage": "PHASE_1_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "emea/h/c/006079",
+        "origin": "REGULATORY_AGENCY",
+        "source": "EMA Human Drugs",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/duvyzat"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02851797",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02851797"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct05933057",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT05933057"
+       },
+       {
+        "clinicalStage": "PHASE_2_3",
+        "id": "nct03373968",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT03373968"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct01761292",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01761292"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "givinostat",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/GIVINOSTAT/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1213492",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Histone deacetylase inhibitor",
+          "references": [
+           {
+            "ids": [
+             "label/2024/217865Orig1s000lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/217865Orig1s000lbl.pdf"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "HDAC1",
+            "id": "ENSG00000116478"
+           },
+           {
+            "approvedSymbol": "HDAC3",
+            "id": "ENSG00000171720"
+           },
+           {
+            "approvedSymbol": "HDAC6",
+            "id": "ENSG00000094631"
+           },
+           {
+            "approvedSymbol": "HDAC2",
+            "id": "ENSG00000196591"
+           },
+           {
+            "approvedSymbol": "HDAC5",
+            "id": "ENSG00000108840"
+           },
+           {
+            "approvedSymbol": "HDAC7",
+            "id": "ENSG00000061273"
+           },
+           {
+            "approvedSymbol": "HDAC8",
+            "id": "ENSG00000147099"
+           },
+           {
+            "approvedSymbol": "HDAC11",
+            "id": "ENSG00000163517"
+           },
+           {
+            "approvedSymbol": "HDAC4",
+            "id": "ENSG00000068024"
+           },
+           {
+            "approvedSymbol": "HDAC9",
+            "id": "ENSG00000048052"
+           },
+           {
+            "approvedSymbol": "HDAC10",
+            "id": "ENSG00000100429"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "GIVINOSTAT"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02432885",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02432885"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL578",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Angiotensin-converting enzyme inhibitor",
+          "references": [
+           {
+            "ids": [
+             "label/2015/018998s080lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/018998s080lbl.pdf"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "ACE",
+            "id": "ENSG00000159640"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "ENALAPRIL"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct05540860",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT05540860"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct06100887",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06100887"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "sevasemten",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/SEVASEMTEN/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL5314486",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "SEVASEMTEN"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct00102453",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00102453"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct00243789",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00243789"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL628",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "ANTAGONIST",
+          "mechanismOfAction": "Adenosine A2 receptor antagonist",
+          "references": [
+           {
+            "ids": [
+             "label/2012/018631s039lbl.pdf",
+             "label/2012/018631s039lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2012/018631s039lbl.pdf",
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2012/018631s039lbl.pdf"
+            ]
+           },
+           {
+            "ids": [
+             "19997047",
+             "11692087",
+             "18568240"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/19997047",
+             "http://europepmc.org/abstract/MED/11692087",
+             "http://europepmc.org/abstract/MED/18568240"
+            ]
+           },
+           {
+            "ids": [
+             "Pentoxifylline",
+             "Pentoxifylline"
+            ],
+            "source": "Wikipedia",
+            "urls": [
+             "http://en.wikipedia.org/wiki/Pentoxifylline",
+             "http://en.wikipedia.org/wiki/Pentoxifylline"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "ADORA2B",
+            "id": "ENSG00000170425"
+           },
+           {
+            "approvedSymbol": "ADORA2A",
+            "id": "ENSG00000128271"
+           }
+          ]
+         },
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "3',5'-cyclic phosphodiesterase inhibitor",
+          "references": [
+           {
+            "ids": [
+             "label/2012/018631s039lbl.pdf",
+             "label/2012/018631s039lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2012/018631s039lbl.pdf",
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2012/018631s039lbl.pdf"
+            ]
+           },
+           {
+            "ids": [
+             "19997047",
+             "11692087",
+             "18568240"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/19997047",
+             "http://europepmc.org/abstract/MED/11692087",
+             "http://europepmc.org/abstract/MED/18568240"
+            ]
+           },
+           {
+            "ids": [
+             "Pentoxifylline",
+             "Pentoxifylline"
+            ],
+            "source": "Wikipedia",
+            "urls": [
+             "http://en.wikipedia.org/wiki/Pentoxifylline",
+             "http://en.wikipedia.org/wiki/Pentoxifylline"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "PDE5A",
+            "id": "ENSG00000138735"
+           },
+           {
+            "approvedSymbol": "PDE4A",
+            "id": "ENSG00000065989"
+           },
+           {
+            "approvedSymbol": "PDE3A",
+            "id": "ENSG00000172572"
+           },
+           {
+            "approvedSymbol": "PDE6H",
+            "id": "ENSG00000139053"
+           },
+           {
+            "approvedSymbol": "PDE6G",
+            "id": "ENSG00000185527"
+           },
+           {
+            "approvedSymbol": "PDE2A",
+            "id": "ENSG00000186642"
+           },
+           {
+            "approvedSymbol": "PDE7A",
+            "id": "ENSG00000205268"
+           },
+           {
+            "approvedSymbol": "PDE1A",
+            "id": "ENSG00000115252"
+           },
+           {
+            "approvedSymbol": "PDE9A",
+            "id": "ENSG00000160191"
+           },
+           {
+            "approvedSymbol": "PDE6B",
+            "id": "ENSG00000133256"
+           },
+           {
+            "approvedSymbol": "PDE4D",
+            "id": "ENSG00000113448"
+           },
+           {
+            "approvedSymbol": "PDE4B",
+            "id": "ENSG00000184588"
+           },
+           {
+            "approvedSymbol": "PDE6D",
+            "id": "ENSG00000156973"
+           },
+           {
+            "approvedSymbol": "PDE6A",
+            "id": "ENSG00000132915"
+           },
+           {
+            "approvedSymbol": "PDE3B",
+            "id": "ENSG00000152270"
+           },
+           {
+            "approvedSymbol": "PDE6C",
+            "id": "ENSG00000095464"
+           },
+           {
+            "approvedSymbol": "PDE8B",
+            "id": "ENSG00000113231"
+           },
+           {
+            "approvedSymbol": "PDE10A",
+            "id": "ENSG00000112541"
+           },
+           {
+            "approvedSymbol": "PDE1B",
+            "id": "ENSG00000123360"
+           },
+           {
+            "approvedSymbol": "PDE4C",
+            "id": "ENSG00000105650"
+           },
+           {
+            "approvedSymbol": "PDE1C",
+            "id": "ENSG00000154678"
+           },
+           {
+            "approvedSymbol": "PDE8A",
+            "id": "ENSG00000073417"
+           },
+           {
+            "approvedSymbol": "PDE7B",
+            "id": "ENSG00000171408"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "PENTOXIFYLLINE"
+      },
+      "maxClinicalStage": "PHASE_1_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct01580501",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01580501"
+       },
+       {
+        "clinicalStage": "EARLY_PHASE_1",
+        "id": "nct01359670",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01359670"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL192",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Phosphodiesterase 5A inhibitor",
+          "references": [
+           {
+            "ids": [
+             "setid=f158fe10-d5dc-4432-b2c9-fc665401291b"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f158fe10-d5dc-4432-b2c9-fc665401291b"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "PDE5A",
+            "id": "ENSG00000138735"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "SILDENAFIL"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03558958",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03558958"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL3137355",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null,
+       "name": "VEPOLOXAMER"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "suvodirsen sodium",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/SUVODIRSEN%20SODIUM/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL4298193",
+       "maximumClinicalStage": "UNKNOWN",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "POSITIVE MODULATOR",
+          "mechanismOfAction": "Dystrophin pre-mRNA positive modulator",
+          "references": [
+           {
+            "ids": [
+             "https://ir.wavelifesciences.com/news-releases/news-release-details/wave-life-sciences-announces-discontinuation-suvodirsen",
+             "https://www.nmd-journal.com/article/S0960-8966(19)30699-6/fulltext"
+            ],
+            "source": "Other",
+            "urls": [
+             "https://ir.wavelifesciences.com/news-releases/news-release-details/wave-life-sciences-announces-discontinuation-suvodirsen",
+             "https://www.nmd-journal.com/article/S0960-8966(19)30699-6/fulltext"
+            ]
+           },
+           {
+            "ids": [
+             "NCT03907072"
+            ],
+            "source": "ClinicalTrials",
+            "urls": [
+             "https://www.clinicaltrials.gov/ct2/show/NCT03907072"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "SUVODIRSEN SODIUM"
+      },
+      "maxClinicalStage": "UNKNOWN"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01540604",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01540604"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1201198",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "PEMIROLAST"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01978366",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01978366"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02525302",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02525302"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct01847573",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01847573"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1197091",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "HALOFUGINONE"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04004065",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT04004065"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct03675126",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03675126"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct03375255",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03375255"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL6068593",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "VESLETEPLIRSEN"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01254019",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01254019"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01480245",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01480245"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01803412",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01803412"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01890798",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "WITHDRAWN",
+        "url": "https://clinicaltrials.gov/study/NCT01890798"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01153932",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01153932"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01462292",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01462292"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01910649",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01910649"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct01128855",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01128855"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct02636686",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "NO_LONGER_AVAILABLE",
+        "url": "https://clinicaltrials.gov/study/NCT02636686"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL2108735",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "POSITIVE MODULATOR",
+          "mechanismOfAction": "Dystrophin pre-mRNA positive modulator",
+          "references": [
+           {
+            "ids": [
+             "18160687",
+             "21428760"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/18160687",
+             "http://europepmc.org/abstract/MED/21428760"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "DRISAPERSEN"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2_3",
+        "id": "nct01183767",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01183767"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL297453",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null,
+       "name": "EPIGALOCATECHIN GALLATE"
+      },
+      "maxClinicalStage": "PHASE_2_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01099761",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01099761"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01239758",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01239758"
+       }
+      ],
+      "drug": {
+       "drugType": "Protein",
+       "id": "CHEMBL2108674",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Growth/differentiation factor 8 inhibitor",
+          "references": [
+           {
+            "ids": [
+             "http://adisinsight.springer.com/drugs/800026145",
+             "http://www.ama-assn.org/resources/doc/usan/ramatercept.pdf"
+            ],
+            "source": "Other",
+            "urls": [
+             "http://adisinsight.springer.com/drugs/800026145",
+             "http://www.ama-assn.org/resources/doc/usan/ramatercept.pdf"
+            ]
+           },
+           {
+            "ids": [
+             "20466801",
+             "27462804"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/20466801",
+             "http://europepmc.org/abstract/MED/27462804"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "MSTN",
+            "id": "ENSG00000138379"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "RAMATERCEPT"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03340675",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03340675"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL3301673",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": null,
+       "name": "IFETROBAN"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "label/2016/206488lbl.pdf",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "http://www.accessdata.fda.gov/drugsatfda_docs/label/2016/206488lbl.pdf"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02255552",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02255552"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03992430",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT03992430"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01396239",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01396239"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01540409",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01540409"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02286947",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02286947"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02420379",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02420379"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03218995",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03218995"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03985878",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03985878"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04179409",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04179409"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct00159250",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00159250"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "emea/h/c/004355",
+        "origin": "REGULATORY_AGENCY",
+        "source": "EMA Human Drugs",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/exondys"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct06606340",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ENROLLING_BY_INVITATION",
+        "url": "https://clinicaltrials.gov/study/NCT06606340"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL2108278",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "POSITIVE MODULATOR",
+          "mechanismOfAction": "Dystrophin pre-mRNA positive modulator",
+          "references": [
+           {
+            "ids": [
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2016/206488lbl.pdf"
+            ],
+            "source": "Other",
+            "urls": [
+             "http://www.accessdata.fda.gov/drugsatfda_docs/label/2016/206488lbl.pdf"
+            ]
+           },
+           {
+            "ids": [
+             "23907995"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/23907995"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "ETEPLIRSEN"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00033813",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00033813"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL13828",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "ANTAGONIST",
+          "mechanismOfAction": "Histamine H1 receptor antagonist",
+          "references": [
+           {
+            "ids": [
+             "6861643"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "https://pubmed.ncbi.nlm.nih.gov/6861643/"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "HRH1",
+            "id": "ENSG00000196639"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "OXATOMIDE"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02814110",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "UNKNOWN",
+        "url": "https://clinicaltrials.gov/study/NCT02814110"
+       }
+      ],
+      "drug": {
+       "drugType": "Protein",
+       "id": "CHEMBL1201567",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "AGONIST",
+          "mechanismOfAction": "Granulocyte colony stimulating factor receptor agonist",
+          "references": [
+           {
+            "ids": [
+             "7504384",
+             "9679526"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/7504384",
+             "http://europepmc.org/abstract/MED/9679526"
+            ]
+           },
+           {
+            "ids": [
+             "setid=fdfe5d72-6b80-435a-afa4-c5d74dd852ce"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=fdfe5d72-6b80-435a-afa4-c5d74dd852ce"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "CSF3R",
+            "id": "ENSG00000119535"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "FILGRASTIM"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct07587242",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT07587242"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct06244082",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06244082"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct05670730",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT05670730"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct07250737",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "AVAILABLE",
+        "url": "https://clinicaltrials.gov/study/NCT07250737"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL6068231",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null,
+       "name": "DELPACIBART ZOTADIRSEN"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct00004646",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00004646"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct00110669",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00110669"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct00308113",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT00308113"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01603407",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01603407"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02036463",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "WITHDRAWN",
+        "url": "https://clinicaltrials.gov/study/NCT02036463"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02167217",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02167217"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04322357",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04322357"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL635",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "AGONIST",
+          "mechanismOfAction": "Glucocorticoid receptor agonist",
+          "references": [
+           {
+            "ids": [
+             "978-1-889788-85-2"
+            ],
+            "source": "ISBN",
+            "urls": [
+             "http://www.isbnsearch.org/isbn/9781889788852"
+            ]
+           },
+           {
+            "ids": [
+             "22850902"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/22850902"
+            ]
+           },
+           {
+            "ids": [
+             "Glucocorticoid"
+            ],
+            "source": "Wikipedia",
+            "urls": [
+             "http://en.wikipedia.org/wiki/Glucocorticoid"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NR3C1",
+            "id": "ENSG00000113580"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "PREDNISONE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct06241950",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT06241950"
+       }
+      ],
+      "drug": {
+       "drugType": "Enzyme",
+       "id": "CHEMBL4297981",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "IMLIFIDASE"
+      },
+      "maxClinicalStage": "PHASE_1"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "bocidelpar sulfate",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/BOCIDELPAR%20SULFATE/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL5095400",
+       "maximumClinicalStage": "UNKNOWN",
+       "mechanismsOfAction": null,
+       "name": "BOCIDELPAR SULFATE"
+      },
+      "maxClinicalStage": "UNKNOWN"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03703882",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03703882"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03917719",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03917719"
+       },
+       {
+        "clinicalStage": "PHASE_1_2",
+        "id": "nct02439216",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02439216"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "edasalonexent",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/EDASALONEXENT/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL3786673",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "INHIBITOR",
+          "mechanismOfAction": "Nuclear factor NF-kappa-B complex inhibitor",
+          "references": [
+           {
+            "ids": [
+             "28074489"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "https://pubmed.ncbi.nlm.nih.gov/28074489/"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NFKB2",
+            "id": "ENSG00000077150"
+           },
+           {
+            "approvedSymbol": "NFKB1",
+            "id": "ENSG00000109320"
+           },
+           {
+            "approvedSymbol": "RELA",
+            "id": "ENSG00000173039"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "EDASALONEXENT"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02354352",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02354352"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1095097",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "ANTAGONIST",
+          "mechanismOfAction": "Mineralocorticoid receptor antagonist",
+          "references": [
+           {
+            "ids": [
+             "setid=cd6cbf0b-34b8-43aa-8037-360480a19cf8#section-13"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=cd6cbf0b-34b8-43aa-8037-360480a19cf8#section-13"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NR3C2",
+            "id": "ENSG00000151623"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "EPLERENONE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02858362",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02858362"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02056808",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02056808"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02383511",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02383511"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1773683",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "MODULATOR",
+          "mechanismOfAction": "Utrophin modulator",
+          "references": [
+           {
+            "ids": [
+             "https://www.tandfonline.com/doi/full/10.1080/21678707.2018.1438261"
+            ],
+            "source": "Other",
+            "urls": [
+             "https://www.tandfonline.com/doi/full/10.1080/21678707.2018.1438261"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "UTRN",
+            "id": "ENSG00000152818"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "EZUTROMID"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02354352",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02354352"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct03777319",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03777319"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1393",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "ANTAGONIST",
+          "mechanismOfAction": "Mineralocorticoid receptor antagonist",
+          "references": [
+           {
+            "ids": [
+             "setid=fb66327e-8261-46ae-b39a-4fa79d520844"
+            ],
+            "source": "DailyMed",
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=fb66327e-8261-46ae-b39a-4fa79d520844"
+            ]
+           },
+           {
+            "ids": [
+             "Spironolactone"
+            ],
+            "source": "Wikipedia",
+            "urls": [
+             "http://en.wikipedia.org/wiki/Spironolactone"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NR3C2",
+            "id": "ENSG00000151623"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "SPIRONOLACTONE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "208685s000lbl.pdf",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "http://www.accessdata.fda.gov/drugsatfda_docs/label/2017/208684s000,208685s000lbl.pdf"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "31b347d2-f156-4055-9d8f-7cf0df420296",
+        "origin": "DRUG_LABEL",
+        "source": "DailyMed",
+        "trialOverallStatus": null,
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=31b347d2-f156-4055-9d8f-7cf0df420296"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "label/2017/208684s000",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "http://www.accessdata.fda.gov/drugsatfda_docs/label/2017/208684s000,208685s000lbl.pdf"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "nct02592941",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "APPROVED_FOR_MARKETING",
+        "url": "https://clinicaltrials.gov/study/NCT02592941"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01603407",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01603407"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03642145",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "WITHDRAWN",
+        "url": "https://clinicaltrials.gov/study/NCT03642145"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02251600",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02251600"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct02295748",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02295748"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL1201891",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "AGONIST",
+          "mechanismOfAction": "Glucocorticoid receptor agonist",
+          "references": [
+           {
+            "ids": [
+             "label/2017/208684s000,208685s000lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "https://www.accessdata.fda.gov/drugsatfda_docs/label/2017/208684s000,208685s000lbl.pdf"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NR3C1",
+            "id": "ENSG00000113580"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "DEFLAZACORT"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "d0f6ym/duchenne muscular dystrophy",
+        "origin": "CURATED_RESOURCE",
+        "source": "TTD",
+        "trialOverallStatus": null,
+        "url": "https://ttd.idrblab.cn/data/drug/details/D0F6YM"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "emea/h/c/005679",
+        "origin": "REGULATORY_AGENCY",
+        "source": "EMA Human Drugs",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/agamree"
+       },
+       {
+        "clinicalStage": "APPROVAL",
+        "id": "label/2023/215239s000lbl.pdf",
+        "origin": "REGULATORY_AGENCY",
+        "source": "FDA",
+        "trialOverallStatus": null,
+        "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2023/215239s000lbl.pdf"
+       },
+       {
+        "clinicalStage": "PHASE_4",
+        "id": "nct06713135",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06713135"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02760264",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02760264"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02760277",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02760277"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03038399",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03038399"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03439670",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03439670"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct05185622",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT05185622"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct03863119",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "AVAILABLE",
+        "url": "https://clinicaltrials.gov/study/NCT03863119"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "nct06564974",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06564974"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL2348780",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "AGONIST",
+          "mechanismOfAction": "Glucocorticoid receptor agonist",
+          "references": [
+           {
+            "ids": [
+             "label/2023/215239s000lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "https://www.accessdata.fda.gov/drugsatfda_docs/label/2023/215239s000lbl.pdf"
+            ]
+           },
+           {
+            "ids": [
+             "30745312"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "https://pubmed.ncbi.nlm.nih.gov/30745312/"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NR3C1",
+            "id": "ENSG00000113580"
+           }
+          ]
+         },
+         {
+          "actionType": "ANTAGONIST",
+          "mechanismOfAction": "Mineralocorticoid receptor antagonist",
+          "references": [
+           {
+            "ids": [
+             "label/2023/215239s000lbl.pdf"
+            ],
+            "source": "FDA",
+            "urls": [
+             "https://www.accessdata.fda.gov/drugsatfda_docs/label/2023/215239s000lbl.pdf"
+            ]
+           },
+           {
+            "ids": [
+             "30745312"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "https://pubmed.ncbi.nlm.nih.gov/30745312/"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "NR3C2",
+            "id": "ENSG00000151623"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "VAMOROLONE"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2_3",
+        "id": "nct03907072",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT03907072"
+       },
+       {
+        "clinicalStage": "PHASE_1",
+        "id": "nct03508947",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03508947"
+       },
+       {
+        "clinicalStage": "UNKNOWN",
+        "id": "suvodirsen",
+        "origin": "CURATED_RESOURCE",
+        "source": "USAN",
+        "trialOverallStatus": null,
+        "url": "https://searchusan.ama-assn.org/finder/usan/search/SUVODIRSEN/relevant/1/"
+       }
+      ],
+      "drug": {
+       "drugType": "Oligonucleotide",
+       "id": "CHEMBL4298192",
+       "maximumClinicalStage": "PHASE_2_3",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "POSITIVE MODULATOR",
+          "mechanismOfAction": "Dystrophin pre-mRNA positive modulator",
+          "references": [
+           {
+            "ids": [
+             "NCT03907072"
+            ],
+            "source": "ClinicalTrials",
+            "urls": [
+             "https://www.clinicaltrials.gov/ct2/show/NCT03907072"
+            ]
+           },
+           {
+            "ids": [
+             "https://www.nmd-journal.com/article/S0960-8966(19)30699-6/fulltext",
+             "https://ir.wavelifesciences.com/news-releases/news-release-details/wave-life-sciences-announces-discontinuation-suvodirsen"
+            ],
+            "source": "Other",
+            "urls": [
+             "https://www.nmd-journal.com/article/S0960-8966(19)30699-6/fulltext",
+             "https://ir.wavelifesciences.com/news-releases/news-release-details/wave-life-sciences-announces-discontinuation-suvodirsen"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "DMD",
+            "id": "ENSG00000198947"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "SUVODIRSEN"
+      },
+      "maxClinicalStage": "PHASE_2_3"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct06450639",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06450639"
+       }
+      ],
+      "drug": {
+       "drugType": "Antibody",
+       "id": "CHEMBL3833307",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "ANTAGONIST",
+          "mechanismOfAction": "IL6Ralpha/GP130 antagonist",
+          "references": [
+           {
+            "ids": [
+             "23227116"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/23227116"
+            ]
+           },
+           {
+            "ids": [
+             "https://myelitis.org/clinical-studies-and-trials/efficacy-and-safety-study-as-monotherapy-of-sa237-to-treat-nmo-and-nmosd/"
+            ],
+            "source": "Other",
+            "urls": [
+             "https://myelitis.org/clinical-studies-and-trials/efficacy-and-safety-study-as-monotherapy-of-sa237-to-treat-nmo-and-nmosd/"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "IL6R",
+            "id": "ENSG00000160712"
+           },
+           {
+            "approvedSymbol": "IL6ST",
+            "id": "ENSG00000134352"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "SATRALIZUMAB"
+      },
+      "maxClinicalStage": "PHASE_2"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "WITHDRAWAL",
+        "id": "emea/h/c/002720",
+        "origin": "REGULATORY_AGENCY",
+        "source": "EMA Human Drugs",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/translarna"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01247207",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01247207"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01557400",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01557400"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct01826487",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT01826487"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct02090959",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02090959"
+       },
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct03179631",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03179631"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00264888",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00264888"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00592553",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00592553"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00759876",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT00759876"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00847379",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT00847379"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct01009294",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT01009294"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct02819557",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02819557"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct03796637",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03796637"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct04336826",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04336826"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL256997",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "actionType": "MODULATOR",
+          "mechanismOfAction": "80S Ribosome modulator",
+          "references": [
+           {
+            "ids": [
+             "https://www.ema.europa.eu/en/documents/product-information/translarna-epar-product-information_en.pdf"
+            ],
+            "source": "EMA",
+            "urls": [
+             "https://www.ema.europa.eu/en/documents/product-information/translarna-epar-product-information_en.pdf"
+            ]
+           },
+           {
+            "ids": [
+             "27702906",
+             "27791186",
+             "25193627"
+            ],
+            "source": "PubMed",
+            "urls": [
+             "http://europepmc.org/abstract/MED/27702906",
+             "http://europepmc.org/abstract/MED/27791186",
+             "http://europepmc.org/abstract/MED/25193627"
+            ]
+           }
+          ],
+          "targets": [
+           {
+            "approvedSymbol": "RPSA",
+            "id": "ENSG00000168028"
+           },
+           {
+            "approvedSymbol": "RPS27",
+            "id": "ENSG00000177954"
+           },
+           {
+            "approvedSymbol": "RPS6",
+            "id": "ENSG00000137154"
+           },
+           {
+            "approvedSymbol": "RPS2",
+            "id": "ENSG00000140988"
+           },
+           {
+            "approvedSymbol": "RPS3",
+            "id": "ENSG00000149273"
+           },
+           {
+            "approvedSymbol": "RPS3A",
+            "id": "ENSG00000145425"
+           },
+           {
+            "approvedSymbol": "RPS4X",
+            "id": "ENSG00000198034"
+           },
+           {
+            "approvedSymbol": "RPS4Y1",
+            "id": "ENSG00000129824"
+           },
+           {
+            "approvedSymbol": "RPS5",
+            "id": "ENSG00000083845"
+           },
+           {
+            "approvedSymbol": "RPS7",
+            "id": "ENSG00000171863"
+           },
+           {
+            "approvedSymbol": "RPS8",
+            "id": "ENSG00000142937"
+           },
+           {
+            "approvedSymbol": "RPS9",
+            "id": "ENSG00000170889"
+           },
+           {
+            "approvedSymbol": "RPS10",
+            "id": "ENSG00000124614"
+           },
+           {
+            "approvedSymbol": "RPS11",
+            "id": "ENSG00000142534"
+           },
+           {
+            "approvedSymbol": "RPS12",
+            "id": "ENSG00000112306"
+           },
+           {
+            "approvedSymbol": "RPS13",
+            "id": "ENSG00000110700"
+           },
+           {
+            "approvedSymbol": "RPS14",
+            "id": "ENSG00000164587"
+           },
+           {
+            "approvedSymbol": "RPS15",
+            "id": "ENSG00000115268"
+           },
+           {
+            "approvedSymbol": "RPS15A",
+            "id": "ENSG00000134419"
+           },
+           {
+            "approvedSymbol": "RPS16",
+            "id": "ENSG00000105193"
+           },
+           {
+            "approvedSymbol": "RPS17",
+            "id": "ENSG00000182774"
+           },
+           {
+            "approvedSymbol": "RPS18",
+            "id": "ENSG00000231500"
+           },
+           {
+            "approvedSymbol": "RPS19",
+            "id": "ENSG00000105372"
+           },
+           {
+            "approvedSymbol": "RPS20",
+            "id": "ENSG00000008988"
+           },
+           {
+            "approvedSymbol": "RPS21",
+            "id": "ENSG00000171858"
+           },
+           {
+            "approvedSymbol": "RPS23",
+            "id": "ENSG00000186468"
+           },
+           {
+            "approvedSymbol": "RPS24",
+            "id": "ENSG00000138326"
+           },
+           {
+            "approvedSymbol": "RPS25",
+            "id": "ENSG00000118181"
+           },
+           {
+            "approvedSymbol": "RPS26",
+            "id": "ENSG00000197728"
+           },
+           {
+            "approvedSymbol": "RPS27A",
+            "id": "ENSG00000143947"
+           },
+           {
+            "approvedSymbol": "RPS28",
+            "id": "ENSG00000233927"
+           },
+           {
+            "approvedSymbol": "RPS29",
+            "id": "ENSG00000213741"
+           },
+           {
+            "approvedSymbol": "FAU",
+            "id": "ENSG00000149806"
+           },
+           {
+            "approvedSymbol": "RPL3",
+            "id": "ENSG00000100316"
+           },
+           {
+            "approvedSymbol": "RPL4",
+            "id": "ENSG00000174444"
+           },
+           {
+            "approvedSymbol": "RPL5",
+            "id": "ENSG00000122406"
+           },
+           {
+            "approvedSymbol": "RPL6",
+            "id": "ENSG00000089009"
+           },
+           {
+            "approvedSymbol": "RPL7",
+            "id": "ENSG00000147604"
+           },
+           {
+            "approvedSymbol": "RPL7A",
+            "id": "ENSG00000148303"
+           },
+           {
+            "approvedSymbol": "RPL8",
+            "id": "ENSG00000161016"
+           },
+           {
+            "approvedSymbol": "RPL9",
+            "id": "ENSG00000163682"
+           },
+           {
+            "approvedSymbol": "RPL10",
+            "id": "ENSG00000147403"
+           },
+           {
+            "approvedSymbol": "RPL10A",
+            "id": "ENSG00000198755"
+           },
+           {
+            "approvedSymbol": "RPL11",
+            "id": "ENSG00000142676"
+           },
+           {
+            "approvedSymbol": "RPL12",
+            "id": "ENSG00000197958"
+           },
+           {
+            "approvedSymbol": "RPL13",
+            "id": "ENSG00000167526"
+           },
+           {
+            "approvedSymbol": "RPL13A",
+            "id": "ENSG00000142541"
+           },
+           {
+            "approvedSymbol": "RPL14",
+            "id": "ENSG00000188846"
+           },
+           {
+            "approvedSymbol": "RPL15",
+            "id": "ENSG00000174748"
+           },
+           {
+            "approvedSymbol": "RPL17",
+            "id": "ENSG00000265681"
+           },
+           {
+            "approvedSymbol": "RPL18",
+            "id": "ENSG00000063177"
+           },
+           {
+            "approvedSymbol": "RPL18A",
+            "id": "ENSG00000105640"
+           },
+           {
+            "approvedSymbol": "RPL19",
+            "id": "ENSG00000108298"
+           },
+           {
+            "approvedSymbol": "RPL21",
+            "id": "ENSG00000122026"
+           },
+           {
+            "approvedSymbol": "RPL22",
+            "id": "ENSG00000116251"
+           },
+           {
+            "approvedSymbol": "RPL23",
+            "id": "ENSG00000125691"
+           },
+           {
+            "approvedSymbol": "RPL23A",
+            "id": "ENSG00000198242"
+           },
+           {
+            "approvedSymbol": "RPL24",
+            "id": "ENSG00000114391"
+           },
+           {
+            "approvedSymbol": "RPL26",
+            "id": "ENSG00000161970"
+           },
+           {
+            "approvedSymbol": "RPL27",
+            "id": "ENSG00000131469"
+           },
+           {
+            "approvedSymbol": "RPL27A",
+            "id": "ENSG00000166441"
+           },
+           {
+            "approvedSymbol": "RPL28",
+            "id": "ENSG00000108107"
+           },
+           {
+            "approvedSymbol": "RPL29",
+            "id": "ENSG00000162244"
+           },
+           {
+            "approvedSymbol": "RPL30",
+            "id": "ENSG00000156482"
+           },
+           {
+            "approvedSymbol": "RPL31",
+            "id": "ENSG00000071082"
+           },
+           {
+            "approvedSymbol": "RPL32",
+            "id": "ENSG00000144713"
+           },
+           {
+            "approvedSymbol": "RPL34",
+            "id": "ENSG00000109475"
+           },
+           {
+            "approvedSymbol": "RPL35",
+            "id": "ENSG00000136942"
+           },
+           {
+            "approvedSymbol": "RPL35A",
+            "id": "ENSG00000182899"
+           },
+           {
+            "approvedSymbol": "RPL36",
+            "id": "ENSG00000130255"
+           },
+           {
+            "approvedSymbol": "RPL36A",
+            "id": "ENSG00000241343"
+           },
+           {
+            "approvedSymbol": "RPL37",
+            "id": "ENSG00000145592"
+           },
+           {
+            "approvedSymbol": "RPL37A",
+            "id": "ENSG00000197756"
+           },
+           {
+            "approvedSymbol": "RPL38",
+            "id": "ENSG00000172809"
+           },
+           {
+            "approvedSymbol": "RPL39",
+            "id": "ENSG00000198918"
+           },
+           {
+            "approvedSymbol": "RPL41",
+            "id": "ENSG00000229117"
+           },
+           {
+            "approvedSymbol": "RPLP0",
+            "id": "ENSG00000089157"
+           },
+           {
+            "approvedSymbol": "RPLP1",
+            "id": "ENSG00000137818"
+           }
+          ]
+         }
+        ]
+       },
+       "name": "ATALUREN"
+      },
+      "maxClinicalStage": "APPROVAL"
+     },
+     {
+      "clinicalReports": [
+       {
+        "clinicalStage": "PHASE_3",
+        "id": "nct00308113",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT00308113"
+       },
+       {
+        "clinicalStage": "PHASE_2",
+        "id": "nct00033189",
+        "origin": "CLINICAL_TRIAL",
+        "source": "ClinicalTrials.gov",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT00033189"
+       }
+      ],
+      "drug": {
+       "drugType": "Small molecule",
+       "id": "CHEMBL454801",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null,
+       "name": "UBIDECARENONE"
+      },
+      "maxClinicalStage": "PHASE_3"
+     }
+    ]
+   },
+   "id": "MONDO_0010679",
+   "name": "Duchenne muscular dystrophy",
+   "synonyms": [
+    {
+     "relation": "hasExactSynonym",
+     "terms": [
+      "DMD",
+      "Duchenne muscular dystrophy",
+      "Duchenne muscular dystrophy, X-linked recessive",
+      "severe dystrophinopathy, Duchenne type"
+     ]
+    },
+    {
+     "relation": "hasRelatedSynonym",
+     "terms": [
+      "muscular dystrophy, Duchenne type"
+     ]
+    },
+    {
+     "relation": "hasNarrowSynonym",
+     "terms": []
+    },
+    {
+     "relation": "hasBroadSynonym",
+     "terms": []
+    }
+   ]
+  },
+  "meta": {
+   "dataVersion": {
+    "month": "09",
+    "year": "26"
+   }
+  }
+ }
+}

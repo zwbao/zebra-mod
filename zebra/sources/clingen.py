@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional
 from zebra.core import Outcome
 from zebra.http import request
 from zebra.sources import record as source_record
+from zebra.sources import validated_text
 
 VALIDITY_CSV = "https://search.clinicalgenome.org/kb/gene-validity/download"
 DOSAGE_TSV = {
@@ -78,8 +79,14 @@ def parse_validity_csv(text: str, symbol: Optional[str] = None, hgnc_id: Optiona
 def validity(symbol: Optional[str] = None, hgnc_id: Optional[str] = None) -> Outcome:
     if not symbol and not hgnc_id:
         raise ValueError("give a gene symbol or HGNC id")
-    resp = request(VALIDITY_CSV, source="ClinGen validity", accept="text/csv,*/*", cache_ttl=CACHE_TTL, timeout=120)
-    rows = parse_validity_csv(resp.text, symbol=symbol, hgnc_id=hgnc_id)
+    def fetch(refresh=False):
+        return request(VALIDITY_CSV, source="ClinGen validity", accept="text/csv,*/*",
+                       cache_ttl=0 if refresh else CACHE_TTL, timeout=120)
+
+    resp = fetch()
+    text = validated_text(resp, "ClinGen validity", must_contain="GENE SYMBOL",
+                          refetch=lambda: fetch(refresh=True))
+    rows = parse_validity_csv(text, symbol=symbol, hgnc_id=hgnc_id)
     label = hgnc_id or symbol
     return Outcome(rows, sources=[source_record("ClinGen gene-disease validity", label, resp,
                                                 url=GENE_PAGE.format(hgnc_id) if hgnc_id else VALIDITY_CSV,
@@ -122,9 +129,14 @@ def dosage(symbol: str, assembly: str = "GRCh38") -> Outcome:
     url = DOSAGE_TSV.get(assembly)
     if not url:
         raise ValueError("assembly must be GRCh38 or GRCh37")
-    resp = request(url, source="ClinGen dosage", accept="text/tab-separated-values,text/plain,*/*",
-                   cache_ttl=CACHE_TTL, timeout=120)
-    row = parse_dosage_tsv(resp.text, symbol)
+    def fetch(refresh=False):
+        return request(url, source="ClinGen dosage", accept="text/tab-separated-values,text/plain,*/*",
+                       cache_ttl=0 if refresh else CACHE_TTL, timeout=120)
+
+    resp = fetch()
+    text = validated_text(resp, "ClinGen dosage", must_contain="#Gene Symbol",
+                          refetch=lambda: fetch(refresh=True))
+    row = parse_dosage_tsv(text, symbol)
     if row is not None:
         row["url"] = f"https://www.ncbi.nlm.nih.gov/projects/dbvar/clingen/clingen_gene.cgi?sym={symbol}"
     return Outcome(row, sources=[source_record("ClinGen dosage sensitivity", symbol, resp, note="bulk TSV filtered by gene")])

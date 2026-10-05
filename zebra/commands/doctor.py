@@ -95,14 +95,18 @@ NETWORK: List[Tuple[str, str, str, Optional[Any], str, Callable[[str], str]]] = 
 ]
 
 # UniProt double-gzips its body for this client (Content-Encoding: gzip over an already gzipped payload);
-# zebra.http decompresses once, so ask for an uncompressed answer here.
+# zebra.http._gunzip unwraps up to 3 gzip layers; ask for an uncompressed
+# answer here so this probe measures the service, not the decoder.
 _HEADERS = {"UniProt": {"Accept-Encoding": "identity"}}
 
 KEYS = [
     ("AlphaGenome key", ("ALPHAGENOME_API_KEY",), "AlphaGenome variant-effect predictions (zebra-s2f)"),
     ("Evo 2 key", ("NVCF_RUN_KEY", "EVO2_API_KEY"), "Evo 2 scoring via NVIDIA NIM (zebra-s2f)"),
     ("NCBI API key", ("NCBI_API_KEY",), "10 instead of 3 requests/s to NCBI E-utilities"),
-    ("OMIM API key", ("OMIM_API_KEY",), "OMIM entries (open alternatives used otherwise)"),
+    # no source in this tree reads OMIM_API_KEY; it is listed so a user who set it
+    # is told it is unused rather than assuming it is in effect.
+    ("OMIM API key", ("OMIM_API_KEY",), "NOT USED by any zebra source: OMIM entries come from Orphanet "
+                                        "cross-references and HPO annotations"),
 ]
 
 

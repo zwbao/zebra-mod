@@ -219,6 +219,60 @@ def capture() -> None:
     with open(os.path.join(HERE, "vep_family2.json"), "w") as fh:
         json.dump({"_source": got2.sources, "records": [_trim_vep(r) for r in got2.result]}, fh, indent=1)
     print(f"captured VEP for {len(got2.result)} family-2 alleles")
+    capture_cnv()
+
+
+# Responses for the `zebra cnv` tests. The region is a 300 kb window inside
+# 15q11.2-q13.1 that contains UBE3A (ClinGen haploinsufficiency score 3), and
+# the transcript is DMD's Ensembl canonical one (the exon numbering NM_004006
+# uses), trimmed to the fields zebra reads.
+CNV_REGION = ("15", 25200000, 25500000)
+CNV_EXON_GENE = "DMD"
+
+
+def capture_cnv() -> None:
+    from zebra.http import get_json
+    from zebra.sources import clingen, ensembl
+
+    chrom, start, end = CNV_REGION
+    resp = get_json(f"https://rest.ensembl.org/overlap/region/human/{chrom}:{start}-{end}",
+                    source="Ensembl overlap", params={"feature": "gene"}, cache_ttl=0, timeout=120)
+    keep = ("id", "external_name", "biotype", "start", "end", "strand", "seq_region_name", "assembly_name")
+    genes = [{k: g[k] for k in keep if k in g} for g in resp.json()]
+    with open(os.path.join(HERE, "overlap_cnv.json"), "w") as fh:
+        json.dump({"_source": {"url": resp.url, "retrieved_at": resp.retrieved_at},
+                   "region": f"{chrom}:{start}-{end}", "response": genes}, fh, indent=1)
+
+    # the real ClinGen bulk TSV, trimmed to its header and the region's genes:
+    # that is what zebra fetches once and parses per gene
+    from zebra.http import request as http_request
+
+    wanted = sorted({g.get("external_name") for g in genes if g.get("external_name")
+                     and g.get("biotype") == "protein_coding"})
+    bulk = http_request(clingen.DOSAGE_TSV["GRCh38"], source="ClinGen dosage",
+                        accept="text/tab-separated-values,text/plain,*/*", cache_ttl=0, timeout=120)
+    kept = [line for line in bulk.text.splitlines()
+            if line.startswith("#Gene Symbol") or line.split("\t")[0].strip() in wanted]
+    rows = {gene: clingen.parse_dosage_tsv("\n".join(kept), gene) for gene in wanted}
+    with open(os.path.join(HERE, "dosage_cnv.json"), "w") as fh:
+        json.dump({"_source": {"url": bulk.url, "retrieved_at": bulk.retrieved_at,
+                               "note": "ClinGen dosage bulk TSV, header plus the rows for the region's genes"},
+                   "tsv": "\n".join(kept) + "\n", "response": rows}, fh, indent=1)
+
+    data = ensembl.lookup_symbol(CNV_EXON_GENE, "GRCh38", expand=True).result
+    tx = [t for t in data["Transcript"] if t.get("is_canonical")][0]
+    trimmed = {k: data[k] for k in ("id", "display_name", "seq_region_name", "start", "end", "strand", "biotype",
+                                    "assembly_name") if k in data}
+    trimmed["Transcript"] = [{
+        **{k: tx[k] for k in ("id", "display_name", "biotype", "is_canonical", "length", "strand",
+                              "seq_region_name", "start", "end") if k in tx},
+        "Exon": [{k: e[k] for k in ("id", "start", "end", "strand", "seq_region_name") if k in e}
+                 for e in tx["Exon"]],
+    }]
+    with open(os.path.join(HERE, f"lookup_{CNV_EXON_GENE.lower()}.json"), "w") as fh:
+        json.dump({"_source": "Ensembl /lookup/symbol/homo_sapiens/DMD?expand=1, canonical transcript only",
+                   "response": trimmed}, fh, indent=1)
+    print(f"captured {len(genes)} genes, {len(rows)} ClinGen dosage rows and {CNV_EXON_GENE}'s canonical transcript")
 
 
 def main() -> None:

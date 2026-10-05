@@ -1,0 +1,263 @@
+{
+ "hitCount": 2,
+ "request": {
+  "cursorMark": "*",
+  "pageSize": 2,
+  "queryString": "BOOK_ID:NBK1119 OR BOOK_ID:NBK1318",
+  "resultType": "core",
+  "sort": "",
+  "synonym": false
+ },
+ "resultList": {
+  "result": [
+   {
+    "abstractText": "<h4>Clinical characteristics</h4>The dystrophinopathies comprise a spectrum including Duchenne muscular dystrophy (DMD) and Becker muscular dystrophy (BMD), which predominantly affect males and involve skeletal and cardiac muscle, and DMD-related cardiomyopathy, characterized by cardiac muscle involvement typically without symptomatic skeletal muscle involvement that affects both males and females. DMD is characterized by early onset and progressive weakness, motor delays, increased risk of cognitive issues, neurobehavioral and psychiatric manifestations, progressive respiratory issues, decline in cardiac function, constipation, osteopenia, and Increased mortality. BMD is characterized by later onset and slower progression, a more heterogeneous cardiac phenotype, and longer survival. Longevity in those with dystrophinopathies has increased with development of improved therapies.<h4>Diagnosis/testing</h4>The diagnosis of a dystrophinopathy is established in a proband with suggestive clinical and laboratory findings and a hemizygous or heterozygous pathogenic variant in DMD identified by molecular genetic testing.<h4>Management</h4>Corticosteroid therapy: Prednisone, deflazacort, or vamarolone for improved muscle strength and motor function Targeted therapies: Histone deacetylase inhibitor therapy (givinostat); dystrophin restoration therapy (antisense oligonucleotide, adeno-associated virus-mediated gene therapy) for those with DMD pathogenic variants in select exons Supportive care: In affected males – preventative home stretching; orthotics; mobility and seating equipment; pain management; treatment of scoliosis per neuromuscular specialist and orthopedist; regular submaximal aerobic exercise or exercise as tolerated; progressive mobility planning; developmental and educational support; standard treatment of neurobehavioral and psychiatric manifestations; nutrition support; gastrostomy tube when needed; proactive treatment of gastroesophageal reflux and constipation; treatment of cardiac disease per cardiologist; vaccinations for respiratory illnesses; respiratory spirometry, lung volume recruitment, mechanical insufflation-exsufflation; additional respiratory support when needed; prompt treatment of respiratory infection; bisphosphonates, vitamin D, and calcium supplements to prevent fractures; transitional care plan; family and social work support. In heterozygous females – cardiac management per cardiologist; regular exercise as tolerated, stretching, and physical therapy as needed in those with skeletal muscle manifestations. Surveillance: In affected males – measure linear growth every six months until completion of puberty and attainment of adult height; nutrition assessment by a registered nutritionist at each visit and at least every six months; assessment of skeletal muscle involvement by a neuromuscular neurologist and physical therapist every six months; cardiology evaluation including EKG and echocardiogram or cardiac MRI annually and before major surgery and more frequently in those with myocardial fibrosis or ventricular dysfunction; Holter monitor annually in those with cardiac dysfunction; evaluation by speech and language therapist when dysphagia is suspected; evaluation for gastrointestinal manifestations per gastroenterologist; pulmonology assessment annually and every six months after loss of ambulation; assess for cognitive and educational issues at each visit; neuropsychological evaluation as needed; assess for anxiety, depression, and social concerns at every visit; psychiatry evaluation as needed; assess pubertal development at each visit beginning in early adolescence; endocrinology evaluation in those with absence of pubertal development by age 14 years; clinical spine examination at each visit; spine radiographs in those with evidence of scoliosis; assess for back pain and fractures at each visit in those on steroid therapy; consider annual lateral spine imaging and dual-energy x-ray absorptiometry scan. In heterozygous females – cardiac evaluation with EKG and cardiac imaging every three to five years beginning in the 2nd to 3rd decade of life; cardiac follow up per cardiologist in those with cardiac manifestations; assessment of skeletal manifestations every 2-3 years. Agents/circumstances to avoid: Abrupt discontinuation of corticosteroids; stress dosing is recommended for steroid therapy to avoid adrenal crisis; statins may exacerbate muscle weakness and cause rhabdomyolysis; anesthetics such as succinylcholine can trigger malignant hyperthermia. Evaluation of relatives at risk: Evaluate at-risk male relatives of an affected individual in order to identify as early as possible those who would benefit from prompt initiation of supportive care and dystrophin restoration targeted therapy. Evaluate at-risk female relatives to identify those who would benefit from cardiac and skeletal muscle evaluation and surveillance. Evaluations include molecular genetic testing if the DMD pathogenic variant in the family is known. Pregnancy management: Evaluation for dilated cardiomyopathy and skeletal muscle involvement ideally prior to conceiving or as soon as pregnancy is recognized; women with dilated cardiomyopathy should be managed by a cardiac specialist with experience in treatment of heart failure and/or neuromuscular disorders and a high-risk obstetrician.<h4>Genetic counseling</h4>Dystrophinopathies are inherited in an X-linked manner. Male proband: The risk to sibs depends on the genetic status of the mother. If the mother of the proband is heterozygous for a DMD pathogenic variant, the chance of the mother transmitting the pathogenic variant in each pregnancy is 50%. Males who inherit the DMD pathogenic variant will be affected and will typically have clinical manifestations similar to those of the proband. Females who inherit the pathogenic variant will be heterozygotes and at risk for DMD-related cardiomyopathy. Heterozygous females are mostly free of severe skeletal muscle disease but may have milder muscle involvement or, rarely, a DMD or BMD phenotype resulting from non-random X-chromosome inactivation. Female proband: The risk to sibs depends on the genetic status of the parents. If the mother of the proband has a DMD pathogenic variant, the chance of the mother transmitting it in each pregnancy is 50%. If the father of the proband has a DMD pathogenic variant, he will transmit it to all his daughters and none of his sons. Once the DMD pathogenic variant has been identified in an affected family member, identification of female heterozygotes and prenatal testing are possible. Depending on the familial DMD pathogenic variant, preimplantation genetic testing may be an option for some families but can be challenging if phasing is necessary to confirm test results.",
+    "affiliation": "University of Arkansas for Medical Sciences;, Arkansas Children's Hospital, Little Rock, Arkansas",
+    "authMan": "N",
+    "authorList": {
+     "author": [
+      {
+       "authorAffiliationDetailsList": {
+        "authorAffiliation": [
+         {
+          "affiliation": "University of Arkansas for Medical Sciences;, Arkansas Children's Hospital, Little Rock, Arkansas"
+         }
+        ]
+       },
+       "firstName": "Ruthwik",
+       "fullName": "Duvuru R",
+       "initials": "R",
+       "lastName": "Duvuru"
+      },
+      {
+       "authorAffiliationDetailsList": {
+        "authorAffiliation": [
+         {
+          "affiliation": "University of Arkansas for Medical Sciences;, Arkansas Children's Hospital, Little Rock, Arkansas"
+         }
+        ]
+       },
+       "firstName": "Tyler",
+       "fullName": "Cunningham T",
+       "initials": "T",
+       "lastName": "Cunningham"
+      },
+      {
+       "authorAffiliationDetailsList": {
+        "authorAffiliation": [
+         {
+          "affiliation": "Massachusetts General Hospital;, Harvard Medical School, Boston, Massachusetts"
+         }
+        ]
+       },
+       "firstName": "Mary K",
+       "fullName": "Colvin MK",
+       "initials": "MK",
+       "lastName": "Colvin"
+      },
+      {
+       "authorAffiliationDetailsList": {
+        "authorAffiliation": [
+         {
+          "affiliation": "University of Arkansas for Medical Sciences;, Arkansas Children's Hospital, Little Rock, Arkansas"
+         }
+        ]
+       },
+       "firstName": "Aravindhan",
+       "fullName": "Veerapandiyan A",
+       "initials": "A",
+       "lastName": "Veerapandiyan"
+      }
+     ]
+    },
+    "authorString": "Duvuru R, Cunningham T, Colvin MK, Veerapandiyan A.",
+    "bookOrReportDetails": {
+     "comprisingTitle": "GeneReviews®",
+     "publisher": "University of Washington, Seattle, Seattle (WA)",
+     "yearOfPublication": 1993
+    },
+    "bookid": "NBK1119",
+    "citedByCount": 1,
+    "dataLinksTagsList": {
+     "dataLinkstag": [
+      "altmetrics",
+      "related_data"
+     ]
+    },
+    "dateOfCreation": "2026-09-10",
+    "dateOfRevision": "2026-09-10",
+    "epmcAuthMan": "N",
+    "firstIndexDate": "2011-12-09",
+    "firstPublicationDate": "2026-09-10",
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "http://europepmc.org/books/NBK1119"
+      },
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "html",
+       "site": "NCBI_Bookshelf",
+       "url": "https://www.ncbi.nlm.nih.gov/books/NBK1119"
+      }
+     ]
+    },
+    "hasBook": "Y",
+    "hasData": "Y",
+    "hasDbCrossReferences": "N",
+    "hasEvaluations": "N",
+    "hasLabsLinks": "Y",
+    "hasPDF": "N",
+    "hasReferences": "N",
+    "hasSuppl": "N",
+    "hasTMAccessionNumbers": "N",
+    "hasTextMinedTerms": "Y",
+    "id": "20301298",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "isOpenAccess": "Y",
+    "keywordList": {
+     "keyword": [
+      "DMD",
+      "Duchenne muscular dystrophy (DMD)",
+      "Dystrophin",
+      "Dystrophinopathies",
+      "Becker Muscular Dystrophy (Bmd)",
+      "Dmd-associated Dilated Cardiomyopathy"
+     ]
+    },
+    "language": "eng",
+    "nihAuthMan": "N",
+    "pmid": "20301298",
+    "pubTypeList": {
+     "pubType": [
+      "Review"
+     ]
+    },
+    "pubYear": "1993",
+    "publicationStatus": "ppublish",
+    "source": "MED",
+    "title": "Dystrophinopathies"
+   },
+   {
+    "abstractText": "<h4>Clinical characteristics</h4>SCN1A seizure disorders encompass a spectrum that ranges from simple febrile seizures and generalized epilepsy with febrile seizures plus (GEFS+) at the mild end to Dravet syndrome and intractable childhood epilepsy with generalized tonic-clonic seizures (ICE-GTC) at the severe end. Phenotypes with intractable seizures including Dravet syndrome are often associated with cognitive decline. Less commonly observed phenotypes include myoclonic astatic epilepsy (MAE), Lennox-Gastaut syndrome, infantile spasms, epilepsy with focal seizures, and vaccine-related encephalopathy and seizures. The phenotype of SCN1A seizure disorders can vary even within the same family.<h4>Diagnosis/testing</h4>The diagnosis of an SCN1A seizure disorder is established in a proband by identification of a heterozygous pathogenic variant in SCN1A by molecular genetic testing.<h4>Management</h4>Treatment of manifestations: Care is best provided by a physician (e.g., pediatric epileptologist) familiar with the pharmacotherapy for this disorder. Seizure control is critical to prevent permanent injury and death. Anti-seizure medication (ASM): clobazam (can be used for treatment of seizures in Lennox-Gastaut syndrome); stiripentol, benzodiazepines, cannabidiol, topiramate, levetiracetam, valproic acid, and ethosuximide. Levetiracetam is often effective, but may make seizures worse in some individuals. Phenobarbital is effective but poorly tolerated because of its effects on cognition. Use of the ketogenic diet to decrease seizure frequency has been beneficial in some affected individuals. Parents are advised to take a CPR course. Routine seizure and personal safety education is indicated. Prevention of secondary complications: Use of protective helmets by individuals with atonic seizures or myoclonic-astatic epilepsy. Good sleep hygiene should be encouraged. Persons with epilepsy should be made aware of motor vehicle driving laws. Surveillance: Serial neuropsychological evaluation for neurologic, cognitive, and behavioral deterioration; EEG monitoring for new or different seizure types; polysomnography should be considered if obstructive or central sleep apnea is suspected. Agents/circumstances to avoid: ASMs: carbamazepine, lamotrigine, and vigabatrin, which can induce or increase myoclonic seizures; phenytoin, which can induce choreoathetosis; rufinamide may exacerbate seizures as well; acetaminophen, which is hepatotoxic. Activities in which a sudden loss of consciousness could lead to injury or death (e.g., bathing, swimming, driving, or working/playing at heights). Sleep deprivation, which can exacerbate seizures, should be avoided. Pregnancy management: Pregnant women should receive counseling regarding the risks and benefits of the use of anti-seizure medication during pregnancy; the advantages and disadvantages of increasing maternal periconceptional folic acid supplementation to 4,000 µg daily; the effects of pregnancy on anticonvulsant metabolism; and the effect of pregnancy on maternal seizure control.<h4>Genetic counseling</h4>SCN1A seizure disorders are inherited in an autosomal dominant manner. A proband with an SCN1A seizure disorder may have an inherited or a de novo pathogenic variant. The proportion of cases caused by de novo pathogenic variants varies by phenotype: the percentage of probands with an SCN1A seizure disorder and an affected parent decreases as the severity of the phenotype in the proband increases; thus, most SCN1A-related severe myoclonic epilepsy in infancy (SCN1A-SMEI) and ICE-GTC are the result of a de novo pathogenic variant. Each child of an individual with an SCN1A seizure disorder has a 50% chance of inheriting the pathogenic variant; however, the risk of developing seizures is less than 100% because of reduced penetrance. Prenatal diagnosis for pregnancies at increased risk is possible if the pathogenic variant in the family is known.",
+    "affiliation": "Medical Director, Comprehensive Epilepsy Program, Nicklaus Children's Hospital, Miami, Florida",
+    "authMan": "N",
+    "authorList": {
+     "author": [
+      {
+       "authorAffiliationDetailsList": {
+        "authorAffiliation": [
+         {
+          "affiliation": "Medical Director, Comprehensive Epilepsy Program, Nicklaus Children's Hospital, Miami, Florida"
+         }
+        ]
+       },
+       "firstName": "Ian O",
+       "fullName": "Miller IO",
+       "initials": "IO",
+       "lastName": "Miller"
+      },
+      {
+       "authorAffiliationDetailsList": {
+        "authorAffiliation": [
+         {
+          "affiliation": "Director, Genetic Epilepsy Clinic and TSC Clinic, Pediatric Neuroscience Center, Swedish Neuroscience Institute, Seattle, Washington"
+         }
+        ]
+       },
+       "firstName": "Marcio A",
+       "fullName": "Sotero de Menezes MA",
+       "initials": "MA",
+       "lastName": "Sotero de Menezes"
+      }
+     ]
+    },
+    "authorString": "Miller IO, Sotero de Menezes MA.",
+    "bookOrReportDetails": {
+     "comprisingTitle": "GeneReviews®",
+     "publisher": "University of Washington, Seattle, Seattle (WA)",
+     "yearOfPublication": 1993
+    },
+    "bookid": "NBK1318",
+    "citedByCount": 2,
+    "dataLinksTagsList": {
+     "dataLinkstag": [
+      "altmetrics",
+      "related_data",
+      "wikipedia"
+     ]
+    },
+    "dateOfCreation": "2022-02-17",
+    "dateOfRevision": "2022-02-17",
+    "epmcAuthMan": "N",
+    "firstIndexDate": "2011-12-09",
+    "firstPublicationDate": "2022-02-17",
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "http://europepmc.org/books/NBK1318"
+      },
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "html",
+       "site": "NCBI_Bookshelf",
+       "url": "https://www.ncbi.nlm.nih.gov/books/NBK1318"
+      }
+     ]
+    },
+    "hasBook": "Y",
+    "hasData": "Y",
+    "hasDbCrossReferences": "N",
+    "hasEvaluations": "N",
+    "hasLabsLinks": "Y",
+    "hasPDF": "N",
+    "hasReferences": "N",
+    "hasSuppl": "N",
+    "hasTMAccessionNumbers": "N",
+    "hasTextMinedTerms": "Y",
+    "id": "20301494",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "isOpenAccess": "Y",
+    "keywordList": {
+     "keyword": [
+      "Scn1a",
+      "Simple Febrile Seizures",
+      "Sodium Channel Protein Type 1 Subunit Alpha",
+      "Intractable Childhood Epilepsy With Generalized Tonic-clonic Seizures (Ice-gtc)",
+      "Intractable Infantile Partial Seizures",
+      "Myoclonic-astatic Epilepsy (Mae)",
+      "Scn1a-related Dravet Syndrome",
+      "Scn1a Seizure Disorders",
+      "Severe Myoclonic Epilepsy In Infancy (Smei)",
+      "Generalized Epilepsy With Febrile Seizures Plus (Gefs+)"
+     ]
+    },
+    "language": "eng",
+    "nihAuthMan": "N",
+    "pmid": "20301494",
+    "pubTypeList": {
+     "pubType": [
+      "Review"
+     ]
+    },
+    "pubYear": "1993",
+    "publicationStatus": "ppublish",
+    "source": "MED",
+    "title": "SCN1A Seizure Disorders"
+   }
+  ]
+ },
+ "version": "6.9"
+}

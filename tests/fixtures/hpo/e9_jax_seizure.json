@@ -1,0 +1,731 @@
+{
+ "terms": [
+  {
+   "comment": "",
+   "definition": "A seizure during pregnancy.",
+   "descendantCount": 0,
+   "id": "HP:0100622",
+   "name": "Maternal seizure",
+   "publicationReferences": [
+    "PMID:25746572"
+   ],
+   "synonyms": [
+    "Maternal seizures"
+   ],
+   "translations": null,
+   "xrefs": [
+    "UMLS:C4022010"
+   ]
+  },
+  {
+   "comment": "",
+   "definition": "A type of focal motor status epilepticus characterized by repeated motor, typically clonic events repeatedly affecting the same segments of the body with spread of clonic movements through contiguous body parts unilaterally, and repeating over a sufficiently prolonged period to reach a diagnosis of status epilepticus.",
+   "descendantCount": 0,
+   "id": "HP:0032665",
+   "name": "Repeated focal motor seizures",
+   "publicationReferences": [
+    "PMID:21070217",
+    "PMID:26336950"
+   ],
+   "synonyms": [
+    "Jacksonian status epilepticus"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A generalized motor seizure is a type of generalized-onset seizure with predominantly motor (involving musculature) signs. The motor event could consist of an increase (positive) or decrease (negative) in muscle contraction to produce a movement.",
+   "descendantCount": 14,
+   "id": "HP:0032677",
+   "name": "Generalized-onset motor seizure",
+   "publicationReferences": [
+    "PMID:11580774",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [
+    "Generalised onset motor seizure",
+    "Generalised-onset motor seizure",
+    "Generalized onset motor seizure"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "Non-motor terms correspond to the earliest prominent sign or symptom.",
+   "definition": "A type of focal-onset seizure characterized by non-motor signs or symptoms (or behavior arrest) as its initial semiological manifestation.",
+   "descendantCount": 145,
+   "id": "HP:0032679",
+   "name": "Focal non-motor seizure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [
+    "Focal seizure without motor onset",
+    "Partial seizure without motor onset"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal non-motor seizure in which awareness is retained throughout the seizure.",
+   "descendantCount": 45,
+   "id": "HP:0032682",
+   "name": "Focal aware non-motor seizure",
+   "publicationReferences": [
+    "PMID:20196795",
+    "PMID:23739099",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [
+    "Focal non-motor aware seizure"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "In order to characterize focal cognitive seizures, specific testing may be required early during the seizure.",
+   "definition": "A focal cognitive seizure involves an alteration in a cognitive function (which can be a deficit or a positive phenomenon such as forced thought), which occurs at seizure onset. To be classified as a focal cognitive seizure, the change in cognitive function should be specific and out of proportion to other relatively unimpaired aspects of cognition, because all cognition is impaired in a focal impaired awareness seizure.",
+   "descendantCount": 52,
+   "id": "HP:0032680",
+   "name": "Focal cognitive seizure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [
+    "Cognitive aura",
+    "Cognitive seizure",
+    "Partial cognitive seizure"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal aware cognitive seizure during which awareness is retained throughout the seizure.",
+   "descendantCount": 16,
+   "id": "HP:0032681",
+   "name": "Focal aware cognitive seizure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "An eyelid myoclonia seizure is a type of generalized myoclonic seizure which may or may not be associated with loss of awareness.",
+   "descendantCount": 1,
+   "id": "HP:0032678",
+   "name": "Eyelid myoclonia seizure",
+   "publicationReferences": [
+    "PMID:19469840"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal cognitive seizure with dyscalculia and or acalculia characterized by retained awareness throughout the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032690",
+   "name": "Focal aware cognitive seizure with dyscalculia/acalculia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "Dyscalculia / acalculia is difficulty completing or understanding mathematical calculation. This seizure type is seen in seizures involving the dominant hemisphere parieto-temporal lobe region.",
+   "definition": "A focal cognitive seizure characterized by dyscalculia / acalculia as the initial semiological manifestation.",
+   "descendantCount": 2,
+   "id": "HP:0032691",
+   "name": "Focal cognitive seizure with dyscalculia/acalculia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "Forced thinking is the presence of intrusive thoughts, ideas or crowding of thoughts. This is a rare seizure type, seen in mesial parietal, posterior parahippocampal and frontal lobe seizures.",
+   "definition": "A focal cognitive seizure characterized by forced thinking as the initial semiological manifestation.",
+   "descendantCount": 2,
+   "id": "HP:0032692",
+   "name": "Focal cognitive seizure with forced thinking",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "Expressive dysphasia / aphasia is the inability to express one's thoughts despite being aware of what they wished to say because of a disorder of language rather than articulation.",
+   "definition": "A focal cognitive seizure characterized by expressive dysphasia / aphasia as the initial semiological manifestation.",
+   "descendantCount": 2,
+   "id": "HP:0032702",
+   "name": "Focal cognitive seizure with expressive dysphasia/aphasia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal cognitive seizure with dysgraphia / agraphia characterized by retained awareness throughout the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032709",
+   "name": "Focal aware cognitive seizure with dysgraphia/agraphia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "Anomia is the inability to name objects despite knowing what they are.",
+   "definition": "A focal cognitive seizure characterized by anomia as the initial semiological manifestation.",
+   "descendantCount": 2,
+   "id": "HP:0032701",
+   "name": "Focal cognitive seizure with anomia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal motor seizure with dysarthria / anarthria characterized by impaired awareness at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032719",
+   "name": "Focal impaired awareness motor seizure with dysarthria/anarthria",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [
+    "Focal motor impaired awareness seizure with dysarthria/anarthria"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "Version id defined as sustained, forced, involuntary turning of the eyes or head.",
+   "definition": "A focal motor seizure with version characterized by impaired awareness at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032713",
+   "name": "Focal impaired awareness motor seizure with version",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [
+    "Focal motor impaired awareness seizure with version"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A type of focal motor seizure in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 24,
+   "id": "HP:0032712",
+   "name": "Focal impaired awareness motor seizure",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [
+    "Focal motor impaired awareness seizure"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "The abnormal movements of dystonia resulting from co-contraction of agonist and antagonist muscles differentiates these from tonic seizures, see focal tonic seizure.",
+   "definition": "A focal motor seizure in which the initial semiological manifestation is the sustained contraction of both agonist and antagonist muscles producing athetoid or twisting movements, which produces abnormal postures.",
+   "descendantCount": 2,
+   "id": "HP:0032718",
+   "name": "Focal motor seizure with dystonia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal motor seizure with dystonia characterized by retained awareness throughout the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032723",
+   "name": "Focal aware motor seizure with dystonia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [
+    "Focal motor aware seizure with dystonia"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal hyperkinetic seizure in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032726",
+   "name": "Focal impaired awareness hyperkinetic seizure",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal atonic seizure in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032728",
+   "name": "Focal impaired awareness atonic seizure",
+   "publicationReferences": [
+    "PMID:11580774",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal tonic seizure in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032724",
+   "name": "Focal impaired awareness tonic seizure",
+   "publicationReferences": [
+    "PMID:11580774",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "These seizures arise in mesial temporal networks, especially the amygdala. They can be distinguished from panic attacks, by the presence of impaired awareness, automatisms and other features of an epileptic seizure appearing in a stereotyped manner. They are also distinguished from a focal autonomic seizure with epigastric sensation, where the onset seizure feature is an autonomic epigastric sensation, and fear may be present as a secondary feature.",
+   "definition": "Focal emotional seizure with agitation is characterized by the presence of psychomotor agitation as an expressed or observed emotion, at the outset of the seizure. Because of the unpleasant nature of these seizures, patients may also have anticipatory anxiety about having seizures.",
+   "descendantCount": 2,
+   "id": "HP:0032727",
+   "name": "Focal emotional seizure with agitation",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "This is a rare seizure type, seen in seizures arising in the anterior insular cortex.",
+   "definition": "Focal emotional seizure with pleasure is characterized by the presence of a positive emotional experience with pleasure, bliss, joy, enhanced personal well-being, heightened self-awareness or ecstasy.",
+   "descendantCount": 2,
+   "id": "HP:0032729",
+   "name": "Focal emotional seizure with pleasure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal aware autonomic seizure has an initial manifestation pertaining to autonomic nervous system function, which may be objective (for example, pupillary dilation) or subjective (for example, nausea). As a type of focal aware seizure, awareness is retained throughout.",
+   "descendantCount": 9,
+   "id": "HP:0032740",
+   "name": "Focal aware autonomic seizure",
+   "publicationReferences": [
+    "PMID:20196795",
+    "PMID:23739099",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [
+    "Focal autonomic seizures without altered responsiveness",
+    "Localised autonomic seizures without altered responsiveness",
+    "Localized autonomic seizures without altered responsiveness",
+    "Partial autonomic seizures without altered responsiveness"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal motor seizure with dysarthria / anarthria characterized by retained awareness throughout the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032733",
+   "name": "Focal aware motor seizure with dysarthria/anarthria",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [
+    "Focal motor aware seizure with dysarthria/anarthria"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with anxiety, fear or panic as an expressed or observed emotion at the outset of the seizure, in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032738",
+   "name": "Focal aware emotional seizure with fear/anxiety/panic",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "These seizures arise in mesial temporal networks, especially the amygdala. They can be distinguished from panic attacks, by the presence of impaired awareness, automatisms and other features of an epileptic seizure appearing in a stereotyped manner. They are also distinguished from a focal autonomic seizure with epigastric sensation, where the onset seizure feature is an autonomic epigastric sensation, and fear may be present as a secondary feature.",
+   "definition": "Focal emotional seizure with anxiety is characterized by the presence of anxiety, fear or panic as an expressed or observed emotion, at the outset of the seizure. Because of the unpleasant nature of these seizures, patients may also have anticipatory anxiety about having seizures.",
+   "descendantCount": 2,
+   "id": "HP:0032739",
+   "name": "Focal emotional seizure with fear/anxiety/panic",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with paranoia in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032741",
+   "name": "Focal aware emotional seizure with paranoia",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with anger in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032735",
+   "name": "Focal aware emotional seizure with anger",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with paranoia is characterized by the presence of paranoia as an expressed or observed emotion at the outset of the seizure.",
+   "descendantCount": 2,
+   "id": "HP:0032737",
+   "name": "Focal emotional seizure with paranoia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "This seizure type localizes to prefrontal or mesial temporal regions of the brain.",
+   "definition": "Focal emotional seizure with anger is characterized by the presence of anger, as an expressed or observed emotion, at the outset of the seizure. It may be accompanied by aggressive behavior.",
+   "descendantCount": 2,
+   "id": "HP:0032736",
+   "name": "Focal emotional seizure with anger",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal emotional seizure during which awareness is retained throughout the seizure.",
+   "descendantCount": 7,
+   "id": "HP:0032734",
+   "name": "Focal aware emotional seizure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with pleasure in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032747",
+   "name": "Focal impaired awareness emotional seizure with pleasure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with paranoia in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032749",
+   "name": "Focal impaired awareness emotional seizure with paranoia",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with laughing in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032750",
+   "name": "Focal impaired awareness emotional seizure with laughing",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with anger in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032748",
+   "name": "Focal impaired awareness emotional seizure with anger",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with agitation in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032744",
+   "name": "Focal aware emotional seizure with agitation",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal emotional seizure in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 7,
+   "id": "HP:0032746",
+   "name": "Focal impaired awareness emotional seizure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with pleasure in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032742",
+   "name": "Focal aware emotional seizure with pleasure",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with laughing in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032745",
+   "name": "Focal aware emotional seizure with laughing",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with crying (dacrystic)in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032743",
+   "name": "Focal aware emotional seizure with crying",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal autonomic seizure characterized by impaired awareness at some point within the seizure.",
+   "descendantCount": 9,
+   "id": "HP:0032755",
+   "name": "Focal impaired awareness autonomic seizure",
+   "publicationReferences": [
+    "PMID:20196795",
+    "PMID:23739099",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [
+    "Focal autonomic seizure with altered responsiveness",
+    "Localised autonomic seizure with altered responsiveness",
+    "Localized autonomic seizure with altered responsiveness",
+    "Partial autonomic seizure with altered responsiveness"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "These seizures involve the parietal cortex, temporo-parieto-occipital junction or parieto-temporal cortex.",
+   "definition": "A seizure characterized by symptoms of dizziness, spinning, vertigo or sense of rotation as its first clinical manifestation.",
+   "descendantCount": 2,
+   "id": "HP:0032759",
+   "name": "Focal sensory seizure with vestibular features",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [
+    "Focal vestibular seizure",
+    "Partial vestibular seizure",
+    "Vestibular aura"
+   ],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with anxiety, fear or panic as an expressed or observed emotion at the outset of the seizure, in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032752",
+   "name": "Focal impaired awareness emotional seizure with fear/anxiety/panic",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal emotional seizure with agitation in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032753",
+   "name": "Focal impaired awareness emotional seizure with agitation",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "Focal emotional seizure with crying in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 0,
+   "id": "HP:0032751",
+   "name": "Focal impaired awareness emotional seizure with crying",
+   "publicationReferences": [
+    "PMID:28276060"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal cognitive seizure in which awareness is partially or fully impaired at some point during the seizure.",
+   "descendantCount": 16,
+   "id": "HP:0032756",
+   "name": "Focal impaired awareness cognitive seizure",
+   "publicationReferences": [
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "",
+   "definition": "A focal hemiclonic seizure in which awareness is retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032757",
+   "name": "Focal aware hemiclonic seizure",
+   "publicationReferences": [
+    "PMID:11580774",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  },
+  {
+   "comment": "A single or short cluster of brief muscle contractions (jerks), each jerk is typically milliseconds in duration.",
+   "definition": "A type of focal myoclonic seizure during which awareness is fully retained throughout.",
+   "descendantCount": 0,
+   "id": "HP:0032758",
+   "name": "Focal aware myoclonic seizure",
+   "publicationReferences": [
+    "PMID:11580774",
+    "PMID:28276060",
+    "PMID:28276064"
+   ],
+   "synonyms": [],
+   "translations": null,
+   "xrefs": []
+  }
+ ],
+ "totalCount": 100
+}

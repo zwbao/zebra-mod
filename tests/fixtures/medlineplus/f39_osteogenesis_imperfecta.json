@@ -1,0 +1,437 @@
+{
+ "_comment": "See https://medlineplus.gov/about/data-files-api",
+ "db-key-list": [
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C0023931"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C0029434"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C0268362"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C0268363"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C1850169"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C1853162"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C1970458"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C2931093"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C3151211"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C3151218"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C3151433"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C3279564"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C3553887"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C3554428"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C3808844"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C4015610"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C4225301"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C4693736"
+   }
+  },
+  {
+   "db-key": {
+    "db": "GTR",
+    "key": "C4746956"
+   }
+  },
+  {
+   "db-key": {
+    "db": "ICD-10-CM",
+    "key": "Q78.0"
+   }
+  },
+  {
+   "db-key": {
+    "db": "MeSH",
+    "key": "D010013"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "166200"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "166210"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "166220"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "259420"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "259440"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "301014"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "610682"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "610915"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "610967"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "610968"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "613848"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "613849"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "613982"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "614856"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "615066"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "615220"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "616229"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "616507"
+   }
+  },
+  {
+   "db-key": {
+    "db": "OMIM",
+    "key": "617952"
+   }
+  },
+  {
+   "db-key": {
+    "db": "SNOMED CT",
+    "key": "205496008"
+   }
+  },
+  {
+   "db-key": {
+    "db": "SNOMED CT",
+    "key": "205497004"
+   }
+  },
+  {
+   "db-key": {
+    "db": "SNOMED CT",
+    "key": "254110009"
+   }
+  },
+  {
+   "db-key": {
+    "db": "SNOMED CT",
+    "key": "385482004"
+   }
+  },
+  {
+   "db-key": {
+    "db": "SNOMED CT",
+    "key": "385483009"
+   }
+  },
+  {
+   "db-key": {
+    "db": "SNOMED CT",
+    "key": "78314001"
+   }
+  },
+  {
+   "db-key": {
+    "db": "SNOMED CT",
+    "key": "86470003"
+   }
+  }
+ ],
+ "ghr_page": "https://medlineplus.gov/genetics/condition/osteogenesis-imperfecta",
+ "inheritance-pattern-list": [
+  {
+   "inheritance-pattern": {
+    "code": "xr",
+    "memo": "X-linked recessive"
+   }
+  },
+  {
+   "inheritance-pattern": {
+    "code": "ar",
+    "memo": "Autosomal recessive"
+   }
+  },
+  {
+   "inheritance-pattern": {
+    "code": "ad",
+    "memo": "Autosomal dominant"
+   }
+  }
+ ],
+ "name": "Osteogenesis imperfecta",
+ "published": "2020-08-18",
+ "related-gene-list": [
+  {
+   "related-gene": {
+    "gene-symbol": "COL1A1",
+    "ghr-page": "https://medlineplus.gov/genetics/gene/col1a1"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "COL1A2",
+    "ghr-page": "https://medlineplus.gov/genetics/gene/col1a2"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "FKBP10",
+    "ghr-page": "https://medlineplus.gov/genetics/gene/fkbp10"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "BMP1",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/649"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "SERPINH1",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/871"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "SERPINF1",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/5176"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "PPIB",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/5479"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "SPARC",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/6678"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "WNT1",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/7471"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "CRTAP",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/10491"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "MBTPS2",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/51360"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "TMEM38B",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/55151"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "TENT5A",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/55603"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "P3H1",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/64175"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "CREB3L1",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/90993"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "SP7",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/121340"
+   }
+  },
+  {
+   "related-gene": {
+    "gene-symbol": "IFITM5",
+    "ghr-page": "https://www.ncbi.nlm.nih.gov/gene/387733"
+   }
+  }
+ ],
+ "reviewed": "2019-11",
+ "synonym-list": [
+  {
+   "synonym": "Brittle bone disease"
+  },
+  {
+   "synonym": "Fragilitas ossium"
+  },
+  {
+   "synonym": "OI"
+  },
+  {
+   "synonym": "Vrolik disease"
+  }
+ ],
+ "text-list": [
+  {
+   "text": {
+    "html": "<p>Osteogenesis imperfecta (OI) is a group of genetic disorders that mainly affect the bones. The term \"osteogenesis imperfecta\" means imperfect bone formation. People with this condition have bones that break (fracture) easily, often from mild trauma or with no apparent cause. Multiple fractures are common, and in severe cases, can occur even before birth. Milder cases may involve only a few fractures over a person's lifetime.</p><p>There are at least 19 recognized forms of osteogenesis imperfecta, designated type I through type XIX. Several types are distinguished by their signs and symptoms, although their characteristic features overlap. Increasingly, genetic causes are used to define rarer forms of osteogenesis imperfecta. Type I (also known as classic non-deforming osteogenesis imperfecta with blue sclerae) is the mildest form of osteogenesis imperfecta. Type II (also known as perinatally lethal osteogenesis imperfecta) is the most severe. Other types of this condition, including types III (progressively deforming osteogenesis imperfecta) and IV (common variable osteogenesis imperfecta with normal sclerae), have signs and symptoms that fall somewhere between these two extremes.</p><p>The milder forms of osteogenesis imperfecta, including type I, are characterized by bone fractures during childhood and adolescence that often result from minor trauma, such as falling while learning to walk. Fractures occur less frequently in adulthood. People with mild forms of the condition typically have a blue or grey tint to the part of the eye that is usually white (the sclera), and about half develop hearing loss in adulthood. Unlike more severely affected individuals, people with type I are usually of normal or near normal height.</p><p>Other types of osteogenesis imperfecta are more severe, causing frequent bone fractures that are present at birth and result from little or no trauma. Additional features of these types can include blue sclerae of the eyes, short stature, curvature of the spine (scoliosis), joint deformities (contractures), hearing loss, respiratory problems, and a disorder of tooth development called dentinogenesis imperfecta. Mobility can be reduced in affected individuals, and some may use a walker or wheelchair. The most severe forms of osteogenesis imperfecta, particularly type II, can include an abnormally small, fragile rib cage and underdeveloped lungs. Infants with these abnormalities may have life-threatening problems with breathing and can die shortly after birth.</p>",
+    "text-role": "description"
+   }
+  }
+ ]
+}

@@ -63,7 +63,7 @@ def parse_entry(d: Dict[str, Any]) -> Dict[str, Any]:
 
 def entry(accession: str) -> Outcome:
     acc = accession.strip()
-    resp = get_json(f"{UNIPROT}/{urllib.parse.quote(acc)}", source="UniProt", params={"fields": FIELDS, "format": "json"},
+    resp = get_json(f"{UNIPROT}/{urllib.parse.quote(acc, safe='')}", source="UniProt", params={"fields": FIELDS, "format": "json"},
                     cache_ttl=CACHE_TTL, timeout=60, headers=NO_GZIP)
     res = parse_entry(resp.json())
     return Outcome(res, sources=[source_record("UniProt", acc, resp, url=res.get("url"))])
@@ -98,7 +98,7 @@ def parse_alphafold(models: List[Dict[str, Any]], accession: str) -> Optional[Di
 
 
 def alphafold(accession: str) -> Outcome:
-    resp = get_json(f"{ALPHAFOLD}/api/prediction/{urllib.parse.quote(accession)}", source="AlphaFold DB",
+    resp = get_json(f"{ALPHAFOLD}/api/prediction/{urllib.parse.quote(accession, safe='')}", source="AlphaFold DB",
                     cache_ttl=CACHE_TTL, timeout=60, ok_statuses=(200, 404))
     if resp.status == 404:
         return Outcome(None, sources=[source_record("AlphaFold DB", accession, resp)],

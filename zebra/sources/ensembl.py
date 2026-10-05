@@ -40,8 +40,20 @@ def host(assembly: str) -> str:
     return HOSTS[assembly]
 
 
+# Mitochondrial results are reported in m. notation (m.3243A>G, m.8344A>G), the
+# form every laboratory letter and patient group uses. It is unambiguous — the
+# mitochondrial genome has one coordinate system — so it is read as a position on MT
+# rather than sent to VEP, which has no m. reference sequence for it.
+MITO_RE = re.compile(r"^m\.(\d+)\s*([ACGTacgt]+)\s*(?:>|->|/)\s*([ACGTacgt]+)$", re.I)
+MITO_DEL_RE = re.compile(r"^m\.(\d+)(?:_(\d+))?\s*del([ACGTacgt]*)$", re.I)
+
+
 def parse_vcf_like(text: str) -> Optional[Tuple[str, int, str, str]]:
-    m = VCF_RE.match(text.strip())
+    t = text.strip()
+    m = MITO_RE.match(t)
+    if m:
+        return "MT", int(m.group(1)), m.group(2).upper(), m.group(3).upper()
+    m = VCF_RE.match(t)
     if not m:
         return None
     chrom = m.group(1).upper()
@@ -53,6 +65,8 @@ def classify_input(text: str) -> str:
     t = text.strip()
     if parse_vcf_like(t):
         return "vcf"
+    if MITO_DEL_RE.match(t):
+        return "mito_indel"
     if RSID_RE.match(t):
         return "rsid"
     if HGVS_RE.match(t):
@@ -95,7 +109,7 @@ def vep(variant: str, assembly: str = "GRCh38") -> Outcome:
         resp = post_json(f"{base}/vep/human/region", {"variants": [vcf_line(chrom, pos, ref, alt)], **params},
                          source="Ensembl VEP", cache_ttl=14 * 86400, timeout=60)
     elif kind == "rsid":
-        resp = get_json(f"{base}/vep/human/id/{urllib.parse.quote(variant.strip())}", source="Ensembl VEP",
+        resp = get_json(f"{base}/vep/human/id/{urllib.parse.quote(variant.strip(), safe='')}", source="Ensembl VEP",
                         params=params, cache_ttl=14 * 86400, timeout=60)
     elif kind in ("hgvs", "gene_hgvs"):
         text = variant.strip()
@@ -212,6 +226,6 @@ def recode(variant: str, assembly: str = "GRCh38") -> Outcome:
 
 
 def lookup_symbol(symbol: str, assembly: str = "GRCh38", expand: bool = False) -> Outcome:
-    resp = get_json(f"{host(assembly)}/lookup/symbol/homo_sapiens/{urllib.parse.quote(symbol)}", source="Ensembl lookup",
+    resp = get_json(f"{host(assembly)}/lookup/symbol/homo_sapiens/{urllib.parse.quote(symbol, safe='')}", source="Ensembl lookup",
                     params={"expand": 1 if expand else 0}, cache_ttl=30 * 86400)
     return Outcome(resp.json(), sources=[source_record("Ensembl lookup", symbol, resp)])

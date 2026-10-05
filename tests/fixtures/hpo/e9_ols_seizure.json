@@ -1,0 +1,1270 @@
+{
+ "facet_counts": {
+  "facet_fields": {
+   "isDefiningOntology": [
+    "true",
+    "307"
+   ],
+   "isObsolete": [
+    "false",
+    "307",
+    "true",
+    "11"
+   ],
+   "ontologyId": [
+    "medgen",
+    "2008",
+    "upheno",
+    "329",
+    "hp",
+    "307",
+    "mondo",
+    "224",
+    "efo",
+    "212",
+    "pride",
+    "212",
+    "snomed",
+    "198",
+    "epio",
+    "196",
+    "doid",
+    "99",
+    "ncit",
+    "84",
+    "mesh",
+    "74",
+    "pr",
+    "72",
+    "nbo",
+    "62",
+    "ordo",
+    "57",
+    "cpont",
+    "40",
+    "enm",
+    "26",
+    "oba",
+    "26",
+    "oae",
+    "24",
+    "mp",
+    "23",
+    "cco",
+    "22",
+    "rexo",
+    "22",
+    "reto",
+    "22",
+    "gexo",
+    "22",
+    "chiro",
+    "21",
+    "symp",
+    "12",
+    "bao",
+    "8",
+    "hgnc",
+    "6",
+    "eupath",
+    "5",
+    "genepio",
+    "4",
+    "omit",
+    "3",
+    "idomal",
+    "3",
+    "ado",
+    "2",
+    "maxo",
+    "2",
+    "scdo",
+    "2",
+    "ontoneo",
+    "1",
+    "obib",
+    "1",
+    "ngbo",
+    "1",
+    "rs",
+    "1",
+    "xco",
+    "1",
+    "cmo",
+    "1",
+    "clo",
+    "1",
+    "cido",
+    "1",
+    "pcl",
+    "1"
+   ],
+   "ontologyIri": [
+    "http://purl.obolibrary.org/obo/hp/hp-international.owl",
+    "307"
+   ],
+   "ontologyPreferredPrefix": [
+    "HP",
+    "307"
+   ],
+   "type": [
+    "class",
+    "307"
+   ]
+  }
+ },
+ "response": {
+  "docs": [
+   {
+    "is_defining_ontology": true,
+    "label": "Seizure",
+    "obo_id": "HP:0001250",
+    "ontology_name": "hp",
+    "synonym": [
+     "Epileptic seizure",
+     "Epilepsy",
+     "Seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Bilateral tonic-clonic seizure with focal onset",
+    "obo_id": "HP:0007334",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal seizure with secondary generalization",
+     "Focal to bilateral tonic-clonic seizure",
+     "Generalised tonic-clonic seizure with focal onset",
+     "Generalised tonic-clonic seizure with partial onset",
+     "Generalized tonic-clonic seizure with focal onset",
+     "Generalized tonic-clonic seizure with partial onset",
+     "Partial seizure with secondary generalization",
+     "Partial seizures with secondary generalization",
+     "Secondarily generalized tonic-clonic seizure",
+     "Secondarily generalized tonic-clonic seizures",
+     "Secondary generalized tonic clonic seizures",
+     "Secondary generalized tonic-clonic seizures",
+     "Focal seizure with secondary generalisation",
+     "Generalised tonic-clonic seizures with focal onset",
+     "Generalized tonic-clonic seizures with focal onset",
+     "Partial seizure with secondary generalisation",
+     "Partial seizures with secondary generalisation",
+     "Secondarily generalised tonic-clonic seizure",
+     "Secondarily generalised tonic-clonic seizures",
+     "Secondary generalised tonic clonic seizures",
+     "Secondary generalised tonic-clonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness seizure",
+    "obo_id": "HP:0002384",
+    "ontology_name": "hp",
+    "synonym": [
+     "Complex focal seizures",
+     "Complex partial seizure",
+     "Complex partial seizures",
+     "Dyscognitive seizures",
+     "Focal dyscognitive seizure",
+     "Focal seizure with impairment of awareness",
+     "Focal seizure with loss of awareness",
+     "Localised dyscognitive seizure",
+     "Localised seizure with impaired awareness",
+     "Localised seizure with loss of awareness",
+     "Localized dyscognitive seizure",
+     "Localized seizure with impaired awareness",
+     "Localized seizure with loss of awareness",
+     "Partial dyscognitive seizure",
+     "Partial seizure with impairment of awareness",
+     "Partial seizure with loss of awareness",
+     "Focal impaired awareness seizures",
+     "Focal seizures with impairment of consciousness or awareness"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Bilateral tonic-clonic seizure with generalized onset",
+    "obo_id": "HP:0025190",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised tonic-clonic seizure without focal onset",
+     "Generalised tonic-clonic seizure without partial onset",
+     "Generalised tonic-clonic seizures without focal onset",
+     "Generalised-onset tonic-clonic seizure",
+     "Generalized tonic-clonic seizure without focal onset",
+     "Generalized tonic-clonic seizure without partial onset",
+     "Generalized tonic-clonic seizures without focal onset",
+     "Generalized-onset tonic-clonic seizure",
+     "Primarily generalized tonic-clonic seizures",
+     "Primary generalized tonic-clonic seizure",
+     "Primary generalized tonic-clonic seizures",
+     "Bilateral tonic-clonic seizure with generalised onset",
+     "Primarily generalised tonic-clonic seizures",
+     "Primary generalised tonic-clonic seizure",
+     "Primary generalised tonic-clonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal behavior arrest seizure",
+    "obo_id": "HP:0011173",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal hypokinetic seizure",
+     "Hypokinetic seizure",
+     "Localised seizure with behavioral arrest",
+     "Localized seizure with behavioral arrest",
+     "Partial hypokinetic seizure",
+     "Partial seizure with behavior arrest",
+     "Focal behaviour arrest seizure",
+     "Hypokinetic seizures",
+     "Localised seizure with behavioural arrest",
+     "Partial seizure with behaviour arrest"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware seizure",
+    "obo_id": "HP:0002349",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal seizure with retained awareness",
+     "Focal seizure without impairment of awareness",
+     "Focal seizure without impairment of consciousness or awareness",
+     "Partial seizure with retained awareness",
+     "Partial seizure without impairment of awareness",
+     "Simple partial seizure",
+     "Focal aware seizures",
+     "Focal seizures without impairment of consciousness or awareness",
+     "Simple partial seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal atonic seizure",
+    "obo_id": "HP:0020220",
+    "ontology_name": "hp",
+    "synonym": [
+     "Localised atonic seizure",
+     "Localised hypotonic seizure",
+     "Localized atonic seizure",
+     "Localized hypotonic seizure",
+     "Partial atonic seizure",
+     "Partial hypotonic seizure",
+     "Segmental atonic seizure",
+     "Segmental hypotonic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized clonic seizure",
+    "obo_id": "HP:0011169",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised clonic seizure",
+     "Generalised onset clonic seizure",
+     "Generalised-onset clonic seizure",
+     "Generalized onset clonic seizure",
+     "Generalized-onset clonic seizure",
+     "Generalised clonic seizures",
+     "Generalized clonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Seizure cluster",
+    "obo_id": "HP:0033349",
+    "ontology_name": "hp",
+    "synonym": [
+     "Acute repetitive seizures",
+     "Crescendo seizures",
+     "Cyclical seizures",
+     "Recurrent seizures",
+     "Seizure flurries",
+     "Serial seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal motor seizure",
+    "obo_id": "HP:0011153",
+    "ontology_name": "hp",
+    "synonym": [
+     "Localized motor seizure",
+     "Partial motor seizure",
+     "Segmental motor seizure",
+     "Focal motor seizures",
+     "Localised motor seizure",
+     "Localised motor seizures",
+     "Localized motor seizures",
+     "Partial motor seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal myoclonic seizure",
+    "obo_id": "HP:0011166",
+    "ontology_name": "hp",
+    "synonym": [
+     "Localised myoclonic seizure",
+     "Localized myoclonic seizure",
+     "Partial myoclonic seizure",
+     "Segmental myoclonic seizure",
+     "Focal myoclonic seizures",
+     "Local myoclonic seizures",
+     "Partial myoclonic seizures",
+     "Segmental myoclonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized-onset seizure",
+    "obo_id": "HP:0002197",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalized onset seizure",
+     "Primary generalized seizure",
+     "Generalised onset seizure",
+     "Generalised seizures",
+     "Generalised-onset seizure",
+     "Generalized seizures",
+     "Generalized-onset seizures",
+     "Primary generalised seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized myoclonic-tonic-clonic seizure",
+    "obo_id": "HP:0032795",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised myoclonic-tonic-clonic seizure",
+     "Generalised-onset myoclonic-tonic-clonic seizure",
+     "Generalized-onset myoclonic-tonic-clonic seizure",
+     "generalized onset myoclonic-tonic-clonic seizure",
+     "generalised onset myoclonic-tonic-clonic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal tonic seizure",
+    "obo_id": "HP:0011167",
+    "ontology_name": "hp",
+    "synonym": [
+     "Localised tonic seizure",
+     "Localized tonic seizure",
+     "Partial tonic seizure",
+     "Segmental tonic seizure",
+     "Focal tonic seizures",
+     "Local tonic seizures",
+     "Partial tonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized non-motor (absence) seizure",
+    "obo_id": "HP:0002121",
+    "ontology_name": "hp",
+    "synonym": [
+     "Absence seizure",
+     "Petit mal seizure",
+     "Petit mal",
+     "Absence seizures",
+     "Brief seizures with staring spells",
+     "Generalised non-motor (absence) seizure",
+     "Generalised non-motor seizure",
+     "Petit mal seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal hyperkinetic seizure",
+    "obo_id": "HP:0011174",
+    "ontology_name": "hp",
+    "synonym": [
+     "Localised hyperkinetic seizure",
+     "Localized hyperkinetic seizure",
+     "Partial hyperkinetic seizure",
+     "Segmental hyperkinetic seizure",
+     "Hyperkinetic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal-onset seizure",
+    "obo_id": "HP:0007359",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal onset seizure",
+     "Focal seizure",
+     "Partial seizure",
+     "Focal seizures",
+     "Focal-onset seizures",
+     "Partial seizures",
+     "Seizure affecting one half of brain"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal emotional seizure",
+    "obo_id": "HP:0025613",
+    "ontology_name": "hp",
+    "synonym": [
+     "Affective seizure",
+     "Emotional seizure",
+     "Focal affective seizure",
+     "Partial emotional seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal-onset seizure evolving into bilateral convulsive status epilepticus",
+    "obo_id": "HP:0032662",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal onset seizure evolving into bilateral convulsive status epilepticus",
+     "Focal-onset seizure evolving into generalized convulsive status epilepticus",
+     "Partial onset seizure evolving into convulsive status epilepticus",
+     "Partial-onset seizure evolving into convulsive status epilepticus",
+     "Secondarily generalized convulsive status epilepticus",
+     "Secondarily generalized tonic-clonic status epilepticus",
+     "Focal-onset seizure evolving into generalised convulsive status epilepticus",
+     "Secondarily generalised convulsive status epilepticus",
+     "Secondarily generalised tonic-clonic status epilepticus"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Dialeptic seizure",
+    "obo_id": "HP:0011146",
+    "ontology_name": "hp",
+    "synonym": [
+     "Behavioral arrest seizure with impairment of awareness irrespective of onset",
+     "Unknown onset behavioral arrest seizure with impairment of awareness",
+     "Behavioural arrest seizure with impairment of awareness irrespective of onset",
+     "Unknown onset behavioural arrest seizure with impairment of awareness"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Bilateral tonic-clonic seizure",
+    "obo_id": "HP:0002069",
+    "ontology_name": "hp",
+    "synonym": [
+     "Bilateral convulsive seizures",
+     "Generalised tonic-clonic seizure (without specification of onset)",
+     "Generalized convulsion",
+     "Generalized tonic-clonic seizure (without specification of onset)",
+     "Grand mal",
+     "Seizures, tonic-clonic",
+     "Generalised convulsion",
+     "Grand mal seizures",
+     "Tonic-clonic convulsion",
+     "Tonic-clonic convulsions"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized tonic seizure",
+    "obo_id": "HP:0010818",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised hypertonic seizure",
+     "Generalized hypertonic seizure",
+     "Hypertonic seizures",
+     "Generalised tonic seizure",
+     "Generalised tonic seizures",
+     "Generalized tonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Atonic seizure",
+    "obo_id": "HP:0010819",
+    "ontology_name": "hp",
+    "synonym": [
+     "Astatic seizure",
+     "Drop attacks",
+     "Hypotonic seizure",
+     "Astatic seizures",
+     "Atonic seizures",
+     "Drop seizures",
+     "Hypotonic seizures",
+     "Sudden loss of muscle tone"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal clonic seizure",
+    "obo_id": "HP:0002266",
+    "ontology_name": "hp",
+    "synonym": [
+     "Segmental clonic seizure",
+     "Focal clonic seizures",
+     "Localised clonic seizure",
+     "Localized clonic seizure",
+     "Partial clonic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware autonomic seizure",
+    "obo_id": "HP:0032740",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal autonomic seizures without altered responsiveness",
+     "Localized autonomic seizures without altered responsiveness",
+     "Partial autonomic seizures without altered responsiveness",
+     "Localised autonomic seizures without altered responsiveness"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness autonomic seizure",
+    "obo_id": "HP:0032755",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal autonomic seizure with altered responsiveness",
+     "Localized autonomic seizure with altered responsiveness",
+     "Partial autonomic seizure with altered responsiveness",
+     "Localised autonomic seizure with altered responsiveness"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized myoclonic-atonic seizure",
+    "obo_id": "HP:0011170",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised myoclonic-atonic seizure",
+     "Myoclonic-astatic seizure",
+     "Myoclonic atonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Febrile seizure (within the age range of 3 months to 6 years)",
+    "obo_id": "HP:0002373",
+    "ontology_name": "hp",
+    "synonym": [
+     "Febrile convulsion",
+     "Seizures, febrile, in early childhood",
+     "Seizures, generalized, associated with fever",
+     "Febrile seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal hemiclonic seizure",
+    "obo_id": "HP:0006813",
+    "ontology_name": "hp",
+    "synonym": [
+     "Hemiclonic seizure",
+     "Unilateral clonic seizure",
+     "Hemiclonic seizures",
+     "Unilateral clonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure with visual features",
+    "obo_id": "HP:0011165",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal visual seizure",
+     "Partial visual seizure",
+     "Simple partial occipital seizures",
+     "Visual aura",
+     "Visual auras"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized-onset motor seizure",
+    "obo_id": "HP:0032677",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised onset motor seizure",
+     "Generalised-onset motor seizure",
+     "Generalized onset motor seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Photosensitive myoclonic seizure",
+    "obo_id": "HP:0001327",
+    "ontology_name": "hp",
+    "synonym": [
+     "Photically induced myoclonic seizure",
+     "Photomyoclonic seizure",
+     "Photomyoclonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized myoclonic seizure",
+    "obo_id": "HP:0002123",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised epileptic myoclonus",
+     "Generalised myoclonic seizure",
+     "Generalized epileptic myoclonus",
+     "Myoclonic epilepsy, progressive",
+     "Myoclonus seizures",
+     "Generalised myoclonic seizures",
+     "Generalized myoclonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal cognitive seizure",
+    "obo_id": "HP:0032680",
+    "ontology_name": "hp",
+    "synonym": [
+     "Cognitive aura",
+     "Cognitive seizure",
+     "Partial cognitive seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Bilateral tonic-clonic seizure on awakening",
+    "obo_id": "HP:0007193",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalized tonic-clonic seizures on awakening",
+     "Generalised tonic-clonic seizures on awakening",
+     "Morning generalised tonic-clonic seizures",
+     "Morning generalized tonic-clonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Atypical absence seizure",
+    "obo_id": "HP:0007270",
+    "ontology_name": "hp",
+    "synonym": [
+     "Atypical absence",
+     "Atypical absence seizures",
+     "Atypical petit mal seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Neonatal electro-clinical seizure with behavior arrest",
+    "obo_id": "HP:0032823",
+    "ontology_name": "hp",
+    "synonym": [
+     "Neonatal electroclinical seizure with behavioral arrest",
+     "Neonatal electro-clinical seizure with behaviour arrest",
+     "Neonatal electroclinical seizure with behavioural arrest"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal emotional seizure with laughing",
+    "obo_id": "HP:0010821",
+    "ontology_name": "hp",
+    "synonym": [
+     "Gelastic seizure",
+     "Gelastic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Photosensitive tonic-clonic seizure",
+    "obo_id": "HP:0007207",
+    "ontology_name": "hp",
+    "synonym": [
+     "Photically induced tonic-clonic seizure",
+     "Seizures, tonic-clonic, photosensitive",
+     "Photosensitive tonic-clonic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal emotional seizure with crying",
+    "obo_id": "HP:0010820",
+    "ontology_name": "hp",
+    "synonym": [
+     "Dacrystic seizure",
+     "Dacrystic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure with auditory features",
+    "obo_id": "HP:0011158",
+    "ontology_name": "hp",
+    "synonym": [
+     "Auditory aura",
+     "Focal auditory seizure",
+     "Focal sensory auditory seizure",
+     "Partial auditory seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Absence seizure with eyelid myoclonia",
+    "obo_id": "HP:0011149",
+    "ontology_name": "hp",
+    "synonym": [
+     "Absence seizures with eyelid myoclonia"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure with gustatory features",
+    "obo_id": "HP:0011160",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal gustatory seizure",
+     "Focal sensory gustatory seizure",
+     "Gustatory aura",
+     "Partial gustatory seizure",
+     "Gustatory auras"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure with olfactory features",
+    "obo_id": "HP:0011161",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal olfactory seizure",
+     "Olfactory aura",
+     "Partial olfactory seizure",
+     "Olfactory auras"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure with somatosensory features",
+    "obo_id": "HP:0011163",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal somatosensory seizure",
+     "Partial somatosensory seizure",
+     "Somatosensory aura",
+     "Somatosensory auras"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure with vestibular features",
+    "obo_id": "HP:0032759",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal vestibular seizure",
+     "Partial vestibular seizure",
+     "Vestibular aura"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Seizure precipitated by febrile infection",
+    "obo_id": "HP:0032894",
+    "ontology_name": "hp",
+    "synonym": [
+     "Fever induced seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Status epilepticus",
+    "obo_id": "HP:0002133",
+    "ontology_name": "hp",
+    "synonym": [
+     "Prolonged seizure",
+     "Repeated seizure without recovery",
+     "Repeated seizures without recovery between them"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure",
+    "obo_id": "HP:0011157",
+    "ontology_name": "hp",
+    "synonym": [
+     "Partial sensory seizure",
+     "Sensory aura",
+     "Focal sensory seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal autonomic seizure with epigastric sensation/nausea/vomiting/other gastrointestinal phenomena",
+    "obo_id": "HP:0011159",
+    "ontology_name": "hp",
+    "synonym": [
+     "Epigastric aura",
+     "Localised seizure with epigastric sensation",
+     "Localized seizure with epigastric sensation",
+     "Partial seizure with epigastric sensation",
+     "Abdominal aura",
+     "Epigastric auras",
+     "Visceral aura"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal motor seizure with version",
+    "obo_id": "HP:0011175",
+    "ontology_name": "hp",
+    "synonym": [
+     "Versive seizure",
+     "Versive seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal non-motor seizure",
+    "obo_id": "HP:0032679",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal seizure without motor onset",
+     "Partial seizure without motor onset"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal cognitive seizure with memory impairment",
+    "obo_id": "HP:0032687",
+    "ontology_name": "hp",
+    "synonym": [
+     "Amnestic aura",
+     "Amnestic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Migrating focal seizure",
+    "obo_id": "HP:0032786",
+    "ontology_name": "hp",
+    "synonym": [
+     "Migrating partial seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal sensory seizure with cephalic sensation",
+    "obo_id": "HP:0032810",
+    "ontology_name": "hp",
+    "synonym": [
+     "Cephalic aura",
+     "Focal seizure with cephalic sensation",
+     "Partial seizure with cephalic sensation"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Hypocalcemic seizures",
+    "obo_id": "HP:0002199",
+    "ontology_name": "hp",
+    "synonym": [
+     "Seizures due to hypocalcemia",
+     "Low calcium seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Neonatal electro-clinical sequential seizure",
+    "obo_id": "HP:0032825",
+    "ontology_name": "hp",
+    "synonym": [
+     "Neonatal electroclinical sequential seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal autonomic seizure",
+    "obo_id": "HP:0011154",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal autonomic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Typical absence seizure",
+    "obo_id": "HP:0011147",
+    "ontology_name": "hp",
+    "synonym": [
+     "Typical absence",
+     "Typical absence seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Complex febrile seizure",
+    "obo_id": "HP:0011172",
+    "ontology_name": "hp",
+    "synonym": [
+     "Complex febrile convulsion",
+     "Complex fever fit",
+     "Complex febrile seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Generalized atonic seizure",
+    "obo_id": "HP:0032887",
+    "ontology_name": "hp",
+    "synonym": [
+     "Generalised atonic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal hemifacial clonic seizure",
+    "obo_id": "HP:0007332",
+    "ontology_name": "hp",
+    "synonym": [
+     "Hemifacial seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Visually-induced seizure",
+    "obo_id": "HP:0020216",
+    "ontology_name": "hp",
+    "synonym": [
+     "Photosensitive seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware motor seizure",
+    "obo_id": "HP:0020217",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor aware seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware non-motor seizure",
+    "obo_id": "HP:0032682",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal non-motor aware seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness motor seizure",
+    "obo_id": "HP:0032712",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor impaired awareness seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness motor seizure with version",
+    "obo_id": "HP:0032713",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor impaired awareness seizure with version"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness non-motor seizure",
+    "obo_id": "HP:0032716",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal non-motor impaired awareness seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness motor seizure with dystonia",
+    "obo_id": "HP:0032717",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor impaired awareness seizure with dystonia"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness motor seizure with dysarthria/anarthria",
+    "obo_id": "HP:0032719",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor impaired awareness seizure with dysarthria/anarthria"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware motor seizure with dystonia",
+    "obo_id": "HP:0032723",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor aware seizure with dystonia"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal emotional seizure with agitation",
+    "obo_id": "HP:0032727",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware motor seizure with paresis/paralysis",
+    "obo_id": "HP:0032732",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor aware seizure with paresis/paralysis"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware motor seizure with dysarthria/anarthria",
+    "obo_id": "HP:0032733",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor aware seizure with dysarthria/anarthria"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal emotional seizure with fear/anxiety/panic",
+    "obo_id": "HP:0032739",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware behavior arrest seizure",
+    "obo_id": "HP:0032789",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal aware behaviour arrest seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness behavior arrest seizure",
+    "obo_id": "HP:0032790",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal impaired awareness behaviour arrest seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Neonatal seizure with electrographic correlate",
+    "obo_id": "HP:0032808",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Neonatal electro-clinical clonic seizure",
+    "obo_id": "HP:0032814",
+    "ontology_name": "hp",
+    "synonym": [
+     "Neonatal electroclinical clonic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Neonatal electro-clinical myoclonic seizure",
+    "obo_id": "HP:0032815",
+    "ontology_name": "hp",
+    "synonym": [
+     "Neonatal electroclinical myoclonic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Neonatal electro-clinical motor seizure with automatism",
+    "obo_id": "HP:0032829",
+    "ontology_name": "hp",
+    "synonym": [
+     "Neonatal electroclinical motor seizure with automatism"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware motor seizure with negative myoclonus",
+    "obo_id": "HP:0032857",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor aware seizure with negative myoclonus"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness motor seizure with negative myoclonus",
+    "obo_id": "HP:0032858",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor impaired awareness seizure with negative myoclonus"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal impaired awareness motor seizure with paresis/paralysis",
+    "obo_id": "HP:0032859",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor impaired awareness seizure with paresis/paralysis"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal aware motor seizure with version",
+    "obo_id": "HP:0032891",
+    "ontology_name": "hp",
+    "synonym": [
+     "Focal motor aware seizure with version"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Reflex asystolic syncope",
+    "obo_id": "HP:0500173",
+    "ontology_name": "hp",
+    "synonym": [
+     "Reflex anoxic seizure",
+     "Reflex anoxic seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Symptomatic seizures",
+    "obo_id": "HP:0011145",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Early onset absence seizures",
+    "obo_id": "HP:0011152",
+    "ontology_name": "hp",
+    "synonym": [
+     "Early onset petit mal seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Simple febrile seizure",
+    "obo_id": "HP:0011171",
+    "ontology_name": "hp",
+    "synonym": [
+     "Simple febrile convulsion",
+     "Simple febrile seizures",
+     "Simple fever fit"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Thinking-induced seizure",
+    "obo_id": "HP:0020215",
+    "ontology_name": "hp",
+    "synonym": [
+     "Cognition induced seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Multifocal seizures",
+    "obo_id": "HP:0031165",
+    "ontology_name": "hp",
+    "synonym": [
+     "Multifocal onset seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Nocturnal seizures",
+    "obo_id": "HP:0031951",
+    "ontology_name": "hp",
+    "synonym": [
+     "Sleep seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Photosensitive myoclonic-tonic-clonic seizure",
+    "obo_id": "HP:0032855",
+    "ontology_name": "hp",
+    "synonym": [
+     "Photically induced myoclonic-tonic-clonic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Non-epileptic seizure",
+    "obo_id": "HP:0033052",
+    "ontology_name": "hp",
+    "synonym": [
+     "Functional seizure",
+     "Psychogenic non-epileptic seizure",
+     "Psychosomatic seizure"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Maternal seizure",
+    "obo_id": "HP:0100622",
+    "ontology_name": "hp",
+    "synonym": [
+     "Maternal seizures"
+    ]
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal bilateral motor seizure",
+    "obo_id": "HP:0032715",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Tonic seizure",
+    "obo_id": "HP:0032792",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Focal neonatal sequential seizure",
+    "obo_id": "HP:0032826",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Bilateral asymmetric neonatal sequential seizure",
+    "obo_id": "HP:0032837",
+    "ontology_name": "hp",
+    "synonym": []
+   },
+   {
+    "is_defining_ontology": true,
+    "label": "Epileptic spasm",
+    "obo_id": "HP:0011097",
+    "ontology_name": "hp",
+    "synonym": [
+     "Salaam convulsion",
+     "Salaam seizure",
+     "West syndrome",
+     "Epileptic spasms",
+     "Salaam convulsions",
+     "Salaam seizures"
+    ]
+   }
+  ],
+  "numFound": 307,
+  "start": 0
+ },
+ "responseHeader": {
+  "QTime": 0,
+  "status": 0
+ }
+}

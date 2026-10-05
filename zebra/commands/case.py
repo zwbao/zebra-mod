@@ -91,6 +91,7 @@ def _add_hpo(args: argparse.Namespace) -> Outcome:
 
 
 def _add_variant(args: argparse.Namespace) -> Outcome:
+    fields = {"gene": args.gene, "hgvs_c": args.hgvs_c, "hgvs_g": args.hgvs_g, "hgvs_p": args.hgvs_p}
     entry = case_mod.add_variant(
         _dir(args), gene=args.gene, hgvs_c=args.hgvs_c, hgvs_g=args.hgvs_g, hgvs_p=args.hgvs_p, vcf=args.vcf,
         assembly=args.assembly, zygosity=args.zygosity, inheritance=args.inheritance,
@@ -98,7 +99,7 @@ def _add_variant(args: argparse.Namespace) -> Outcome:
         kind=args.kind, region=args.region, iscn=args.iscn, cnv_type=args.cnv_type, copy_number=args.copy_number,
         exons=args.exons, genes=args.genes, motif=args.motif, repeat_count=args.repeats, method=args.method,
     )
-    return Outcome(entry, text=f"added {entry['id']}: {entry}")
+    return Outcome(entry, warnings=case_mod.variant_notes(fields), text=f"added {entry['id']}: {entry}")
 
 
 def _add_hypothesis(args: argparse.Namespace) -> Outcome:
@@ -150,11 +151,21 @@ def _ledger(args: argparse.Namespace) -> Outcome:
     rows = case_mod.read_ledger(_dir(args))
     if args.eid:
         rows = [r for r in rows if r.get("eid") in set(args.eid)]
-    text = "\n".join(f"{r['eid']}\t{r.get('db')}\t{r.get('record') or ''}\t{r.get('url') or ''}\t{r.get('retrieved_at') or ''}" for r in rows)
+    text = "\n".join(f"{r.get('eid') or '(no id)'}\t{r.get('db')}\t{r.get('record') or ''}\t"
+                     f"{r.get('url') or ''}\t{r.get('retrieved_at') or ''}" for r in rows)
     return Outcome(rows, text=text or "(empty ledger)")
 
 
 OPS_KEYS = ("profile", "phenotypes", "variants", "hypotheses", "leads", "acmg", "questions", "remove")
+# the fields each list item may carry; an unknown one is a typo that would
+# otherwise be dropped in silence while the envelope reported success
+ITEM_FIELDS = {
+    "phenotypes": ("id", "status", "onset", "source", "note"),
+    "hypotheses": ("disease", "status", "ids", "support", "against", "note"),
+    "leads": ("name", "kind", "status", "evidence", "ids", "note"),
+    "acmg": ("variant_id", "codes", "note"),
+    "remove": ("kind", "id"),
+}
 # keys people and models reach for, and what they meant
 OPS_ALIASES = {"phenotype": "phenotypes", "variant": "variants", "hypothesis": "hypotheses",
                "hypothese": "hypotheses", "lead": "leads", "therapy_leads": "leads", "therapy": "leads",
@@ -163,8 +174,14 @@ _LIST_OPS = ("phenotypes", "variants", "hypotheses", "leads", "acmg", "remove")
 
 
 def _ids_map(raw: Any, field: str) -> Dict[str, str]:
-    """`["ORPHA:33069", "OMIM:607208"]` → {"ORPHA": "33069", ...}, each shape-checked."""
+    """`["ORPHA:33069", …]` → {"ORPHA": "33069", …}, each shape-checked.
+
+    The dict form `case show` prints is accepted too, so what is read out of a
+    case can be fed straight back in.
+    """
     out: Dict[str, str] = {}
+    if isinstance(raw, dict):
+        raw = [f"{k}:{v}" for k, v in raw.items()]
     for pair in case_mod.str_list(raw, field):
         prefix, value = case_mod.check_id(pair).split(":", 1)
         out[prefix] = value
@@ -190,6 +207,16 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
                 raise case_mod.CaseError("unknown profile field(s) " + ", ".join(sorted(bad))
                                          + "; accepted: " + ", ".join(case_mod.PROFILE_FIELDS))
             clean["profile"] = dict(ops["profile"])
+            for key_, value_ in clean["profile"].items():
+                if key_ in ("title", "role", "language") and value_ is not None:
+                    if not isinstance(value_, str) or not value_.strip():
+                        raise case_mod.CaseError(f"profile.{key_} must be a non-empty string, got {value_!r}")
+                    if key_ == "role" and value_ not in case_mod.ROLES:
+                        raise case_mod.CaseError(f"role must be one of {', '.join(case_mod.ROLES)}")
+                if key_ in ("sex", "age", "ancestry") and value_ is not None and not isinstance(value_, str):
+                    raise case_mod.CaseError(f"profile.{key_} must be a string, got {type(value_).__name__}")
+                if key_ == "consanguinity" and value_ is not None and not isinstance(value_, (bool, str)):
+                    raise case_mod.CaseError("profile.consanguinity must be true, false or a short description")
         for key in _LIST_OPS:
             if ops.get(key) is None:
                 continue
@@ -200,6 +227,11 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
             for item in ops[key]:
                 if not isinstance(item, dict):
                     raise case_mod.CaseError(f"{key}: every item must be an object, got {item!r}")
+                allowed = ITEM_FIELDS.get(key) or case_mod.VARIANT_FIELDS
+                unknown_fields = [f for f in item if f not in allowed]
+                if unknown_fields:
+                    raise case_mod.CaseError(f"{key}: unknown field(s) " + ", ".join(sorted(unknown_fields))
+                                             + "; accepted: " + ", ".join(allowed))
             clean[key] = list(ops[key])
         if ops.get("questions") is not None:
             clean["questions"] = case_mod.str_list(ops["questions"], "questions")
@@ -210,17 +242,25 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
                 raise case_mod.CaseError(f"phenotypes: {hid!r} is not an HPO id (HP:0001250); find it with hpo_search")
             if p.get("status") not in (None, *case_mod.PHENO_STATUS):
                 raise case_mod.CaseError(f"phenotypes: status must be one of {', '.join(case_mod.PHENO_STATUS)}")
+            for field in ("onset", "source", "note"):
+                if p.get(field) is not None and not isinstance(p[field], str):
+                    raise case_mod.CaseError(f"phenotypes[{hid}].{field} must be a string, "
+                                             f"not {type(p[field]).__name__}")
         for v in clean.get("variants", []):
             bad = [k for k in v if k not in case_mod.VARIANT_FIELDS]
             if bad:
                 raise case_mod.CaseError("unknown variant field(s) " + ", ".join(sorted(bad))
                                          + "; accepted: " + ", ".join(case_mod.VARIANT_FIELDS))
             v.update(case_mod.check_variant(**{k: v.get(k) for k in case_mod.VARIANT_FIELDS}))
+            v["_notes"] = case_mod.variant_notes(v)
         for h in clean.get("hypotheses", []):
             if not isinstance(h.get("disease"), str) or not h["disease"].strip():
                 raise case_mod.CaseError(f"hypotheses: disease must be a non-empty string, got {h.get('disease')!r}")
             if h.get("status") not in (None, *case_mod.HYP_STATUS):
                 raise case_mod.CaseError(f"hypotheses: status must be one of {', '.join(case_mod.HYP_STATUS)}")
+            if h.get("note") is not None and not isinstance(h["note"], str):
+                raise case_mod.CaseError(f"hypotheses[{h['disease']}].note must be a string, "
+                                         f"not {type(h['note']).__name__}")
             h["_ids"] = _ids_map(h.get("ids"), f"hypotheses[{h['disease']}].ids")
             for field in ("support", "against"):
                 h[f"_{field}"] = case_mod.check_evidence_ids(h.get(field), f"hypotheses[{h['disease']}].{field}",
@@ -228,6 +268,10 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
         for t in clean.get("leads", []):
             if not isinstance(t.get("name"), str) or not t["name"].strip():
                 raise case_mod.CaseError(f"leads: name must be a non-empty string, got {t.get('name')!r}")
+            for field in ("status", "note"):
+                if t.get(field) is not None and not isinstance(t[field], str):
+                    raise case_mod.CaseError(f"leads[{t['name']}].{field} must be a string, "
+                                             f"not {type(t[field]).__name__}")
             if t.get("kind") not in case_mod.LEAD_KINDS:
                 raise case_mod.CaseError(f"leads[{t['name']}]: kind must be one of {', '.join(case_mod.LEAD_KINDS)}")
             t["_evidence"] = case_mod.check_evidence_ids(t.get("evidence"), f"leads[{t['name']}].evidence",
@@ -239,6 +283,13 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
             a["_codes"] = case_mod.str_list(a.get("codes"), f"acmg[{a.get('variant_id')}].codes")
             if not a["_codes"]:
                 raise case_mod.CaseError(f"acmg[{a.get('variant_id')}]: codes must list the ACMG codes you justified")
+            from zebra import acmg as acmg_mod
+
+            for code in a["_codes"]:
+                try:
+                    acmg_mod.parse_code(code)
+                except (ValueError, KeyError) as err:
+                    raise case_mod.CaseError(f"acmg[{a.get('variant_id')}]: {err}") from None
         for r in clean.get("remove", []):
             if r.get("kind") not in case_mod.REMOVE_KINDS:
                 raise case_mod.CaseError("remove: kind must be one of " + ", ".join(case_mod.REMOVE_KINDS))
@@ -264,6 +315,11 @@ def _apply(args: argparse.Namespace) -> Outcome:
         raise UsageError(f"--ops is not JSON: {err}") from None
     target = _dir(args)
     case_mod.load(target)  # fail here, before any work, if there is no readable case
+    # the positional directory IS the case: without this the mod's own call
+    # (case apply <dir> --ops …, no --case) would verify HPO terms against the
+    # live source and then throw the provenance away
+    if not getattr(args, "case", None):
+        args.case = target
     ops = _check_ops(ops_raw, case_mod.ledger_ids(target))
 
     sources: List[Dict[str, Any]] = []
@@ -302,10 +358,14 @@ def _apply(args: argparse.Namespace) -> Outcome:
                 hid = str(p["id"]).strip()
                 if hid not in labels:
                     continue
-                added.append(case_mod.apply_phenotype(data, hid, labels[hid], status=p.get("status") or "present",
-                                                      onset=p.get("onset"), source=p.get("source"), note=p.get("note")))
+                # status=None keeps the status the term already has: re-recording a
+                # term must not turn a clinician's "excluded" into "present"
+                added.append(case_mod.apply_phenotype(data, hid, labels[hid], status=p.get("status"),
+                                                      onset=p.get("onset"), source=p.get("source"),
+                                                      note=p.get("note")))
             done["phenotypes"] = added
         for v in ops.get("variants", []):
+            warnings.extend(v.get("_notes") or [])
             done.setdefault("variants", []).append(
                 case_mod.apply_variant(data, **{k: v.get(k) for k in case_mod.VARIANT_FIELDS}))
         for h in ops.get("hypotheses", []):
@@ -426,6 +486,9 @@ def register(sub: argparse._SubParsersAction) -> None:
 
     q = add("apply", _apply, "apply several updates from JSON (phenotypes, variants, hypotheses, leads, questions, remove)")
     q.add_argument("--ops", required=True, help="JSON object")
+    # the HPO verifications this performs are evidence: they must get E-ids, or a
+    # hypothesis can never cite the phenotype it rests on
+    q.set_defaults(no_ledger=False)
 
     q = add("ledger", _ledger, "list evidence ledger rows", positional_dir=False)
     q.add_argument("eid", nargs="*", help="only these ids")

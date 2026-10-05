@@ -166,7 +166,10 @@ def by_name(name: str, lang: str = "en") -> Outcome:
     """
     key = (name.strip(), lang)
     if key in _BY_NAME_CACHE:
-        return _BY_NAME_CACHE[key]
+        first = _BY_NAME_CACHE[key]
+        # the warning was already reported on the first call; repeating it would
+        # print the same line once per caller
+        return Outcome(first.result, sources=list(first.sources), warnings=[])
     asked = name.strip()
     query = re.sub(r"\s+", " ", asked.replace("/", " ")).strip()
     resp, data, src = _get(f"rd-cross-referencing/orphacodes/names/{urllib.parse.quote(query, safe='')}",

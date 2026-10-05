@@ -18,6 +18,7 @@ const LOCAL_TOOLS = new Set(['case_status', 'case_update'])
 const READ_ONLY_TOOLS = new Set([
   'case_status', 'hpo_search', 'phenotype_rank', 'gene_card', 'variant_card', 'disease_card', 'acmg',
   's2f_predict', 'therapy_landscape', 'trials_search', 'literature_search', 'rare_stats', 'edit_check', 'china_rare',
+  'cnv_interpret',
 ])
 
 const board = atom({ plugin: 'zebra-mod', key: 'board' } as const, null as Board | null)

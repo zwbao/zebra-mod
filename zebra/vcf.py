@@ -137,6 +137,7 @@ def open_text(path: str) -> io.TextIOBase:
     return open(p, "r", encoding="utf-8", errors="replace")
 
 
+_BASES_RE = re.compile(r"^[ACGTNacgtn]+$")
 _STRUCT_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_.]*)=("(?:[^"\\]|\\.)*"|[^,]*)')
 
 
@@ -177,16 +178,17 @@ class Header:
             low = k.lower()
             if any(p in low for p in _BOTTLENECKED):
                 continue
+            declared = (self.info.get(k) or {}).get("Type")
+            if declared and declared != "Float":
+                continue  # Integer means a count, whatever the name says
             if low in _POPMAX_AF_KEYS:
                 keys.append(k)
                 continue
             if "gnomad" not in low:
                 continue
             rest = _GNOMAD_PREFIX_RE.sub("", low, count=1).strip("_.")
-            if not _AF_TYPE_RE.match(rest):
-                continue
-            declared = (self.info.get(k) or {}).get("Type")
-            if declared and declared != "Float":
+            rest = _SUBSET_RE.sub("", rest, count=1).strip("_.")  # gnomad_exomes_AF, gnomAD_genomes_AF_nfe
+            if not (_AF_TYPE_RE.match(rest) or _GROUP_AF_RE.match(rest)):
                 continue
             keys.append(k)
         return keys
@@ -203,8 +205,16 @@ _CSQ_AF_RE = re.compile(r"^gnomad[eg]?_(?:(?:afr|amr|eas|nfe|sas)_)?af$", re.I)
 _AF_TYPE_RE = re.compile(r"^(af|faf95|faf99)(_[a-z0-9_]+)?$")
 _GNOMAD_PREFIX_RE = re.compile(r"gnomad[a-z0-9]*")
 _POPMAX_AF_KEYS = ("af_popmax", "af_grpmax", "popmax_af", "grpmax_af")
+_SUBSET_RE = re.compile(r"^(?:exomes?|genomes?|joint)(?=_|$)")
+_GROUP_AF_RE = re.compile(r"^[a-z]{2,8}_(af|faf95|faf99)$")  # gnomAD_AFR_AF
 # gnomAD never reports a frequency above 1; a larger value means the field is a count
 MAX_PLAUSIBLE_AF = 1.0
+# ClinGen SVI's BA1 threshold: above this, no allele is a fully penetrant cause,
+# so a ClinVar assertion no longer exempts it from the frequency filter.
+BA1_AF = 0.05
+# a shared FORMAT/PS beyond this distance is not read-backed phasing (linked-read
+# and statistical phasing write chromosome-wide blocks), so it does not settle phase
+PHASE_TRUSTED_SPAN = 500_000
 
 
 def _is_af_field(name: str) -> bool:
@@ -303,6 +313,8 @@ def parse_line_why(line: str, n_samples: int) -> Tuple[Optional[Record], Optiona
         return None, f"POS {pos} is not a 1-based position"
     if not cols[3] or not cols[4]:
         return None, "empty REF or ALT"
+    if not _BASES_RE.match(cols[3]):
+        return None, f"REF {cols[3]!r} is not a DNA sequence"
     fmt = cols[8].split(":") if len(cols) > 8 else []
     return Record(cols[0], norm_chrom(cols[0]), pos, cols[2], cols[3].upper(), cols[4].split(","), cols[5], cols[6],
                   cols[7], fmt, cols[9:9 + n_samples]), None
@@ -364,7 +376,7 @@ class RecordStream:
     def read_note(self) -> Optional[str]:
         if not self.malformed:
             return None
-        return (f"{self.malformed} of {self.data_lines} data line(s) could not be read and were NOT counted: "
+        return (f"{self.malformed} of {self.data_lines} data line(s) could not be read as variants: "
                 + "; ".join(self.malformed_examples)
                 + ("; …" if self.malformed > len(self.malformed_examples) else ""))
 
@@ -463,7 +475,8 @@ def parse_gt(raw: str) -> Tuple[Optional[Tuple[Optional[int], ...]], bool]:
     phased = "|" in raw
     alleles: List[Optional[int]] = []
     for a in re.split(r"[/|]", raw):
-        alleles.append(None if a in (".", "") else _int(a))
+        index = None if a in (".", "") else _int(a)
+        alleles.append(index if index is None or index >= 0 else None)
     return tuple(alleles), phased
 
 
@@ -746,8 +759,13 @@ def info_annotation(header: Header, rec: Record, k: int) -> Optional[Dict[str, A
                 if _is_af_field(name):
                     for v in get(name).split("&"):
                         x = _float(v)
-                        if x is not None:
-                            afs.append(x)
+                        if x is None:
+                            continue
+                        if x > MAX_PLAUSIBLE_AF or x < 0:
+                            if name not in out["implausible_af_fields"]:
+                                out["implausible_af_fields"].append(name)
+                            continue
+                        afs.append(x)
     if header.ann_fields and "ANN" in info:
         f = {n: i for i, n in enumerate(header.ann_fields)}
         for entry in info["ANN"].split(","):
@@ -1012,9 +1030,19 @@ def af_summary(groups: Dict[str, Any]) -> Dict[str, Any]:
     if gn:
         out["filter_af"], out["source"] = max(gn), "gnomAD"
     else:
+        bottlenecked = [(value, k) for k, v in groups.items()
+                        for value in [_num(v)]
+                        if value is not None and k.startswith(("gnomade_", "gnomadg_"))
+                        and any(p in k for p in _BOTTLENECKED)]
         kg = [_num(groups.get(k)) for k in ("af", "afr", "amr", "eas", "eur", "sas")]
         kg = [x for x in kg if x is not None]
-        if kg:
+        if bottlenecked:
+            # gnomAD's grpmax excludes these groups; a frequency filter must not,
+            # or a variant seen only in one bottlenecked population reads as absent
+            value, group = max(bottlenecked)
+            out["filter_af"], out["source"] = value, f"gnomAD {group} (a bottlenecked group, outside grpmax)"
+            out["bottlenecked_only"] = group
+        elif kg:
             out["filter_af"], out["source"] = max(kg), "1000 Genomes (no gnomAD frequency)"
     if faf95 is not None:
         out["bound_af"], out["bound_basis"] = faf95, f"filtering AF {faf95_group} (95% CI lower bound)"
@@ -1044,14 +1072,27 @@ CLINVAR_PLP = ("pathogenic", "likely_pathogenic", "pathogenic/likely_pathogenic"
                "pathogenic_low_penetrance", "likely_pathogenic_low_penetrance")
 
 
+CLINVAR_BENIGN = ("benign", "likely_benign", "benign/likely_benign")
+
+
 def clinvar_pathogenic(ann: Optional[Dict[str, Any]]) -> List[str]:
-    """The P/LP assertions VEP's colocated ClinVar record carries for this allele."""
-    out = []
-    for sig in (ann or {}).get("clinvar") or []:
-        key = str(sig).strip().lower().replace(" ", "_")
-        if key in CLINVAR_PLP:
-            out.append(str(sig))
-    return out
+    """The P/LP assertions VEP's colocated ClinVar record carries for this allele.
+
+    A record that also carries benign or likely benign (ClinVar's "conflicting
+    classifications") is not an assertion anyone can lean on, so it returns
+    nothing: see `clinvar_conflicting`.
+    """
+    sigs = [str(s).strip().lower().replace(" ", "_") for s in (ann or {}).get("clinvar") or []]
+    if any(s in CLINVAR_BENIGN for s in sigs):
+        return []
+    return [str(s) for s in (ann or {}).get("clinvar") or []
+            if str(s).strip().lower().replace(" ", "_") in CLINVAR_PLP]
+
+
+def clinvar_conflicting(ann: Optional[Dict[str, Any]]) -> bool:
+    """True when the ClinVar record carries both a pathogenic and a benign classification."""
+    sigs = [str(s).strip().lower().replace(" ", "_") for s in (ann or {}).get("clinvar") or []]
+    return any(s in CLINVAR_PLP for s in sigs) and any(s in CLINVAR_BENIGN for s in sigs)
 
 
 def annotate_vep(rec: Dict[str, Any], prefer: Optional[Set[str]] = None) -> Dict[str, Any]:
@@ -1190,7 +1231,9 @@ def _phase_relation(a: Dict[str, Any], b: Dict[str, Any]) -> Tuple[Optional[str]
     chromosomes. Within one phase set (FORMAT/PS), a phased GT says which
     haplotype each ALT sits on; the same haplotype is cis, the other is trans.
     """
-    if a["site"] == b["site"] and a is not b:
+    if a["variant"] == b["variant"]:
+        return None, ""  # the same allele called twice is not a pair
+    if a["site"] == b["site"]:
         if a.get("trans_at_site") and b.get("trans_at_site"):
             return "trans", (f"two ALT alleles called at {a['site']} (GT {a['phase'].get('gt') or '1/2'}): "
                              "necessarily in trans, no parental testing needed")
@@ -1198,10 +1241,18 @@ def _phase_relation(a: Dict[str, Any], b: Dict[str, Any]) -> Tuple[Optional[str]
     pa, pb = a.get("phase") or {}, b.get("phase") or {}
     if pa.get("ps") is not None and pa.get("ps") == pb.get("ps") and pa.get("hap") is not None \
             and pb.get("hap") is not None:
+        span = abs(a["pos"] - b["pos"])
+        if span > PHASE_TRUSTED_SPAN:
+            # a phase set spanning this much is not read-backed: population or
+            # panel phasing written back as PS is not evidence of phase here
+            return None, (f"a phase set (PS {pa['ps']}) covers both this allele and {b['variant']}, "
+                          f"{span:,} bp away: too far apart for read-backed phasing, so the phase is treated as "
+                          "unknown")
         if pa["hap"] == pb["hap"]:
-            return "cis", (f"same haplotype in phase set PS {pa['ps']} as {b['variant']}: in cis, "
+            return "cis", (f"same haplotype in phase set PS {pa['ps']} as {b['variant']} ({span:,} bp away): in cis, "
                            "not a compound heterozygote")
-        return "trans", f"opposite haplotype in phase set PS {pa['ps']} as {b['variant']}: read-backed phase, in trans"
+        return "trans", (f"opposite haplotype in phase set PS {pa['ps']} as {b['variant']} ({span:,} bp away): "
+                         "read-backed phase, in trans")
     return None, ""
 
 
@@ -1216,8 +1267,31 @@ def _phase_pairs(vs: List[Dict[str, Any]]):
             elif rel == "cis":
                 cis.append((vs[i], vs[j], why))
             else:
-                unknown.append((vs[i], vs[j], ""))
+                unknown.append((vs[i], vs[j], why))
     return trans, cis, unknown
+
+
+def _pair_up(members: List[Dict[str, Any]], partners_of, pairing: str, why: str) -> None:
+    """Record a compound-heterozygous pairing without destroying a stronger class label.
+
+    A de novo variant that happens to share its gene with a second qualifying
+    het is still a de novo: overwriting its class would cost it the strongest
+    label in triage, flip its gene-MOI fit and drop its score. The pairing is
+    recorded alongside the class instead, which is what exempts the partner
+    from the dominant allele-frequency cut-off and what the scoring reads.
+    """
+    for v in members:
+        partners = [p for p in partners_of(v) if p != v["variant"]]
+        if not partners:
+            continue
+        v["partners"] = sorted(set(partners))
+        v["comphet"] = pairing
+        if not v.get("af_exempt"):
+            v["af_exempt"] = "compound-heterozygous partner (recessive threshold)"
+        if v["class"] in ("het", "inherited_het"):
+            v["class"] = "comphet" if pairing == "trans" else "comphet_unphased"
+        if why and why not in v["flags"]:
+            v["flags"].append(why)
 
 
 def _qualifies(a: Optional[Dict[str, Any]]) -> bool:
@@ -1279,8 +1353,10 @@ def _classify(ctype: str, sex: Optional[str], pz: str, mother: Optional[Dict[str
             if p is None:
                 continue
             if p["adequate_ref"]:
-                if x_unknown_sex or (ctype == "x_nonpar" and role == "father"):
-                    continue  # X passes mother→son: a hom-ref father is not a conflict
+                if x_unknown_sex:
+                    continue  # the call may be a male hemizygote: say that instead of blaming a parent
+                # for a female proband a hom-ref father IS a conflict (she has his X);
+                # a male proband never reaches here, he is classed x_hemizygous above
                 flags.append(f"Mendelian conflict: {role} is hom-ref (UPD, deletion in trans, or sample mix-up)")
             elif p["z"] == "hom_alt":
                 flags.append(f"{role} is also hom-alt")
@@ -1295,6 +1371,10 @@ def _classify(ctype: str, sex: Optional[str], pz: str, mother: Optional[Dict[str
     if has_m and has_f:
         if not mc and not fc:
             if mother["adequate_ref"] and father["adequate_ref"]:  # type: ignore[index]
+                blind = [r for r, p in (("mother", mother), ("father", father)) if p.get("no_gq")]
+                if blind:
+                    flags.append(", ".join(blind) + " reported no genotype quality (GQ): this de novo call rests on "
+                                 "depth and allele counts alone")
                 return "de_novo", "de_novo", flags
             why = [f"{r}: {', '.join(p['why'])}" for r, p in (("mother", mother), ("father", father))
                    if not p["adequate_ref"]]  # type: ignore[index]
@@ -1335,7 +1415,14 @@ def _parent(call: Optional[Call], k: int, min_dp: int, min_gq: int) -> Optional[
         why.append(f"GQ {call.gq:g} < {min_gq}")
     if z == "hom_ref" and alt_reads is not None and alt_reads >= 2:
         why.append(f"{alt_reads} ALT reads (parental mosaicism?)")
-    return {"z": z, "adequate_ref": z == "hom_ref" and not why, "why": why}
+    return {"z": z, "adequate_ref": z == "hom_ref" and not why, "why": why,
+            "no_gq": call.gq is None}
+
+
+SEX_X_ALT_MIN = 20  # X non-PAR ALT calls needed before a het fraction decides
+SEX_SCAN_MAX = 3_000_000  # records read before the pre-scan gives up
+SEX_Y_ALT_MIN = 2  # Y non-PAR ALT calls needed before Y is read as evidence
+SEX_Y_FRACTION = 0.25  # ... and the share of called Y sites they must make up (noise is sparser)
 
 
 def infer_sex(path: str, proband: str, assembly: Optional[str]) -> Dict[str, Any]:
@@ -1355,8 +1442,14 @@ def infer_sex(path: str, proband: str, assembly: Optional[str]) -> Dict[str, Any
         return {"sex": None, "basis": "the proband is not a sample in the VCF", "counts": {}}
     i = header.samples.index(proband)
     c: Counter = Counter()
+    n = 0
+    complete = True
     try:
         for rec in records:
+            n += 1
+            if n > SEX_SCAN_MAX:
+                complete = False
+                break
             if rec.chrom not in ("X", "Y") or not rec.fmt or "GT" not in rec.fmt or i >= len(rec.sample_fields):
                 continue
             ctype = _ctype(rec.chrom, rec.pos, assembly)
@@ -1382,26 +1475,33 @@ def infer_sex(path: str, proband: str, assembly: Optional[str]) -> Dict[str, Any
     finally:
         records.close()
     counts = dict(c)
-    x_alt, x_het = c["x_alt"], c["x_het"]
+    counts["records_scanned"] = n
+    counts["scan_complete"] = complete
+    x_alt, x_het, y_alt, y_called = c["x_alt"], c["x_het"], c["y_alt"], c["y_called"]
     het_frac = (x_het / x_alt) if x_alt else None
+    y_frac = (y_alt / y_called) if y_called else None
+    # the counts every answer rests on, so no basis can assert what was not measured
+    seen = (f"X non-PAR: {x_alt} ALT call(s), {x_het} heterozygous, {c['x_haploid']} haploid; "
+            f"Y non-PAR: {y_alt} ALT of {y_called} called"
+            + ("" if complete else f"; scan stopped after {n} records"))
     if c["x_haploid"] and c["x_haploid"] >= 0.5 * max(1, c["x_called"]):
-        return {"sex": "male", "basis": f"{c['x_haploid']}/{c['x_called']} X non-PAR calls are haploid",
+        return {"sex": "male", "basis": f"{c['x_haploid']}/{c['x_called']} X non-PAR calls are haploid ({seen})",
                 "counts": counts}
-    if c["y_alt"] >= 2 and (het_frac is None or het_frac < 0.25):
-        return {"sex": "male", "basis": f"{c['y_alt']} ALT call(s) on Y outside the PARs"
-                                       + (f" and {x_het}/{x_alt} X non-PAR ALT calls heterozygous" if x_alt else ""),
+    # Y ALT calls appear as noise in female samples, so they must be a real
+    # share of the called Y sites, and must not contradict a female-like X
+    if y_alt >= SEX_Y_ALT_MIN and (y_frac is None or y_frac >= SEX_Y_FRACTION) \
+            and (het_frac is None or het_frac < 0.1):
+        return {"sex": "male", "basis": f"{y_alt} of {y_called} called Y non-PAR sites carry an ALT allele ({seen})",
                 "counts": counts}
-    if x_alt >= 20 and het_frac is not None:
-        if het_frac < 0.05:
-            return {"sex": "male", "basis": f"only {x_het}/{x_alt} X non-PAR ALT calls are heterozygous",
+    if x_alt >= SEX_X_ALT_MIN and het_frac is not None:
+        if het_frac < 0.05 and (y_frac is None or y_frac >= SEX_Y_FRACTION or y_alt == 0):
+            return {"sex": "male", "basis": f"only {x_het} of {x_alt} X non-PAR ALT calls are heterozygous ({seen})",
                     "counts": counts}
-        if het_frac > 0.2 and not c["y_alt"]:
-            return {"sex": "female", "basis": f"{x_het}/{x_alt} X non-PAR ALT calls are heterozygous, no Y ALT calls",
-                    "counts": counts}
-    return {"sex": None,
-            "basis": f"not enough evidence (X non-PAR ALT {x_alt}, heterozygous {x_het}, Y ALT {c['y_alt']}, "
-                     f"haploid X {c['x_haploid']})",
-            "counts": counts}
+        if het_frac > 0.2 and (y_alt < SEX_Y_ALT_MIN or (y_frac is not None and y_frac < SEX_Y_FRACTION)):
+            return {"sex": "female",
+                    "basis": f"{x_het} of {x_alt} X non-PAR ALT calls are heterozygous and Y shows no consistent "
+                             f"ALT calls ({seen})", "counts": counts}
+    return {"sex": None, "basis": f"not enough consistent evidence ({seen})", "counts": counts}
 
 
 def _parent_ref_ok(mother: Optional[Dict[str, Any]], father: Optional[Dict[str, Any]]) -> bool:
@@ -1439,7 +1539,11 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     dom_af_explicit = max_af_dominant is not None
 
     header, _records = iter_records(path)
-    _records.close()
+    try:
+        for _ in _records:  # touch the stream: a corrupt gzip must be named as such here
+            break
+    finally:
+        _records.close()
     if not header.samples:
         raise UsageError("the VCF has no sample columns (no genotypes): triage needs at least the proband")
     for role, s in (("proband", proband), ("mother", mother), ("father", father)):
@@ -1521,12 +1625,17 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     no_depth = 0
     implausible_af: Set[str] = set()
     over_budget: Counter = Counter()
+    no_gt = off_contig = 0
+    chrom_lengths = CHROM_LENGTHS.get(assembly, {})
     de_novo_like = proband_hets_trio = 0
     _, records = iter_records(path)
     for rec in records:
         counts["records"] += 1
         if not rec.fmt or "GT" not in rec.fmt:
+            no_gt += 1
             continue
+        if chrom_lengths.get(rec.chrom) and rec.pos > chrom_lengths[rec.chrom]:
+            off_contig += 1
         pcall = parse_call(rec.fmt, rec.sample_fields[pi]) if pi < len(rec.sample_fields) else None
         for k, alt_raw in enumerate(rec.alts, 1):
             if is_symbolic(alt_raw):
@@ -1601,7 +1710,7 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
                 "vcf_id": rec.vid if rec.vid not in (".", "") else None, "class": cls, "origin": origin,
                 "flags": flags, "ctype": ctype, "ab": round(ab, 3) if ab is not None else None,
                 "region_genes": hits, "info": info_ann,
-                "site": f"{rec.chrom}:{rec.pos}:{rec.ref}",
+                "site": f"{rec.chrom}:{pos}:{ref}",
                 "trans_at_site": pcall.other_alt(k),
                 "phase": {"phased": pcall.phased, "ps": pcall.ps, "hap": pcall.haplotype(k), "gt": pcall.raw},
                 "parent_ref_ok": _parent_ref_ok(mp, fp),
@@ -1611,14 +1720,25 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     read_note = records.read_note()
     if read_note:
         # malformed lines are never dropped silently: half a file must not vanish without a word
-        if records.malformed > 20 and records.malformed > 0.1 * max(1, records.data_lines):
-            raise UsageError(f"{path}: {read_note}. That is more than a tenth of the file; triage refuses to run on "
-                             "it. Check the file is tab-separated and complete (zebra vcf inspect reports the same "
-                             "count without refusing).")
+        bad_fraction = records.malformed / max(1, records.data_lines)
+        if bad_fraction > 0.5 or (bad_fraction > 0.1 and records.malformed > 20):
+            raise UsageError(f"{path}: {read_note}. That is {bad_fraction:.0%} of the data lines; triage refuses to "
+                             "report a negative result from a file it cannot read. Check that it is tab-separated "
+                             "and complete (zebra vcf inspect reports the same count without refusing).")
         warnings.append(read_note)
     counts["malformed_lines"] = records.malformed
+    if no_gt:
+        counts["records_without_gt"] = no_gt
+        notes.append(f"{no_gt} record(s) carry no GT in FORMAT and were not genotyped (they are counted in "
+                     "'records' but in no later step)")
+    if off_contig:
+        warnings.append(f"{off_contig} record(s) sit past the end of their chromosome in {assembly}: the file's "
+                        "positions do not match the build it is being read as")
+    if over_budget:
+        counts["over_per_class_cap"] = dict(over_budget)
     if implausible_af:
-        warnings.append("INFO field(s) " + ", ".join(sorted(implausible_af)) + " held values above 1 and were not "
+        warnings.append("annotation field(s) " + ", ".join(sorted(implausible_af)) + " held values above 1 and were "
+                        "not "
                         "read as frequencies (they look like allele counts); the frequency prefilter ignored them")
     if filtered_names:
         notes.append("removed by FILTER: " + ", ".join(f"{k} {v}" for k, v in filtered_names.most_common(5)))
@@ -1630,7 +1750,30 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
 
     # ---- restriction before any variant leaves the machine
     survivors_all = [v for cls in list(PRIORITY) + [c for c in stored if c not in PRIORITY] for v in stored.get(cls, [])]
-    total_candidates = sum(by_class_seen.values())
+    # One allele written on two lines (a merged call set, or two spellings of the
+    # same deletion) must never become two candidates: it would read as a
+    # compound heterozygote of an allele with itself.
+    seen_allele: Dict[Tuple[str, int, str, str], Dict[str, Any]] = {}
+    duplicates = 0
+    deduped = []
+    for v in survivors_all:
+        key = (v["chrom"], v["pos"], v["ref"], v["alt"])
+        first = seen_allele.get(key)
+        if first is None:
+            seen_allele[key] = v
+            deduped.append(v)
+            continue
+        duplicates += 1
+        first["flags"].append("the same allele is written on more than one line of the VCF "
+                              f"(also as {v['chrom']}-{v['pos']}-{v['ref']}-{v['alt']} from another record); "
+                              "counted once, with the strongest inheritance class")
+        if first.get("origin") is None and v.get("origin"):
+            first["origin"] = v["origin"]
+    if duplicates:
+        warnings.append(f"{duplicates} candidate line(s) repeated an allele already counted (normalised to the same "
+                        "chrom-pos-ref-alt); each allele is counted once")
+    survivors_all = deduped
+    total_candidates = sum(by_class_seen.values()) - duplicates
     restriction: Dict[str, Any] = {}
     if regions is not None:
         counts["in_gene_regions"] = in_region
@@ -1712,10 +1855,22 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         if af is None or af <= max_af:
             kept1.append(v)
             continue
-        if plp:
+        if clinvar_conflicting(v.get("ann")):
+            warnings.append(f"{label(v)} has conflicting ClinVar classifications "
+                            f"({'/'.join(v['ann']['clinvar'])}) and gnomAD {af:.3g} above --max-af {max_af:g}: "
+                            "removed on frequency, because a contested assertion is not a reason to keep a common "
+                            "allele. Read the ClinVar submissions if this gene fits the phenotype.")
+        elif plp and af > BA1_AF:
+            warnings.append(f"{label(v)} carries a ClinVar {'/'.join(plp)} assertion but its gnomAD frequency is "
+                            f"{af:.3g}, above the ClinGen BA1 threshold {BA1_AF:g}: removed on frequency, and the "
+                            "assertion is worth reporting to ClinVar")
+        if plp and af <= BA1_AF:
             # the commonest pathogenic recessive alleles (CFTR F508del grpmax
             # 0.015, GJB2 c.35delG, HFE C282Y) sit above a 1 % cut-off: a
-            # frequency filter must not delete the textbook diagnosis
+            # frequency filter must not delete the textbook diagnosis. Above
+            # the ClinGen BA1 threshold (5 %) the exemption stops: no allele
+            # that common can be a fully penetrant cause, whatever a single
+            # ClinVar submission asserts.
             v["af_exempt"] = "ClinVar " + "/".join(plp)
             v["flags"].append(f"gnomAD {af:.3g} is above --max-af {max_af:g}, but ClinVar reports "
                               f"{'/'.join(plp)} for this allele: kept for review rather than filtered "
@@ -1745,55 +1900,79 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     for g, vs in by_gene.items():
         if len(vs) < 2:
             continue
-        # ---- phase first: a PS block or a 1/2 call settles cis/trans without the parents
+        # ---- phase: a PS block or a 1/2 call settles cis/trans without the parents.
+        # The parents' genotypes outrank it: when a trio puts two alleles in
+        # trans and a phase block says cis, the two disagree, and the candidate
+        # is kept with the disagreement named rather than quietly dropped.
         trans_pairs, cis_pairs, unknown_pairs = _phase_pairs(vs)
-        if trans_pairs:
+        trio_mat = [v for v in vs if v["origin"] == "maternal"] if mode == "trio" else []
+        trio_pat = [v for v in vs if v["origin"] == "paternal"] if mode == "trio" else []
+        if trio_mat and trio_pat and cis_pairs:
+            keep = []
+            for a, b, why in cis_pairs:
+                if {a["origin"], b["origin"]} == {"maternal", "paternal"}:
+                    for v, other in ((a, b), (b, a)):
+                        v["flags"].append(
+                            f"the phase set puts this allele on the same haplotype as {other['variant']}, but the "
+                            f"parents' genotypes put them in trans ({a['origin']} / {b['origin']}): check the "
+                            "phasing and the sample labels; the parental genotypes were used")
+                else:
+                    keep.append((a, b, why))
+            cis_pairs = keep
+        if trans_pairs and not (trio_mat and trio_pat):
             comphet_genes.append(g)
-            partners: Dict[int, List[str]] = defaultdict(list)
+            partners: Dict[str, List[str]] = defaultdict(list)
             for a, b, why in trans_pairs:
-                partners[id(a)].append(b["variant"])
-                partners[id(b)].append(a["variant"])
+                partners[a["variant"]].append(b["variant"])
+                partners[b["variant"]].append(a["variant"])
                 for v in (a, b):
                     if why not in v["flags"]:
                         v["flags"].append(why)
-            for v in vs:
-                if id(v) in partners:
-                    v["class"] = "comphet"
-                    v["partners"] = sorted(set(partners[id(v)]))
+            _pair_up(vs, lambda v: partners.get(v["variant"], []), "trans", "")
             for a, b, why in cis_pairs:
                 for v in (a, b):
                     if why not in v["flags"]:
                         v["flags"].append(why)
             continue
-        if cis_pairs and not unknown_pairs:
+        if cis_pairs and not unknown_pairs and not (trio_mat and trio_pat) and not trans_pairs:
             for a, b, why in cis_pairs:
                 for v in (a, b):
                     if why not in v["flags"]:
                         v["flags"].append(why)
+            warnings.append(f"{g}: {len(vs)} qualifying het(s) are on one haplotype according to the phase set, so "
+                            "they are NOT called compound heterozygous and are held to the dominant allele-frequency "
+                            "cut-off. If the phase set came from population phasing rather than reads, re-run with "
+                            "--max-af-dominant to see them.")
             continue  # every pair is on one haplotype: not compound heterozygous
         for a, b, why in cis_pairs:
             for v in (a, b):
                 if why not in v["flags"]:
                     v["flags"].append(why)
+        for a, b, why in trans_pairs:
+            for v in (a, b):
+                if why not in v["flags"]:
+                    v["flags"].append(why)
+        for a, b, why in unknown_pairs:
+            if not why:
+                continue  # no phase information at all needs no explanation
+            for v in (a, b):
+                if why not in v["flags"]:
+                    v["flags"].append(why)
         if mode == "trio":
-            mat = [v for v in vs if v["origin"] == "maternal"]
-            pat = [v for v in vs if v["origin"] == "paternal"]
+            mat, pat = trio_mat, trio_pat
             if mat and pat:
                 comphet_genes.append(g)
-                for v in mat + pat:
-                    v["class"] = "comphet"
-                    v["partners"] = [w["variant"] for w in (pat if v in mat else mat)]
-            rest = [v for v in vs if v["class"] != "comphet"]
+                _pair_up(mat + pat,
+                         lambda v: [w["variant"] for w in (pat if v in mat else mat)], "trans",
+                         "in trans: one allele from each parent")
+            rest = [v for v in vs if not v.get("comphet")]
             if any(v["class"] in ("de_novo", "possible_de_novo") or v["origin"] == "both" for v in rest):
                 # a de novo plus an inherited allele in a recessive gene is a
                 # real compound heterozygote until the phase is tested; holding
                 # the inherited partner to the dominant cut-off deletes it
-                for v in rest:
-                    v["class"] = "comphet_unphased"
-                    v["partners"] = [w["variant"] for w in vs if w is not v]
-                    v["flags"].append(f"{len(vs)} qualifying hets in {g}, one de novo or of unknown parental origin: "
-                                      "phase unknown (possible comp-het); the recessive AF threshold is used, not the "
-                                      "dominant one")
+                _pair_up(rest, lambda v: [w["variant"] for w in vs], "unphased",
+                         f"{len(vs)} qualifying hets in {g}, one de novo or of unknown parental origin: "
+                         "phase unknown (possible comp-het); the recessive AF threshold is used, not the dominant one")
                 if g not in comphet_genes:
                     comphet_genes.append(g)
             elif not (mat and pat):
@@ -1809,32 +1988,31 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         if mode == "duo" and carried and not_carried:
             comphet_genes.append(g)
             role = "mother" if mother else "father"
-            for v in carried + not_carried:
-                v["class"] = "comphet"
-                v["partners"] = [w["variant"] for w in (not_carried if v in carried else carried)]
-                v["flags"].append(f"in trans inferred from one parent: one allele from the {role}, the other not "
-                                  "(from the untested parent or de novo)")
+            _pair_up(carried + not_carried,
+                     lambda v: [w["variant"] for w in (not_carried if v in carried else carried)], "trans",
+                     f"in trans inferred from one parent: one allele from the {role}, the other not "
+                     "(from the untested parent or de novo)")
             for v in vs:
-                if v["class"] != "comphet":
+                if not v.get("comphet"):
                     v["flags"].append(f"another qualifying het in {g}")
             continue
         comphet_genes.append(g)
-        for v in vs:
-            v["class"] = "comphet_unphased"
-            v["partners"] = [w["variant"] for w in vs if w is not v]
-            v["flags"].append("phase unknown: test the parents to confirm the alleles are in trans")
-        if unknown_parent and carried:
+        _pair_up(vs, lambda v: [w["variant"] for w in vs], "unphased",
+                 "phase unknown: test the parents to confirm the alleles are in trans")
+        if mode == "duo" and unknown_parent:
             for v in unknown_parent:
                 v["flags"].append("the tested parent's genotype here is missing or below the depth/quality "
                                   "thresholds: carrier status unknown, so trans was NOT inferred")
     counts["comphet_genes"] = len(comphet_genes)
     final: List[Dict[str, Any]] = []
+    dom_dropped: List[Dict[str, Any]] = []
     for v in kept1:
         if v["class"] not in DOMINANT_CLASSES:
             final.append(v)
             continue
         bound = bound_af(v)
         if bound is not None and bound > dom_af and not v.get("af_exempt"):
+            dom_dropped.append(v)
             continue
         af = (v.get("ann") or {}).get("af") or {}
         if af.get("grpmax") is not None and af["grpmax"] > dom_af and (bound is None or bound <= dom_af):
@@ -1845,6 +2023,12 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
                 "evidence against pathogenicity (check AC/AN or faf95 in gnomAD)")
         final.append(v)
     counts["af_pass_dominant"] = len(final)
+    if dom_dropped:
+        warnings.append(f"{len(dom_dropped)} variant(s) in a dominant class removed by gnomAD AF > "
+                        f"{dom_af:g} (the dominant cut-off): "
+                        + ", ".join(f"{label(v)} {bound_af(v):.3g} [{v['class']}]" for v in dom_dropped[:8])
+                        + (" …" if len(dom_dropped) > 8 else "")
+                        + "; raise --max-af-dominant to keep them")
 
     # ---- scoring
     moi = gene_moi({v["gene"] for v in final if v.get("gene")})
@@ -1855,8 +2039,12 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         a = v.get("ann")
         g = v.get("gene")
         v["moi"] = moi.get(g or "", [])
-        fit = moi_fit(v["class"], v["moi"], v["ctype"])
-        base = INH_BASE.get(v["class"], 0.3)
+        # a variant paired with another in the same gene is scored as half of a
+        # recessive pair even when it keeps a stronger class label (a de novo)
+        pair = v.get("comphet")
+        scored_as = ("comphet" if pair == "trans" else "comphet_unphased") if pair else v["class"]
+        fit = moi_fit(scored_as, v["moi"], v["ctype"])
+        base = max(INH_BASE.get(v["class"], 0.3), INH_BASE.get(scored_as, 0.3))
         if v["class"] == "x_hemizygous" and v.get("origin") == "de_novo":
             base = 1.0
         v["moi_fit"] = fit
@@ -1958,7 +2146,7 @@ def _row(v: Dict[str, Any], rank: int) -> Dict[str, Any]:
                    "grpmax": af.get("grpmax"), "grpmax_group": af.get("grpmax_group"), "source": af.get("source"),
                    "bound_af": af.get("bound_af"), "bound_basis": af.get("bound_basis"),
                    "faf95": af.get("faf95"), "faf95_group": af.get("faf95_group")},
-        "af_exempt": v.get("af_exempt"),
+        "af_exempt": v.get("af_exempt"), "comphet": v.get("comphet"),
         "phase": {k: x for k, x in (v.get("phase") or {}).items() if x not in (None, False)} or None,
         "predictors": {"revel": a.get("revel"), "alphamissense": a.get("alphamissense"), "am_class": a.get("am_class"),
                        "cadd": a.get("cadd"), "spliceai_max": a.get("spliceai_max")},

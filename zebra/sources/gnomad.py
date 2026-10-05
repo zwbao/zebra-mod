@@ -332,8 +332,10 @@ def parse_variant(data: Dict[str, Any], dataset: str, vid: str) -> Dict[str, Any
         excl = ", ".join(gmax["groups_excluded"]) or "none present"
         gmax["basis"] = (f"{basis}; highest AF over the non-bottlenecked groups "
                          f"{', '.join(gmax['groups_considered'])}; excluded here: {excl} "
-                         "(gnomAD help topic 'grpmax'; the Middle Eastern group is excluded from the "
-                         "genome-only calculation, not from exome or joint)")
+                         "(gnomAD help topic 'grpmax')")
+        if "mid" in groups:
+            gmax["basis"] += ("; the Middle Eastern group (mid) counts here, because gnomAD excludes it from "
+                              "the genome-only grpmax and not from the exome or joint calculation")
     if joint and joint.get("faf95") is not None:
         faf = {"value": joint["faf95"], "group": joint["faf95_group"], "datasets": ["joint"],
                "basis": ("GroupMax FAF: gnomAD's joint (exome+genome) faf95 popmax — the filtering AF of the "

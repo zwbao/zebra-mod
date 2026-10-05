@@ -127,13 +127,15 @@ def _resolve(query, monkeypatch):
 
 def test_resolve_gene_symbol_as_target(monkeypatch):
     matched, out = _resolve("CFTR", monkeypatch)
-    assert matched == [{"as": "target", "id": "ENSG00000001626", "name": "CFTR", "how": "exact gene symbol"}]
+    assert matched == [{"as": "target", "id": "ENSG00000001626", "name": "CFTR", "how": "exact gene symbol",
+                        "exact": True}]
     assert out.result["search_hits"][0]["entity"] == "target"
 
 
 def test_resolve_disease_name(monkeypatch):
     matched, _ = _resolve("dravet syndrome", monkeypatch)
-    assert matched == [{"as": "disease", "id": "MONDO_0100135", "name": "Dravet syndrome", "how": "exact disease name"}]
+    assert matched == [{"as": "disease", "id": "MONDO_0100135", "name": "Dravet syndrome",
+                        "how": "exact disease name", "exact": True}]
 
 
 def test_resolve_ids_and_refuses_xref_numbers(monkeypatch):
@@ -238,3 +240,184 @@ def test_live_therapy_sma():
 def test_live_ema_orphan_register():
     o = orphan.ema_designations(["Dravet syndrome"]).result
     assert o["records_scanned"] > 3000 and o["count"] >= 3
+
+
+# -------------------------------------------- P1g: approval status is per jurisdiction and current
+
+def _dmd_rows():
+    data = load("opentargets/p1g_dmd_drugs.json")["data"]
+    return (data["disease"]["drugAndClinicalCandidates"]["rows"], data)
+
+
+def test_P1g_jurisdiction_mapping_and_stage_reading():
+    reports = [
+        {"origin": "REGULATORY_AGENCY", "source": "FDA", "clinicalStage": "APPROVAL", "url": "u1"},
+        {"origin": "REGULATORY_AGENCY", "source": "EMA Human Drugs", "clinicalStage": "WITHDRAWAL", "url": "u2"},
+        {"origin": "REGULATORY_AGENCY", "source": "PMDA", "clinicalStage": "APPROVAL", "url": "u3"},
+        {"origin": "DRUG_LABEL", "source": "DailyMed", "clinicalStage": "APPROVAL", "url": "u4"},
+        {"origin": "CLINICAL_TRIAL", "source": "ClinicalTrials.gov", "clinicalStage": "PHASE_3", "url": "u5"},
+    ]
+    reg = ot.regulatory_status(reports)
+    assert reg["approved_in"] == ["FDA (United States)", "PMDA (Japan)"]
+    assert reg["withdrawn_or_suspended_in"] == ["EMA (European Union)"]
+    assert reg["label_only_in"] == ["United States (DailyMed label archive)"]
+    assert {j["jurisdiction"] for j in reg["by_jurisdiction"]} == {
+        "FDA (United States)", "EMA (European Union)", "PMDA (Japan)"}
+    withdrawn = next(j for j in reg["by_jurisdiction"] if j["stage"] == "WITHDRAWAL")
+    assert withdrawn["reading"] == "authorisation withdrawn — NOT currently approved"
+    assert "WITHDRAWN/SUSPENDED: EMA (European Union)" in reg["headline"]
+
+
+def test_P1g_a_withdrawal_outranks_an_approval_for_the_same_agency():
+    reg = ot.regulatory_status([
+        {"origin": "REGULATORY_AGENCY", "source": "EMA Human Drugs", "clinicalStage": "APPROVAL", "url": "a"},
+        {"origin": "REGULATORY_AGENCY", "source": "EMA Human Drugs", "clinicalStage": "WITHDRAWAL", "url": "b"},
+    ])
+    assert reg["approved_in"] == [] and reg["withdrawn_or_suspended_in"] == ["EMA (European Union)"]
+
+
+def test_P1g_ataluren_is_not_presented_as_approved():
+    """The row's maxClinicalStage is APPROVAL while its only agency report is an EMA withdrawal."""
+    rows, _ = _dmd_rows()
+    row = next(r for r in rows if (r["drug"] or {}).get("name") == "ATALUREN")
+    parsed = ot.parse_drug_row(row)
+    assert parsed["stage"] == "APPROVAL"  # the raw field is unchanged ...
+    assert parsed["regulatory"]["approved_in"] == []   # ... and contradicted per jurisdiction
+    assert parsed["regulatory"]["withdrawn_or_suspended_in"] == ["EMA (European Union)"]
+    assert "do not read this as an approved therapy" in parsed["stage_warning"]
+    assert "highest stage this drug reached FOR THIS DISEASE" in parsed["stage_meaning"]
+
+
+def test_P1g_a_genuinely_approved_drug_says_where():
+    rows, _ = _dmd_rows()
+    row = next(r for r in rows if (r["drug"] or {}).get("name") == "CASIMERSEN")
+    parsed = ot.parse_drug_row(row)
+    assert parsed["regulatory"]["approved_in"] == ["FDA (United States)"]
+    assert "stage_warning" not in parsed
+    vam = ot.parse_drug_row(next(r for r in rows if (r["drug"] or {}).get("name") == "VAMOROLONE"))
+    assert vam["regulatory"]["approved_in"] == ["EMA (European Union)", "FDA (United States)"]
+
+
+def test_P1g_the_list_is_labelled_as_what_the_source_holds():
+    _, data = _dmd_rows()
+    drugs = ot._drugs(data["disease"]["drugAndClinicalCandidates"], 40, False)
+    assert "NOT a list of approved therapies" in drugs["what_this_is"]
+    assert "ATALUREN" in drugs["withdrawn_or_suspended"]
+
+
+def test_P1g_orphan_designations_missing_from_the_drug_list_are_named():
+    """Elevidys has an EU orphan designation for DMD and no row in Open Targets' 62 drugs."""
+    rows, data = _dmd_rows()
+    parsed = ot._drugs(data["disease"]["drugAndClinicalCandidates"], 40, False)["rows"]
+    designations = [
+        {"substance": "adeno-associated virus serotype rh74 containing the human micro-dystrophin gene",
+         "medicine": "Elevidys", "status": "Positive", "eu_number": "EU/3/18/x", "url": "u"},
+        {"substance": "ATALUREN", "medicine": None, "status": "Positive", "eu_number": "EU/3/05/y", "url": "v"},
+    ]
+    missing = therapy_cmd._designations_not_in_drug_list(designations, parsed)
+    names = [m["medicine"] or m["substance"] for m in missing]
+    assert "Elevidys" in names
+    assert "ATALUREN" not in [m["substance"] for m in missing]  # it IS in the list, so not a gap
+    assert therapy_cmd._gap_label(missing[0]) == "Elevidys"
+
+
+def test_P1g_gap_label_shortens_a_chemical_description():
+    label = therapy_cmd._gap_label({"substance": "palmitoyl-conjugated tricyclo-DNA antisense oligonucleotide "
+                                                 "5'-Palm-C6-*GGA GAT GgC AGT TTC-3", "medicine": None})
+    assert len(label) <= 61 and label.endswith("…")
+
+
+def test_P1g_rendering_shows_the_jurisdictions_and_the_warning():
+    rows, _ = _dmd_rows()
+    row = ot.parse_drug_row(next(r for r in rows if (r["drug"] or {}).get("name") == "ATALUREN"))
+    line = therapy_cmd._drug_line(row, False)
+    assert "status by jurisdiction:" in line
+    assert "EMA (European Union): WITHDRAWAL — authorisation withdrawn — NOT currently approved" in line
+    assert "! Open Targets gives this row maxClinicalStage APPROVAL" in line
+    assert "any indication:" in line or row["drug_max_stage"] == row["stage"]
+
+
+# ---------------------------------------------------------------- F13: a fuzzy disease match warns
+
+def test_F13_an_exact_disease_name_raises_no_warning(monkeypatch):
+    monkeypatch.setattr(ot, "post_json", ot_router())
+    out = Outcome({})
+    matched = therapy_cmd._resolve("Dravet Syndrome", out)
+    assert matched[0]["exact"] is True and out.warnings == []
+
+
+def test_F13_first_hit_resolution_is_a_warning_not_a_footnote(monkeypatch):
+    hits = {"data": {"search": {"total": 4, "hits": [
+        {"id": "MONDO_0019079", "name": "proximal spinal muscular atrophy", "entity": "disease", "description": ""},
+        {"id": "EFO_0010970", "name": "severe malarial anemia", "entity": "disease", "description": ""},
+        {"id": "MONDO_0001516", "name": "spinal muscular atrophy", "entity": "disease", "description": ""},
+    ]}}}
+
+    def fake(url, payload, source, **kw):
+        return resp(hits, url)
+
+    monkeypatch.setattr(ot, "post_json", fake)
+    out = Outcome({})
+    matched = therapy_cmd._resolve("SMA", out)
+    assert matched[0]["id"] == "MONDO_0019079" and matched[0]["exact"] is False
+    assert len(out.warnings) == 1
+    w = out.warnings[0]
+    assert "'SMA' is not an exact Open Targets disease name" in w
+    assert "proximal spinal muscular atrophy" in w
+    assert "spinal muscular atrophy (MONDO_0001516)" in w
+    assert "`zebra disease` resolves a name to an id without guessing" in w
+
+
+# ---------------------------------------------------------------- live
+
+@pytest.mark.live
+def test_live_P1g_ataluren_for_dmd_is_withdrawn_not_approved():
+    d = ot.disease("MONDO_0010679").result
+    row = next(r for r in d["drugs"]["rows"] if r["drug"] == "ATALUREN")
+    assert row["stage"] == "APPROVAL"
+    assert row["regulatory"]["withdrawn_or_suspended_in"] == ["EMA (European Union)"]
+    assert row["regulatory"]["approved_in"] == []
+    assert "ATALUREN" in d["drugs"]["withdrawn_or_suspended"]
+
+
+@pytest.mark.live
+def test_live_F13_sma_warns_that_the_name_was_not_exact(capsys):
+    code = cli.main(["--json", "therapy", "SMA"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert any("is not an exact Open Targets disease name" in w for w in env["warnings"])
+    assert env["result"]["matched"][0]["exact"] is False
+
+
+# ---------------------------------------------------------------- F10: never serve a cached error
+
+def test_F10_a_cached_graphql_error_is_refetched_once(monkeypatch):
+    """B-P1-1's first repro: a 200 carrying `errors` was cached for 7 days and raised on every call."""
+    ttls = []
+
+    def fake_post(url, payload, source, **kw):
+        ttls.append(kw.get("cache_ttl"))
+        cached = len(ttls) == 1
+        body = ('{"errors":[{"message":"upstream timeout"}]}' if cached
+                else '{"data":{"disease":{"id":"MONDO_1","name":"X"}}}')
+        return Response(url, 200, body, "2026-10-06T00:00:00+00:00", cached)
+
+    monkeypatch.setattr(ot, "post_json", fake_post)
+    resp, data = ot.gql(ot.DISEASE_Q, {"id": "MONDO_1", "nt": 1}, "MONDO_1")
+    assert ttls == [7 * 86400, 0]  # the second call bypasses the cache
+    assert data["disease"]["name"] == "X"
+
+
+def test_F10_a_fresh_graphql_error_is_raised_once_and_names_the_record(monkeypatch):
+    calls = []
+
+    def fake_post(url, payload, source, **kw):
+        calls.append(1)
+        return Response(url, 200, '{"errors":[{"message":"upstream timeout"}]}',
+                        "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(ot, "post_json", fake_post)
+    with pytest.raises(SourceError) as err:
+        ot.gql(ot.DISEASE_Q, {"id": "MONDO_1", "nt": 1}, "MONDO_1")
+    assert len(calls) == 1  # a fresh error is not retried
+    assert "GraphQL error for MONDO_1" in err.value.message and "upstream timeout" in err.value.message

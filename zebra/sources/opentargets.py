@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from zebra.core import Outcome
 from zebra.http import SourceError, post_json
 from zebra.sources import record as source_record
+from zebra.sources import validated_json
 
 API = "https://api.platform.opentargets.org/api/v4/graphql"
 WEB = "https://platform.opentargets.org"
@@ -27,6 +28,33 @@ _PREFIX_CASE = {"mondo": "MONDO", "efo": "EFO", "orphanet": "Orphanet", "hp": "H
 # highest first; anything else ranks last
 STAGE_ORDER = ["APPROVAL", "PREAPPROVAL", "PHASE_4", "PHASE_3", "PHASE_2_3", "PHASE_2", "PHASE_1_2", "PHASE_1",
                "EARLY_PHASE_1", "PHASE_0", "PRECLINICAL", "UNKNOWN"]
+# P1g: "APPROVAL" in `maxClinicalStage` is the highest stage ever reached, with
+# no jurisdiction and no current status, so a withdrawn authorisation showed as
+# an approval. Ataluren for Duchenne muscular dystrophy is the case: its only
+# regulatory report is `EMA Human Drugs / WITHDRAWAL` (verified live on
+# 2026-10-06 via MONDO_0010679), while the row's `maxClinicalStage` is
+# APPROVAL. The regulatory reports are therefore read per agency.
+# Report `origin` and `source` values observed live across four rare-disease
+# queries (MONDO_0010679, MONDO_0100135, MONDO_0019079, MONDO_0018150):
+# REGULATORY_AGENCY/{FDA, EMA Human Drugs, PMDA}, DRUG_LABEL/DailyMed,
+# CLINICAL_TRIAL/ClinicalTrials.gov, CURATED_RESOURCE/{TTD, USAN, INN}.
+JURISDICTIONS = {
+    "FDA": "FDA (United States)",
+    "EMA Human Drugs": "EMA (European Union)",
+    "PMDA": "PMDA (Japan)",
+    "DailyMed": "United States (DailyMed label archive)",
+}
+# clinicalStage values seen on REGULATORY_AGENCY reports, and how to read them
+REGULATORY_STAGE_READING = {
+    "APPROVAL": "marketing authorisation on record",
+    "PREAPPROVAL": "under review, not authorised",
+    "WITHDRAWAL": "authorisation withdrawn — NOT currently approved",
+    "SUSPENSION": "authorisation suspended — NOT currently usable",
+    "REFUSAL": "authorisation refused",
+    "UNKNOWN": "the agency holds a record, but Open Targets resolved no stage from it",
+}
+NOT_APPROVED_STAGES = frozenset(("WITHDRAWAL", "WITHDRAWN", "SUSPENSION", "SUSPENDED", "REFUSAL", "REFUSED",
+                                 "REVOCATION"))
 MODALITIES = {"SM": "small_molecule", "AB": "antibody", "PR": "protac", "OC": "other_modalities"}
 
 _DRUG_FIELDS = """
@@ -66,11 +94,26 @@ query($q: String!, $entities: [String!], $size: Int!) {
 }"""
 
 
+def _post(payload: Dict[str, Any], *, refresh: bool = False):
+    return post_json(API, payload, source="Open Targets", cache_ttl=0 if refresh else 7 * 86400, timeout=90)
+
+
 def gql(query: str, variables: Dict[str, Any], record: str):
-    """POST a GraphQL query; GraphQL errors (HTTP 200 with `errors`) raise SourceError."""
-    resp = post_json(API, {"query": query, "variables": variables}, source="Open Targets", cache_ttl=7 * 86400, timeout=90)
-    data = resp.json()
-    if data.get("errors"):
+    """POST a GraphQL query; GraphQL errors (HTTP 200 with `errors`) raise SourceError.
+
+    A 200 carrying `errors` is an error answer that `zebra.http` has already
+    written to its 7-day cache (F10), so it was raised again on every later call
+    with no network request at all — a transient upstream timeout became a
+    week-long outage. `validated_json` re-requests once when the bad body came
+    from the cache, and only then gives up.
+    """
+    payload = {"query": query, "variables": variables}
+    resp = _post(payload)
+    try:
+        data = validated_json(resp, "Open Targets", refetch=lambda: _post(payload, refresh=True))
+    except SourceError as err:
+        raise SourceError("Open Targets", API, err.status, f"GraphQL error for {record}: {err.message}") from None
+    if data.get("errors"):  # defensive: validated_json already rejects a top-level `errors`
         msg = "; ".join(str(e.get("message")) for e in data["errors"])[:300]
         raise SourceError("Open Targets", API, resp.status, f"GraphQL error for {record}: {msg}")
     return resp, data.get("data") or {}
@@ -102,10 +145,60 @@ def _report_rank(r: Dict[str, Any]) -> tuple:
 
 
 def _evidence(r: Dict[str, Any]) -> Dict[str, Any]:
-    ev = {"source": r.get("source"), "stage": r.get("clinicalStage"), "status": r.get("trialOverallStatus"), "url": r.get("url")}
+    ev = {"source": r.get("source"), "stage": r.get("clinicalStage"), "status": r.get("trialOverallStatus"),
+          "origin": r.get("origin"), "url": r.get("url")}
     if not ev["url"]:
         ev["id"] = r.get("id")
     return ev
+
+
+def regulatory_status(reports: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Per-jurisdiction reading of the regulatory reports on one drug row (P1g).
+
+    Returns `{"by_jurisdiction": [...], "approved_in": [...],
+    "withdrawn_or_suspended_in": [...], "unresolved_in": [...], "label_only_in":
+    [...], "headline": str}`. "Approved" is only ever said of a jurisdiction
+    whose own agency report says so; a withdrawal is reported as a withdrawal,
+    not folded into a highest-stage-ever.
+    """
+    per: Dict[str, Dict[str, Any]] = {}
+    labels: Dict[str, Dict[str, Any]] = {}
+    for r in reports or []:
+        src = r.get("source") or "?"
+        who = JURISDICTIONS.get(src, src)
+        stage = (r.get("clinicalStage") or "UNKNOWN").upper()
+        row = {"jurisdiction": who, "source": src, "stage": stage,
+               "reading": REGULATORY_STAGE_READING.get(stage, f"stage {stage} as the agency record reports it"),
+               "url": r.get("url")}
+        if r.get("origin") == "REGULATORY_AGENCY":
+            cur = per.get(who)
+            # a withdrawal outranks an approval for the same agency: it is the later fact
+            if cur is None or (stage in NOT_APPROVED_STAGES and cur["stage"] not in NOT_APPROVED_STAGES):
+                per[who] = row
+        elif r.get("origin") == "DRUG_LABEL":
+            labels.setdefault(who, row)
+    approved = sorted(w for w, r in per.items() if r["stage"] == "APPROVAL")
+    gone = sorted(w for w, r in per.items() if r["stage"] in NOT_APPROVED_STAGES)
+    unresolved = sorted(w for w, r in per.items() if r["stage"] not in NOT_APPROVED_STAGES and r["stage"] != "APPROVAL")
+    parts = []
+    if approved:
+        parts.append("authorisation on record: " + ", ".join(approved))
+    if gone:
+        parts.append("WITHDRAWN/SUSPENDED: " + ", ".join(f"{w} ({per[w]['stage']})" for w in gone))
+    if unresolved:
+        parts.append("agency record with no stage: " + ", ".join(unresolved))
+    if not per and labels:
+        parts.append("no agency report; a drug label exists for " + ", ".join(sorted(labels)))
+    if not parts:
+        parts.append("no regulatory report in Open Targets for this drug and disease")
+    return {
+        "by_jurisdiction": [per[w] for w in sorted(per)],
+        "approved_in": approved,
+        "withdrawn_or_suspended_in": gone,
+        "unresolved_in": unresolved,
+        "label_only_in": sorted(w for w in labels if w not in per),
+        "headline": "; ".join(parts),
+    }
 
 
 def parse_drug_row(row: Dict[str, Any], with_diseases: bool = False) -> Dict[str, Any]:
@@ -126,7 +219,11 @@ def parse_drug_row(row: Dict[str, Any], with_diseases: bool = False) -> Dict[str
         "chembl_id": drug.get("id"),
         "type": drug.get("drugType"),
         "stage": row.get("maxClinicalStage"),
+        "stage_meaning": "highest stage this drug reached FOR THIS DISEASE in any jurisdiction, ever — "
+                         "not its current approval status",
         "drug_max_stage": drug.get("maximumClinicalStage"),
+        "drug_max_stage_meaning": "highest stage this drug reached for ANY indication, ever",
+        "regulatory": regulatory_status(reports),
         "mechanisms": moas,
         "reports": len(reports),
         "trials": sum(1 for r in reports if r.get("source") == "ClinicalTrials.gov"),
@@ -134,6 +231,13 @@ def parse_drug_row(row: Dict[str, Any], with_diseases: bool = False) -> Dict[str
         "evidence": [_evidence(r) for r in ordered[:4]],
         "url": f"{WEB}/drug/{drug.get('id')}" if drug.get("id") else None,
     }
+    reg = out["regulatory"]
+    if out["stage"] == "APPROVAL" and not reg["approved_in"]:
+        out["stage_warning"] = (
+            "Open Targets gives this row maxClinicalStage APPROVAL, but no agency report says it is authorised"
+            + (f"; the EU/US/JP records say: {reg['headline']}" if reg["by_jurisdiction"] else
+               " and there is no agency report at all")
+            + " — do not read this as an approved therapy")
     if with_diseases:
         names = []
         for d in row.get("diseases") or []:
@@ -148,8 +252,14 @@ def _drugs(block: Dict[str, Any], limit: int, with_diseases: bool) -> Dict[str, 
     rows = [r for r in (block or {}).get("rows") or [] if r.get("drug")]
     parsed = [parse_drug_row(r, with_diseases) for r in rows]
     parsed.sort(key=lambda d: (_stage_rank(d["stage"]), d["drug"] or ""))
+    withdrawn = [d["drug"] for d in parsed[:limit] if d["regulatory"]["withdrawn_or_suspended_in"]]
     return {"count": (block or {}).get("count", len(rows)), "shown": min(limit, len(parsed)),
-            "order": "by clinical stage for this disease/target, then name", "rows": parsed[:limit]}
+            "order": "by clinical stage for this disease/target, then name",
+            "what_this_is": "what Open Targets holds for this disease or target — drugs and clinical candidates "
+                            "it has linked, at the highest stage each reached. It is NOT a list of approved "
+                            "therapies and it is not complete: read `regulatory` per row for approval status",
+            "withdrawn_or_suspended": withdrawn,
+            "rows": parsed[:limit]}
 
 
 def _version(data: Dict[str, Any]) -> Optional[str]:

@@ -2,12 +2,16 @@
 
 This package root holds the three guards every source module shares.
 
-`attempt` is `zebra.core.attempt` widened with `AttributeError` (F11). The
+`attempt` runs one source call and turns a failure into a warning (F11). The
 parsers call `.get` on whatever the service sent, so a list or a string where a
-dict was expected raises `AttributeError`; `zebra.core.attempt` does not catch
-it, the exception escapes `cli.main`, stdout stays empty and every *other*
-source that did answer is lost. Source modules and the commands that drive them
-import `attempt` from here.
+dict was expected raises `AttributeError`; when that escaped, `cli.main` wrote
+nothing to stdout and every *other* source that did answer was lost with it.
+`zebra.core.attempt` now catches `AttributeError` too, but the source layer
+keeps its own copy so this guarantee is a property of the source layer rather
+than of a file it does not own, and `tests/test_gene.py::test_F11_*` checks
+this one. Source modules and the commands that drive them import `attempt`
+from here. A `UsageError` is deliberately NOT caught: bad input from the caller
+must reach the caller.
 
 `public_url` removes credential parameters from a URL. `zebra.http.request`
 bakes `params` into `Response.url`, and `source_record` copies that URL into the

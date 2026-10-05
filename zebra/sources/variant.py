@@ -38,7 +38,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from zebra.core import Outcome
+from zebra.core import Outcome, UsageError
 from zebra.http import SourceError
 from zebra.sources import attempt, clinvar, ensembl, gnomad
 
@@ -351,8 +351,15 @@ def _litvar_compact(res: Any, rsids: List[str]) -> Optional[Dict[str, Any]]:
 OTHER_ASSEMBLY = {"GRCh38": "GRCh37", "GRCh37": "GRCh38"}
 
 
-class RefMismatch(ValueError):
-    """The REF implied by the input does not match the reference at that position."""
+class RefMismatch(UsageError, ValueError):
+    """The REF implied by the input does not match the reference at that position.
+
+    A `UsageError` so every command that calls `card()` reports it as bad input
+    (exit 2, message shown as is) without having to catch it: `zebra acmg
+    suggest` does not wrap `card()`, and a plain ValueError reached the CLI as
+    an `InternalError` with a traceback. Also a `ValueError`, so the callers
+    that do catch ValueError keep working.
+    """
 
 
 def reference_bases(chrom: str, pos: int, length: int, assembly: str) -> Optional[str]:
@@ -496,6 +503,12 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         warnings.append(f"{len(overlap_genes)} genes overlap this position; annotated on {gene_symbol} "
                         f"({', '.join(tc.get('consequence_terms') or []) if tc else '-'}). Also overlapping — "
                         f"{detail} — use --gene to annotate on another")
+    if gene and tc is not None and not overlaps(tc):
+        warnings.append(f"--gene {gene} names a gene the variant does not lie in: annotated on "
+                        f"{tc.get('transcript_id')} ({', '.join(tc.get('consequence_terms') or []) or '-'}"
+                        + (f", {tc['distance']} bp away" if tc.get("distance") is not None else "") + "). "
+                        + (f"The variant is inside {', '.join(overlap_genes)}" if overlap_genes
+                           else "It lies inside no transcript") + " — drop --gene to annotate where it sits")
     if gene and gene_symbol and gene.upper() != str(gene_symbol).upper():
         genes_hit = sorted({t.get("gene_symbol") for t in tcs if t.get("gene_symbol")})
         warnings.append(f"gene mismatch: you gave {gene}; VEP places this variant in {', '.join(genes_hit) or '-'} "

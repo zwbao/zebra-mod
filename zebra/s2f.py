@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from zebra.core import Outcome, UsageError
-from zebra.http import get_json, source_record
+from zebra.http import deadline_seconds, get_json, source_record
 from zebra.sources import ensembl
 
 MODELS = ("spliceai", "pangolin", "alphagenome", "evo2", "gpn_msa")
@@ -673,19 +673,35 @@ def predict(variant: str, assembly: str = "GRCh38", models: Optional[Sequence[st
     chosen, skipped = _select(models, v, assembly, ontology, binary)
     ws = workspace_dir(case=case, workspace=workspace)
 
+    # The models run one after another, and a hosted one can take minutes. The caller's
+    # deadline (ZEBRA_DEADLINE_MS, set by the mod from the tool's timeout) is shared out:
+    # a model that cannot fit in what is left is `not_run` with that reason, so the models
+    # that did run are still reported instead of the whole call being killed.
     rows: List[Dict[str, Any]] = []
     for name in chosen:
+        budget = float(timeout)
+        left_now = deadline_seconds()
+        if left_now is not None:
+            left = left_now - 2.0  # leave room to serialise the answer
+            if left <= 2.0:
+                rows.append({"model": name, "status": "not_run", "claim_ceiling": CLAIM_CEILINGS[name],
+                             "reason": "the time budget for this call ran out before this model started; "
+                                       "run it on its own (zebra s2f predict ... --models "
+                                       f"{name} --timeout 900), in the background if it is evo2 or alphagenome"})
+                warnings.append(f"{name} not_run: the call's time budget ran out before it started")
+                continue
+            budget = min(budget, left)
         try:
             if name == "spliceai":
                 row = run_spliceai(v, assembly, int(distance), mask)
             elif name == "pangolin":
                 row = run_pangolin(v, assembly, int(distance), mask)
             elif name == "gpn_msa":
-                row = run_gpn_msa(v, assembly, binary, ws, timeout)
+                row = run_gpn_msa(v, assembly, binary, ws, budget)
             elif name == "evo2":
-                row = run_evo2(v, assembly, binary, ws, timeout, window=evo2_window)
+                row = run_evo2(v, assembly, binary, ws, budget, window=evo2_window)
             else:
-                row = run_alphagenome(v, assembly, binary, ws, timeout, ontology=ontology)
+                row = run_alphagenome(v, assembly, binary, ws, budget, ontology=ontology)
         except UsageError:
             raise
         except Exception as err:  # one model failing must not take the others down

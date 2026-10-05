@@ -11,7 +11,7 @@ const def = (name: string) => {
 describe('tool → CLI argv', () => {
   test('every tool has a unique, legal name and an object schema', () => {
     const names = TOOLS.map(t => t.name)
-    expect(names.length).toBe(15)
+    expect(names.length).toBe(16)
     expect(new Set(names).size).toBe(names.length)
     for (const t of TOOLS) {
       expect(/^[A-Za-z0-9_-]{1,64}$/.test(t.name)).toBe(true)

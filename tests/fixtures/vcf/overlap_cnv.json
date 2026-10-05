@@ -1,0 +1,387 @@
+{
+ "_source": {
+  "url": "https://rest.ensembl.org/overlap/region/human/15:25200000-25500000?feature=gene",
+  "retrieved_at": "2026-10-05T18:38:24+00:00"
+ },
+ "region": "15:25200000-25500000",
+ "response": [
+  {
+   "id": "ENSG00000201482",
+   "external_name": "SNORD115-17",
+   "biotype": "snoRNA",
+   "start": 25201323,
+   "end": 25201404,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200163",
+   "external_name": "SNORD115-18",
+   "biotype": "snoRNA",
+   "start": 25203227,
+   "end": 25203308,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000199968",
+   "external_name": "SNORD115-19",
+   "biotype": "snoRNA",
+   "start": 25204357,
+   "end": 25204438,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201969",
+   "external_name": "SNORD115-20",
+   "biotype": "snoRNA",
+   "start": 25206262,
+   "end": 25206343,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000199833",
+   "external_name": "SNORD115-21",
+   "biotype": "snoRNA",
+   "start": 25208083,
+   "end": 25208163,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201326",
+   "external_name": "SNORD115-22",
+   "biotype": "snoRNA",
+   "start": 25209918,
+   "end": 25209999,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201331",
+   "external_name": "SNORD115-23",
+   "biotype": "snoRNA",
+   "start": 25211796,
+   "end": 25211877,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200398",
+   "external_name": "SNORD115-24",
+   "biotype": "snoRNA",
+   "start": 25213648,
+   "end": 25213729,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000199489",
+   "external_name": "SNORD115-25",
+   "biotype": "snoRNA",
+   "start": 25215541,
+   "end": 25215622,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000275524",
+   "external_name": "SNORD115-26",
+   "biotype": "snoRNA",
+   "start": 25218617,
+   "end": 25218698,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201300",
+   "external_name": "SNORD115-27",
+   "biotype": "snoRNA",
+   "start": 25220497,
+   "end": 25220578,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200801",
+   "external_name": "SNORD115-28",
+   "biotype": "snoRNA",
+   "start": 25222348,
+   "end": 25222428,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000199704",
+   "external_name": "SNORD115-29",
+   "biotype": "snoRNA",
+   "start": 25223246,
+   "end": 25223327,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200987",
+   "external_name": "SNORD115-30",
+   "biotype": "snoRNA",
+   "start": 25225203,
+   "end": 25225284,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000202188",
+   "external_name": "SNORD115-31",
+   "biotype": "snoRNA",
+   "start": 25227109,
+   "end": 25227190,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200949",
+   "external_name": "SNORD115-32",
+   "biotype": "snoRNA",
+   "start": 25228967,
+   "end": 25229048,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200593",
+   "external_name": "SNORD115-33",
+   "biotype": "snoRNA",
+   "start": 25230838,
+   "end": 25230919,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000199311",
+   "external_name": "SNORD115-34",
+   "biotype": "snoRNA",
+   "start": 25232387,
+   "end": 25232468,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201992",
+   "external_name": "SNORD115-35",
+   "biotype": "snoRNA",
+   "start": 25234247,
+   "end": 25234328,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000202499",
+   "external_name": "SNORD115-36",
+   "biotype": "snoRNA",
+   "start": 25236085,
+   "end": 25236166,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200638",
+   "external_name": "SNORD115-37",
+   "biotype": "snoRNA",
+   "start": 25237986,
+   "end": 25238067,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201907",
+   "external_name": "SNORD115-38",
+   "biotype": "snoRNA",
+   "start": 25239838,
+   "end": 25239919,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200564",
+   "external_name": "SNORD115-39",
+   "biotype": "snoRNA",
+   "start": 25241746,
+   "end": 25241827,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000272460",
+   "external_name": "SNORD115-40",
+   "biotype": "snoRNA",
+   "start": 25243614,
+   "end": 25243695,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000200478",
+   "external_name": "SNORD115-41",
+   "biotype": "snoRNA",
+   "start": 25245478,
+   "end": 25245559,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201143",
+   "external_name": "SNORD115-42",
+   "biotype": "snoRNA",
+   "start": 25247345,
+   "end": 25247426,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000202373",
+   "external_name": "SNORD115-43",
+   "biotype": "snoRNA",
+   "start": 25249198,
+   "end": 25249279,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000202261",
+   "external_name": "SNORD115-44",
+   "biotype": "snoRNA",
+   "start": 25250859,
+   "end": 25250940,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000280234",
+   "biotype": "TEC",
+   "start": 25255579,
+   "end": 25257027,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000212380",
+   "external_name": "SNORD115-45",
+   "biotype": "snoRNA",
+   "start": 25264510,
+   "end": 25264590,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000276844",
+   "external_name": "SNORD115-46",
+   "biotype": "snoRNA",
+   "start": 25266591,
+   "end": 25266661,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000212528",
+   "external_name": "SNORD115-47",
+   "biotype": "snoRNA",
+   "start": 25268466,
+   "end": 25268551,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000201634",
+   "external_name": "SNORD115-48",
+   "biotype": "snoRNA",
+   "start": 25269783,
+   "end": 25269858,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000239169",
+   "external_name": "SNORD109B",
+   "biotype": "snoRNA",
+   "start": 25278343,
+   "end": 25278409,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000261529",
+   "biotype": "lncRNA",
+   "start": 25345633,
+   "end": 25347235,
+   "strand": -1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000224078",
+   "external_name": "SNHG14",
+   "biotype": "lncRNA",
+   "start": 24978583,
+   "end": 25420336,
+   "strand": 1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000235731",
+   "external_name": "LINC02250",
+   "biotype": "lncRNA",
+   "start": 25456131,
+   "end": 25578823,
+   "strand": -1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  },
+  {
+   "id": "ENSG00000114062",
+   "external_name": "UBE3A",
+   "biotype": "protein_coding",
+   "start": 25333728,
+   "end": 25439122,
+   "strand": -1,
+   "seq_region_name": "15",
+   "assembly_name": "GRCh38"
+  }
+ ]
+}

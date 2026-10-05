@@ -38,6 +38,10 @@ You justify codes; `zebra` does the arithmetic. Every code cites a ledger id or 
    - the class, points, and the single piece of evidence most likely to move it (parental testing, RNA study, segregation, a functional assay);
    - if it differs from the laboratory's class: "worth asking the laboratory to review", listing the evidence — never "the lab is wrong"; labs reclassify on request.
 
+## Not a sequence variant
+
+A CNV, an exon-level deletion or duplication, a copy-number result or a repeat expansion is scored by a different framework (ACMG/ClinGen CNV 2019, or the gene's own repeat thresholds), not by the codes above. Run `mcp__zebra-mod__cnv_interpret` for the genes covered, dosage sensitivity (ClinGen haploinsufficiency/triplosensitivity) and the section 1–5 evidence inputs, then do the scoring yourself and say which framework you used. For an out-of-frame exon deletion, the frame arithmetic it returns is also the exon-skipping question — carry it to `zebra-therapy`.
+
 ## Families
 
 A VUS is not a diagnosis and not a negative result: it is "not enough evidence yet". Say what evidence could change it and how (parents' samples, other affected relatives, new publications). Do not let a family act on a VUS.

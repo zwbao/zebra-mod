@@ -52,7 +52,14 @@ def _max_credible_af(args: argparse.Namespace) -> Dict[str, Any]:
 def _suggest(args: argparse.Namespace) -> Outcome:
     from zebra.sources import variant as variant_src
 
-    card = variant_src.card(args.variant, assembly=args.assembly)
+    try:
+        card = variant_src.card(args.variant, assembly=args.assembly)
+    except UsageError:
+        raise
+    except ValueError as err:
+        # a REF that does not match the build, an unreadable variant string: the
+        # caller's input, not an internal fault
+        raise UsageError(str(err)) from None
     data: Dict[str, Any] = dict(card.result.get("acmg_inputs", {}))
     # The caller may know ClinVar's aggregate classification already; the variant card
     # carries it. BA1 must never be offered against a P/LP assertion without saying so.

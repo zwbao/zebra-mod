@@ -46,7 +46,7 @@ def parse_results(results: List[Dict[str, Any]], base: str) -> List[Dict[str, An
 
 def gene_panels(symbol: str, source: str = "GE", limit: int = 20) -> Outcome:
     name, base = HOSTS[source]
-    url = f"{base}/api/v1/genes/{urllib.parse.quote(symbol.strip())}/"
+    url = f"{base}/api/v1/genes/{urllib.parse.quote(symbol.strip(), safe='')}/"
     results: List[Dict[str, Any]] = []
     sources = []
     pages = 0

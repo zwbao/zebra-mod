@@ -86,7 +86,7 @@ def _params(condition: str, term: Optional[str], country: Optional[str], status:
     if term:
         p["query.term"] = term
     if country:
-        p["filter.advanced"] = f'AREA[LocationCountry]"{country}"'
+        p["filter.advanced"] = f'AREA[LocationCountry]"{country.replace(chr(34), "")}"'
     if status != "ANY":
         p["filter.overallStatus"] = status
     return p

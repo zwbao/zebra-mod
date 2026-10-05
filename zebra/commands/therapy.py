@@ -47,8 +47,21 @@ def _resolve(query: str, out: Outcome) -> List[Dict[str, Any]]:
     elif not tgt:
         first = next((h for h in hits if h["entity"] == "disease"), None)
         if first:
-            matched.append({"as": "disease", "id": first["id"], "name": first["name"],
+            matched.append({"as": "disease", "id": first["id"], "name": first["name"], "exact": False,
                             "how": "first disease hit of Open Targets search (not an exact name match: check it is the disease meant)"})
+            # F13: the caveat used to live only in `matched[0].how`, where the
+            # reader of a built landscape never saw it. `zebra therapy SMA`
+            # silently became "proximal spinal muscular atrophy" (MONDO_0019079),
+            # while `zebra disease SMA` refuses a non-exact name and lists
+            # candidates — so the two tools disagreed without saying so.
+            others = [h for h in hits if h["entity"] == "disease" and h["id"] != first["id"]][:4]
+            out.warnings.append(
+                f"'{q}' is not an exact Open Targets disease name: the landscape below is for "
+                f"{first['id']} '{first['name']}', the first search hit. Confirm it is the disease meant"
+                + ("; other hits were " + ", ".join(f"{h['name']} ({h['id']})" for h in others) if others else "")
+                + ". `zebra disease` resolves a name to an id without guessing")
+    for m in matched:
+        m.setdefault("exact", True)
     return matched
 
 
@@ -56,14 +69,56 @@ def _drug_line(d: Dict[str, Any], with_indications: bool) -> str:
     moa = "; ".join(f"{m['mechanism']} [{', '.join(m['targets'])}]" for m in d["mechanisms"]) or "mechanism not given"
     stage = d.get("stage") or "?"
     if d.get("drug_max_stage") and d["drug_max_stage"] != stage:
-        stage += f" (drug max {d['drug_max_stage']})"
+        stage += f" (any indication: {d['drug_max_stage']})"
     ev = "; ".join(f"{e['source']} {e['stage']}" + (f" {e['status']}" if e.get("status") else "") + (f" {e['url']}" if e.get("url") else "")
                    for e in d["evidence"][:3])
     line = f"  {stage:<12} {d['drug']} ({d['chembl_id']}, {d.get('type')}) — {moa}"
+    reg = d.get("regulatory") or {}
+    if reg.get("by_jurisdiction") or reg.get("headline"):
+        line += f"\n      status by jurisdiction: {reg.get('headline')}"
+        for j in reg.get("by_jurisdiction") or []:
+            line += f"\n        {j['jurisdiction']}: {j['stage']} — {j['reading']}" + (f" {j['url']}" if j.get("url") else "")
+    if d.get("stage_warning"):
+        line += f"\n      ! {d['stage_warning']}"
     if with_indications and d.get("indications"):
         line += f"\n      indications: {', '.join(d['indications'])}"
     line += f"\n      {d['reports']} reports ({d['trials']} ClinicalTrials.gov) · {ev}"
     return line
+
+
+def _tokens(text: str) -> set:
+    return {t for t in re.split(r"[^a-z0-9]+", (text or "").lower()) if len(t) > 3}
+
+
+def _gap_label(m: Dict[str, Any]) -> str:
+    """A short name for a designated substance: its trade name when the EMA register gives one."""
+    if m.get("medicine"):
+        return str(m["medicine"])
+    s = str(m.get("substance") or "?")
+    return s if len(s) <= 60 else s[:57].rsplit(" ", 1)[0] + "…"
+
+
+def _designations_not_in_drug_list(designations: List[Dict[str, Any]], rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """EU orphan-designated substances with no row in the Open Targets drug list (P1g).
+
+    A gap found this way is evidence, not a guess: both lists come from this
+    run. Delandistrogene moxeparvovec (Elevidys) for Duchenne muscular
+    dystrophy is the case the review found — it has an EU orphan designation
+    and an FDA approval, and no row in Open Targets' 62 drugs for the disease.
+    Matching is on a shared word of 4+ characters between the substance name
+    (or the medicine's trade name) and a drug name, so a spelling difference
+    does not invent a gap.
+    """
+    known = set()
+    for r in rows or []:
+        known |= _tokens(r.get("drug") or "")
+    out = []
+    for d in designations:
+        subj = _tokens(d.get("substance") or "") | _tokens(d.get("medicine") or "")
+        if subj and not (subj & known):
+            out.append({"substance": d.get("substance"), "medicine": d.get("medicine"), "status": d.get("status"),
+                        "eu_number": d.get("eu_number"), "url": d.get("url")})
+    return out
 
 
 def _disease_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:
@@ -79,8 +134,14 @@ def _disease_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:
     if d["xrefs"]:
         lines.append("xrefs: " + ", ".join(d["xrefs"]))
     dr = d["drugs"]
-    lines.append(f"drugs and clinical candidates for this disease: {dr['count']} (showing {dr['shown']}, {dr['order']})")
+    lines.append(f"what Open Targets holds for this disease: {dr['count']} drugs and clinical candidates "
+                 f"(showing {dr['shown']}, {dr['order']}). Not a list of approved therapies — see each row's "
+                 "status by jurisdiction")
     lines += [_drug_line(x, False) for x in dr["rows"]] or ["  none in Open Targets"]
+    if dr.get("withdrawn_or_suspended"):
+        out.warnings.append("withdrawn or suspended in at least one jurisdiction, despite showing APPROVAL as a "
+                            "highest-ever stage: " + ", ".join(dr["withdrawn_or_suspended"])
+                            + " — read each row's status by jurisdiction before calling anything approved")
     if d["top_targets"]:
         lines.append("top associated targets (Open Targets association score): " +
                      ", ".join(f"{t['symbol']} {t['score']}" for t in d["top_targets"]))
@@ -94,6 +155,16 @@ def _disease_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:
         for x in o["designations"]:
             lines.append(f"  {x['status']:<9} {x['substance']}" + (f" ({x['medicine']})" if x.get("medicine") else "")
                          + f" — {x['intended_use']} — {x['eu_number']} {x['date']} {x['url']}")
+        missing = _designations_not_in_drug_list(o.get("designations") or [], dr["rows"])
+        if missing:
+            out.result["coverage_gap"] = missing
+            out.warnings.append(
+                f"{len(missing)} EU orphan-designated substance(s) for this disease are NOT in the Open Targets "
+                "drug list above, so an approved or late-stage therapy can be missing from it: "
+                + "; ".join(_gap_label(m) for m in missing[:6])
+                + (f"; +{len(missing) - 6} more in result.coverage_gap" if len(missing) > 6 else "")
+                + ". Check each against the FDA (Drugs@FDA / Purple Book), the EMA register and, for China, NMPA "
+                  "and the national reimbursement list — none of which this command queries")
 
 
 def _target_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:

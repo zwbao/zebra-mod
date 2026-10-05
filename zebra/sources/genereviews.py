@@ -6,7 +6,20 @@ Lookup tables are NCBI's own GeneReviews mapping files
   GRshortname_NBKid_genesymbol_dzname.txt     NBK id -> gene symbols and the chapter's disease name
 Chapter metadata (title, authors, last update) comes from E-utilities
 (esearch/esummary, db=books); a name with no table hit is searched there too.
-The bookshelf HTML is not fetched (it answers scripts with a captcha).
+The bookshelf HTML is not fetched: `https://www.ncbi.nlm.nih.gov/books/NBK1119/`
+answered a Google reCAPTCHA challenge page on 2026-10-06, and
+`efetch.fcgi?db=books&rettype=xml` answers "Database: books - is not supported
+for rettype=xml".
+
+The chapter's own text comes from Europe PMC instead (F39). Every GeneReviews
+chapter is a PubMed book record, and Europe PMC indexes its summary as the
+abstract, in four `<h4>` sections — Clinical characteristics, Diagnosis/testing,
+Management, Genetic counseling. The exact handle is the search field `BOOK_ID`:
+`BOOK_ID:NBK1318` returns hitCount 1 (the SCN1A chapter, PMID 20301494, 3,946
+characters of summary), and several are fetched in one OR-ed query. Verified
+live 2026-10-06 for NBK1119 (Dystrophinopathies, 6,822 chars), NBK1318 and
+NBK1480. This is the chapter *summary* that GeneReviews publishes as its
+abstract, not the whole chapter; `url` points at the full chapter.
 """
 
 from __future__ import annotations
@@ -15,9 +28,12 @@ import html
 import re
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from zebra.core import Outcome, attempt
+from zebra.core import Outcome
 from zebra.http import get_json, request
+from zebra.sources import attempt
 from zebra.sources import record as source_record
+from zebra.sources import validated_json
+from zebra.sources import validated_text
 
 FTP = "https://ftp.ncbi.nlm.nih.gov/pub/GeneReviews"
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
@@ -52,10 +68,27 @@ def parse_gene_map(text: str) -> List[Dict[str, str]]:
     return rows
 
 
+def _fetch_map(name: str, refresh: bool = False):
+    return request(f"{FTP}/{name}", source="GeneReviews (NCBI FTP)", accept="text/plain",
+                   cache_ttl=0 if refresh else 30 * 86400, timeout=60)
+
+
 def _fetch_maps():
-    r1 = request(f"{FTP}/{OMIM_FILE}", source="GeneReviews (NCBI FTP)", accept="text/plain", cache_ttl=30 * 86400, timeout=60)
-    r2 = request(f"{FTP}/{GENE_FILE}", source="GeneReviews (NCBI FTP)", accept="text/plain", cache_ttl=30 * 86400, timeout=60)
-    return parse_omim_map(r1.text), parse_gene_map(r2.text), [
+    """The two NCBI mapping files, rejected when the answer is not one of them (F10).
+
+    Without the check an HTML error page or a truncated download parsed to an
+    empty table and the card showed "no GeneReviews chapter" for the whole
+    30-day cache life. The markers are the files' own first bytes, checked live
+    2026-10-06: `NBKid_shortname_OMIM.txt` begins `#NBK_id\tGR_shortname\tOMIM`,
+    and every row of `GRshortname_NBKid_genesymbol_dzname.txt` contains `|NBK`.
+    """
+    r1 = _fetch_map(OMIM_FILE)
+    t1 = validated_text(r1, "GeneReviews OMIM map", must_contain="#NBK_id",
+                        refetch=lambda: _fetch_map(OMIM_FILE, True))
+    r2 = _fetch_map(GENE_FILE)
+    t2 = validated_text(r2, "GeneReviews gene map", must_contain="|NBK",
+                        refetch=lambda: _fetch_map(GENE_FILE, True))
+    return parse_omim_map(t1), parse_gene_map(t2), [
         source_record("GeneReviews OMIM map", OMIM_FILE, r1), source_record("GeneReviews gene map", GENE_FILE, r2)]
 
 
@@ -137,15 +170,68 @@ def parse_esummary(data: Dict[str, Any], nbks: Optional[Sequence[str]] = None) -
     return out
 
 
+EPMC_SEARCH = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+SECTION_RE = re.compile(r"<h4[^>]*>(.*?)</h4>(.*?)(?=<h4|$)", re.S | re.I)
+
+
+def _plain(html_text: str) -> str:
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", html_text or "")).split())
+
+
+def parse_sections(abstract: str) -> Dict[str, str]:
+    """A GeneReviews summary's `<h4>` sections as {heading: plain text}, in order."""
+    out: Dict[str, str] = {}
+    for head, body in SECTION_RE.findall(abstract or ""):
+        h = _plain(head)
+        if h and h not in out:
+            out[h] = _plain(body)
+    if not out and (abstract or "").strip():
+        out["Summary"] = _plain(abstract)
+    return out
+
+
+def chapter_text(nbks: Sequence[str]) -> Outcome:
+    """The published summary text of these GeneReviews chapters, from Europe PMC (F39)."""
+    ids = [n for n in dict.fromkeys(nbks) if str(n).startswith("NBK")][:10]
+    if not ids:
+        return Outcome({})
+    query = " OR ".join(f"BOOK_ID:{n}" for n in ids)
+    resp = get_json(EPMC_SEARCH, source="Europe PMC (GeneReviews text)",
+                    params={"query": query, "format": "json", "resultType": "core", "pageSize": len(ids)},
+                    cache_ttl=14 * 86400, timeout=60)
+    data = validated_json(resp, "Europe PMC (GeneReviews text)", require="resultList")
+    out: Dict[str, Dict[str, Any]] = {}
+    for r in ((data.get("resultList") or {}).get("result") or []):
+        nbk = r.get("bookid")
+        if nbk not in ids:
+            continue
+        details = r.get("bookOrReportDetails") or {}
+        out[nbk] = {
+            "nbk": nbk,
+            "pmid": r.get("pmid"),
+            "title": r.get("title"),
+            "book": details.get("comprisingTitle"),
+            "publisher": details.get("publisher"),
+            "last_revised": r.get("dateOfRevision"),
+            "sections": parse_sections(r.get("abstractText") or ""),
+            "source": "GeneReviews chapter summary as published in PubMed, retrieved through Europe PMC "
+                      f"(BOOK_ID:{nbk}); the full chapter is at {book_url(nbk)}",
+        }
+    srcs = [source_record("GeneReviews chapter text (Europe PMC)", ", ".join(ids), resp,
+                          note="PubMed book records; abstract = the chapter's published summary")]
+    warnings = [f"no Europe PMC book record for {n}: chapter text not retrieved" for n in ids if n not in out]
+    return Outcome(out, sources=srcs, warnings=warnings)
+
+
 def chapters(omim_ids: Iterable[str] = (), genes: Iterable[str] = (), name: Optional[str] = None,
-             limit: int = 5) -> Outcome:
+             limit: int = 5, with_text: bool = True) -> Outcome:
     """GeneReviews chapters covering these OMIM numbers / genes / disease name, most specific first."""
     omim_ids, genes = list(omim_ids), list(genes)
     omim_map, gene_rows, srcs = _fetch_maps()
     hits = match_chapters(omim_map, gene_rows, omim_ids, genes, name)
     warnings: List[str] = []
     if not hits and name:
-        term = f'gene[book] AND "{name}"[title]'
+        term = f'gene[book] AND "{name.replace(chr(34), " ").strip()}"[title]'
         es = get_json(f"{EUTILS}/esearch.fcgi", source="NCBI E-utilities",
                       params={"db": "books", "term": term, "retmode": "json", "retmax": 50}, cache_ttl=14 * 86400)
         srcs.append(source_record("NCBI Bookshelf esearch", term, es))
@@ -180,5 +266,18 @@ def chapters(omim_ids: Iterable[str] = (), genes: Iterable[str] = (), name: Opti
                     h["title"] = m["title"] or h["title"]
                     h["dates"] = m["dates"]
                     h["authors"] = m["authors"]
+    if ordered and with_text:
+        got = attempt("GeneReviews chapter text (Europe PMC)",
+                      lambda: chapter_text([h["nbk"] for h in ordered]), warnings)
+        if got is not None:
+            srcs.extend(got.sources)
+            warnings.extend(got.warnings)
+            for h in ordered:
+                t = got.result.get(h["nbk"])
+                if t:
+                    h["pmid"] = t["pmid"]
+                    h["sections"] = t["sections"]
+                    h["text_source"] = t["source"]
+                    h["last_revised"] = t.get("last_revised")
     return Outcome({"query": {"omim": omim_ids, "genes": genes, "name": name}, "chapters": ordered},
                    sources=srcs, warnings=warnings)

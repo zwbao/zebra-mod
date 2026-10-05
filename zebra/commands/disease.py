@@ -56,6 +56,7 @@ class Resolver:
         self.obsolete_mondo: Dict[str, Optional[str]] = {}  # given obsolete MONDO -> replacement
         self.name: Optional[str] = None
         self.notes: List[str] = []
+        self.query: Optional[str] = None  # what the user typed, for the China list lookup
 
     # -- helpers
     def _try(self, label: str, fn: Callable[[], Outcome]) -> Optional[Outcome]:
@@ -180,12 +181,118 @@ class Resolver:
         return True
 
 
+def resolve_chinese(r: Resolver, name: str) -> Tuple[Resolver, str, List[str]]:
+    """Resolve a Chinese disease name (P1f). Returns (resolver, status, English names to try next).
+
+    Order, every step recorded in `r.notes` with what it matched:
+      1. Orphanet's own Chinese preferred terms, bundled as
+         `zebra/data/orphanet_zh_names.json`, matched exactly and then by
+         character-bigram overlap. This is what reaches the *clinical entity*:
+         杜氏肌营养不良 scores 0.923 against ORPHA:98896 杜氏肌营养不良症
+         (genes: DMD) and 脊髓性肌萎缩症 scores 0.769 against ORPHA:70
+         近端脊髓性肌萎缩 (genes: SMN1). Orphadata's live closest-name endpoint
+         is NOT trusted for this: asked for 渐冻症 it answers ORPHA:90280
+         冻疮样狼疮 (chilblain lupus) and for 德拉韦综合征 it answers
+         ORPHA:398073 普拉德-威利样综合征 (checked 2026-10-06).
+      2. The national-list alias layer, which carries the folk names
+         (瓷娃娃, 渐冻症, 小胖威利, 快乐木偶) that no ontology holds; its entry
+         gives an ORPHAcode when the list name could be linked to one, and in
+         any case the official English name to resolve in English.
+    """
+    from zebra.commands import china
+
+    zh_hits: List[Dict[str, Any]] = []
+    try:
+        zh_hits = china.zh_name_hits(name, limit=3)
+    except (OSError, ValueError):
+        pass
+    english: List[str] = []
+    try:
+        hit = china.lookup([name])
+    except china.ListUnavailable as err:
+        r.warnings.append(f"China rare disease list unavailable: {err}")
+        hit = {"on_list": False, "matches": []}
+    alias_hit = hit["matches"][0] if hit["on_list"] else None
+
+    # Candidates in order of how much the match is worth, not in source order.
+    # An exact alias beats a fuzzy Chinese name (瑞特综合征 is an exact folk alias
+    # of Rett综合征, and scores 0.75 against 巴特综合征 / Bartter syndrome), while a
+    # near-exact Chinese name beats an exact alias that only reaches a grouping
+    # (杜氏肌营养不良 scores 0.923 against ORPHA:98896, whose genes include DMD;
+    # the list entry it is an alias of links to ORPHA:206644, a group of disorders).
+    cands: List[Tuple[int, Dict[str, Any]]] = []
+    for z in zh_hits:
+        if z["match"] == "exact":
+            cands.append((0, {"kind": "zh", "z": z}))
+        elif z["similarity"] >= 0.85:
+            cands.append((2, {"kind": "zh", "z": z}))
+        else:
+            cands.append((4, {"kind": "zh", "z": z}))
+    if alias_hit and alias_hit.get("orpha"):
+        tier = 1 if alias_hit.get("orpha_disorder_group") == "Disorder" else 3
+        cands.append((tier, {"kind": "alias", "m": alias_hit}))
+    cands.sort(key=lambda c: c[0])
+
+    for _tier, c in cands:
+        if c["kind"] == "zh":
+            z = c["z"]
+            how = (f"Chinese name matched Orphanet's Chinese preferred term '{z['name_zh']}' "
+                   f"({z['orpha']}, {z['match']} match, character-bigram similarity {z['similarity']}; "
+                   f"{z['source']})")
+            if not r.from_orpha(z["orpha"], how):
+                continue
+            if z["match"] != "exact":
+                r.warnings.append(f"'{name}' is not an exact Orphanet Chinese name: resolved to {z['orpha']} "
+                                  f"'{z['name_zh']}' by character-bigram similarity {z['similarity']} — confirm "
+                                  "it is the disease meant"
+                                  + ("; next closest: " + ", ".join(
+                                      f"{o['orpha']} {o['name_zh']} ({o['similarity']})"
+                                      for o in zh_hits if o is not z)
+                                     if len(zh_hits) > 1 else ""))
+            return r, "resolved", []
+        m = c["m"]
+        r.notes.append(f"Chinese name matched the national list entry '{m['name_zh']}' / '{m['name_en']}' "
+                       f"({m['list_name']} #{m['no']}, matched '{m.get('matched_on')}' "
+                       f"[{m.get('alias_kind') or m['match']}])")
+        how = (f"the national list entry {m['list_name']} #{m['no']} '{m['name_zh']}' links to {m['orpha']} "
+               f"({m.get('orpha_match')}); your text matched its alias '{m.get('matched_on')}' "
+               f"[{m.get('alias_kind')}]")
+        if not r.from_orpha(m["orpha"], how):
+            continue
+        if m.get("orpha_disorder_group") and m["orpha_disorder_group"] != "Disorder":
+            r.warnings.append(f"{m['orpha']} is an Orphanet '{m['orpha_disorder_group']}', not a single "
+                              "clinical entity: Orphanet assigns genes to entities, so the gene list below "
+                              "may come only from Monarch. Name the specific subtype if you know it")
+        return r, "resolved", []
+
+    if alias_hit:
+        m = alias_hit
+        r.notes.append(f"Chinese name matched the national list entry '{m['name_zh']}' / '{m['name_en']}' "
+                       f"({m['list_name']} #{m['no']}, matched '{m.get('matched_on')}' "
+                       f"[{m.get('alias_kind') or m['match']}]); that entry has no single ORPHAcode, so the "
+                       "English name is resolved instead")
+        en = m["name_en"]
+        english = [p.strip() for p in re.split(r"[/()（）]", en) if len(p.strip()) > 3] + [en]
+    if zh_hits:
+        r.notes.append("Orphanet Chinese names close to this text, none accepted: "
+                       + ", ".join(f"{z['orpha']} {z['name_zh']} ({z['similarity']})" for z in zh_hits))
+    elif not english:
+        r.warnings.append(f"'{name}' matched no Orphanet Chinese preferred term (bundled index, "
+                          "Orphanet zh dataset 2020-06-01) and no national-list name or alias. Chinese coverage is "
+                          "the Orphanet zh dataset plus the list alias layer; try the English name, or "
+                          "`zebra china <name>` to see the closest list entries")
+    return r, "not_found", english
+
+
 def resolve(query: str) -> Tuple[Resolver, str, List[Dict[str, Any]]]:
     """Returns (resolver, status, candidates). status: resolved | ambiguous | not_found."""
     from zebra.sources import monarch, orphanet
 
     kind, value = parse_query(query)
     r = Resolver()
+    # The card's China-list line must agree with `zebra china <same text>`: the
+    # list is matched on names, and the name the family used is one of them.
+    r.query = query.strip() if kind == "name" else None
     if kind == "ORPHA":
         ok = r.from_orpha(value)
         if not ok:  # Orphanet down or silent: Monarch may still know the code through Mondo
@@ -205,20 +312,10 @@ def resolve(query: str) -> Tuple[Resolver, str, List[Dict[str, Any]]]:
     name = value
     names_to_try = [name]
     if _CJK.search(name):
-        got = r._try("Orphanet name search (zh)", lambda: orphanet.by_name(name, lang="zh"))
-        if got and orphanet.name_matches(got.result, name):
-            ok = r.from_orpha(got.result["id"], f"Chinese name '{got.result['name']}' in Orphanet (zh, 2020 dataset)")
-            return r, ("resolved" if ok else "not_found"), []
-        from zebra.commands import china
-
-        try:
-            hit = china.lookup([name])
-            if hit["on_list"]:
-                en = hit["matches"][0]["name_en"]
-                r.notes.append(f"Chinese name matched the national list entry '{hit['matches'][0]['name_zh']}' / '{en}'")
-                names_to_try = [p.strip() for p in re.split(r"[/()（）]", en) if len(p.strip()) > 3] + [en]
-        except china.ListUnavailable:
-            pass
+        r2, status2, cands2 = resolve_chinese(r, name)
+        if status2 == "resolved":
+            return r2, status2, cands2
+        names_to_try = cands2 or names_to_try  # cands2 carries English names to try next
     for n in names_to_try:
         got = r._try("Orphanet name search", lambda n=n: orphanet.by_name(n))
         if got and orphanet.name_matches(got.result, n):
@@ -265,9 +362,49 @@ def _freq_weight(f: Optional[str]) -> float:
     return 0.5
 
 
+ORPHADATA_DATASETS = ("rd-cross-referencing", "rd-epidemiology", "rd-natural_history", "rd-associated-genes",
+                      "rd-phenotypes", "rd-classification", "rd-medical-specialties")
+
+
+def support_pointers(orpha: Optional[str], row: Dict[str, Any], ids: Dict[str, Any],
+                     mp: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Where to find patient organisations and expert centres (F39).
+
+    These are pointers to pages, not retrieved records, and the note says so.
+    Orphanet's public API serves no patient-organisation or expert-centre
+    dataset: its OpenAPI document (https://api.orphadata.com/openapi.json,
+    read 2026-10-06) lists only the datasets in `ORPHADATA_DATASETS`. The
+    orpha.net disease page does list organisations and expert centres, and
+    GARD (NIH) lists patient organisations on the page for the GARD id Orphanet
+    cross-references, so both are given as links to open.
+    """
+    pointers: List[Dict[str, Any]] = []
+    if row.get("url"):
+        pointers.append({"what": "patient organisations and expert centres",
+                         "source": "Orphanet disease page (orpha.net)", "url": row["url"],
+                         "retrieved": False})
+    for g in (ids.get("GARD") or [])[:2]:
+        gid = (g.get("id") if isinstance(g, dict) else str(g)).split(":")[-1]
+        if gid.isdigit():
+            pointers.append({"what": "patient organisations and advocacy groups",
+                             "source": f"GARD (NIH) GARD:{gid}, cross-referenced by Orphanet",
+                             "url": f"https://rarediseases.info.nih.gov/diseases/{gid}/index",
+                             "retrieved": False})
+    if mp and mp.get("url"):
+        pointers.append({"what": "plain-language description and further reading",
+                         "source": "MedlinePlus Genetics", "url": mp["url"], "retrieved": True})
+    return {
+        "pointers": pointers,
+        "note": "Links to open, not data this command retrieved. Orphanet's public API "
+                "(api.orphadata.com) serves no patient-organisation or expert-centre dataset — its OpenAPI "
+                "document lists only " + ", ".join(ORPHADATA_DATASETS) + " — so the organisations themselves "
+                "cannot be named here, and China's 全国罕见病诊疗协作网 hospital list is not bundled.",
+    }
+
+
 def build_card(r: Resolver) -> Dict[str, Any]:
     from zebra.commands import china
-    from zebra.sources import genereviews, hpo, monarch, orphanet
+    from zebra.sources import genereviews, hpo, medlineplus, monarch, orphanet
 
     orpha = r.orpha
     exact_omim = [k for k, v in r.omim.items() if v in ("given",) or v.startswith("exact")]
@@ -287,6 +424,11 @@ def build_card(r: Resolver) -> Dict[str, Any]:
         jobs[f"mgenes{i}"] = ("Monarch gene associations", lambda mid=mid: monarch.disease_genes(mid))
     name = r.name
     jobs["gr"] = ("GeneReviews", lambda: genereviews.chapters(omim_ids=exact_omim, name=name))
+    # F39: a plain-language source for the family, and the chapter text above.
+    orow = r.orpha_row or {}
+    mp_names = [n for n in dict.fromkeys(
+        [orow.get("name"), r.name] + list(orow.get("synonyms") or [])[:4]) if n]
+    jobs["mp"] = ("MedlinePlus Genetics", lambda: medlineplus.condition(mp_names, exact_omim))
 
     results: Dict[str, Optional[Outcome]] = {}
     warn: Dict[str, List[str]] = {k: [] for k in jobs}
@@ -357,7 +499,7 @@ def build_card(r: Resolver) -> Dict[str, Any]:
                 hpo_onset.append(p["label"])
 
     # China lists
-    names = [row.get("name"), (zh or {}).get("name"), r.name] + list(row.get("synonyms") or [])[:5] \
+    names = [r.query, row.get("name"), (zh or {}).get("name"), r.name] + list(row.get("synonyms") or [])[:5] \
         + list((zh or {}).get("synonyms") or [])[:3] + ([me.get("name")] + list(me.get("synonyms") or [])[:5] if me else [])
     try:
         cn = china.lookup([n for n in dict.fromkeys(names) if n and (len(n) >= 4 or _CJK.search(n))])
@@ -369,7 +511,10 @@ def build_card(r: Resolver) -> Dict[str, Any]:
 
     nh = res("nh") or {}
     gr = res("gr") or {}
+    mp = res("mp")
     return {
+        "plain_language": mp,
+        "support": support_pointers(orpha, row, ids, mp),
         "name": row.get("name") or r.name or (me or {}).get("name"),
         "name_mondo": (me or {}).get("name") if me and (me.get("name") or "").lower() != (row.get("name") or r.name or "").lower() else None,
         "name_zh": (zh or {}).get("name"),
@@ -450,8 +595,30 @@ def render(card: Dict[str, Any]) -> str:
     for ch in card["genereviews"]:
         lines.append(f"GeneReviews: {ch['nbk']} {ch['title']}" + (f" ({ch['dates']})" if ch.get("dates") else "")
                      + f" {ch['url']}  [matched by {', '.join(ch['matched_by'])}]")
+        for head, body in (ch.get("sections") or {}).items():
+            lines.append(f"  {head}: {body if len(body) <= 600 else body[:600].rsplit(' ', 1)[0] + ' …'}")
+        if ch.get("sections"):
+            lines.append(f"  (chapter summary as published, PMID {ch.get('pmid')}; full chapter at {ch['url']})")
     if not card["genereviews"]:
         lines.append("GeneReviews: no chapter found for these OMIM ids / this name")
+    mp = card.get("plain_language")
+    if mp:
+        desc = next((b["text"] for b in mp.get("text") or [] if b["role"] == "description"),
+                    (mp.get("text") or [{}])[0].get("text", ""))
+        lines.append(f"plain language ({mp['register']}): {mp['name']} — {mp['url']}"
+                     + (f" [OMIM match {', '.join(mp['omim_overlap'])}]" if mp.get("omim_overlap")
+                        else " [matched by name only]"))
+        if desc:
+            lines.append("  " + (desc if len(desc) <= 700 else desc[:700].rsplit(" ", 1)[0] + " …"))
+    else:
+        lines.append("plain language: no MedlinePlus Genetics page found by name")
+    sup = card.get("support") or {}
+    if sup.get("pointers"):
+        lines.append("support (links to open, not retrieved records):")
+        for p in sup["pointers"]:
+            lines.append(f"  {p['what']} — {p['source']}: {p['url']}")
+    if sup.get("note"):
+        lines.append(f"  note: {sup['note']}")
     ha = card["hpo_annotations"]
     if ha["top"]:
         lines.append(f"HPO ({ha['disease']}, {ha['count']} terms; most frequent): " + "; ".join(

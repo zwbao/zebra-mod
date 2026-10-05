@@ -345,6 +345,47 @@ def _rank(args: argparse.Namespace) -> Outcome:
                 remote_terms.append(pid)
         labels = {t: idx.names.get(idx.primary(t)[0] or t) for t in present + excluded}
 
+    # F14: a web source cannot be queried with an empty term set. Terms the
+    # local release does not know, and obsolete terms with no replacement, are
+    # dropped from `remote_terms`; when every term is dropped, PubCaseFinder
+    # and Monarch were still called with an empty termset and the answer came
+    # back `ok: true` with `diseases: 0`, which reads as "nothing matches this
+    # patient" rather than "none of these ids is usable".
+    if idx is None and [s for s in sources if s in ("monarch", "pubcasefinder")]:
+        # Without the local release there is nothing to resolve ids against, so
+        # each one is checked once against the HPO API (cached 30 days) rather
+        # than sent to a ranker that answers an unknown id with "no match".
+        from zebra.sources import hpo as hpo_src
+
+        checked = []
+        for t in remote_terms:
+            got = attempt(f"HPO {t}", lambda t=t: hpo_src.term(t, prefer_local=False), warnings)
+            if got is None:  # the API could not be reached: keep the term, say so
+                checked.append(t)
+                continue
+            outcome_note = (got.result or {}).get("note")
+            if (got.result or {}).get("name") is None and outcome_note == "not found in HPO":
+                continue
+            replacement = (got.result or {}).get("replaced_by")
+            checked.append(replacement or t)
+            if replacement and replacement != t:
+                notes.append(f"{t} is obsolete in HPO; used {replacement} (HPO API)")
+        remote_terms = list(dict.fromkeys(checked))
+
+    dropped = [t for t in present if t not in remote_terms]
+    if dropped:
+        warnings.append("not sent to the web sources, because this HPO release does not resolve them to a current "
+                        f"term: {', '.join(dropped)}")
+    remote_sources = [s for s in sources if s in ("monarch", "pubcasefinder")]
+    if remote_sources and not remote_terms:
+        local_possible = "local" in sources and idx is not None
+        raise UsageError(
+            f"none of the {len(present)} phenotype(s) given is a term this HPO release can resolve "
+            f"({', '.join(present)}): {', '.join(remote_sources)} cannot be queried with an empty set, and an "
+            "empty query would come back as 'no disease matches'. Check the ids with `zebra hpo term <id>`, or "
+            "search for the phenotype with `zebra hpo search <phrase>`."
+            + ("" if local_possible else " Run `zebra hpo fetch` once to get the HPO release."))
+
     per: Dict[str, Any] = {}
     outcome = Outcome(None)
     jobs: Dict[str, Callable[[], Outcome]] = {}

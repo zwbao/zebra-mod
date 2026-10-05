@@ -54,28 +54,43 @@ ID_SHAPES = {
     "DBSNP": (re.compile(r"^rs\d+$", re.I), "DBSNP:rs113993960"),
     "ENSEMBL": (re.compile(r"^ENS[A-Z]*\d{6,}(\.\d+)?$"), "ENSEMBL:ENSG00000198947"),
 }
-# HGVS: a versioned reference sequence (or a bare gene symbol for c./p.) and a
-# sequence type. Accepts the exon-boundary form NM_004006.3:c.6439-?_7309+?del.
-HGVS_RE = re.compile(
-    r"^(?:(?:N[CGMRPTW]_\d+(?:\.\d+)?|ENS[TGP]\d+(?:\.\d+)?|LRG_\d+(?:t\d+|p\d+)?|[A-Za-z0-9][A-Za-z0-9_.-]{0,20})"
-    r"(?:\([A-Za-z0-9_.-]+\))?):[cgmnopr]\.\S+$"
-)
+# HGVS shape: an optional reference sequence (or a gene symbol), then a sequence
+# type and a description. The reference is optional because that is how reports
+# and families write it ("p.Phe508del"); which transcript was used is then not
+# recorded, and `hgvs_reference` says so, so the caller can warn instead of
+# refusing the commonest form. Accepts NM_004006.3:c.6439-?_7309+?del.
+HGVS_REF = (r"(?:N[CGMRPTW]_\d+(?:\.\d+)?|ENS[TGP]\d+(?:\.\d+)?|LRG_\d+(?:t\d+|p\d+)?"
+            r"|[A-Za-z0-9][A-Za-z0-9_.-]{0,20})(?:\([A-Za-z0-9_.-]+\))?")
+# the description must at least start the way HGVS descriptions do: a position
+# (c.1521del, g.117559590A>G, p.Phe508del) or the *-/? forms reports use
+HGVS_DESC = r"(?:[*-]?\d|\(|\[|[A-Z][a-z]{2}\d|[A-Z]\d|=|\?)\S*"
+HGVS_RE = re.compile(r"^(?:(?P<ref>" + HGVS_REF + r"):)?(?P<kind>[cgmnopr])\.(?P<desc>" + HGVS_DESC + r")$")
 
 
 class CaseError(Exception):
     pass
 
 
+_BARE_ID_RE = re.compile(r"^(NCT|PMC|rs)(\d+)$", re.I)
+
+
 def check_id(pair: str) -> str:
-    """Validate a `PREFIX:VALUE` identifier's shape; returns the normalised form."""
+    """Validate an identifier's shape; returns the normalised `PREFIX:VALUE` form.
+
+    The forms people actually paste are accepted: `NCT04006210` and `rs113993960`
+    carry their prefix without a colon, which is how every registry prints them.
+    """
     text = str(pair).strip()
+    bare = _BARE_ID_RE.match(text)
+    if bare:
+        prefix = bare.group(1).upper()
+        text = f"{'DBSNP' if prefix == 'RS' else prefix}:{bare.group(0) if prefix == 'RS' else bare.group(2)}"
     if ":" not in text:
         raise CaseError(f"{text!r} is not an identifier: it takes PREFIX:VALUE (ORPHA:33069, OMIM:607208, "
-                        "MONDO:0100135, NCT04006210, PMID:28919360)")
+                        "MONDO:0100135, PMID:28919360) or a registry id that carries its own prefix "
+                        "(NCT04006210, rs113993960)")
     prefix, value = text.split(":", 1)
     prefix, value = prefix.strip().upper(), value.strip()
-    if prefix == "NCT" and value == "":  # NCT04006210 written without a colon
-        raise CaseError("NCT ids are written NCT04006210")
     shape = ID_SHAPES.get(prefix)
     if shape is None:
         raise CaseError(f"unknown identifier prefix {prefix!r} in {text!r}; zebra validates "
@@ -89,8 +104,25 @@ def check_hgvs(text: str, field: str = "hgvs") -> str:
     value = str(text).strip()
     if not HGVS_RE.match(value):
         raise CaseError(f"{field}: {value!r} is not HGVS (expected like NM_000492.4:c.1521_1523del, "
-                        "NC_000007.14:g.117559590_117559592del or NP_000483.3:p.Phe508del)")
+                        "c.1521_1523del, NC_000007.14:g.117559590_117559592del or p.Phe508del)")
     return value
+
+
+def hgvs_reference(text: str) -> Optional[str]:
+    """The reference sequence an HGVS string names, or None when it names none."""
+    got = HGVS_RE.match(str(text).strip())
+    return got.group("ref") if got else None
+
+
+def variant_notes(fields: Dict[str, Any]) -> List[str]:
+    """What is worth saying about a recorded variant without refusing it."""
+    notes = []
+    for key in ("hgvs_c", "hgvs_g", "hgvs_p"):
+        value = fields.get(key)
+        if value and not hgvs_reference(value):
+            notes.append(f"{key} {value!r} names no reference sequence: the transcript or genome the laboratory "
+                         "used is not recorded with it, so the position cannot be checked")
+    return notes
 
 
 def str_list(value: Any, field: str) -> List[str]:
@@ -216,6 +248,23 @@ def _validate(data: Any, where: str) -> Dict[str, Any]:
             bad = [i for i in data[key] if not isinstance(i, dict)]
             if bad:
                 raise CaseError(f"{where}: every item in {key!r} must be an object, got {bad[0]!r}")
+    # the nested objects summary() and the report reach into
+    for v in data["variants"]:
+        if v.get("zebra_acmg") is not None and not isinstance(v["zebra_acmg"], dict):
+            raise CaseError(f"{where}: variant {v.get('id')!r}: zebra_acmg must be an object "
+                            f"(classification/points/codes), not {type(v['zebra_acmg']).__name__}")
+    for h in data["hypotheses"]:
+        for field in ("support", "against"):
+            if h.get(field) is not None and not isinstance(h[field], list):
+                raise CaseError(f"{where}: hypothesis {h.get('id')!r}: {field!r} must be a list of evidence ids "
+                                f"(E1, E7), not {type(h[field]).__name__}")
+        if h.get("ids") is not None and not isinstance(h["ids"], dict):
+            raise CaseError(f"{where}: hypothesis {h.get('id')!r}: 'ids' must be an object of PREFIX: VALUE")
+    for t in data["therapy_leads"]:
+        if t.get("evidence") is not None and not isinstance(t["evidence"], list):
+            raise CaseError(f"{where}: lead {t.get('id')!r}: 'evidence' must be a list of evidence ids")
+    if data.get("_issued_ids") is not None and not isinstance(data["_issued_ids"], dict):
+        data["_issued_ids"] = {}
     return data
 
 
@@ -235,15 +284,23 @@ def load(case_dir: str) -> Dict[str, Any]:
 
 def _write(root: Path, data: Dict[str, Any]) -> None:
     data["updated_at"] = now_iso()
-    tmp = root / "case.json.tmp"
-    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", "utf-8")
-    os.replace(tmp, root / "case.json")
+    tmp = root / f"case.json.{os.getpid()}.tmp"
+    try:
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + "\n", "utf-8")
+        os.replace(tmp, root / "case.json")
+    except OSError as err:
+        raise CaseError(f"could not write {root / 'case.json'}: {err.strerror or err}. The case was not changed; "
+                        "check the folder's permissions and that the disk is not full.") from None
 
 
 @contextmanager
 def _locked(path: Path) -> Iterator[None]:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    lock = open(str(path) + ".lock", "a+")
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lock = open(str(path) + ".lock", "a+")
+    except OSError as err:
+        raise CaseError(f"could not take the lock on {path}: {err.strerror or err}. Nothing was changed; check the "
+                        "folder's permissions.") from None
     try:
         try:
             import fcntl
@@ -260,32 +317,57 @@ def _locked(path: Path) -> Iterator[None]:
 def editing(case_dir: str) -> Iterator[Dict[str, Any]]:
     """Load, let the caller change, write back under a lock."""
     root = _path(case_dir)
+    if not (root / "case.json").exists():  # never create a folder for a mistyped path
+        raise CaseError(f"no case at {root} (run: zebra case init {case_dir})")
     with _locked(root / "case.json"):
         data = load(case_dir)
         yield data
         _write(root, data)
 
 
-def _next_id(items: List[Dict[str, Any]], prefix: str) -> str:
-    taken = {str(i.get("id")) for i in items}
-    n = 1
-    while f"{prefix}{n}" in taken:
-        n += 1
-    return f"{prefix}{n}"
+def _next_id(data: Dict[str, Any], key: str, prefix: str) -> str:
+    """The next id for `data[key]`, numbered from the highest ever issued.
+
+    A deleted item must not let its id be re-used: `v1` quoted from an earlier
+    `case summary` would otherwise attach an ACMG reading to a different gene.
+    """
+    issued = data.setdefault("_issued_ids", {})
+    highest = 0
+    for item in data.get(key) or []:
+        text = str(item.get("id") or "")
+        if text.startswith(prefix) and text[len(prefix):].isdigit():
+            highest = max(highest, int(text[len(prefix):]))
+    try:
+        highest = max(highest, int(issued.get(prefix, 0)))
+    except (TypeError, ValueError):
+        pass
+    issued[prefix] = highest + 1
+    return f"{prefix}{highest + 1}"
 
 
 # Each mutator comes in two halves: `apply_*` changes a loaded case dict and is
 # what `case apply` calls (all ops under one lock, one write), and the public
 # function wraps it in `editing()` for single-op callers.
 
-def apply_phenotype(data: Dict[str, Any], hpo_id: str, label: str, status: str = "present",
+def apply_phenotype(data: Dict[str, Any], hpo_id: str, label: str, status: Optional[str] = None,
                     onset: Optional[str] = None, source: Optional[str] = None,
                     note: Optional[str] = None) -> Dict[str, Any]:
+    """Add or update one phenotype.
+
+    Fields that are not given are kept from the existing entry: re-recording a
+    term must never turn a clinician's `excluded` into `present`, nor drop the
+    note that said why it was excluded.
+    """
     if not HPO_RE.match(str(hpo_id)):
         raise CaseError(f"{hpo_id!r} is not an HPO id (HP:0000000)")
-    if status not in PHENO_STATUS:
+    if status is not None and status not in PHENO_STATUS:
         raise CaseError(f"status must be one of {', '.join(PHENO_STATUS)}")
-    entry = {"id": hpo_id, "label": label, "status": status, "onset": onset, "source": source, "note": note}
+    existing = next((p for p in data["phenotypes"] if str(p.get("id")) == hpo_id), None) or {}
+    entry = {"id": hpo_id, "label": label or existing.get("label"),
+             "status": status or existing.get("status") or "present",
+             "onset": onset if onset is not None else existing.get("onset"),
+             "source": source if source is not None else existing.get("source"),
+             "note": note if note is not None else existing.get("note")}
     data["phenotypes"] = [p for p in data["phenotypes"] if str(p.get("id")) != hpo_id] + [entry]
     return entry
 
@@ -334,14 +416,21 @@ def check_variant(**fields: Any) -> Dict[str, Any]:
         raise CaseError("repeat_count must be a number or the range as the report writes it")
     if fields.get("genes") is not None:
         fields["genes"] = str_list(fields["genes"], "genes")
-    if fields.get("region") is not None and not isinstance(fields["region"], str):
-        raise CaseError("region must be a string like 15:23000000-28500000")
+    for key in ("region", "iscn", "exons", "motif", "method", "note", "source", "description", "gene"):
+        if fields.get(key) is not None and not isinstance(fields[key], str):
+            raise CaseError(f"{key} must be a string, not {type(fields[key]).__name__}")
+    if fields.get("region"):
+        got = re.match(r"^(?:chr)?([0-9]{1,2}|X|Y|MT)[:\s](\d+)[-_](\d+)$", fields["region"].strip(), re.I)
+        if not got:
+            raise CaseError(f"region {fields['region']!r} must look like 15:23000000-28500000")
+        if int(got.group(3)) < int(got.group(2)):
+            raise CaseError(f"region {fields['region']!r} ends before it starts")
     return fields
 
 
 def apply_variant(data: Dict[str, Any], **fields: Any) -> Dict[str, Any]:
     fields = check_variant(**fields)
-    entry = {"id": _next_id(data["variants"], "v")}
+    entry = {"id": _next_id(data, "variants", "v")}
     entry.update({k: v for k, v in fields.items() if v is not None})
     data["variants"].append(entry)
     return entry
@@ -375,7 +464,7 @@ def apply_hypothesis(data: Dict[str, Any], disease: str, status: Optional[str] =
         if note:
             existing["note"] = note
         return existing
-    entry = {"id": _next_id(data["hypotheses"], "h"), "disease": disease, "status": status or "considered",
+    entry = {"id": _next_id(data, "hypotheses", "h"), "disease": disease, "status": status or "considered",
              "ids": ids or {}, "support": support or [], "against": against or [], "note": note}
     data["hypotheses"].append(entry)
     return entry
@@ -395,7 +484,7 @@ def apply_lead(data: Dict[str, Any], name: str, kind: str, status: Optional[str]
         raise CaseError(f"kind must be one of {', '.join(LEAD_KINDS)}")
     if not isinstance(name, str) or not name.strip():
         raise CaseError(f"a therapy lead needs a name (a non-empty string), got {name!r}")
-    entry = {"id": _next_id(data["therapy_leads"], "t"), "name": name.strip(), "kind": kind, "status": status,
+    entry = {"id": _next_id(data, "therapy_leads", "t"), "name": name.strip(), "kind": kind, "status": status,
              "evidence": evidence or [], "note": note}
     if ids:
         entry["ids"] = ids
@@ -500,12 +589,18 @@ def append_ledger(case_dir: str, command: str, query: Dict[str, Any], sources: L
     if not (root / "case.json").exists():
         raise CaseError(f"no case at {root}")
     ledger = root / "evidence" / "ledger.jsonl"
+    mark = root / "evidence" / ".high_water"
     ids: List[str] = []
     with _locked(ledger):
         # Number from the highest id ever issued, not from the line count: a
         # deleted line must not let an id be re-used, and a row whose eid
         # cannot be read still counts.
         highest = 0
+        if mark.exists():  # survives deleting the last row, which the file alone cannot
+            try:
+                highest = max(highest, int(mark.read_text("utf-8").strip() or 0))
+            except (ValueError, OSError):
+                pass
         unterminated = False
         if ledger.exists():
             with open(ledger, "r", encoding="utf-8") as fh:
@@ -532,16 +627,22 @@ def append_ledger(case_dir: str, command: str, query: Dict[str, Any], sources: L
                 highest += 1
                 eid = f"E{highest}"
                 ids.append(eid)
-                fh.write(json.dumps({"eid": eid, "command": command, "query": query, **src}, ensure_ascii=False) + "\n")
+                fh.write(json.dumps({"eid": eid, "command": command, "query": query, **src},
+                                     ensure_ascii=False, allow_nan=False) + "\n")
+        try:
+            mark.write_text(str(highest) + "\n", "utf-8")
+        except OSError:
+            pass  # the ids in the file are still monotonic; only a deletion could repeat one
     return ids
 
 
 def ledger_ids(case_dir: str) -> Set[str]:
     """Every evidence id in the ledger: what a hypothesis's support/against may cite."""
-    return {str(r.get("eid")) for r in read_ledger(case_dir) if r.get("eid")}
+    return {str(r.get("eid")) for r in read_ledger(case_dir) if isinstance(r, dict) and r.get("eid")}
 
 
 def read_ledger(case_dir: str) -> List[Dict[str, Any]]:
+    """Every readable ledger row. A line that is not a JSON object is skipped, not raised."""
     ledger = _path(case_dir) / "evidence" / "ledger.jsonl"
     if not ledger.exists():
         return []
@@ -549,11 +650,14 @@ def read_ledger(case_dir: str) -> List[Dict[str, Any]]:
     with open(ledger, "r", encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
-            if line:
-                try:
-                    rows.append(json.loads(line))
-                except ValueError:
-                    continue
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(row, dict):  # `null`, a list or a number is not a row
+                rows.append(row)
     return rows
 
 
@@ -606,7 +710,8 @@ def summary(case_dir: str) -> Dict[str, Any]:
         ],
         "hypotheses": [
             {"id": h.get("id"), "disease": str(h.get("disease", "")), "status": h.get("status", "considered"),
-             "support": len(h.get("support") or []), "against": len(h.get("against") or [])}
+             "support": len(h.get("support") or []), "against": len(h.get("against") or []),
+             "ids": dict(h.get("ids") or {})}
             for h in hyps
         ],
         "therapy_leads": [{"id": t.get("id"), "name": t.get("name"), "kind": t.get("kind"), "status": t.get("status")}

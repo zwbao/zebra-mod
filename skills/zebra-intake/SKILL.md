@@ -18,7 +18,13 @@ Output: an updated case (via `mcp__zebra-mod__case_update`) and a short summary 
    - present vs excluded: excluded only when the record states absence or a normal result for that feature (normal brain MRI → excluded `Abnormality of brain morphology`);
    - onset when stated (HPO onset terms or an age), `source` = file and page;
    - never code the diagnosis itself, a drug, or a test name as a phenotype; a lab value becomes a phenotype only with its direction (elevated CK → `Elevated circulating creatine kinase concentration`).
-6. **Variants.** Copy exactly as printed: gene, transcript HGVS (`NM_...:c.`), protein change, genomic coordinates **with the assembly the report names** (Chinese reports often use hg19/GRCh37), zygosity, inheritance if parents were tested, the lab's classification. Do not normalise here; `zebra-variant` does that.
+6. **Variants and other findings.** Copy exactly as printed: gene, transcript HGVS (`NM_...:c.`), protein change, genomic coordinates **with the assembly the report names** (Chinese reports often use hg19/GRCh37), zygosity, inheritance if parents were tested, the lab's classification. Do not normalise here; `zebra-variant` does that.
+   Not every report is a sequence variant. Use `mcp__zebra-mod__cnv_interpret` (`record: true`) for:
+   - a microarray or CNV-seq result (a region, or an ISCN string such as `arr[GRCh38] 22q11.21(18648855_21800471)x1`);
+   - an exon-level deletion or duplication (`DMD exon 45-50 deletion`, `NM_004006.3:c.6439-?_7309+?del`) — it also says whether the reading frame is kept and which exon would restore it;
+   - SMN1-type copy number (`SMN1 exon 7 copy number 0`);
+   - a repeat expansion (`FMR1 CGG 230`).
+   It returns the genes covered, dosage sensitivity and the ACMG/ClinGen CNV evidence inputs — never a classification; that judgement belongs to `zebra-variant` and the laboratory.
 7. **Family and tests.** Consanguinity, affected relatives (who, what, age), parental testing; tests done and results (CMA, panel, exome/genome — singleton or trio, year, lab), biochemical/metabolic tests, imaging, EEG/EMG, biopsy. Put these in the case's notes via questions or variants' `source` fields; record "test not done" gaps as questions.
 8. **Write once.** One `case_update` call with all phenotypes, variants and questions.
 9. **Report back.** Board summary, then the gaps that would change the analysis (e.g. no parental samples, exome from 2019 never reanalysed, no metabolic screen, onset ages unknown) as questions for the care team.

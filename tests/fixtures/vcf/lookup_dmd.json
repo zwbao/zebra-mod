@@ -1,0 +1,581 @@
+{
+ "_source": "Ensembl /lookup/symbol/homo_sapiens/DMD?expand=1, canonical transcript only",
+ "response": {
+  "id": "ENSG00000198947",
+  "display_name": "DMD",
+  "seq_region_name": "X",
+  "start": 31097677,
+  "end": 33339609,
+  "strand": -1,
+  "biotype": "protein_coding",
+  "assembly_name": "GRCh38",
+  "Transcript": [
+   {
+    "id": "ENST00000357033",
+    "display_name": "DMD-203",
+    "biotype": "protein_coding",
+    "is_canonical": 1,
+    "length": 13992,
+    "strand": -1,
+    "seq_region_name": "X",
+    "start": 31119222,
+    "end": 33211549,
+    "Exon": [
+     {
+      "id": "ENSE00001899141",
+      "start": 33211282,
+      "end": 33211549,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003463064",
+      "start": 33020139,
+      "end": 33020200,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003691097",
+      "start": 32849728,
+      "end": 32849820,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001640206",
+      "start": 32844783,
+      "end": 32844860,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001685282",
+      "start": 32823295,
+      "end": 32823387,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001789498",
+      "start": 32816468,
+      "end": 32816640,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436342",
+      "start": 32809493,
+      "end": 32809611,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436506",
+      "start": 32699112,
+      "end": 32699293,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001434995",
+      "start": 32697870,
+      "end": 32697998,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435581",
+      "start": 32644964,
+      "end": 32645152,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435687",
+      "start": 32644132,
+      "end": 32644313,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435796",
+      "start": 32614303,
+      "end": 32614453,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436736",
+      "start": 32595757,
+      "end": 32595876,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003639921",
+      "start": 32573745,
+      "end": 32573846,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001479014",
+      "start": 32573530,
+      "end": 32573637,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001434823",
+      "start": 32565702,
+      "end": 32565881,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435605",
+      "start": 32545159,
+      "end": 32545334,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436267",
+      "start": 32518008,
+      "end": 32518131,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436655",
+      "start": 32501755,
+      "end": 32501842,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436512",
+      "start": 32491277,
+      "end": 32491518,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435151",
+      "start": 32484919,
+      "end": 32485099,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435583",
+      "start": 32472164,
+      "end": 32472309,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435180",
+      "start": 32468498,
+      "end": 32468710,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436271",
+      "start": 32464586,
+      "end": 32464699,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435906",
+      "start": 32463439,
+      "end": 32463594,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436731",
+      "start": 32454662,
+      "end": 32454832,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436545",
+      "start": 32448456,
+      "end": 32448638,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435146",
+      "start": 32441180,
+      "end": 32441314,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001434999",
+      "start": 32438241,
+      "end": 32438390,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001434585",
+      "start": 32411752,
+      "end": 32411913,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435573",
+      "start": 32390071,
+      "end": 32390181,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435218",
+      "start": 32389501,
+      "end": 32389674,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436039",
+      "start": 32386310,
+      "end": 32386465,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001435954",
+      "start": 32380510,
+      "end": 32380680,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00000978409",
+      "start": 32365020,
+      "end": 32365199,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001157370",
+      "start": 32364582,
+      "end": 32364710,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988225",
+      "start": 32362788,
+      "end": 32362958,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988222",
+      "start": 32348406,
+      "end": 32348528,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988224",
+      "start": 32345943,
+      "end": 32346080,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988229",
+      "start": 32343134,
+      "end": 32343286,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988226",
+      "start": 32342100,
+      "end": 32342282,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988221",
+      "start": 32310082,
+      "end": 32310276,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988227",
+      "start": 32287529,
+      "end": 32287701,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988219",
+      "start": 32216916,
+      "end": 32217063,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988228",
+      "start": 31968339,
+      "end": 31968514,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988223",
+      "start": 31932080,
+      "end": 31932227,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003988220",
+      "start": 31929596,
+      "end": 31929745,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003687899",
+      "start": 31875188,
+      "end": 31875373,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003592729",
+      "start": 31836718,
+      "end": 31836819,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003639303",
+      "start": 31819975,
+      "end": 31820083,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003669071",
+      "start": 31773960,
+      "end": 31774192,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001213215",
+      "start": 31729631,
+      "end": 31729748,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001258577",
+      "start": 31679375,
+      "end": 31679586,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001213199",
+      "start": 31657990,
+      "end": 31658144,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001258641",
+      "start": 31627673,
+      "end": 31627862,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003500236",
+      "start": 31507281,
+      "end": 31507453,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003669069",
+      "start": 31496788,
+      "end": 31496944,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003675980",
+      "start": 31478983,
+      "end": 31479103,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001259193",
+      "start": 31478106,
+      "end": 31478374,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001259171",
+      "start": 31444481,
+      "end": 31444627,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003637702",
+      "start": 31348556,
+      "end": 31348634,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003693649",
+      "start": 31323598,
+      "end": 31323658,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003620850",
+      "start": 31260955,
+      "end": 31261016,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003554036",
+      "start": 31223047,
+      "end": 31223121,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158950",
+      "start": 31209498,
+      "end": 31209699,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158943",
+      "start": 31206582,
+      "end": 31206667,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158937",
+      "start": 31203961,
+      "end": 31204118,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001034045",
+      "start": 31182738,
+      "end": 31182904,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003569118",
+      "start": 31180370,
+      "end": 31180481,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001034039",
+      "start": 31178669,
+      "end": 31178805,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158912",
+      "start": 31177932,
+      "end": 31177970,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158905",
+      "start": 31173539,
+      "end": 31173604,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158901",
+      "start": 31172348,
+      "end": 31172413,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158895",
+      "start": 31169443,
+      "end": 31169601,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158887",
+      "start": 31147275,
+      "end": 31147518,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001034085",
+      "start": 31146291,
+      "end": 31146414,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001158874",
+      "start": 31134102,
+      "end": 31134194,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00001436107",
+      "start": 31126642,
+      "end": 31126673,
+      "strand": -1,
+      "seq_region_name": "X"
+     },
+     {
+      "id": "ENSE00003901420",
+      "start": 31119222,
+      "end": 31121930,
+      "strand": -1,
+      "seq_region_name": "X"
+     }
+    ]
+   }
+  ]
+ }
+}

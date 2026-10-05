@@ -32,7 +32,7 @@
 
 ## mod 为 Claude Code 增加的能力
 
-- **15 个工具**，模型可直接调用（`mcp__zebra-mod__*`）：`case_status`、`case_update`、`hpo_search`、`phenotype_rank`、`gene_card`、`variant_card`、`disease_card`、`acmg`、`s2f_predict`、`therapy_landscape`、`trials_search`、`literature_search`、`rare_stats`、`edit_check`、`china_rare`。公共数据库查询已预先授权，只读研究操作无需逐次确认。
+- **16 个工具**，模型可直接调用（`mcp__zebra-mod__*`）：`case_status`、`case_update`、`hpo_search`、`phenotype_rank`、`gene_card`、`variant_card`、`disease_card`、`acmg`、`cnv_interpret`、`s2f_predict`、`therapy_landscape`、`trials_search`、`literature_search`、`rare_stats`、`edit_check`、`china_rare`。公共数据库查询已预先授权，只读研究操作无需逐次确认。
 - **研究守则**写入系统提示词（即上述原则），并附当前病例信息。
 - **病例看板**面板（`/zebra board`）与状态栏：表型、变异及其研究级分类、诊断假设、治疗线索、待解决问题、证据条数，随病例更新实时刷新。
 - **`/zebra`** 命令：`new <目录> [标题]`、`case <目录>`、`board`、`ledger`、`doctor`、`close`。

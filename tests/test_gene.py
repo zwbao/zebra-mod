@@ -43,7 +43,7 @@ def test_parse_hgnc():
 
 def test_hgnc_previous_symbol_followed(monkeypatch):
     _fake_hgnc(monkeypatch, {"fetch/symbol/C3orf72": "hgnc_fetch_c3orf72.json",
-                             "search/prev_symbol/C3orf72": "hgnc_prev_c3orf72.json",
+                             "fetch/prev_symbol/C3orf72": "hgnc_prev_c3orf72.json",
                              "fetch/symbol/FOXL2NB": "hgnc_fetch_foxl2nb.json"})
     out = gene.hgnc("C3orf72")
     assert out.result["symbol"] == "FOXL2NB"
@@ -52,8 +52,8 @@ def test_hgnc_previous_symbol_followed(monkeypatch):
 
 def test_hgnc_ambiguous_alias_is_not_guessed(monkeypatch):
     empty = "hgnc_fetch_c3orf72.json"  # a real zero-hit fetch response
-    _fake_hgnc(monkeypatch, {"fetch/symbol/NAC1": empty, "search/prev_symbol/NAC1": empty,
-                             "search/alias_symbol/NAC1": "hgnc_alias_nac1.json"})
+    _fake_hgnc(monkeypatch, {"fetch/symbol/NAC1": empty, "fetch/prev_symbol/NAC1": empty,
+                             "fetch/alias_symbol/NAC1": "hgnc_alias_nac1.json"})
     with pytest.raises(UsageError) as err:
         gene.hgnc("NAC1")
     assert "NACC1" in str(err.value) and "SCN1A" in str(err.value)
@@ -222,3 +222,285 @@ def test_live_dmd_xlinked():
 def test_live_unknown_symbol():
     with pytest.raises(UsageError):
         gene.card("NOTAGENE123")
+
+
+# ---------------------------------------------------------------- F15: refuse a junk symbol
+
+@pytest.mark.parametrize("bad,why", [
+    ("../search/symbol/SCN1A", "character HGNC symbols do not use"),
+    ("SCN1A extra", "space"),
+    ("", "give a gene symbol"),
+    ("   ", "give a gene symbol"),
+    ("SCN1A/CFTR", "character HGNC symbols do not use"),
+    ("a" * 40, "longer than any HGNC symbol"),
+])
+def test_F15_junk_symbols_are_refused_before_any_request(bad, why, monkeypatch):
+    def boom(*a, **kw):
+        raise AssertionError("no request may be made for a symbol that cannot be one")
+
+    monkeypatch.setattr(gene, "get_json", boom)
+    with pytest.raises(UsageError) as err:
+        gene.card(bad)
+    assert why in str(err.value)
+
+
+def test_F15_check_symbol_accepts_real_hgnc_spellings():
+    for ok in ("SCN1A", "C3orf72", "HLA-A", "MT-TL1", "RNU4ATAC", "NKX2-5", "IGH@", "ATP6V0A2"):
+        assert gene.check_symbol(ok) == ok
+    assert gene.check_symbol(" SCN1A ") == "SCN1A"
+
+
+def test_F15_previous_symbol_resolution_uses_the_exact_field_fetch(monkeypatch):
+    urls = []
+
+    def fake(url, source, **kw):
+        urls.append(url)
+        name = {"fetch/symbol/C3orf72": "hgnc_fetch_c3orf72.json",
+                "fetch/prev_symbol/C3orf72": "hgnc_prev_c3orf72.json",
+                "fetch/symbol/FOXL2NB": "hgnc_fetch_foxl2nb.json"}
+        for key, fx in name.items():
+            if url.endswith(key):
+                return Response(url, 200, json.dumps(load("gene", fx)), "2026-10-06T00:00:00+00:00", True)
+        raise AssertionError(f"unexpected HGNC call {url}")
+
+    monkeypatch.setattr(gene, "get_json", fake)
+    out = gene.hgnc("C3orf72")
+    assert out.result["symbol"] == "FOXL2NB"
+    # never the Solr text search, which scored ESPL1/GSDMC/SH3GL1 for "SCN1A extra"
+    assert not any("/search/" in u for u in urls)
+    assert any("exact prev_symbol match" in w for w in out.warnings)
+
+
+def test_F15_hgnc_404_is_a_usage_error_not_unavailable(monkeypatch):
+    def fake(url, source, **kw):
+        return Response(url, 404, "", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(gene, "get_json", fake)
+    with pytest.raises(UsageError) as err:
+        gene.card("ZZZZZZ9")
+    assert "HGNC has no record" in str(err.value)
+
+
+def test_F15_an_unreachable_hgnc_says_the_symbol_is_unverified(monkeypatch):
+    from zebra.http import SourceError
+
+    def fake(url, source, **kw):
+        raise SourceError("HGNC", url, 503, "maintenance")
+
+    monkeypatch.setattr(gene, "get_json", fake)
+    monkeypatch.setattr(gene, "_run", lambda tasks: {})
+    out = gene.card("SCN1A")
+    assert any("unverified symbol" in w and "may mean the symbol is wrong" in w for w in out.warnings)
+
+
+# ---------------------------------------------------------------- E8: no key in any recorded URL
+
+def test_E8_the_api_key_is_sent_but_never_recorded(monkeypatch):
+    from zebra.sources import clinvar
+
+    monkeypatch.setenv("NCBI_API_KEY", "SECRET_NCBI_KEY_123")
+    wire = []
+
+    def fake_request(url, source, **kw):
+        wire.append({"url": url, "method": kw.get("method", "GET"), "body": kw.get("body"),
+                     "headers": kw.get("headers")})
+        if "esearch" in url:
+            payload = {"esearchresult": {"count": "1", "idlist": ["7105"]}}
+        else:
+            payload = {"result": {"uids": []}}
+        return Response(url, 200, json.dumps(payload), "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr("zebra.http.request", fake_request)
+    out = clinvar.lookup(rsid="rs113993960")
+    # the key really was sent: in the POST body, not the query string
+    assert wire and all(w["method"] == "POST" for w in wire)
+    assert all("api_key=SECRET_NCBI_KEY_123" in (w["body"] or "") for w in wire)
+    assert all(w["headers"]["Content-Type"] == "application/x-www-form-urlencoded" for w in wire)
+    # and it is in no URL, no source row and no warning
+    assert not any("SECRET_NCBI_KEY_123" in w["url"] for w in wire)
+    assert "SECRET_NCBI_KEY_123" not in json.dumps(out.sources)
+    assert "SECRET_NCBI_KEY_123" not in json.dumps(out.warnings)
+    assert any("eutils.ncbi.nlm.nih.gov" in (s.get("url") or "") for s in out.sources)
+
+
+def test_E8_without_a_key_the_call_stays_a_get(monkeypatch):
+    from zebra.sources import clinvar
+
+    monkeypatch.delenv("NCBI_API_KEY", raising=False)
+    seen = []
+
+    def fake_request(url, source, **kw):
+        seen.append(kw.get("method", "GET"))
+        return Response(url, 200, json.dumps({"esearchresult": {"count": "0", "idlist": []}}),
+                        "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr("zebra.http.request", fake_request)
+    clinvar.search("rs1[VRID]")
+    assert seen == ["GET"]
+
+
+def test_E8_a_rejected_key_is_redacted_from_the_error(monkeypatch):
+    from zebra.http import SourceError
+    from zebra.sources import clinvar
+
+    monkeypatch.setenv("NCBI_API_KEY", "SECRET_NCBI_KEY_123")
+
+    def fake_request(url, source, **kw):
+        raise SourceError("ClinVar", url, 400,
+                          '{"error":"API key invalid","api-key":"SECRET_NCBI_KEY_123"}')
+
+    monkeypatch.setattr("zebra.http.request", fake_request)
+    with pytest.raises(SourceError) as err:
+        clinvar.search("rs1[VRID]")
+    assert "SECRET_NCBI_KEY_123" not in str(err.value)
+    assert "<NCBI_API_KEY redacted>" in err.value.message
+
+
+def test_E8_public_url_strips_every_credential_parameter():
+    from zebra.sources import public_url, record
+
+    url = "https://e.ncbi/x.fcgi?db=clinvar&api_key=K&term=t&email=a%40b&token=T"
+    out = public_url(url)
+    assert "api_key" not in out and "email" not in out and "token" not in out
+    assert "db=clinvar" in out and "term=t" in out
+    assert public_url("https://e/x") == "https://e/x"
+    assert public_url(None) is None
+    assert record("db", "r", url=url)["url"] == out
+
+
+def test_E8_no_source_url_in_any_owned_module_can_carry_a_key():
+    """Nothing in zebra/sources or the owned commands may put a credential in `params`."""
+    import pathlib
+    import re as _re
+
+    root = pathlib.Path(gene.__file__).parent.parent
+    offenders = []
+    for p in list((root / "sources").glob("*.py")) + list((root / "commands").glob("*.py")):
+        text = p.read_text("utf-8")
+        for m in _re.finditer(r'"(api_key|apikey|key|token|access_token|password|secret)"\s*\]?\s*=', text):
+            line = text[:m.start()].count("\n") + 1
+            if p.name == "clinvar.py":
+                continue  # clinvar builds a POST body, checked above
+            offenders.append(f"{p.name}:{line} {m.group(1)}")
+    assert offenders == [], offenders
+
+
+# ---------------------------------------------------------------- F11: one bad shape, one card section
+
+def test_F11_source_layer_attempt_catches_attribute_error():
+    from zebra.sources import attempt as src_attempt
+
+    warnings = []
+
+    def upstream_changed_shape():
+        return ["not", "a", "dict"].get("field")
+
+    assert src_attempt("Europe PMC", upstream_changed_shape, warnings) is None
+    assert len(warnings) == 1 and "AttributeError" in warnings[0]
+
+
+def test_F11_a_usage_error_still_escapes_so_a_bad_symbol_is_not_hidden():
+    from zebra.sources import attempt as src_attempt
+
+    warnings = []
+    with pytest.raises(UsageError):
+        src_attempt("HGNC", lambda: (_ for _ in ()).throw(UsageError("bad symbol")), warnings)
+
+
+# ---------------------------------------------------------------- F10: never cache an error body
+
+@pytest.mark.parametrize("body,status,why", [
+    ("", 200, "empty body"),
+    ("<html>maintenance</html>", 200, "HTML page"),
+    ("not json at all", 200, "not JSON"),
+    ('{"errors":[{"message":"upstream timeout"}]}', 200, "error body"),
+    ('{"error":"nope"}', 200, "error body"),
+])
+def test_F10_validated_json_rejects_a_200_that_is_really_an_error(body, status, why):
+    from zebra.http import SourceError
+    from zebra.sources import validated_json
+
+    resp = Response("https://u/x", status, body, "2026-10-06T00:00:00+00:00", False)
+    with pytest.raises(SourceError) as err:
+        validated_json(resp, "Upstream")
+    assert why in err.value.message
+
+
+def test_F10_validated_json_requires_the_key_the_parser_needs():
+    from zebra.http import SourceError
+    from zebra.sources import validated_json
+
+    resp = Response("https://u/x", 200, '{"something": 1}', "2026-10-06T00:00:00+00:00", False)
+    with pytest.raises(SourceError) as err:
+        validated_json(resp, "ClinVar", require="esearchresult")
+    assert "has no 'esearchresult'" in err.value.message
+
+
+def test_F10_a_bad_body_from_the_cache_is_refetched_once():
+    from zebra.sources import validated_json
+
+    cached = Response("https://u/x", 200, '{"errors":[{"message":"timeout"}]}', "2026-10-05T00:00:00+00:00", True)
+    fresh = Response("https://u/x", 200, '{"data": 1}', "2026-10-06T00:00:00+00:00", False)
+    calls = []
+
+    def refetch():
+        calls.append(1)
+        return fresh
+
+    assert validated_json(cached, "Upstream", refetch=refetch) == {"data": 1}
+    assert len(calls) == 1
+
+
+def test_F10_a_bad_fresh_body_is_not_refetched():
+    from zebra.http import SourceError
+    from zebra.sources import validated_json
+
+    fresh_bad = Response("https://u/x", 200, "", "2026-10-06T00:00:00+00:00", False)
+    with pytest.raises(SourceError):
+        validated_json(fresh_bad, "Upstream", refetch=lambda: pytest.fail("must not refetch a fresh body"))
+
+
+def test_F10_validated_text_rejects_html_and_a_missing_header():
+    from zebra.http import SourceError
+    from zebra.sources import validated_text
+
+    html = Response("https://u/x", 200, "<html>maintenance</html>", "2026-10-06T00:00:00+00:00", False)
+    with pytest.raises(SourceError) as err:
+        validated_text(html, "ClinGen validity", must_contain="GENE SYMBOL")
+    assert "HTML page" in err.value.message
+    no_header = Response("https://u/x", 200, "a,b,c\n1,2,3\n", "2026-10-06T00:00:00+00:00", False)
+    with pytest.raises(SourceError) as err:
+        validated_text(no_header, "ClinGen validity", must_contain="GENE SYMBOL")
+    assert "not the expected table" in err.value.message
+    good = Response("https://u/x", 200, "GENE SYMBOL,X\nSCN1A,1\n", "2026-10-06T00:00:00+00:00", False)
+    assert validated_text(good, "ClinGen validity", must_contain="GENE SYMBOL").startswith("GENE SYMBOL")
+
+
+def test_F10_a_clingen_maintenance_page_is_rejected_and_refetched(monkeypatch):
+    from zebra.http import SourceError
+    from zebra.sources import clingen as cg
+
+    ttls = []
+
+    def fake_request(url, source, **kw):
+        ttls.append(kw.get("cache_ttl"))
+        return Response(url, 200, "<html>maintenance</html>", "2026-10-06T00:00:00+00:00", len(ttls) == 1)
+
+    monkeypatch.setattr(cg, "request", fake_request)
+    with pytest.raises(SourceError) as err:
+        cg.validity(symbol="SCN1A")
+    assert len(ttls) == 2 and ttls[1] == 0
+    assert "HTML page" in err.value.message  # not "header row 'GENE SYMBOL' not found"
+
+
+def test_F10_an_empty_genereviews_map_is_rejected_not_parsed_to_nothing(monkeypatch):
+    from zebra.http import SourceError
+    from zebra.sources import genereviews as gr
+
+    def fake_request(url, source, **kw):
+        return Response(url, 200, "", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(gr, "request", fake_request)
+    with pytest.raises(SourceError) as err:
+        gr._fetch_maps()
+    assert "empty body" in err.value.message

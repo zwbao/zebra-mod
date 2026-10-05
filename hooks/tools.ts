@@ -97,6 +97,20 @@ export const TOOLS: ToolDef[] = [
               classification_lab: { type: 'string', description: 'as written on the lab report' },
               source: { type: 'string' },
               description: { type: 'string' },
+              kind: {
+                type: 'string',
+                enum: ['sequence', 'cnv', 'exon_cnv', 'copy_number', 'repeat'],
+                description: 'sequence (default) for SNV/indel; cnv for a CMA/CNV-seq result; exon_cnv for an exon-level deletion or duplication; copy_number for SMN1-type dosage; repeat for an expansion',
+              },
+              region: { type: 'string', description: 'cnv: chr15:23123715-28193120' },
+              iscn: { type: 'string', description: 'cnv: the ISCN string as reported, e.g. arr[GRCh38] 22q11.21(18648855_21800471)x1' },
+              cnv_type: { type: 'string', enum: ['loss', 'gain'] },
+              copy_number: { type: 'number', description: 'copies reported (SMN1 exon 7 = 0, 1, 2 …)' },
+              exons: { type: 'string', description: 'exon_cnv: 45-50, or a single exon number' },
+              genes: { type: 'array', items: { type: 'string' }, description: 'genes the finding covers, as a tool returned them' },
+              motif: { type: 'string', description: 'repeat: the repeat unit, e.g. CGG' },
+              repeat_count: { type: 'number', description: 'repeat: the number of units reported' },
+              method: { type: 'string', description: 'how it was measured: CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR …' },
             },
           },
         },
@@ -162,7 +176,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'hpo_search',
     description:
-      'Find Human Phenotype Ontology terms for a clinical phrase (English; translate Chinese descriptions first). Returns verified ids and labels. Use it for every phenotype before recording it.',
+      'Find Human Phenotype Ontology terms for a clinical phrase. Chinese works once the HPO release is fetched (official Chinese labels plus the lay phrases families use: 走路晚, 抽风, 不会说话, 发热惊厥); English works either way. Returns verified ids with the label, the Chinese label where there is one, and what matched (label, synonym or lay phrase). Use it for every phenotype before recording one.',
     inputSchema: {
       type: 'object',
       properties: { text: { type: 'string' }, limit: { type: 'number', default: 8 } },
@@ -289,13 +303,14 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'trials_search',
     description:
-      'Clinical trials from ClinicalTrials.gov (v2 API): by condition and optionally a keyword (gene, drug, modality), country and status (default RECRUITING; ANY for all). With a country, only trials with a site there are returned, and those sites are listed. Returns NCT ids, phase, status, interventions, ages, sites and URL.',
+      'Clinical trials from ClinicalTrials.gov (v2 API): by condition and optionally a keyword (gene, drug, modality), country and status (default RECRUITING; ANY for all). With a country, only trials with a site there are returned, and those sites are listed. Returns NCT ids, phase, status, interventions, ages, eligibility criteria, contacts, sites and URL, and flags a trial whose status looks stale or inconsistent. ChiCTR (the Chinese registry) is not covered: for China, say so and point to it.',
     inputSchema: {
       type: 'object',
       properties: {
         condition: { type: 'string' },
         term: { type: 'string', description: 'extra keyword: gene, drug, modality' },
-        country: { type: 'string', description: 'e.g. China, United States' },
+        country: { type: 'string', description: 'e.g. China, United States; only trials with a site there, and those sites are listed' },
+        full_eligibility: { type: 'boolean', description: 'the whole eligibility text instead of its first 600 characters' },
         status: { type: 'string', enum: ['RECRUITING', 'NOT_YET_RECRUITING', 'ACTIVE_NOT_RECRUITING', 'COMPLETED', 'ANY'] },
         limit: { type: 'number', default: 20 },
       },
@@ -303,7 +318,8 @@ export const TOOLS: ToolDef[] = [
     },
     argv: i => [
       'trials', str(i.condition) ?? '',
-      ...flag('--term', str(i.term)), ...flag('--country', str(i.country)), ...flag('--status', str(i.status)), ...flag('--limit', num(i.limit)),
+      ...flag('--term', str(i.term)), ...flag('--country', str(i.country)), ...flag('--status', str(i.status)),
+      ...(i.full_eligibility === true ? ['--full-eligibility'] : []), ...flag('--limit', num(i.limit)),
     ],
     deferred: true,
   },
@@ -383,6 +399,35 @@ export const TOOLS: ToolDef[] = [
       ...(i.annotate_bystanders === true ? ['--annotate-bystanders'] : []),
     ],
     deferred: true,
+  },
+  {
+    name: 'cnv_interpret',
+    description:
+      'Read the report forms that are not a single sequence variant: a CNV or microarray result (region or ISCN string) → the genes it spans with ClinGen dosage sensitivity and the ACMG/ClinGen CNV scoring inputs (section 1–5 evidence, never a classification — that judgement is yours); an exon-level deletion or duplication (e.g. "DMD exon 45-50 deletion", NM_004006.3:c.6439-?_7309+?del) → exon coordinates, size, whether the reading frame is kept, and which additional exon would restore it (the exon-skipping question); SMN1-type copy number and repeat expansions → recorded as structured findings with what they mean for the mechanism. Coordinates come from Ensembl.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        result: {
+          type: 'string',
+          description: 'the finding as the report gives it: "chr15:23123715-28193120 loss" | "arr[GRCh38] 22q11.21(18648855_21800471)x1" | "DMD exon 45-50 deletion" | "NM_004006.3:c.6439-?_7309+?del" | "SMN1 exon 7 copy number 0" | "FMR1 CGG 230"',
+        },
+        assembly: ASSEMBLY,
+        gene: { type: 'string', description: 'when the string does not name one' },
+        copies: { type: 'number', description: 'copy number the report gives, when it is not in the string' },
+        inheritance: { type: 'string', enum: ['de_novo', 'maternal', 'paternal', 'biparental', 'unknown'] },
+        method: { type: 'string', description: 'CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR …' },
+        record: { type: 'boolean', description: 'also record it in the active case' },
+      },
+      required: ['result'],
+    },
+    argv: i => [
+      'cnv', str(i.result) ?? '',
+      ...flag('--assembly', str(i.assembly)), ...flag('--gene', str(i.gene)), ...flag('--copies', num(i.copies)),
+      ...flag('--inheritance', str(i.inheritance)), ...flag('--method', str(i.method)),
+      ...(i.record === true ? ['--record'] : []),
+    ],
+    touchesCase: true,
+    timeoutMs: 180_000,
   },
   {
     name: 'china_rare',

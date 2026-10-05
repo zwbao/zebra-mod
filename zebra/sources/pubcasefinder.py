@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Sequence
 from zebra.core import Outcome
 from zebra.http import request
 from zebra.sources import record as source_record
+from zebra.sources import validated_text
 
 BASE = "https://pubcasefinder.dbcls.jp/api"
 TARGETS = ("omim", "orphanet", "gene")
@@ -37,7 +38,12 @@ def parse_tsv(text: str, target: str, limit: int) -> List[Dict[str, Any]]:
         row = dict(zip(header, cols))
         try:
             rank = int(row.get("Rank", "0"))
-            score = round(float(row.get("Score", "nan")), 4)
+            raw_score = row.get("Score")
+            if raw_score is None or not str(raw_score).strip():
+                continue  # a row with no score would serialise as NaN, which is not valid JSON
+            score = round(float(raw_score), 4)
+            if score != score or score in (float("inf"), float("-inf")):
+                continue
         except ValueError:
             continue
         matched = [t for t in (row.get("Matched_Phenotype") or "").split(",") if t]
@@ -62,11 +68,23 @@ def ranked(hpo_ids: Sequence[str], target: str = "omim", limit: int = 15, timeou
     if target not in TARGETS:
         raise ValueError(f"target must be one of {', '.join(TARGETS)}")
     hpo = ",".join(hpo_ids)
-    resp = request(f"{BASE}/pcf_get_ranked_list", source="PubCaseFinder",
-                   params={"target": target, "format": "tsv", "hpo_id": hpo},
-                   accept="text/tab-separated-values, text/plain, */*", timeout=timeout, retries=1,
-                   cache_ttl=7 * 86400)
-    rows = parse_tsv(resp.text, target, limit)
+    if not hpo:
+        raise ValueError("PubCaseFinder needs at least one HPO id")
+
+    def fetch(refresh=False):
+        return request(f"{BASE}/pcf_get_ranked_list", source="PubCaseFinder",
+                       params={"target": target, "format": "tsv", "hpo_id": hpo},
+                       accept="text/tab-separated-values, text/plain, */*", timeout=timeout, retries=1,
+                       cache_ttl=0 if refresh else 7 * 86400)
+
+    resp = fetch()
+    # F10: an empty or HTML 200 was cached for 7 days and parsed to `hits: []`
+    # with no warning, which reads as "PubCaseFinder matched no disease for this
+    # patient". `Rank` is the first column of the real TSV header
+    # (`Rank\tScore\tOMIM_ID\tDisease_Name\tMatched_Phenotype\tCausative_Gene`,
+    # checked live 2026-10-06).
+    text = validated_text(resp, "PubCaseFinder", must_contain="Rank", refetch=lambda: fetch(refresh=True))
+    rows = parse_tsv(text, target, limit)
     return Outcome({"target": target, "hits": rows},
                    sources=[source_record("PubCaseFinder", f"{target}: {hpo}", resp,
                                           note="ranked list (pcf_get_ranked_list, TSV)")])

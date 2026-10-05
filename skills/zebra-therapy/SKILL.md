@@ -25,7 +25,7 @@ From the case and `gene_card` / `disease_card` (and `zebra-variant` / `zebra-s2f
 ## 2. Gather leads (all in parallel when possible)
 
 - `mcp__zebra-mod__therapy_landscape` (disease and gene): known drugs with phase and mechanism (Open Targets / ChEMBL), tractability.
-- `mcp__zebra-mod__trials_search`: recruiting first; with `country: "China"` for Chinese families as well as worldwide; note age and genotype eligibility only as stated.
+- `mcp__zebra-mod__trials_search`: recruiting first; with `country: "China"` for Chinese families as well as worldwide. It returns the eligibility criteria (`full_eligibility: true` for the whole text) and contacts: read the genotype and age criteria against this patient instead of guessing, and repeat a status the tool flagged as stale as "last updated <date>, worth checking". It does not cover ChiCTR, so for China add that the Chinese registry should also be searched.
 - `mcp__zebra-mod__literature_search`: case reports and series of treatment in this disease/gene (off-label use, compassionate use), reviews.
 - China: `mcp__zebra-mod__china_rare` (national rare disease lists). Drug approval or reimbursement in China that no tool returned is "not checked" — point to NMPA and the treating hospital.
 - Large searches → one `zebra-mod:therapy-scout` subagent per angle (approved/investigational, trials, literature/repurposing, N-of-1), all in one message.
@@ -33,6 +33,7 @@ From the case and `gene_card` / `disease_card` (and `zebra-variant` / `zebra-s2f
 ## 3. N-of-1 feasibility screens (research)
 
 - **Antisense**: variant class (splice / pseudoexon / GoF allele / haploinsufficiency with a targetable poison exon), tissue reachable (CNS by intrathecal dosing, eye, liver; muscle is harder), gene expressed in it, onset vs disease stage. The N=1 Collaborative and n-Lorem publish eligibility criteria — cite them via literature, do not paraphrase from memory.
+- **Exon skipping**: for an out-of-frame exon deletion, `mcp__zebra-mod__cnv_interpret` gives the frame arithmetic and which added exon restores it; that is the exon the antisense drug must skip. Check an approved or trial drug for exactly that exon, never for the gene in general.
 - **Base editing**: `mcp__zebra-mod__edit_check` (SNV revertible by ABE/CBE? protospacer with the base in the window? bystanders?). No NGG protospacer → rerun with `pam: "NG"` (relaxed-PAM Cas9 variants); `annotate_bystanders: true` checks whether bystander edits change the protein. Delivery to the relevant tissue is the hard part — say so.
 - **Gene replacement**: coding sequence vs AAV capacity (~4.7 kb including regulatory elements); dosage sensitivity (overexpression toxicity, e.g. MECP2).
 

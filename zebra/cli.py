@@ -34,6 +34,7 @@ from zebra.http import SourceError
 # the JSON valid and the warnings, sources and ledger ids intact.
 DEFAULT_MAX_BYTES = 60_000
 TRACEBACK_TAIL = 2_000
+MESSAGE_CAP = 4_000  # an error message never carries a whole oversized input back
 
 
 class _ArgvError(Exception):
@@ -135,55 +136,159 @@ def _finite(value: Any, path: str, bad: List[str]) -> Any:
 
 
 def _longest_list(node: Any, path: str = "result") -> Tuple[Optional[list], str, int, int]:
-    """The longest list anywhere under `node` (by serialised length), with its dotted path."""
+    """The longest list anywhere under `node`, by item count, with its dotted path.
+
+    Item count, not serialised size: a list's serialisation always contains its
+    children's, so ranking by size could only ever pick the outermost list, and
+    trimming that drops whole records (a variant, a disease) when trimming an
+    inner list would have freed the same bytes.
+    """
     best: Tuple[Optional[list], str, int, int] = (None, "", 0, 0)
     if isinstance(node, list):
         if node:
             best = (node, path, len(node), len(_dump(node, None)))
         for i, item in enumerate(node):
             got = _longest_list(item, f"{path}[{i}]")
-            if got[3] > best[3]:
+            if (got[2], got[3]) > (best[2], best[3]):
                 best = got
     elif isinstance(node, dict):
         for key, item in node.items():
             got = _longest_list(item, f"{path}.{key}")
-            if got[3] > best[3]:
+            if (got[2], got[3]) > (best[2], best[3]):
                 best = got
     return best
 
 
-def _dump(envelope: Dict[str, Any], indent: Optional[int] = 1) -> str:
-    return json.dumps(envelope, ensure_ascii=False, indent=indent, allow_nan=False)
+def _subparser(parser: argparse.ArgumentParser, name: str) -> Optional[argparse.ArgumentParser]:
+    for act in parser._actions:  # noqa: SLF001
+        if isinstance(act, argparse._SubParsersAction):  # noqa: SLF001
+            return act.choices.get(name)
+    return None
+
+
+def _longest_string(node: Any) -> Optional[Tuple[Any, Any, int]]:
+    """The longest string value under `node`, as (holder, key, length), so it can be cut in place."""
+    best: Optional[Tuple[Any, Any, int]] = None
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        items = current.items() if isinstance(current, dict) else (
+            enumerate(current) if isinstance(current, list) else ())
+        for key, value in items:
+            if isinstance(value, str):
+                if best is None or len(value) > best[2]:
+                    best = (current, key, len(value))
+            elif isinstance(value, (dict, list)):
+                stack.append(value)
+    return best
+
+
+def _dump(envelope: Any, indent: Optional[int] = 1, ascii_only: bool = False) -> str:
+    return json.dumps(envelope, ensure_ascii=ascii_only, indent=indent, allow_nan=False)
+
+
+def _emit(text: str, stream=None) -> None:
+    """Write one line to stdout, surviving a stdout that cannot encode it.
+
+    A non-UTF-8 stdout (PYTHONIOENCODING, a cp1252 console, C-locale coercion
+    disabled) would otherwise raise UnicodeEncodeError *inside* the error
+    handler and leave the caller with empty stdout and a traceback — which is
+    exactly what the envelope contract exists to prevent. This toolkit answers
+    queries in Chinese, so it is first-class input.
+    """
+    out = stream or sys.stdout
+    try:
+        out.write(text + "\n")
+        out.flush()
+        return
+    except UnicodeEncodeError:
+        pass
+    encoding = getattr(out, "encoding", None) or "ascii"
+    out.write(text.encode(encoding, "backslashreplace").decode(encoding, "replace") + "\n")
+    out.flush()
+
+
+def _emit_json(envelope: Dict[str, Any], indent: Optional[int] = 1) -> None:
+    """Write a JSON envelope, re-encoding non-ASCII as \\uXXXX if stdout cannot take it."""
+    try:
+        _emit(_dump(envelope, indent))
+    except UnicodeEncodeError:  # pragma: no cover - _emit handles it, this is the belt
+        _emit(_dump(envelope, indent, ascii_only=True))
 
 
 def _trim(envelope: Dict[str, Any], budget: int) -> str:
-    """Serialise, trimming the longest list in `result` until it fits. The envelope stays valid JSON."""
+    """Serialise, trimming the longest list in `result` until it fits. The envelope stays valid JSON.
+
+    The number of items kept is found by bisection, so as much of the result
+    survives as the budget allows, and the warning names exactly how many
+    items were dropped.
+    """
     text = _dump(envelope)
     if budget <= 0 or len(text) <= budget:
         return text
+    warnings = envelope.setdefault("warnings", [])
+    # the bulk is normally `result`, but an oversized query string or a long
+    # list of source records must be cut too: a consumer that hard-cuts the
+    # body at its own limit would otherwise be handed invalid JSON
+    for key in ("query", "result"):
+        node = envelope.get(key)
+        big = _longest_string(node)
+        if big is not None and big[2] > max(200, budget // 4):
+            holder, field, length = big
+            keep = max(100, budget // 4)
+            holder[field] = str(holder[field])[:keep] + f"… [{length - keep} more characters, cut to stay inside " \
+                                                        f"the {budget}-character limit]"
+            warnings.append(f"{key}.{field} was {length} characters and was cut to {keep} to stay under "
+                            f"{budget} characters")
+            text = _dump(envelope)
+            if len(text) <= budget:
+                return text
     for _ in range(40):
-        target, path, size, _ = _longest_list(envelope.get("result"))
+        target, path, size, bytes_ = _longest_list(envelope.get("result"))
+        sources = envelope.get("sources")
+        if isinstance(sources, list) and sources:
+            source_bytes = len(_dump(sources, None))
+            if target is None or source_bytes > bytes_:
+                target, path, size = sources, "sources", len(sources)
         if target is None or size == 0:
             break
-        # trim proportionally; the loop corrects itself if the first cut is not enough
-        keep = min(size - 1, max(1 if size > 1 else 0, int(size * budget / len(text)) - 1))
-        drop = size - keep
-        del target[keep:]
-        envelope.setdefault("warnings", []).append(
-            f"result trimmed to stay under {budget} characters: {drop} of {size} items dropped from {path}"
-            + ("" if keep else " (the list is now empty)")
-        )
+        whole = list(target)
+        slot = len(warnings)
+        what = "provenance record(s)" if path == "sources" else "items"
+        warnings.append(f"result trimmed to stay under {budget} characters: {size} of {size} {what} dropped "
+                        f"from {path} (the list is now empty)")  # the longest wording, so the budget holds
+        low, high = 0, size - 1  # at least one item must go, or there is no progress
+        while low < high:
+            mid = (low + high + 1) // 2
+            target[:] = whole[:mid]
+            if len(_dump(envelope)) <= budget:
+                low = mid
+            else:
+                high = mid - 1
+        target[:] = whole[:low]
+        dropped = size - low
+        warnings[slot] = (f"{'sources' if path == 'sources' else 'result'} trimmed to stay under {budget} "
+                          f"characters: {dropped} of {size} {what} dropped from {path}"
+                          + ("" if low else " (the list is now empty)")
+                          + (" — the ledger ids still name every source" if path == "sources" else ""))
         text = _dump(envelope)
         if len(text) <= budget:
             return text
     if len(text) > budget:
         kept = {k: v for k, v in envelope.items() if k != "result"}
+        had_lists = _longest_list(envelope.get("result"))[0] is not None
         kept["warnings"] = list(kept.get("warnings") or []) + [
-            f"result dropped entirely: it does not fit in {budget} characters even after trimming its lists"
+            f"result dropped entirely: it does not fit in {budget} characters"
+            + (" even after trimming its lists" if had_lists else " and holds no list that could be trimmed")
         ]
         kept["result"] = None
         text = _dump(kept)
     return text
+
+
+def _nonfinite_warning(bad: List[str]) -> str:
+    return ("not a finite number, reported as null: " + "; ".join(bad[:5])
+            + (f" (+{len(bad) - 5} more)" if len(bad) > 5 else ""))
 
 
 def _envelope(command: str, outcome: Outcome, ledger_ids: List[str]) -> Dict[str, Any]:
@@ -194,8 +299,7 @@ def _envelope(command: str, outcome: Outcome, ledger_ids: List[str]) -> Dict[str
     sources = _finite(outcome.sources, "sources", bad)
     warnings = list(outcome.warnings)
     if bad:
-        warnings.append("not a finite number, reported as null: " + "; ".join(bad[:5])
-                        + (f" (+{len(bad) - 5} more)" if len(bad) > 5 else ""))
+        warnings.append(_nonfinite_warning(bad))
     return {
         "ok": True,
         "zebra": __version__,
@@ -206,6 +310,17 @@ def _envelope(command: str, outcome: Outcome, ledger_ids: List[str]) -> Dict[str
         "sources": sources,
         "result": result,
     }
+
+
+def _cap(message: str, limit: Optional[int] = None) -> str:
+    """Keep an error message inside the size budget: a 200 kB query must not be echoed whole."""
+    if limit is None:
+        budget = _max_bytes()
+        limit = MESSAGE_CAP if budget <= 0 else max(500, min(MESSAGE_CAP, budget // 2))
+    text = str(message)
+    if len(text) <= limit:
+        return text
+    return text[:limit] + f"… [{len(text) - limit} more characters, cut to stay inside the size budget]"
 
 
 def _max_bytes() -> int:
@@ -222,7 +337,9 @@ def _max_bytes() -> int:
 
 def main(argv: Optional[List[str]] = None) -> int:
     tokens = list(sys.argv[1:] if argv is None else argv)
-    want_json = "--json" in tokens  # known before parsing, so parse errors can be JSON too
+    # known before parsing, so parse errors can be JSON too; argparse accepts any
+    # unambiguous prefix of --json, and the two must never disagree
+    want_json = any(t.startswith("--j") and "--json".startswith(t) for t in tokens)
     parser = build_parser()
     buffer = io.StringIO()
     try:
@@ -234,21 +351,26 @@ def main(argv: Optional[List[str]] = None) -> int:
         code = 0 if err.code is None else int(err.code)
         text = buffer.getvalue()
         if want_json:
-            print(_dump({"ok": code == 0, "zebra": __version__, "command": "zebra", "warnings": [],
-                         "result": {"stdout": text}} if code == 0 else
-                        {"ok": False, "zebra": __version__, "command": "zebra",
-                         "error": {"type": "UsageError", "message": text.strip() or f"exit {code}"}}))
+            _emit_json({"ok": code == 0, "zebra": __version__, "command": "zebra", "query": {}, "warnings": [],
+                        "ledger": [], "sources": [], "result": {"stdout": text}} if code == 0 else
+                       {"ok": False, "zebra": __version__, "command": "zebra",
+                        "error": {"type": "UsageError", "message": text.strip() or f"exit {code}"}})
         else:
-            sys.stdout.write(text)
+            _emit(text.rstrip("\n"))
         return code
+    except KeyboardInterrupt:
+        return _fail(want_json, "zebra", "Interrupted", "interrupted while reading the arguments", 130)
     except Exception as err:  # noqa: BLE001 - the envelope must survive anything
         return _internal(want_json, "zebra", err)
 
     if not getattr(args, "func", None):
+        named = getattr(args, "command", None)
+        sub = _subparser(parser, named) if named else None
+        help_text = (sub or parser).format_help().strip()
         if want_json:
-            return _fail(True, "zebra", "UsageError", parser.format_help().strip(), 1)
-        parser.print_help()
-        return 1
+            return _fail(True, named or "zebra", "UsageError", help_text, 2 if sub else 1)
+        _emit(help_text)
+        return 2 if sub else 1
     command = " ".join(p for p in [args.command, getattr(args, "action", None)] if p)
     try:
         outcome: Outcome = args.func(args)
@@ -258,7 +380,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _fail(getattr(args, "json", False), command, "SourceError", f"{err.source}: {err.message}", 3,
                      source=err.source, status=err.status)
     except KeyboardInterrupt:
-        return 130
+        return _fail(getattr(args, "json", False), command, "Interrupted",
+                     "interrupted before the answer was complete", 130)
+    except SystemExit as err:  # a handler (or a library) called sys.exit
+        return _internal(getattr(args, "json", False), command,
+                         RuntimeError(f"the command exited with status {err.code!r} instead of returning a result"))
     except Exception as err:  # noqa: BLE001
         return _internal(getattr(args, "json", False), command, err)
 
@@ -267,18 +393,24 @@ def main(argv: Optional[List[str]] = None) -> int:
         from zebra import case as case_mod
 
         try:
-            ledger_ids = case_mod.append_ledger(args.case, command, outcome.query, outcome.sources)
+            # the ledger is a durable artifact: it gets the sanitised copies, so
+            # a non-finite number cannot make a row unparseable by strict JSON
+            ledger_ids = case_mod.append_ledger(args.case, command, _finite(outcome.query, "query", []),
+                                                _finite(outcome.sources, "sources", []))
         except (OSError, case_mod.CaseError) as err:
             outcome.warnings.append(f"evidence ledger not written: {err}")
 
     try:
         if args.json:
-            print(_trim(_envelope(command, outcome, ledger_ids), _max_bytes()))
+            _emit(_trim(_envelope(command, outcome, ledger_ids), _max_bytes()))
         else:
             if outcome.text is not None:
-                print(outcome.text)
+                _emit(outcome.text)
             else:
-                print(json.dumps(_finite(outcome.result, "result", []), ensure_ascii=False, indent=2, allow_nan=False))
+                nonfinite: List[str] = []
+                _emit(_dump(_finite(outcome.result, "result", nonfinite), indent=2))
+                if nonfinite:
+                    outcome.warnings.append(_nonfinite_warning(nonfinite))
             if outcome.warnings:
                 print("\nwarnings:", file=sys.stderr)
                 for w in outcome.warnings:
@@ -292,22 +424,22 @@ def main(argv: Optional[List[str]] = None) -> int:
 
 def _fail(want_json: bool, command: str, kind: str, message: str, code: int, **extra) -> int:
     if want_json:
-        print(_dump({"ok": False, "zebra": __version__, "command": command,
-                     "error": {"type": kind, "message": message, **extra}}, indent=None))
+        _emit_json({"ok": False, "zebra": __version__, "command": command,
+                    "error": {"type": kind, "message": _cap(message), **extra}}, indent=None)
     else:
-        print(f"zebra {command}: {message}", file=sys.stderr)
+        _emit(f"zebra {command}: {message}", sys.stderr)
     return code
 
 
 def _internal(want_json: bool, command: str, err: BaseException) -> int:
     tail = "".join(traceback.format_exception(type(err), err, err.__traceback__))[-TRACEBACK_TAIL:]
     if want_json:
-        print(_dump({"ok": False, "zebra": __version__, "command": command,
-                     "error": {"type": "InternalError", "exception": type(err).__name__, "message": str(err),
-                               "traceback_tail": tail}}, indent=None))
+        _emit_json({"ok": False, "zebra": __version__, "command": command,
+                    "error": {"type": "InternalError", "exception": type(err).__name__, "message": _cap(str(err)),
+                              "traceback_tail": tail}}, indent=None)
     else:
-        print(f"zebra {command}: internal error ({type(err).__name__}: {err})", file=sys.stderr)
-        print(tail, file=sys.stderr)
+        _emit(f"zebra {command}: internal error ({type(err).__name__}: {err})", sys.stderr)
+        _emit(tail, sys.stderr)
     return 70
 
 

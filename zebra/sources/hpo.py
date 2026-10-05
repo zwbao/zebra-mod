@@ -29,6 +29,15 @@ from zebra.http import SourceError, get_json
 from zebra.sources import record as source_record
 
 BASE = "https://ontology.jax.org/api"
+# `term()` answers are cached for a day, not 30 (B-P2-9). `zebra.http.request`
+# picks the TTL before it sees the status, so a 404 cannot be given its own
+# shorter life; the whole endpoint therefore takes the short one, because a
+# transient 404 that reads as "HPO has no such term" for a month is worse than
+# one extra small request a day. The term endpoint is keyless and paced at
+# 0.34 s per request in `zebra.http._HOST_INTERVAL`.
+# (A `not_found_ttl` argument in `zebra.http.request` would make this a 30-day
+# cache for hits and a 1-day cache for misses; that file is not owned here.)
+NOT_FOUND_TTL = 86400
 HPO_RE = re.compile(r"^HP:\d{7}$")
 
 
@@ -59,8 +68,8 @@ def term(hpo_id: str, prefer_local: bool = True) -> Outcome:
         }
         return Outcome(result, sources=[source_record("HPO", hpo_id, url=f"https://hpo.jax.org/browse/term/{hpo_id}",
                                                       note=f"local release {idx.version}")])
-    resp = get_json(f"{BASE}/hp/terms/{urllib.parse.quote(hpo_id)}", source="HPO", cache_ttl=30 * 86400,
-                    ok_statuses=(200, 404))
+    resp = get_json(f"{BASE}/hp/terms/{urllib.parse.quote(hpo_id, safe='')}", source="HPO",
+                    cache_ttl=NOT_FOUND_TTL, ok_statuses=(200, 404))
     if resp.status == 404:
         return Outcome({"id": hpo_id, "name": None, "obsolete": None, "note": "not found in HPO"},
                        sources=[source_record("HPO", hpo_id, resp)])
@@ -198,7 +207,7 @@ def search(text: str, limit: int = 10) -> Outcome:
 
 def disease_annotations(disease_id: str) -> Outcome:
     """Phenotypes annotated to a disease (OMIM:/ORPHA:), grouped by category."""
-    resp = get_json(f"{BASE}/network/annotation/{urllib.parse.quote(disease_id)}", source="HPO", cache_ttl=14 * 86400)
+    resp = get_json(f"{BASE}/network/annotation/{urllib.parse.quote(disease_id, safe='')}", source="HPO", cache_ttl=14 * 86400)
     data = resp.json()
     disease = data.get("disease") or {}
     terms = []

@@ -219,3 +219,228 @@ def test_sources_down_reports_unavailable_not_absent(monkeypatch, capsys):
     assert code == 0
     assert env["result"]["status"] == "unavailable"
     assert any(w.startswith("Orphanet unavailable") for w in env["warnings"])
+
+
+# ------------------------------------- F39: GeneReviews text, plain language, support pointers
+
+def test_F39_genereviews_sections_are_parsed_from_the_published_summary():
+    body = _json("genereviews/f39_epmc_book_text.json")
+    by_id = {r["bookid"]: r for r in body["resultList"]["result"]}
+    secs = genereviews.parse_sections(by_id["NBK1119"]["abstractText"])
+    assert list(secs) == ["Clinical characteristics", "Diagnosis/testing", "Management", "Genetic counseling"]
+    assert "Duchenne muscular dystrophy" in secs["Clinical characteristics"]
+    assert "Corticosteroid therapy" in secs["Management"]
+    assert "<" not in secs["Management"]  # tags stripped
+    assert by_id["NBK1119"]["bookOrReportDetails"]["comprisingTitle"].startswith("GeneReviews")
+
+
+def test_F39_chapter_text_keyed_by_nbk(monkeypatch):
+    from zebra.http import Response
+
+    body = _json("genereviews/f39_epmc_book_text.json")
+    seen = {}
+
+    def fake_get(url, source, **kw):
+        seen["query"] = kw["params"]["query"]
+        return Response(url, 200, json.dumps(body), "2026-10-06T00:00:00+00:00", True)
+
+    monkeypatch.setattr(genereviews, "get_json", fake_get)
+    out = genereviews.chapter_text(["NBK1119", "NBK1318"])
+    assert seen["query"] == "BOOK_ID:NBK1119 OR BOOK_ID:NBK1318"
+    assert set(out.result) == {"NBK1119", "NBK1318"}
+    assert out.result["NBK1318"]["pmid"] == "20301494"
+    assert "Clinical characteristics" in out.result["NBK1318"]["sections"]
+    assert "the full chapter is at https://www.ncbi.nlm.nih.gov/books/NBK1318/" in out.result["NBK1318"]["source"]
+
+
+def test_F39_a_chapter_with_no_book_record_is_warned_about(monkeypatch):
+    from zebra.http import Response
+
+    body = _json("genereviews/f39_epmc_book_text.json")
+
+    def fake_get(url, source, **kw):
+        return Response(url, 200, json.dumps(body), "2026-10-06T00:00:00+00:00", True)
+
+    monkeypatch.setattr(genereviews, "get_json", fake_get)
+    out = genereviews.chapter_text(["NBK1119", "NBK99999"])
+    assert "NBK99999" not in out.result
+    assert any("NBK99999" in w and "chapter text not retrieved" in w for w in out.warnings)
+
+
+def test_F39_medlineplus_parses_a_plain_language_summary():
+    from zebra.sources import medlineplus
+
+    data = _json("medlineplus/f39_osteogenesis_imperfecta.json")
+    r = medlineplus.parse_condition(data, "osteogenesis-imperfecta", ["OMIM:166200"])
+    assert r["name"] == "Osteogenesis imperfecta"
+    assert r["url"].startswith("https://medlineplus.gov/genetics/condition/")
+    body = next(b for b in r["text"] if b["role"] == "description")
+    assert "bones that break (fracture) easily" in body["text"] and "<" not in body["text"]
+    assert "COL1A1" in r["genes"]
+    assert r["register"].startswith("MedlinePlus Genetics")
+
+
+def test_F39_medlineplus_says_when_a_match_rests_on_the_name_alone():
+    from zebra.sources import medlineplus
+
+    data = _json("medlineplus/f39_osteogenesis_imperfecta.json")
+    confirmed = medlineplus.parse_condition(data, "osteogenesis-imperfecta", data_omim(data))
+    assert confirmed["id_confirmed"] is True and confirmed["omim_overlap"]
+    name_only = medlineplus.parse_condition(data, "osteogenesis-imperfecta", ["OMIM:999999"])
+    assert name_only["id_confirmed"] is False and name_only["omim_overlap"] == []
+
+
+def data_omim(data):
+    return ["OMIM:" + k["db-key"]["key"] for k in data["db-key-list"] if k["db-key"]["db"] == "OMIM"][:1]
+
+
+def test_F39_medlineplus_slug_building_and_candidate_order():
+    from zebra.sources import medlineplus
+
+    assert medlineplus.slug("Duchenne and Becker muscular dystrophy") == "duchenne-and-becker-muscular-dystrophy"
+    assert medlineplus.slug("Gaucher's disease") == "gauchers-disease"
+    cands = medlineplus.slug_candidates(["Osteogenesis imperfecta", "OI", "", "Osteogenesis imperfecta",
+                                         "Brittle bone disease"])
+    assert cands == ["osteogenesis-imperfecta", "brittle-bone-disease"]  # "OI" is too short, duplicates dropped
+
+
+def test_F39_medlineplus_miss_is_a_404_not_an_error(monkeypatch):
+    from zebra.http import Response
+    from zebra.sources import medlineplus
+
+    def fake_get(url, source, **kw):
+        assert kw["ok_statuses"] == (200, 404)
+        return Response(url, 404, "<!DOCTYPE html><html>not found", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(medlineplus, "get_json", fake_get)
+    out = medlineplus.condition(["Dravet syndrome"])
+    assert out.result is None
+    assert any("no MedlinePlus Genetics page found" in w and "dravet-syndrome" in w for w in out.warnings)
+
+
+def test_F39_support_pointers_name_their_source_and_say_they_are_not_retrieved():
+    sup = D.support_pointers("ORPHA:98896", {"url": "https://www.orpha.net/en/disease/detail/98896"},
+                             {"GARD": [{"id": "GARD:6291", "relation": "E"}]},
+                             {"url": "https://medlineplus.gov/genetics/condition/x"})
+    whats = {p["what"]: p for p in sup["pointers"]}
+    assert "patient organisations and expert centres" in whats
+    assert whats["patient organisations and expert centres"]["retrieved"] is False
+    gard = whats["patient organisations and advocacy groups"]
+    assert gard["url"] == "https://rarediseases.info.nih.gov/diseases/6291/index"
+    assert "serves no patient-organisation or expert-centre dataset" in sup["note"]
+    assert "rd-cross-referencing" in sup["note"]
+
+
+# ---------------------------------------------------------------- F12: a deterministic 404 is a miss
+
+def test_F12_orphanet_name_search_does_not_use_the_bare_json_accept(monkeypatch):
+    from zebra.http import Response
+
+    seen = {}
+
+    def fake_get(url, source, **kw):
+        seen.update(kw)
+        return Response(url, 404, "<html>404</html>", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(orphanet, "get_json", fake_get)
+    orphanet._BY_NAME_CACHE.clear()
+    out = orphanet.by_name("Hyperphenylalaninemia/PKU")
+    # the HTML-where-JSON-was-expected retry only fires for accept == "application/json"
+    assert seen["accept"] == "application/json, */*"
+    assert seen["ok_statuses"] == (200, 404)
+    assert out.result is None
+
+
+def test_F12_slash_is_replaced_before_quoting_and_said_so(monkeypatch):
+    from zebra.http import Response
+
+    urls = []
+
+    def fake_get(url, source, **kw):
+        urls.append(url)
+        return Response(url, 404, "<html>404</html>", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(orphanet, "get_json", fake_get)
+    orphanet._BY_NAME_CACHE.clear()
+    out = orphanet.by_name("Hyperphenylalaninemia/PKU")
+    assert "%2F" not in urls[0] and "Hyperphenylalaninemia%20PKU" in urls[0]
+    assert any("rejects '/' in a name" in w for w in out.warnings)
+
+
+def test_F12_by_name_is_memoized_so_one_run_makes_one_request(monkeypatch):
+    from zebra.http import Response
+
+    calls = []
+
+    def fake_get(url, source, **kw):
+        calls.append(url)
+        return Response(url, 404, "<html>404</html>", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(orphanet, "get_json", fake_get)
+    orphanet._BY_NAME_CACHE.clear()
+    first = orphanet.by_name("Some Name")
+    second = orphanet.by_name("Some Name")
+    assert len(calls) == 1
+    assert second.result == first.result and second.warnings == []  # not repeated per caller
+
+
+@pytest.mark.live
+def test_live_F39_genereviews_text_and_support_on_the_dmd_card(capsys):
+    code = cli.main(["--json", "disease", "ORPHA:98896"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0
+    r = env["result"]
+    ch = r["genereviews"][0]
+    assert ch["nbk"] == "NBK1119" and ch["pmid"] == "20301298"
+    assert "Clinical characteristics" in ch["sections"] and "Management" in ch["sections"]
+    assert "Corticosteroid" in ch["sections"]["Management"]
+    pointers = {p["source"] for p in r["support"]["pointers"]}
+    assert any("Orphanet disease page" in s for s in pointers)
+    assert any("GARD" in s for s in pointers)
+    assert "serves no patient-organisation or expert-centre dataset" in r["support"]["note"]
+
+
+@pytest.mark.live
+def test_live_F39_medlineplus_plain_language_on_osteogenesis_imperfecta(capsys):
+    code = cli.main(["--json", "disease", "ORPHA:666"])
+    r = json.loads(capsys.readouterr().out)["result"]
+    assert code == 0
+    mp = r["plain_language"]
+    assert mp["name"] == "Osteogenesis imperfecta"
+    assert mp["url"].startswith("https://medlineplus.gov/genetics/condition/osteogenesis-imperfecta")
+    assert any("bones" in b["text"] for b in mp["text"])
+    assert mp["register"].startswith("MedlinePlus Genetics")
+
+
+@pytest.mark.live
+def test_live_F12_a_disease_name_with_a_slash_is_answered_fast_and_not_adopted():
+    """Before: an HTML 404 retried 4 times with 10.5 s of backoff, twice per run (62 s total).
+
+    With `/` replaced by a space the endpoint answers normally, so there is no
+    retry storm at all — and the answer is Orphadata's *closest* name, which
+    `name_matches` must still reject so the resolver does not adopt it.
+    """
+    import time
+
+    from zebra.sources import orphanet as O
+
+    O._BY_NAME_CACHE.clear()
+    t0 = time.monotonic()
+    out = O.by_name("Hyperphenylalaninemia/PKU")
+    elapsed = time.monotonic() - t0
+    assert elapsed < 20  # was 4 attempts plus 10.5 s of backoff, twice per run
+    assert any("rejects '/' in a name" in w for w in out.warnings)
+    assert O.name_matches(out.result, "Hyperphenylalaninemia/PKU") is False
+    # and the memoized second call costs nothing
+    t1 = time.monotonic()
+    again = O.by_name("Hyperphenylalaninemia/PKU")
+    assert time.monotonic() - t1 < 0.05 and again.result == out.result
+
+
+@pytest.mark.live
+def test_live_F12_the_command_calls_it_a_miss_not_an_unavailable_source(capsys):
+    code = cli.main(["--json", "disease", "Hyperphenylalaninemia/PKU"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert env["result"]["status"] in ("ambiguous", "not_found")  # never "unavailable"
+    assert not any("Orphanet name search unavailable" in w for w in env["warnings"])
