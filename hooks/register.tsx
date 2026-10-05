@@ -4,7 +4,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import type { Board, Ready } from '../types'
 import { DOCTRINE, renderDoctrine } from './doctrine'
 import { TOOLS, toolArgv, type ToolDef } from './tools'
-import { guardInput, uploadsGenome } from './privacy'
+import { guardInput, isOutboundShell, uploadsGenome } from './privacy'
 
 const PLUGIN = 'zebra-mod'
 const PANE = 'zebra-board'
@@ -149,7 +149,7 @@ export const register: Register = (on, options) => {
       e.tool === 'WebFetch' ||
       e.tool === 'WebSearch' ||
       (e.tool.startsWith('mcp__') && !isOwn) ||
-      (e.tool === 'Bash' && /\b(curl|wget|http|https|nc|ncat|scp|sftp|rsync|ssh|ftp|gh|aws|gsutil|rclone|python3?\s+-c)\b/.test(String((e.input as { command?: unknown })?.command ?? '')))
+      (e.tool === 'Bash' && isOutboundShell(String((e.input as { command?: unknown })?.command ?? '')))
 
     if (privacyOn && outbound) {
       const hit = guardInput(e.input, ids)
@@ -317,10 +317,16 @@ async function setCase($: EngineInterface, python: string, path: string | null):
 
 // ------------------------------------------------------------ text
 
-async function absolute($: { session: { cwd: () => Promise<string> } }, p: string): Promise<string> {
-  if (p.startsWith('/')) return p.replace(/\/+$/, '')
-  const cwd = await $.session.cwd()
-  return `${cwd}/${p}`.replace(/\/\.\//g, '/').replace(/\/+$/, '')
+async function absolute($: EngineInterface, p: string): Promise<string> {
+  const home = (await $.env.get('HOME')) ?? ''
+  const raw = p.startsWith('~/') ? `${home}/${p.slice(2)}` : p.startsWith('/') ? p : `${await $.session.cwd()}/${p}`
+  const parts: string[] = []
+  for (const part of raw.split('/')) {
+    if (part === '' || part === '.') continue
+    if (part === '..') parts.pop()
+    else parts.push(part)
+  }
+  return `/${parts.join('/')}`
 }
 
 function statusLine(b: Board): string {

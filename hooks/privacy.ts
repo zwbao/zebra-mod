@@ -35,3 +35,13 @@ const UPLOADER =
 export function uploadsGenome(command: string): boolean {
   return UPLOADER.test(command) && GENOME_FILE.test(command)
 }
+
+const NETWORK_TOOL = /\b(?:curl|wget|https?|nc|ncat|scp|sftp|rsync|ssh|ftp|gh|aws|gsutil|rclone)\b|\bpython3?\s+-c\b/
+const ZEBRA_CLI = /(?:^|[\s;&|(/])zebra(?![\w-])/
+const ZEBRA_LOCAL = /\bcase\s+identifiers\b/
+
+/** True when a shell command may send data off the machine (network tools, or the zebra CLI's web lookups). */
+export function isOutboundShell(command: string): boolean {
+  if (NETWORK_TOOL.test(command)) return true
+  return ZEBRA_CLI.test(command) && !ZEBRA_LOCAL.test(command)
+}

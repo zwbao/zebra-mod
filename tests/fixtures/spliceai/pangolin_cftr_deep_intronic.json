@@ -1,0 +1,55 @@
+{
+ "variant": "chr7-117639961-C-T",
+ "hg": "38",
+ "bc": "basic",
+ "distance": 500,
+ "mask": "False",
+ "genomeVersion": "38",
+ "chrom": "7",
+ "pos": 117639961,
+ "ref": "C",
+ "alt": "T",
+ "scores": [
+  {
+   "DS_SG": "0.333",
+   "DS_SL": "-0.005",
+   "DP_SG": -2,
+   "DP_SL": 2,
+   "SG_REF": "0.053",
+   "SG_ALT": "0.386",
+   "SL_REF": "0.058",
+   "SL_ALT": "0.053",
+   "g_id": "ENSG00000001626.20",
+   "g_name": "CFTR",
+   "t_id": "ENST00000003084.11",
+   "t_priority": "MS",
+   "t_refseq_ids": [
+    "NM_000492.4"
+   ],
+   "t_strand": "+",
+   "t_type": "protein_coding",
+   "nNonZeroScores": 3
+  },
+  {
+   "DS_SG": "0.058",
+   "DS_SL": "-0.259",
+   "DP_SG": -66,
+   "DP_SL": 12,
+   "SG_REF": "0.221",
+   "SG_ALT": "0.280",
+   "SL_REF": "0.520",
+   "SL_ALT": "0.261",
+   "g_id": "ENSG00000083622.8",
+   "g_name": "CFTR-AS2",
+   "t_id": "ENST00000456270.1",
+   "t_priority": "C",
+   "t_refseq_ids": null,
+   "t_strand": "-",
+   "t_type": "lncRNA",
+   "nNonZeroScores": 5
+  }
+ ],
+ "source": "pangolin:model:cache",
+ "allNonZeroScoresStrand": "+",
+ "allNonZeroScoresTranscriptId": "ENST00000003084.11"
+}

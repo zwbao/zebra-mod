@@ -1,0 +1,16 @@
+[
+ {
+  "_id": "litvar@rs794726730##",
+  "rsid": "rs794726730",
+  "gene": [
+   "SCN1A"
+  ],
+  "name": "c.2134C>T",
+  "hgvs": "c.2134C>T",
+  "pmids_count": 21,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": true,
+  "match": null
+ }
+]

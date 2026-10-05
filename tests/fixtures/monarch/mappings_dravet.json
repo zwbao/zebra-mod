@@ -1,0 +1,37 @@
+{
+ "limit": 500,
+ "offset": 0,
+ "total": 3,
+ "items": [
+  {
+   "subject_id": "MONDO:0100079",
+   "subject_label": "developmental and epileptic encephalopathy, 6A",
+   "predicate_id": "skos:exactMatch",
+   "object_id": "OMIM:607208",
+   "object_label": "dravet syndrome",
+   "mapping_justification": "semapv:UnspecifiedMatching",
+   "id": "c13448f2-6e6b-445e-8e69-1bb53c45e5b9",
+   "mapping_source": "mondo.sssom"
+  },
+  {
+   "subject_id": "MONDO:0014328",
+   "subject_label": "developmental and epileptic encephalopathy, 19",
+   "predicate_id": "skos:exactMatch",
+   "object_id": "OMIM:615744",
+   "object_label": "developmental and epileptic encephalopathy 19",
+   "mapping_justification": "semapv:UnspecifiedMatching",
+   "id": "acb0229b-8b7d-471b-b2c2-87e672a10741",
+   "mapping_source": "mondo.sssom"
+  },
+  {
+   "subject_id": "MONDO:0011794",
+   "subject_label": "obsolete Dravet syndrome",
+   "predicate_id": "skos:exactMatch",
+   "object_id": "Orphanet:33069",
+   "object_label": "Dravet syndrome",
+   "mapping_justification": "semapv:UnspecifiedMatching",
+   "id": "02729c7c-dab9-455d-aa6a-6412dd8e4fae",
+   "mapping_source": "mondo.sssom"
+  }
+ ]
+}

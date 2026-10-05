@@ -52,6 +52,8 @@ REVEL_BP4 = [(0.003, "VeryStrong"), (0.016, "Strong"), (0.183, "Moderate"), (0.2
 # Walker et al. 2023 (AJHG 110:1046), ClinGen SVI Splicing Subgroup.
 SPLICEAI_PP3 = 0.2
 SPLICEAI_BP4 = 0.1
+NULL_CONSEQUENCES = ("stop_gained", "frameshift_variant", "splice_donor_variant", "splice_acceptor_variant",
+                     "start_lost", "stop_lost", "transcript_ablation")
 
 
 @dataclass
@@ -234,12 +236,15 @@ def suggest_from_data(data: Dict[str, Any], inheritance: Optional[str] = None) -
         if b:
             out.append({"code": "BP4" if b == "Supporting" else f"BP4_{b}", "basis": f"REVEL {revel} (<= threshold for {b})",
                         "rule": "Pejaver et al. 2022: REVEL BP4 Supporting <=0.290, Moderate <=0.183, Strong <=0.016, VeryStrong <=0.003"})
+    null_like = any(c in NULL_CONSEQUENCES for c in consequence)
+    inframe = any(c in ("inframe_deletion", "inframe_insertion") for c in consequence)
     if spliceai is not None:
         sp = float(spliceai)
-        if sp >= SPLICEAI_PP3 and not any(c in ("stop_gained", "frameshift_variant") for c in consequence):
+        if sp >= SPLICEAI_PP3 and not null_like:
             out.append({"code": "PP3", "basis": f"SpliceAI max delta {sp} >= 0.2",
                         "rule": "Walker et al. 2023 (ClinGen SVI Splicing): SpliceAI >=0.2 supports PP3; do not combine with PVS1 for the same splice effect"})
-        if sp <= SPLICEAI_BP4 and (revel is None or float(revel) <= 0.290 or not is_missense):
+        # Walker 2023: BP4/BP7 from SpliceAI only where splicing is the question — not for null variants or in-frame indels
+        if sp <= SPLICEAI_BP4 and not null_like and not inframe and (revel is None or float(revel) <= 0.290 or not is_missense):
             out.append({"code": "BP4", "basis": f"SpliceAI max delta {sp} <= 0.1",
                         "rule": "Walker et al. 2023: SpliceAI <=0.1 supports BP4 (and BP7 for synonymous/deep intronic)"})
 
@@ -248,7 +253,7 @@ def suggest_from_data(data: Dict[str, Any], inheritance: Optional[str] = None) -
     ac = data.get("gnomad_ac")
     faf95 = data.get("faf95")
     max_af = data.get("max_credible_af")
-    if af is not None and float(af) > 0.05 and (an is None or an >= 2000):
+    if af is not None and float(af) > 0.05 and an is not None and an >= 2000:
         out.append({"code": "BA1", "basis": f"grpmax AF {float(af):.4g} > 0.05",
                     "rule": "ClinGen SVI (Ghosh et al. 2018): BA1 when AF > 0.05 in a continental population with >= 2000 alleles, outside the BA1 exception list"})
     elif faf95 is not None and max_af is not None and float(faf95) > float(max_af):

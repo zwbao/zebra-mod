@@ -1,0 +1,122 @@
+{
+ "s2f_core": "0.1.0",
+ "run_id": "20261005T151545Z-evo2-score",
+ "run_dir": "/Users/baozhiwei/.cache/zebra-mod/s2f-runs/output/s2f/20261005T151545Z-evo2-score",
+ "family": "evo2",
+ "subcommand": "score",
+ "stack": "evo2-hosted",
+ "python_version": "Python 3.11.4",
+ "command": "/Users/baozhiwei/.penguin/data/default_project/agents/s2f/shared_env/evo2-hosted/bin/python /Users/baozhiwei/s2f-penguin/s2f_core/families/evo2/run_real_evo2_workflow.py --mode variant --chrom chr2 --pos 166042334 --ref G --alt A --variant-window-len 2048 --output-dir /Users/baozhiwei/.cache/zebra-mod/s2f-runs/output/s2f/20261005T151545Z-evo2-score/artifacts",
+ "argv": [
+  "--chrom",
+  "chr2",
+  "--pos",
+  "166042334",
+  "--ref",
+  "G",
+  "--alt",
+  "A",
+  "--variant-window-len",
+  "2048"
+ ],
+ "env_present": [
+  "NVCF_RUN_KEY"
+ ],
+ "start_utc": "2026-10-05T15:15:45.649832+00:00",
+ "end_utc": "2026-10-05T15:19:42.912181+00:00",
+ "exit_code": 0,
+ "wall_s": 237.26,
+ "timeout_s": 3600.0,
+ "summary": {
+  "schema": "s2f.summary.v1",
+  "skill_id": "s2f-evo2",
+  "family": "evo2",
+  "task": "score",
+  "inputs": {
+   "assembly": "hg38",
+   "interval": {
+    "chrom": "19",
+    "start_0based": 6700000,
+    "end_0based": 6732768
+   },
+   "variant": {
+    "chrom": "2",
+    "position_1based": 166042334,
+    "alt": "A",
+    "window_len": 2048
+   }
+  },
+  "outputs": [
+   "evo2_real_workflow_results.json",
+   "evo2_chr12_variant_effect.png",
+   "summary.json"
+  ],
+  "status": "ok",
+  "error": null,
+  "model": {
+   "id": "evo2-7b",
+   "checkpoint": null,
+   "version": "hosted",
+   "generation_model_used": null
+  },
+  "coordinate_convention": {
+   "interval": "0-based [start, end)",
+   "variant_position": "1-based"
+  },
+  "generated_at_utc": "2026-10-05T15:19:42Z",
+  "variant_effect_is_proxy": true,
+  "delta_loglik": -40.10391114001686,
+  "delta_logprob_at_variant": -3.5791139416708244,
+  "delta_emb_norm_at_variant": 0.7762508263752295,
+  "embedding_layer": "blocks.24.inner_mha_cls",
+  "preflight_steps": [
+   {
+    "step": "reference_base",
+    "ok": true,
+    "detail": "--ref given and equal to the hg38 base"
+   },
+   {
+    "step": "window",
+    "ok": true,
+    "detail": "2048 bp window centred on the variant, causal log-softmax"
+   }
+  ],
+  "kind": "variant_effect",
+  "readout_class": "function_measured_proxy",
+  "claim_level": "molecular",
+  "higher_is_better": false,
+  "units": "nats (summed log-probability difference over the window)",
+  "headline_score": "delta_loglik",
+  "score_definitions": {
+   "delta_loglik": "sum over the window (default 2,048 bp) of log P(base_i | prefix) for the ALT sequence minus the REF sequence, from the causal log-softmax of the unembed logits. Negative = ALT window less likely under the model; a proxy for constraint, no tissue, no direction of effect.",
+   "delta_logprob_at_variant": "the same difference at the variant position only (one base), not the windowed sum.",
+   "delta_emb_norm_at_variant": "L2 distance between ALT and REF embeddings at the variant position (block 24); unsigned, a geometry measure, not an effect direction."
+  },
+  "conditioning_tracks_provided": "n/a (sequence-only model; hosted evo2-7b/40b)",
+  "contract_source": {
+   "kind": "family.yaml",
+   "readout_class": "family.yaml",
+   "claim_level": "family.yaml",
+   "higher_is_better": "family.yaml",
+   "units": "family.yaml",
+   "headline_score": "family.yaml",
+   "score_definitions": "family.yaml",
+   "conditioning_tracks_provided": "family.yaml",
+   "preflight_steps": "script"
+  }
+ },
+ "outputs": [
+  {
+   "path": "artifacts/evo2_chr12_variant_effect.png",
+   "bytes": 389273
+  },
+  {
+   "path": "artifacts/evo2_real_workflow_results.json",
+   "bytes": 2099
+  },
+  {
+   "path": "artifacts/summary.json",
+   "bytes": 1792
+  }
+ ]
+}

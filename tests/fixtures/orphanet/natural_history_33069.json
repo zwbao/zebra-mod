@@ -1,0 +1,36 @@
+{
+ "data": {
+  "__count": 1,
+  "__licence": {
+   "identifier": "CC-BY-4.0",
+   "link": "https://creativecommons.org/licenses/by/4.0",
+   "name": "Creative Commons Attribution 4.0 International"
+  },
+  "results": {
+   "AverageAgeOfOnset": [
+    "Infancy",
+    "Neonatal"
+   ],
+   "Date": "2026-06-23 07:57:51",
+   "DisorderGroup": "Disorder",
+   "ORPHAcode": 33069,
+   "OrphanetURL": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=33069",
+   "Preferred term": "Dravet syndrome",
+   "TypeOfInheritance": [
+    "Autosomal dominant"
+   ],
+   "Typology": "Disease"
+  }
+ },
+ "datasetCategory": {
+  "lang": "en",
+  "name": "Natural history of rare diseases"
+ },
+ "parameters": {
+  "path": {
+   "ORPHAcode": 33069
+  },
+  "query": {}
+ },
+ "uri": "https://api.orphadata.com/rd-natural_history/orphacodes/33069"
+}

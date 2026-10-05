@@ -1,0 +1,78 @@
+{
+ "_source": {
+  "url": "https://rest.ensembl.org/lookup/symbol/homo_sapiens",
+  "retrieved_at": "2026-10-05T15:24:33+00:00"
+ },
+ "response": {
+  "SCN1A": {
+   "id": "ENSG00000144285",
+   "display_name": "SCN1A",
+   "seq_region_name": "2",
+   "start": 165984641,
+   "end": 166182806,
+   "strand": -1,
+   "biotype": "protein_coding",
+   "assembly_name": "GRCh38"
+  },
+  "DMD": {
+   "id": "ENSG00000198947",
+   "display_name": "DMD",
+   "seq_region_name": "X",
+   "start": 31097677,
+   "end": 33339609,
+   "strand": -1,
+   "biotype": "protein_coding",
+   "assembly_name": "GRCh38"
+  },
+  "NGLY1": {
+   "id": "ENSG00000151092",
+   "display_name": "NGLY1",
+   "seq_region_name": "3",
+   "start": 25718698,
+   "end": 25790039,
+   "strand": -1,
+   "biotype": "protein_coding",
+   "assembly_name": "GRCh38"
+  },
+  "TTN": {
+   "id": "ENSG00000155657",
+   "display_name": "TTN",
+   "seq_region_name": "2",
+   "start": 178525989,
+   "end": 178830802,
+   "strand": -1,
+   "biotype": "protein_coding",
+   "assembly_name": "GRCh38"
+  },
+  "PCDH19": {
+   "id": "ENSG00000165194",
+   "display_name": "PCDH19",
+   "seq_region_name": "X",
+   "start": 100291644,
+   "end": 100410296,
+   "strand": -1,
+   "biotype": "protein_coding",
+   "assembly_name": "GRCh38"
+  },
+  "ALDH7A1": {
+   "id": "ENSG00000164904",
+   "display_name": "ALDH7A1",
+   "seq_region_name": "5",
+   "start": 126531200,
+   "end": 126595362,
+   "strand": -1,
+   "biotype": "protein_coding",
+   "assembly_name": "GRCh38"
+  },
+  "CFTR": {
+   "id": "ENSG00000001626",
+   "display_name": "CFTR",
+   "seq_region_name": "7",
+   "start": 117287120,
+   "end": 117715971,
+   "strand": 1,
+   "biotype": "protein_coding",
+   "assembly_name": "GRCh38"
+  }
+ }
+}

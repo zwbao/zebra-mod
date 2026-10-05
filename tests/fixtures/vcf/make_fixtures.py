@@ -1,0 +1,184 @@
+"""Build the synthetic family VCF used by tests/test_vcf.py (and optionally re-capture Ensembl responses).
+
+    python tests/fixtures/vcf/make_fixtures.py            # write trio.vcf, trio.vcf.gz, genes.txt
+    python tests/fixtures/vcf/make_fixtures.py --capture  # also refresh vep_trio.json, lookup_genes.json (network)
+
+Coordinates are real GRCh38 positions; every REF base was checked against Ensembl
+/sequence/region (2026-10-05). The variants are real dbSNP/ClinVar alleles
+(resolved with Ensembl variant_recoder / overlap); only the genotypes, depths and
+the family are invented. Samples: M (mother), F (father), P (proband, female),
+S (brother, male). trio.vcf uses chr-prefixed contigs, trio.vcf.gz plain names
+(written as BGZF, so it is what bgzip would produce).
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import struct
+import sys
+import zlib
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SAMPLES = ("M", "F", "P", "S")
+
+# GRCh38 lengths (Ensembl /info/assembly/homo_sapiens, GRCh38.p14)
+CONTIGS = [("1", 248956422), ("2", 242193529), ("3", 198295559), ("4", 190214555), ("5", 181538259),
+           ("6", 170805979), ("7", 159345973), ("8", 145138636), ("9", 138394717), ("10", 133797422),
+           ("11", 135086622), ("12", 133275309), ("13", 114364328), ("14", 107043718), ("15", 101991189),
+           ("16", 90338345), ("17", 83257441), ("18", 80373285), ("19", 58617616), ("20", 64444167),
+           ("21", 46709983), ("22", 50818468), ("X", 156040895), ("Y", 57227415), ("M", 16569)]
+
+# chrom, pos, id, ref, alts, filter, {sample: (GT, AD, DP, GQ)}, what it tests
+RECORDS = [
+    ("2", 166036097, "rs2105793395", "A", "C", "PASS",
+     {"M": ("0/0", "30,0", 30, 90), "F": ("0/0", "28,0", 28, 84), "P": ("0/1", "3,3", 6, 40), "S": ("0/0", "25,0", 25, 75)},
+     "SCN1A ClinVar pathogenic stop: proband DP 6 < 10 -> removed by the quality filter"),
+    ("2", 166036116, "rs796052993", "C", "A", "LowQual",
+     {"M": ("0/0", "30,0", 30, 90), "F": ("0/0", "26,0", 26, 78), "P": ("0/1", "10,4", 14, 5), "S": ("0/0", "22,0", 22, 66)},
+     "SCN1A ClinVar pathogenic stop: FILTER LowQual, GQ 5 -> removed"),
+    ("2", 166042334, "rs794726730", "G", "A", "PASS",
+     {"M": ("0/0", "31,0", 31, 90), "F": ("0/0", "29,0", 29, 87), "P": ("0/1", "18,17", 35, 99), "S": ("0/0", "25,0", 25, 75)},
+     "SCN1A NM_001165963.4:c.2134C>T p.Arg712* de novo in P"),
+    ("2", 166053034, "rs3812718", "C", "T,A", "PASS",
+     {"M": ("0/1", "15,16,0", 31, 99), "F": ("0/0", "30,0,0", 30, 90), "P": ("0/1", "20,18,0", 38, 99), "S": ("1/1", "0,22,0", 22, 66)},
+     "multi-allelic common SCN1A intronic SNP: T common (filtered by AF), A not carried by P"),
+    ("2", 166122240, "rs7587026", "C", "A", "PASS",
+     {"M": ("0/0", "27,0", 27, 81), "F": ("0/1", "13,14", 27, 99), "P": ("0|1", "14,15", 29, 99), "S": ("0/0", "24,0", 24, 72)},
+     "common SCN1A intronic SNP, paternal, phased GT -> filtered by AF"),
+    ("2", 178560007, "rs562860372", "C", "T", "PASS",
+     {"M": ("0/0", "30,0", 30, 90), "F": ("0/1", "15,15", 30, 99), "P": ("0/1", "16,16", 32, 99), "S": ("0/0", "25,0", 25, 75)},
+     "TTN missense VUS, paternal (outside the gene list)"),
+    ("2", 178560163, "rs72648224", "T", "A", "PASS",
+     {"M": ("0/1", "14,15", 29, 99), "F": ("0/0", "28,0", 28, 84), "P": ("0/1", "17,16", 33, 99), "S": ("0/1", "12,13", 25, 99)},
+     "TTN stop, maternal (outside the gene list)"),
+    ("3", 25751134, "rs200561967", "G", "A", "PASS",
+     {"M": ("0/0", "4,0", 4, 12), "F": ("0/0", "33,0", 33, 99), "P": ("0/1", "20,20", 40, 99), "S": ("0/0", "21,0", 21, 63)},
+     "NGLY1 stop; mother DP 4 -> possible_de_novo, not de novo"),
+    ("5", 126554292, ".", "C", "G", "PASS",
+     {"M": ("0/1", "14,14", 28, 99), "F": ("0/1", "15,13", 28, 99), "P": ("1/1", "0,30", 30, 90), "S": ("0/1", "12,12", 24, 99)},
+     "ALDH7A1 NM_001182.5:c.1195G>C p.Gly399Arg homozygous in P, absent from gnomAD"),
+    ("7", 117559479, "rs213950", "G", "A", "PASS",
+     {"M": ("0/1", "15,15", 30, 99), "F": ("0/1", "14,16", 30, 99), "P": ("1/1", "0,31", 31, 93), "S": ("0/1", "13,13", 26, 99)},
+     "CFTR c.1408G>A p.Val470Met common, homozygous in P -> filtered by AF"),
+    ("7", 117587806, "rs75527207", "G", "A", "PASS",
+     {"M": ("0/1", "16,15", 31, 99), "F": ("0/0", "30,0", 30, 90), "P": ("0/1", "15,17", 32, 99), "S": ("0/0", "27,0", 27, 81)},
+     "CFTR c.1652G>A p.Gly551Asp maternal -> comp-het partner"),
+    ("7", 117652877, "rs80034486", "C", "G", "PASS",
+     {"M": ("0/0", "29,0", 29, 87), "F": ("0/1", "14,14", 28, 99), "P": ("0|1", "16,14", 30, 99), "S": ("0/1", "11,12", 23, 99)},
+     "CFTR c.3909C>G p.Asn1303Lys paternal -> comp-het partner"),
+    ("X", 31178721, "rs398123832", "G", "A", "PASS",
+     {"M": ("0/1", "15,14", 29, 99), "F": ("0", "20,0", 20, 60), "P": ("0/1", "13,14", 27, 99), "S": ("1", "0,24", 24, 72)},
+     "DMD c.10171C>T p.Arg3391*: maternal het in P (female), hemizygous in S (male)"),
+]
+
+GENES = ["SCN1A", "ALDH7A1", "CFTR", "DMD", "NGLY1", "PCDH19"]
+
+
+def vcf_text(chr_prefix: bool) -> str:
+    pre = "chr" if chr_prefix else ""
+    lines = [
+        "##fileformat=VCFv4.2",
+        '##FILTER=<ID=PASS,Description="All filters passed">',
+        '##FILTER=<ID=LowQual,Description="Low quality">',
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">',
+        '##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">',
+        '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth">',
+        '##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">',
+        '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele">',
+        '##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">',
+        '##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency in this call set (not a population frequency)">',
+    ]
+    for name, length in CONTIGS:
+        cid = (pre + name) if chr_prefix else ("MT" if name == "M" else name)
+        lines.append(f"##contig=<ID={cid},length={length}>")
+    lines.append("##reference=file:///references/GRCh38_full_analysis_set_plus_decoy_hla.fa")
+    lines.append("##source=zebra-mod synthetic fixture: real GRCh38 alleles, invented genotypes")
+    lines.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + "\t".join(SAMPLES))
+    for chrom, pos, vid, ref, alts, filt, gts, _ in RECORDS:
+        n_alt = len(alts.split(","))
+        ac = [0] * n_alt
+        an = 0
+        for s in SAMPLES:
+            for a in gts[s][0].replace("|", "/").split("/"):
+                if a not in (".",):
+                    an += 1
+                    if a != "0":
+                        ac[int(a) - 1] += 1
+        info = f"AC={','.join(map(str, ac))};AN={an};AF={','.join(f'{x / an:.3f}' for x in ac)}"
+        cols = [pre + chrom, str(pos), vid, ref, alts, "500" if filt == "PASS" else "12", filt, info, "GT:AD:DP:GQ"]
+        cols += [f"{g}:{ad}:{dp}:{gq}" for g, ad, dp, gq in (gts[s] for s in SAMPLES)]
+        lines.append("\t".join(cols))
+    return "\n".join(lines) + "\n"
+
+
+def bgzf(data: bytes) -> bytes:
+    """BGZF (blocked gzip, as written by bgzip): gzip members of <=64 KB with a 'BC' extra field, plus EOF block."""
+    out = b""
+    for i in range(0, len(data), 65280):
+        block = data[i:i + 65280]
+        comp = zlib.compressobj(9, zlib.DEFLATED, -15)
+        cdata = comp.compress(block) + comp.flush()
+        header = (b"\x1f\x8b\x08\x04" + b"\x00\x00\x00\x00" + b"\x00\xff" + struct.pack("<H", 6) + b"BC"
+                  + struct.pack("<H", 2) + struct.pack("<H", len(cdata) + 25))
+        out += header + cdata + struct.pack("<II", zlib.crc32(block) & 0xFFFFFFFF, len(block))
+    return out + bytes.fromhex("1f8b08040000000000ff0600424302001b0003000000000000000000")
+
+
+def alleles():
+    out = []
+    for chrom, pos, _, ref, alts, _, _, _ in RECORDS:
+        for alt in alts.split(","):
+            out.append((chrom, pos, ref, alt))
+    return out
+
+
+def _trim_vep(rec):
+    keep_tc = ("transcript_id", "gene_id", "gene_symbol", "mane_select", "canonical", "biotype", "impact",
+               "consequence_terms", "hgvsc", "hgvsp", "revel", "alphamissense", "cadd_phred", "spliceai")
+    keep_cv = ("id", "allele_string", "frequencies", "clin_sig", "clin_sig_allele", "start", "end")
+    out = {k: rec.get(k) for k in ("input", "assembly_name", "seq_region_name", "start", "end", "allele_string",
+                                   "most_severe_consequence") if k in rec}
+    rank = {"HIGH": 3, "MODERATE": 2, "LOW": 1, "MODIFIER": 0}
+    tcs = rec.get("transcript_consequences") or []
+    main = [t for t in tcs if t.get("mane_select") or t.get("canonical")]
+    floor = max((rank.get(t.get("impact"), 0) for t in main), default=0)
+    tcs = main + [t for t in tcs if t not in main and t.get("biotype") == "protein_coding"
+                  and rank.get(t.get("impact"), 0) > floor][:3]  # keep 'more severe elsewhere' cases
+    out["transcript_consequences"] = [{k: t[k] for k in keep_tc if k in t} for t in tcs]
+    out["colocated_variants"] = [{k: c[k] for k in keep_cv if k in c} for c in rec.get("colocated_variants") or []]
+    if rec.get("intergenic_consequences"):
+        out["intergenic_consequences"] = rec["intergenic_consequences"]
+    return out
+
+
+def capture() -> None:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(HERE))))
+    from zebra.http import post_json
+    from zebra.sources import ensembl
+
+    got = ensembl.vep_batch(alleles(), "GRCh38")
+    with open(os.path.join(HERE, "vep_trio.json"), "w") as fh:
+        json.dump({"_source": got.sources, "records": [_trim_vep(r) for r in got.result]}, fh, indent=1)
+    resp = post_json("https://rest.ensembl.org/lookup/symbol/homo_sapiens", {"symbols": GENES + ["TTN", "NOTAGENE1"]},
+                     source="Ensembl lookup", cache_ttl=0, timeout=120)
+    keep = ("id", "display_name", "seq_region_name", "start", "end", "strand", "biotype", "assembly_name")
+    data = {k: {f: v[f] for f in keep if f in v} for k, v in resp.json().items()}
+    with open(os.path.join(HERE, "lookup_genes.json"), "w") as fh:
+        json.dump({"_source": {"url": resp.url, "retrieved_at": resp.retrieved_at}, "response": data}, fh, indent=1)
+    print(f"captured VEP for {len(got.result)} alleles and lookup for {len(data)} genes")
+
+
+def main() -> None:
+    with open(os.path.join(HERE, "trio.vcf"), "w") as fh:
+        fh.write(vcf_text(chr_prefix=True))
+    with open(os.path.join(HERE, "trio.vcf.gz"), "wb") as fh:
+        fh.write(bgzf(vcf_text(chr_prefix=False).encode("utf-8")))
+    with open(os.path.join(HERE, "genes.txt"), "w") as fh:
+        fh.write("# genes for the triage acceptance run\n" + "\n".join(GENES) + "\n")
+    if "--capture" in sys.argv:
+        capture()
+
+
+if __name__ == "__main__":
+    main()

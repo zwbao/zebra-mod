@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": 404,
+    "message": "message to define",
+    "type": "Query not found"
+  }
+}

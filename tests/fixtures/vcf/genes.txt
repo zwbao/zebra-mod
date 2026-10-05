@@ -1,0 +1,7 @@
+# genes for the triage acceptance run
+SCN1A
+ALDH7A1
+CFTR
+DMD
+NGLY1
+PCDH19

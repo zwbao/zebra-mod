@@ -1,0 +1,856 @@
+{
+ "data": {
+  "meta": {
+   "dataVersion": {
+    "year": "26",
+    "month": "09"
+   }
+  },
+  "disease": {
+   "id": "MONDO_0100135",
+   "name": "Dravet syndrome",
+   "description": "Dravet syndrome is a channelopathy with epilepsy of with onset during the first year of life, typically 4-5 months, characterized by status epilepticus and a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment. Dravet differs from other channelopathies usually due to a mutation in SCN1A.",
+   "dbXRefs": [
+    "DOID:0060171",
+    "DOID:0080422",
+    "GARD:0010430",
+    "ICD10CM:G40.83",
+    "ICD9:345.10",
+    "MEDGEN:148243",
+    "NANDO:1200587",
+    "NANDO:2200877",
+    "NCIT:C116573",
+    "NORD:1061",
+    "SCTID:230437002",
+    "UMLS:C0751122",
+    "icd11.foundation:1255654700"
+   ],
+   "synonyms": [
+    {
+     "relation": "hasExactSynonym",
+     "terms": [
+      "DS",
+      "Dravet",
+      "Dravet syndrome",
+      "SME",
+      "SMEB",
+      "myoclonic epilepsy, severe, of infancy",
+      "severe myoclonic epilepsy of infancy"
+     ]
+    },
+    {
+     "relation": "hasRelatedSynonym",
+     "terms": []
+    },
+    {
+     "relation": "hasNarrowSynonym",
+     "terms": []
+    },
+    {
+     "relation": "hasBroadSynonym",
+     "terms": []
+    }
+   ],
+   "drugAndClinicalCandidates": {
+    "count": 11,
+    "rows": [
+     {
+      "maxClinicalStage": "APPROVAL",
+      "drug": {
+       "id": "CHEMBL1983350",
+       "name": "STIRIPENTOL",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": null
+      },
+      "clinicalReports": [
+       {
+        "id": "5297d38de31d98385748c746ab1c97f76515a6d8020920e7070b0ee565059632",
+        "source": "PMDA",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": null,
+        "url": "https://www.pmda.go.jp/english/review-services/reviews/approved-information/drugs/0001.html",
+        "origin": "REGULATORY_AGENCY"
+       },
+       {
+        "id": "d02xsa/dravet syndrome",
+        "source": "TTD",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": null,
+        "url": "https://ttd.idrblab.cn/data/drug/details/D02XSA",
+        "origin": "CURATED_RESOURCE"
+       },
+       {
+        "id": "nct01983722",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": "APPROVED_FOR_MARKETING",
+        "url": "https://clinicaltrials.gov/study/NCT01983722",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct01835314",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "UNKNOWN",
+        "trialOverallStatus": "NO_LONGER_AVAILABLE",
+        "url": "https://clinicaltrials.gov/study/NCT01835314",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct02239276",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "UNKNOWN",
+        "trialOverallStatus": "NO_LONGER_AVAILABLE",
+        "url": "https://clinicaltrials.gov/study/NCT02239276",
+        "origin": "CLINICAL_TRIAL"
+       }
+      ]
+     },
+     {
+      "maxClinicalStage": "PHASE_3",
+      "drug": {
+       "id": "CHEMBL5095386",
+       "name": "ZOREVUNERSEN",
+       "drugType": "Oligonucleotide",
+       "maximumClinicalStage": "PHASE_3",
+       "mechanismsOfAction": null
+      },
+      "clinicalReports": [
+       {
+        "id": "nct06872125",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06872125",
+        "origin": "CLINICAL_TRIAL"
+       }
+      ]
+     },
+     {
+      "maxClinicalStage": "PHASE_3",
+      "drug": {
+       "id": "CHEMBL70418",
+       "name": "CLOBAZAM",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "mechanismOfAction": "GABA-A receptor; anion channel positive allosteric modulator",
+          "actionType": "POSITIVE ALLOSTERIC MODULATOR",
+          "targets": [
+           {
+            "id": "ENSG00000022355",
+            "approvedSymbol": "GABRA1"
+           },
+           {
+            "id": "ENSG00000145864",
+            "approvedSymbol": "GABRB2"
+           },
+           {
+            "id": "ENSG00000113327",
+            "approvedSymbol": "GABRG2"
+           },
+           {
+            "id": "ENSG00000166206",
+            "approvedSymbol": "GABRB3"
+           },
+           {
+            "id": "ENSG00000109158",
+            "approvedSymbol": "GABRA4"
+           },
+           {
+            "id": "ENSG00000182256",
+            "approvedSymbol": "GABRG3"
+           },
+           {
+            "id": "ENSG00000268089",
+            "approvedSymbol": "GABRQ"
+           },
+           {
+            "id": "ENSG00000011677",
+            "approvedSymbol": "GABRA3"
+           },
+           {
+            "id": "ENSG00000094755",
+            "approvedSymbol": "GABRP"
+           },
+           {
+            "id": "ENSG00000187730",
+            "approvedSymbol": "GABRD"
+           },
+           {
+            "id": "ENSG00000163285",
+            "approvedSymbol": "GABRG1"
+           },
+           {
+            "id": "ENSG00000163288",
+            "approvedSymbol": "GABRB1"
+           },
+           {
+            "id": "ENSG00000102287",
+            "approvedSymbol": "GABRE"
+           },
+           {
+            "id": "ENSG00000151834",
+            "approvedSymbol": "GABRA2"
+           },
+           {
+            "id": "ENSG00000186297",
+            "approvedSymbol": "GABRA5"
+           },
+           {
+            "id": "ENSG00000145863",
+            "approvedSymbol": "GABRA6"
+           }
+          ],
+          "references": [
+           {
+            "source": "PubMed",
+            "ids": [
+             "11530681"
+            ],
+            "urls": [
+             "http://europepmc.org/abstract/MED/11530681"
+            ]
+           },
+           {
+            "source": "Wikipedia",
+            "ids": [
+             "Clobazam"
+            ],
+            "urls": [
+             "http://en.wikipedia.org/wiki/Clobazam"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "clinicalReports": [
+       {
+        "id": "nct02174094",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": "WITHDRAWN",
+        "url": "https://clinicaltrials.gov/study/NCT02174094",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct02187809",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02187809",
+        "origin": "CLINICAL_TRIAL"
+       }
+      ]
+     },
+     {
+      "maxClinicalStage": "PHASE_2",
+      "drug": {
+       "id": "CHEMBL256997",
+       "name": "ATALUREN",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "mechanismOfAction": "80S Ribosome modulator",
+          "actionType": "MODULATOR",
+          "targets": [
+           {
+            "id": "ENSG00000168028",
+            "approvedSymbol": "RPSA"
+           },
+           {
+            "id": "ENSG00000177954",
+            "approvedSymbol": "RPS27"
+           },
+           {
+            "id": "ENSG00000137154",
+            "approvedSymbol": "RPS6"
+           },
+           {
+            "id": "ENSG00000140988",
+            "approvedSymbol": "RPS2"
+           },
+           {
+            "id": "ENSG00000149273",
+            "approvedSymbol": "RPS3"
+           },
+           {
+            "id": "ENSG00000145425",
+            "approvedSymbol": "RPS3A"
+           },
+           {
+            "id": "ENSG00000198034",
+            "approvedSymbol": "RPS4X"
+           },
+           {
+            "id": "ENSG00000129824",
+            "approvedSymbol": "RPS4Y1"
+           },
+           {
+            "id": "ENSG00000083845",
+            "approvedSymbol": "RPS5"
+           },
+           {
+            "id": "ENSG00000171863",
+            "approvedSymbol": "RPS7"
+           },
+           {
+            "id": "ENSG00000142937",
+            "approvedSymbol": "RPS8"
+           },
+           {
+            "id": "ENSG00000170889",
+            "approvedSymbol": "RPS9"
+           },
+           {
+            "id": "ENSG00000124614",
+            "approvedSymbol": "RPS10"
+           },
+           {
+            "id": "ENSG00000142534",
+            "approvedSymbol": "RPS11"
+           },
+           {
+            "id": "ENSG00000112306",
+            "approvedSymbol": "RPS12"
+           },
+           {
+            "id": "ENSG00000110700",
+            "approvedSymbol": "RPS13"
+           },
+           {
+            "id": "ENSG00000164587",
+            "approvedSymbol": "RPS14"
+           },
+           {
+            "id": "ENSG00000115268",
+            "approvedSymbol": "RPS15"
+           },
+           {
+            "id": "ENSG00000134419",
+            "approvedSymbol": "RPS15A"
+           },
+           {
+            "id": "ENSG00000105193",
+            "approvedSymbol": "RPS16"
+           },
+           {
+            "id": "ENSG00000182774",
+            "approvedSymbol": "RPS17"
+           },
+           {
+            "id": "ENSG00000231500",
+            "approvedSymbol": "RPS18"
+           },
+           {
+            "id": "ENSG00000105372",
+            "approvedSymbol": "RPS19"
+           },
+           {
+            "id": "ENSG00000008988",
+            "approvedSymbol": "RPS20"
+           },
+           {
+            "id": "ENSG00000171858",
+            "approvedSymbol": "RPS21"
+           },
+           {
+            "id": "ENSG00000186468",
+            "approvedSymbol": "RPS23"
+           },
+           {
+            "id": "ENSG00000138326",
+            "approvedSymbol": "RPS24"
+           },
+           {
+            "id": "ENSG00000118181",
+            "approvedSymbol": "RPS25"
+           },
+           {
+            "id": "ENSG00000197728",
+            "approvedSymbol": "RPS26"
+           },
+           {
+            "id": "ENSG00000143947",
+            "approvedSymbol": "RPS27A"
+           },
+           {
+            "id": "ENSG00000233927",
+            "approvedSymbol": "RPS28"
+           },
+           {
+            "id": "ENSG00000213741",
+            "approvedSymbol": "RPS29"
+           },
+           {
+            "id": "ENSG00000149806",
+            "approvedSymbol": "FAU"
+           },
+           {
+            "id": "ENSG00000100316",
+            "approvedSymbol": "RPL3"
+           },
+           {
+            "id": "ENSG00000174444",
+            "approvedSymbol": "RPL4"
+           },
+           {
+            "id": "ENSG00000122406",
+            "approvedSymbol": "RPL5"
+           },
+           {
+            "id": "ENSG00000089009",
+            "approvedSymbol": "RPL6"
+           },
+           {
+            "id": "ENSG00000147604",
+            "approvedSymbol": "RPL7"
+           },
+           {
+            "id": "ENSG00000148303",
+            "approvedSymbol": "RPL7A"
+           },
+           {
+            "id": "ENSG00000161016",
+            "approvedSymbol": "RPL8"
+           },
+           {
+            "id": "ENSG00000163682",
+            "approvedSymbol": "RPL9"
+           },
+           {
+            "id": "ENSG00000147403",
+            "approvedSymbol": "RPL10"
+           },
+           {
+            "id": "ENSG00000198755",
+            "approvedSymbol": "RPL10A"
+           },
+           {
+            "id": "ENSG00000142676",
+            "approvedSymbol": "RPL11"
+           },
+           {
+            "id": "ENSG00000197958",
+            "approvedSymbol": "RPL12"
+           },
+           {
+            "id": "ENSG00000167526",
+            "approvedSymbol": "RPL13"
+           },
+           {
+            "id": "ENSG00000142541",
+            "approvedSymbol": "RPL13A"
+           },
+           {
+            "id": "ENSG00000188846",
+            "approvedSymbol": "RPL14"
+           },
+           {
+            "id": "ENSG00000174748",
+            "approvedSymbol": "RPL15"
+           },
+           {
+            "id": "ENSG00000265681",
+            "approvedSymbol": "RPL17"
+           },
+           {
+            "id": "ENSG00000063177",
+            "approvedSymbol": "RPL18"
+           },
+           {
+            "id": "ENSG00000105640",
+            "approvedSymbol": "RPL18A"
+           },
+           {
+            "id": "ENSG00000108298",
+            "approvedSymbol": "RPL19"
+           },
+           {
+            "id": "ENSG00000122026",
+            "approvedSymbol": "RPL21"
+           },
+           {
+            "id": "ENSG00000116251",
+            "approvedSymbol": "RPL22"
+           },
+           {
+            "id": "ENSG00000125691",
+            "approvedSymbol": "RPL23"
+           },
+           {
+            "id": "ENSG00000198242",
+            "approvedSymbol": "RPL23A"
+           },
+           {
+            "id": "ENSG00000114391",
+            "approvedSymbol": "RPL24"
+           },
+           {
+            "id": "ENSG00000161970",
+            "approvedSymbol": "RPL26"
+           },
+           {
+            "id": "ENSG00000131469",
+            "approvedSymbol": "RPL27"
+           },
+           {
+            "id": "ENSG00000166441",
+            "approvedSymbol": "RPL27A"
+           },
+           {
+            "id": "ENSG00000108107",
+            "approvedSymbol": "RPL28"
+           },
+           {
+            "id": "ENSG00000162244",
+            "approvedSymbol": "RPL29"
+           },
+           {
+            "id": "ENSG00000156482",
+            "approvedSymbol": "RPL30"
+           },
+           {
+            "id": "ENSG00000071082",
+            "approvedSymbol": "RPL31"
+           },
+           {
+            "id": "ENSG00000144713",
+            "approvedSymbol": "RPL32"
+           },
+           {
+            "id": "ENSG00000109475",
+            "approvedSymbol": "RPL34"
+           },
+           {
+            "id": "ENSG00000136942",
+            "approvedSymbol": "RPL35"
+           },
+           {
+            "id": "ENSG00000182899",
+            "approvedSymbol": "RPL35A"
+           },
+           {
+            "id": "ENSG00000130255",
+            "approvedSymbol": "RPL36"
+           },
+           {
+            "id": "ENSG00000241343",
+            "approvedSymbol": "RPL36A"
+           },
+           {
+            "id": "ENSG00000145592",
+            "approvedSymbol": "RPL37"
+           },
+           {
+            "id": "ENSG00000197756",
+            "approvedSymbol": "RPL37A"
+           },
+           {
+            "id": "ENSG00000172809",
+            "approvedSymbol": "RPL38"
+           },
+           {
+            "id": "ENSG00000198918",
+            "approvedSymbol": "RPL39"
+           },
+           {
+            "id": "ENSG00000229117",
+            "approvedSymbol": "RPL41"
+           },
+           {
+            "id": "ENSG00000089157",
+            "approvedSymbol": "RPLP0"
+           },
+           {
+            "id": "ENSG00000137818",
+            "approvedSymbol": "RPLP1"
+           }
+          ],
+          "references": [
+           {
+            "source": "EMA",
+            "ids": [
+             "https://www.ema.europa.eu/en/documents/product-information/translarna-epar-product-information_en.pdf"
+            ],
+            "urls": [
+             "https://www.ema.europa.eu/en/documents/product-information/translarna-epar-product-information_en.pdf"
+            ]
+           },
+           {
+            "source": "PubMed",
+            "ids": [
+             "27702906",
+             "27791186",
+             "25193627"
+            ],
+            "urls": [
+             "http://europepmc.org/abstract/MED/27702906",
+             "http://europepmc.org/abstract/MED/27791186",
+             "http://europepmc.org/abstract/MED/25193627"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "clinicalReports": [
+       {
+        "id": "d09irq/dravet syndrome",
+        "source": "TTD",
+        "clinicalStage": "PHASE_2",
+        "trialOverallStatus": null,
+        "url": "https://ttd.idrblab.cn/data/drug/details/D09IRQ",
+        "origin": "CURATED_RESOURCE"
+       },
+       {
+        "id": "nct02758626",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_2",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02758626",
+        "origin": "CLINICAL_TRIAL"
+       }
+      ]
+     },
+     {
+      "maxClinicalStage": "APPROVAL",
+      "drug": {
+       "id": "CHEMBL87493",
+       "name": "FENFLURAMINE",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "mechanismOfAction": "Serotonin 1d (5-HT1d) receptor agonist",
+          "actionType": "AGONIST",
+          "targets": [
+           {
+            "id": "ENSG00000179546",
+            "approvedSymbol": "HTR1D"
+           }
+          ],
+          "references": [
+           {
+            "source": "PubMed",
+            "ids": [
+             "27364433",
+             "28428755",
+             "25965391",
+             "26600876",
+             "25965391",
+             "28428755",
+             "26600876",
+             "27364433",
+             "26600876",
+             "28428755",
+             "27364433",
+             "25965391"
+            ],
+            "urls": [
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/25965391",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/25965391",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/25965391"
+            ]
+           }
+          ]
+         },
+         {
+          "mechanismOfAction": "Serotonin 2c (5-HT2c) receptor agonist",
+          "actionType": "AGONIST",
+          "targets": [
+           {
+            "id": "ENSG00000147246",
+            "approvedSymbol": "HTR2C"
+           }
+          ],
+          "references": [
+           {
+            "source": "PubMed",
+            "ids": [
+             "27364433",
+             "28428755",
+             "25965391",
+             "26600876",
+             "25965391",
+             "28428755",
+             "26600876",
+             "27364433",
+             "26600876",
+             "28428755",
+             "27364433",
+             "25965391"
+            ],
+            "urls": [
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/25965391",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/25965391",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/25965391"
+            ]
+           }
+          ]
+         },
+         {
+          "mechanismOfAction": "Sigma opioid receptor antagonist",
+          "actionType": "ANTAGONIST",
+          "targets": [
+           {
+            "id": "ENSG00000147955",
+            "approvedSymbol": "SIGMAR1"
+           }
+          ],
+          "references": [
+           {
+            "source": "PubMed",
+            "ids": [
+             "27364433",
+             "28428755",
+             "25965391",
+             "26600876",
+             "25965391",
+             "28428755",
+             "26600876",
+             "27364433",
+             "26600876",
+             "28428755",
+             "27364433",
+             "25965391"
+            ],
+            "urls": [
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/25965391",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/25965391",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/26600876",
+             "http://europepmc.org/abstract/MED/28428755",
+             "http://europepmc.org/abstract/MED/27364433",
+             "http://europepmc.org/abstract/MED/25965391"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "clinicalReports": [
+       {
+        "id": "nct04437004",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": "APPROVED_FOR_MARKETING",
+        "url": "https://clinicaltrials.gov/study/NCT04437004",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct06598449",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT06598449",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct07112365",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT07112365",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "d09wnk/dravet syndrome",
+        "source": "TTD",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": null,
+        "url": "https://ttd.idrblab.cn/data/drug/details/D09WNK",
+        "origin": "CURATED_RESOURCE"
+       },
+       {
+        "id": "nct05560282",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT05560282",
+        "origin": "CLINICAL_TRIAL"
+       }
+      ]
+     }
+    ]
+   },
+   "associatedTargets": {
+    "count": 1182,
+    "rows": [
+     {
+      "score": 0.8772808677568371,
+      "target": {
+       "id": "ENSG00000144285",
+       "approvedSymbol": "SCN1A",
+       "approvedName": "sodium voltage-gated channel alpha subunit 1"
+      }
+     },
+     {
+      "score": 0.5801042208829351,
+      "target": {
+       "id": "ENSG00000147955",
+       "approvedSymbol": "SIGMAR1",
+       "approvedName": "sigma non-opioid intracellular receptor 1"
+      }
+     },
+     {
+      "score": 0.5778160923120754,
+      "target": {
+       "id": "ENSG00000147246",
+       "approvedSymbol": "HTR2C",
+       "approvedName": "5-hydroxytryptamine receptor 2C"
+      }
+     },
+     {
+      "score": 0.5683179442898632,
+      "target": {
+       "id": "ENSG00000179546",
+       "approvedSymbol": "HTR1D",
+       "approvedName": "5-hydroxytryptamine receptor 1D"
+      }
+     },
+     {
+      "score": 0.544944128423219,
+      "target": {
+       "id": "ENSG00000143376",
+       "approvedSymbol": "SNX27",
+       "approvedName": "sorting nexin 27"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

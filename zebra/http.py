@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import gzip
 import hashlib
+import http.client
 import json
 import os
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -31,11 +33,28 @@ _HOST_INTERVAL = {
     "www.ncbi.nlm.nih.gov": 0.34,
     "rest.ensembl.org": 0.07,
     "grch37.rest.ensembl.org": 0.07,
-    "gnomad.broadinstitute.org": 0.5,
+    "gnomad.broadinstitute.org": 6.0,  # gnomAD asks for ~10 requests/minute
+    "panelapp.genomicsengland.co.uk": 0.2,
+    "panelapp-aus.org": 0.2,
+    "rest.genenames.org": 0.2,
+    "rest.uniprot.org": 0.1,
+    "alphafold.ebi.ac.uk": 0.1,
+    "search.clinicalgenome.org": 0.5,
+    "ftp.clinicalgenome.org": 0.5,
+    "spliceai-38-xwkwwwxdwq-uc.a.run.app": 2.0,
+    "spliceai-37-xwkwwwxdwq-uc.a.run.app": 2.0,
+    "pangolin-38-xwkwwwxdwq-uc.a.run.app": 2.0,
+    "pangolin-37-xwkwwwxdwq-uc.a.run.app": 2.0,
     "pubcasefinder.dbcls.jp": 0.5,
     "clinicaltrials.gov": 0.2,
+    "www.ebi.ac.uk": 0.1,
+    "api.platform.opentargets.org": 0.1,
+    "www.ema.europa.eu": 1.0,
+    "api.orphadata.com": 0.1,
+    "api-v3.monarchinitiative.org": 0.1,
 }
 _last_call: Dict[str, float] = {}
+_pace_lock = threading.Lock()
 
 
 class SourceError(Exception):
@@ -83,11 +102,12 @@ def _pace(host: str) -> None:
         interval = 0.11
     if interval <= 0:
         return
-    last = _last_call.get(host, 0.0)
-    wait = last + interval - time.monotonic()
-    if wait > 0:
-        time.sleep(wait)
-    _last_call[host] = time.monotonic()
+    with _pace_lock:
+        now = time.monotonic()
+        slot = max(now, _last_call.get(host, 0.0) + interval)
+        _last_call[host] = slot
+    if slot > now:
+        time.sleep(slot - now)
 
 
 def _opener() -> urllib.request.OpenerDirector:
@@ -158,17 +178,13 @@ def request(
         req = urllib.request.Request(url, data=data, headers=hdrs, method=method)
         try:
             with opener.open(req, timeout=timeout) as resp:
-                raw = resp.read()
-                if resp.headers.get("Content-Encoding") == "gzip":
-                    raw = gzip.decompress(raw)
+                raw = _gunzip(resp.read())
                 status = resp.status
                 text = raw.decode("utf-8", "replace")
         except urllib.error.HTTPError as err:
             status = err.code
             try:
-                raw = err.read()
-                if err.headers.get("Content-Encoding") == "gzip":
-                    raw = gzip.decompress(raw)
+                raw = _gunzip(err.read())
                 text = raw.decode("utf-8", "replace")
             except Exception:  # noqa: BLE001 - best effort error body
                 text = ""
@@ -182,7 +198,7 @@ def request(
                 continue
             else:
                 raise SourceError(source, url, status, _short(text) or str(err)) from None
-        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as err:
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, http.client.HTTPException) as err:
             last_error = err
             if attempt < retries:
                 time.sleep(1.5 * (2**attempt))
@@ -191,6 +207,13 @@ def request(
 
         if status not in ok_statuses:
             raise SourceError(source, url, status, _short(text))
+        if accept == "application/json" and text.lstrip()[:1] == "<":
+            # some services answer an HTML error page with 200; never cache it
+            last_error = SourceError(source, url, status, "HTML page where JSON was expected")
+            if attempt < retries:
+                time.sleep(1.5 * (2**attempt))
+                continue
+            raise last_error
         retrieved = now_iso()
         if use_cache:
             try:
@@ -213,6 +236,18 @@ def get_json(url: str, *, source: str, **kw: Any) -> Response:
 
 def post_json(url: str, payload: Any, *, source: str, **kw: Any) -> Response:
     return request(url, source=source, method="POST", body=payload, **kw)
+
+
+def _gunzip(raw: bytes) -> bytes:
+    """Undo gzip however many times it was applied (some servers double-encode)."""
+    for _ in range(3):
+        if raw[:2] != b"\x1f\x8b":
+            break
+        try:
+            raw = gzip.decompress(raw)
+        except OSError:
+            break
+    return raw
 
 
 def _short(text: str, limit: int = 300) -> str:

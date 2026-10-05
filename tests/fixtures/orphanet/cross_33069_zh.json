@@ -1,0 +1,86 @@
+{
+ "data": {
+  "__count": 1,
+  "__licence": {
+   "identifier": "CC-BY-4.0",
+   "link": "https://creativecommons.org/licenses/by/4.0",
+   "name": "Creative Commons Attribution 4.0 International"
+  },
+  "results": {
+   "Date": "2020-06-01 04:34:03",
+   "DisorderDisorderAssociation": null,
+   "DisorderFlag": [
+    {
+     "Label": null,
+     "Value": 1
+    }
+   ],
+   "DisorderGroup": "疾病",
+   "ExternalReference": [
+    {
+     "DisorderMappingICDRelation": null,
+     "DisorderMappingRelation": "完全对应：2个等同概念",
+     "DisorderMappingValidationStatus": "已确认",
+     "Reference": "C0751122",
+     "Source": "UMLS"
+    },
+    {
+     "DisorderMappingICDRelation": null,
+     "DisorderMappingRelation": "完全对应：2个等同概念",
+     "DisorderMappingValidationStatus": "已确认",
+     "Reference": "10430",
+     "Source": "GARD"
+    },
+    {
+     "DisorderMappingICDRelation": null,
+     "DisorderMappingRelation": "完全对应：2个等同概念",
+     "DisorderMappingValidationStatus": "已确认",
+     "Reference": "607208",
+     "Source": "OMIM"
+    },
+    {
+     "DisorderMappingICDRelation": null,
+     "DisorderMappingRelation": "ORPHA代码的较广术语映射于较窄术语",
+     "DisorderMappingValidationStatus": "已确认",
+     "Reference": "612164",
+     "Source": "OMIM"
+    },
+    {
+     "DisorderMappingICDRelation": null,
+     "DisorderMappingRelation": "ORPHA代码的较广术语映射于较窄术语",
+     "DisorderMappingValidationStatus": "已确认",
+     "Reference": "615744",
+     "Source": "OMIM"
+    },
+    {
+     "DisorderMappingICDRelation": "已归属（ICD10 代码归属于Orphanet）",
+     "DisorderMappingRelation": "ORPHA代码的较窄术语映射于较广术语",
+     "DisorderMappingValidationStatus": "已确认",
+     "Reference": "G40.4",
+     "Source": "ICD-10"
+    }
+   ],
+   "ORPHAcode": 33069,
+   "OrphanetURL": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=zh&Expert=33069",
+   "Preferred term": "Dravet综合征",
+   "SummaryInformation": null,
+   "Synonym": [
+    "婴儿严重肌阵挛型癫痫"
+   ],
+   "Typology": "疾病"
+  }
+ },
+ "datasetCategory": {
+  "lang": "zh",
+  "name": "Rare diseases and cross-referencing"
+ },
+ "parameters": {
+  "path": {
+   "ORPHAcode": 33069
+  },
+  "query": {
+   "lang": "zh"
+  }
+ },
+ "uri": "https://api.orphadata.com/rd-cross-referencing/orphacodes/33069?lang=zh"
+}

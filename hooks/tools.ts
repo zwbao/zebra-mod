@@ -37,10 +37,23 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'case_update',
     description:
-      'Record findings in the active case. phenotypes: HPO terms present or excluded (labels are verified against HPO; never invent an id — find it with hpo_search). variants, hypotheses (with ORPHA/OMIM/MONDO ids and ledger evidence ids for and against), ACMG readings of recorded variants (codes in, class computed by zebra), therapy leads, questions for the care team, and removals. Several at once.',
+      'Record findings in the active case. profile: role (family/patient/clinician/researcher), language, proband sex/age. phenotypes: HPO terms present or excluded (labels are verified against HPO; never invent an id — find it with hpo_search). variants, hypotheses (with ORPHA/OMIM/MONDO ids and ledger evidence ids for and against), ACMG readings of recorded variants (codes in, class computed by zebra), therapy leads, questions for the care team, and removals. Several at once.',
     inputSchema: {
       type: 'object',
       properties: {
+        profile: {
+          type: 'object',
+          description: 'who the case is for and how to write to them; proband basics (no names or birth dates)',
+          properties: {
+            title: { type: 'string' },
+            role: { type: 'string', enum: ['family', 'patient', 'clinician', 'researcher'] },
+            language: { type: 'string', description: 'zh or en' },
+            sex: { type: 'string', enum: ['female', 'male', 'unknown'] },
+            age: { type: 'string', description: 'age or age band, e.g. "2y11m"' },
+            ancestry: { type: 'string' },
+            consanguinity: { type: 'boolean' },
+          },
+        },
         phenotypes: {
           type: 'array',
           items: {
@@ -174,7 +187,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'gene_card',
     description:
-      'Everything that matters about one gene for rare disease: HGNC identity, associated diseases with inheritance (Monarch/OMIM/Orphanet), ClinGen gene–disease validity and dosage sensitivity, gnomAD constraint (pLI, LOEUF, missense Z), PanelApp panels, protein (UniProt). Use symbols as HGNC spells them.',
+      'Everything that matters about one gene for rare disease: HGNC identity (aliases resolved), causal disease associations with inheritance (Monarch: OMIM and ClinGen), ClinGen gene–disease validity classes and dosage sensitivity (haploinsufficiency / triplosensitivity), gnomAD constraint (pLI, LOEUF, missense Z), PanelApp (England and Australia) panels with confidence, protein function (UniProt) and AlphaFold model. Use symbols as HGNC spells them.',
     inputSchema: { type: 'object', properties: { symbol: { type: 'string' } }, required: ['symbol'] },
     argv: i => ['gene', str(i.symbol) ?? ''],
   },
@@ -223,14 +236,16 @@ export const TOOLS: ToolDef[] = [
   {
     name: 's2f_predict',
     description:
-      'Sequence-to-function predictions for a variant: splicing (SpliceAI and Pangolin via the Broad lookup service), and when keys or the s2f CLI are present, AlphaGenome (expression/splicing/chromatin tracks) and Evo 2 (zero-shot likelihood). Returns each model separately with its claim ceiling; use for splice-region, deep intronic, UTR, promoter and other non-coding variants, and to test a mechanism.',
+      'Sequence-to-function predictions for one variant, each model reported separately with its claim ceiling (never averaged): spliceai and pangolin (Broad lookup service; GRCh38 and GRCh37) — the default; and, through the s2f CLI when installed with keys, gpn_msa (conservation, hg38 SNVs, ~1 min), alphagenome (expression/splicing/chromatin in one tissue: needs ontology, e.g. UBERON:0000955 brain; ~5 s) and evo2 (zero-shot likelihood; 3–10 min). A model that cannot run is not_run with the reason. Use for splice-region, deep intronic, UTR, promoter and other non-coding variants, and to test a mechanism.',
     inputSchema: {
       type: 'object',
       properties: {
-        variant: { type: 'string', description: 'chrom-pos-ref-alt or HGVS' },
+        variant: { type: 'string', description: 'chrom-pos-ref-alt, transcript HGVS or rsID' },
         assembly: ASSEMBLY,
-        models: { type: 'array', items: { type: 'string', enum: ['spliceai', 'pangolin', 'alphagenome', 'evo2'] } },
+        models: { type: 'array', items: { type: 'string', enum: ['spliceai', 'pangolin', 'gpn_msa', 'alphagenome', 'evo2'] }, description: 'default spliceai + pangolin' },
+        ontology: { type: 'string', description: 'tissue/cell CURIE for alphagenome (UBERON:/CL:), chosen for the disease' },
         distance: { type: 'number', description: 'SpliceAI window around the variant (default 500)' },
+        timeout: { type: 'number', description: 'seconds per s2f model run (default 540)' },
       },
       required: ['variant'],
     },
@@ -239,24 +254,26 @@ export const TOOLS: ToolDef[] = [
       return [
         's2f', 'predict', str(i.variant) ?? '',
         ...flag('--assembly', str(i.assembly)),
-        ...(models.length ? ['--models', models.join(',')] : []),
+        '--models', (models.length ? models : ['spliceai', 'pangolin']).join(','),
+        ...flag('--ontology', str(i.ontology)),
         ...flag('--distance', num(i.distance)),
+        ...flag('--timeout', num(i.timeout) ?? '540'),
       ]
     },
-    timeoutMs: 300_000,
+    timeoutMs: 600_000,
   },
   {
     name: 'therapy_landscape',
     description:
-      'Genotype-to-therapy landscape for a disease or gene: approved and investigational drugs with mechanism and phase (Open Targets / ChEMBL), target tractability, and pointers for N-of-1 routes (antisense, gene therapy, base editing) to check. Results are leads with their evidence, not recommendations.',
-    inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'disease name/id or gene symbol' } }, required: ['query'] },
+      'Therapy landscape for a disease or gene (data only, no judgement): approved and investigational drugs and clinical candidates with stage and mechanism (Open Targets / ChEMBL), target tractability for a gene, and EU orphan designations (EMA; US designations are not checked). Input: a disease name or MONDO/EFO id, or a gene symbol (OMIM:/ORPHA: ids are not accepted — use the name). Mechanism fit and N-of-1 routes are for the zebra-therapy skill to judge.',
+    inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'disease name or MONDO/EFO id, or gene symbol' } }, required: ['query'] },
     argv: i => ['therapy', str(i.query) ?? ''],
     timeoutMs: 180_000,
   },
   {
     name: 'trials_search',
     description:
-      'Clinical trials from ClinicalTrials.gov (v2 API): by condition and optionally gene/intervention keyword, country and recruitment status. Returns NCT ids, phase, status, locations count and contacts link.',
+      'Clinical trials from ClinicalTrials.gov (v2 API): by condition and optionally a keyword (gene, drug, modality), country and status (default RECRUITING; ANY for all). With a country, only trials with a site there are returned, and those sites are listed. Returns NCT ids, phase, status, interventions, ages, sites and URL.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -283,12 +300,15 @@ export const TOOLS: ToolDef[] = [
         query: { type: 'string' },
         gene: { type: 'string' },
         variant: { type: 'string', description: 'rsID or HGVS protein/cDNA change' },
+        sort: { type: 'string', enum: ['relevance', 'date', 'cited'] },
+        abstract: { type: 'array', items: { type: 'string' }, description: 'PMIDs whose abstracts to return' },
         limit: { type: 'number', default: 15 },
       },
     },
     argv: i => [
       'lit', ...(str(i.query) ? [str(i.query) as string] : []),
-      ...flag('--gene', str(i.gene)), ...flag('--variant', str(i.variant)), ...flag('--limit', num(i.limit)),
+      ...flag('--gene', str(i.gene)), ...flag('--variant', str(i.variant)), ...flag('--sort', str(i.sort)),
+      ...(list(i.abstract).length ? ['--abstract', ...list(i.abstract)] : []), ...flag('--limit', num(i.limit)),
     ],
   },
   {
@@ -320,13 +340,23 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'edit_check',
     description:
-      'Is this variant a candidate for base editing? Checks whether an adenine or cytosine base editor could revert it (A•T↔G•C or C•G↔T•A), lists SpCas9-family protospacers that put the base in the editing window with bystander bases, from the Ensembl reference sequence. A feasibility screen for researchers, not a design.',
+      'Base-editing feasibility screen for an SNV: can an adenine or cytosine base editor revert the patient allele to reference, and which SpCas9 protospacers (PAM NGG, or NG for relaxed-PAM variants) put the base in the editing window, with bystander bases (annotate_bystanders checks their coding effect via VEP). Reference sequence from Ensembl. A screen for researchers, not a guide design; delivery to the tissue is the hard part.',
     inputSchema: {
       type: 'object',
-      properties: { variant: { type: 'string', description: 'chrom-pos-ref-alt (SNV)' }, assembly: ASSEMBLY },
+      properties: {
+        variant: { type: 'string', description: 'chrom-pos-ref-alt (SNV), transcript HGVS or rsID' },
+        assembly: ASSEMBLY,
+        pam: { type: 'string', enum: ['NGG', 'NG'], description: 'NG when no NGG protospacer exists' },
+        window: { type: 'string', description: 'editing window in protospacer positions, default "4-8"' },
+        annotate_bystanders: { type: 'boolean' },
+      },
       required: ['variant'],
     },
-    argv: i => ['edit', str(i.variant) ?? '', ...flag('--assembly', str(i.assembly))],
+    argv: i => [
+      'edit', str(i.variant) ?? '',
+      ...flag('--assembly', str(i.assembly)), ...flag('--pam', str(i.pam)), ...flag('--window', str(i.window)),
+      ...(i.annotate_bystanders === true ? ['--annotate-bystanders'] : []),
+    ],
     deferred: true,
   },
   {

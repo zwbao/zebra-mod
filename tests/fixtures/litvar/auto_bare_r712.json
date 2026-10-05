@@ -1,0 +1,28 @@
+[
+ {
+  "_id": "litvar@#22866#p.R712*",
+  "gene": [
+   "CNKSR2"
+  ],
+  "name": "p.R712*",
+  "hgvs": "p.R712*",
+  "pmids_count": 5,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": false,
+  "match": "Matched on synonyms <m>p.Arg712*</m>"
+ },
+ {
+  "_id": "litvar@#83696#p.R712*",
+  "gene": [
+   "TRAPPC9"
+  ],
+  "name": "p.R712*",
+  "hgvs": "p.R712*",
+  "pmids_count": 3,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": false,
+  "match": "Matched on synonyms <m>p.Arg712*</m>"
+ }
+]

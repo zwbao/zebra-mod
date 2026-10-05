@@ -1,0 +1,1293 @@
+{
+ "_source": [
+  {
+   "db": "Ensembl VEP",
+   "record": "batch 1 (14 variants)",
+   "url": "https://rest.ensembl.org/vep/human/region",
+   "retrieved_at": "2026-10-05T15:24:14+00:00",
+   "cached": true,
+   "note": "GRCh38"
+  }
+ ],
+ "records": [
+  {
+   "input": "2 166036097 . A C . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 166036097,
+   "end": 166036097,
+   "allele_string": "A/C",
+   "most_severe_consequence": "stop_gained",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000651574",
+     "gene_id": "ENSG00000236107",
+     "gene_symbol": "SCN1A-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "non_coding_transcript_exon_variant"
+     ],
+     "hgvsc": "ENST00000651574.1:n.454A>C",
+     "cadd_phred": 39
+    },
+    {
+     "transcript_id": "ENST00000674923",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "mane_select": "NM_001165963.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "HIGH",
+     "consequence_terms": [
+      "stop_gained"
+     ],
+     "hgvsc": "ENST00000674923.1:c.3380T>G",
+     "hgvsp": "ENSP00000501589.1:p.Leu1127Ter",
+     "cadd_phred": 39,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_DG": 21,
+      "DP_AG": 21,
+      "SYMBOL": "SCN1A",
+      "DS_DG": 0,
+      "DP_DL": -49,
+      "DS_AG": 0.01,
+      "DS_DL": 0,
+      "DP_AL": -12
+     }
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "COSV57658540",
+     "allele_string": "COSMIC_MUTATION",
+     "start": 166036097,
+     "end": 166036097
+    },
+    {
+     "id": "rs2105793395",
+     "allele_string": "A/C",
+     "clin_sig": [
+      "pathogenic"
+     ],
+     "clin_sig_allele": "C:pathogenic",
+     "start": 166036097,
+     "end": 166036097
+    }
+   ]
+  },
+  {
+   "input": "2 166036116 . C A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 166036116,
+   "end": 166036116,
+   "allele_string": "C/A",
+   "most_severe_consequence": "stop_gained",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000651574",
+     "gene_id": "ENSG00000236107",
+     "gene_symbol": "SCN1A-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "non_coding_transcript_exon_variant"
+     ],
+     "hgvsc": "ENST00000651574.1:n.473C>A",
+     "cadd_phred": 42
+    },
+    {
+     "transcript_id": "ENST00000674923",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "mane_select": "NM_001165963.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "HIGH",
+     "consequence_terms": [
+      "stop_gained"
+     ],
+     "hgvsc": "ENST00000674923.1:c.3361G>T",
+     "hgvsp": "ENSP00000501589.1:p.Glu1121Ter",
+     "cadd_phred": 42,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_DG": 2,
+      "SYMBOL": "SCN1A",
+      "DP_AG": -31,
+      "DS_DG": 0,
+      "DP_DL": -1,
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DP_AL": 2
+     }
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "COSV57666425",
+     "allele_string": "COSMIC_MUTATION",
+     "start": 166036116,
+     "end": 166036116
+    },
+    {
+     "id": "rs796052993",
+     "allele_string": "C/A",
+     "clin_sig": [
+      "pathogenic"
+     ],
+     "clin_sig_allele": "A:pathogenic",
+     "start": 166036116,
+     "end": 166036116
+    }
+   ]
+  },
+  {
+   "input": "2 166042334 . G A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 166042334,
+   "end": 166042334,
+   "allele_string": "G/A",
+   "most_severe_consequence": "stop_gained",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000651574",
+     "gene_id": "ENSG00000236107",
+     "gene_symbol": "SCN1A-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant",
+      "non_coding_transcript_variant"
+     ],
+     "hgvsc": "ENST00000651574.1:n.487+6204G>A",
+     "cadd_phred": 37
+    },
+    {
+     "transcript_id": "ENST00000674923",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "mane_select": "NM_001165963.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "HIGH",
+     "consequence_terms": [
+      "stop_gained"
+     ],
+     "hgvsc": "ENST00000674923.1:c.2134C>T",
+     "hgvsp": "ENSP00000501589.1:p.Arg712Ter",
+     "cadd_phred": 37,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_DG": -46,
+      "SYMBOL": "SCN1A",
+      "DP_AG": 5,
+      "DP_DL": -42,
+      "DS_DG": 0,
+      "DS_DL": 0,
+      "DS_AG": 0,
+      "DP_AL": 20
+     }
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CM024300",
+     "allele_string": "HGMD_MUTATION",
+     "start": 166042334,
+     "end": 166042334
+    },
+    {
+     "id": "COSV57668399",
+     "allele_string": "COSMIC_MUTATION",
+     "start": 166042334,
+     "end": 166042334
+    },
+    {
+     "id": "CX096176",
+     "allele_string": "HGMD_MUTATION",
+     "start": 166042334,
+     "end": 166042334
+    },
+    {
+     "id": "rs794726730",
+     "allele_string": "G/A",
+     "clin_sig": [
+      "pathogenic"
+     ],
+     "clin_sig_allele": "A:pathogenic",
+     "start": 166042334,
+     "end": 166042334
+    }
+   ]
+  },
+  {
+   "input": "2 166053034 . C T . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 166053034,
+   "end": 166053034,
+   "allele_string": "C/T",
+   "most_severe_consequence": "splice_donor_5th_base_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000651574",
+     "gene_id": "ENSG00000236107",
+     "gene_symbol": "SCN1A-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant",
+      "non_coding_transcript_variant"
+     ],
+     "hgvsc": "ENST00000651574.1:n.487+16904C>T",
+     "cadd_phred": 19.44
+    },
+    {
+     "transcript_id": "ENST00000674923",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "mane_select": "NM_001165963.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant"
+     ],
+     "hgvsc": "ENST00000674923.1:c.603-91G>A",
+     "cadd_phred": 19.44,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_AG": -40,
+      "SYMBOL": "SCN1A",
+      "DP_DG": 15,
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DS_DG": 0.01,
+      "DP_DL": 5,
+      "DP_AL": 42
+     }
+    },
+    {
+     "transcript_id": "ENST00000640036",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "biotype": "protein_coding",
+     "impact": "LOW",
+     "consequence_terms": [
+      "splice_donor_5th_base_variant",
+      "intron_variant"
+     ],
+     "hgvsc": "ENST00000640036.2:c.694+5G>A",
+     "cadd_phred": 19.44,
+     "spliceai": {
+      "SYMBOL": "SCN1A",
+      "DP_AG": -40,
+      "DP_DG": 15,
+      "DS_AL": 0,
+      "DP_AL": 42,
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DP_DL": 5,
+      "DS_DG": 0.01
+     }
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "COSV57673143",
+     "allele_string": "COSMIC_MUTATION",
+     "start": 166053034,
+     "end": 166053034
+    },
+    {
+     "id": "CS084633",
+     "allele_string": "HGMD_MUTATION",
+     "start": 166053034,
+     "end": 166053034
+    },
+    {
+     "id": "rs3812718",
+     "allele_string": "C/A/T",
+     "frequencies": {
+      "T": {
+       "amr": 0.4452,
+       "gnomade_nfe": 0.5504,
+       "gnomadg_eas": 0.5578,
+       "gnomadg_fin": 0.5376,
+       "gnomade_asj": 0.5439,
+       "gnomade_eas": 0.5541,
+       "gnomadg_mid": 0.4388,
+       "sas": 0.5808,
+       "gnomadg_sas": 0.5563,
+       "gnomadg_asj": 0.5392,
+       "gnomade_fin": 0.5369,
+       "gnomadg_amr": 0.487,
+       "gnomade_remaining": 0.5272,
+       "gnomade_mid": 0.4214,
+       "gnomadg_remaining": 0.4825,
+       "afr": 0.3396,
+       "gnomade": 0.5401,
+       "gnomadg": 0.4845,
+       "af": 0.4934,
+       "gnomade_sas": 0.5501,
+       "gnomadg_afr": 0.3483,
+       "gnomade_amr": 0.4528,
+       "gnomade_afr": 0.3424,
+       "eas": 0.5962,
+       "eur": 0.5408,
+       "gnomadg_nfe": 0.5443,
+       "gnomadg_ami": 0.5835
+      }
+     },
+     "clin_sig": [
+      "benign",
+      "drug_response",
+      "risk_factor"
+     ],
+     "clin_sig_allele": "T:risk_factor;T:benign;T:drug_response",
+     "start": 166053034,
+     "end": 166053034
+    }
+   ]
+  },
+  {
+   "input": "2 166053034 . C A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 166053034,
+   "end": 166053034,
+   "allele_string": "C/A",
+   "most_severe_consequence": "splice_donor_5th_base_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000651574",
+     "gene_id": "ENSG00000236107",
+     "gene_symbol": "SCN1A-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant",
+      "non_coding_transcript_variant"
+     ],
+     "hgvsc": "ENST00000651574.1:n.487+16904C>A",
+     "cadd_phred": 19.61
+    },
+    {
+     "transcript_id": "ENST00000674923",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "mane_select": "NM_001165963.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant"
+     ],
+     "hgvsc": "ENST00000674923.1:c.603-91G>T",
+     "cadd_phred": 19.61,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_AG": -40,
+      "SYMBOL": "SCN1A",
+      "DP_DG": 15,
+      "DS_DL": 0,
+      "DS_AG": 0,
+      "DP_DL": 5,
+      "DS_DG": 0.01,
+      "DP_AL": 42
+     }
+    },
+    {
+     "transcript_id": "ENST00000640036",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "biotype": "protein_coding",
+     "impact": "LOW",
+     "consequence_terms": [
+      "splice_donor_5th_base_variant",
+      "intron_variant"
+     ],
+     "hgvsc": "ENST00000640036.2:c.694+5G>T",
+     "cadd_phred": 19.61,
+     "spliceai": {
+      "DS_DG": 0.01,
+      "DP_DL": 5,
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DP_AL": 42,
+      "DS_AL": 0,
+      "DP_DG": 15,
+      "DP_AG": -40,
+      "SYMBOL": "SCN1A"
+     }
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "COSV57673143",
+     "allele_string": "COSMIC_MUTATION",
+     "start": 166053034,
+     "end": 166053034
+    },
+    {
+     "id": "CS084633",
+     "allele_string": "HGMD_MUTATION",
+     "start": 166053034,
+     "end": 166053034
+    },
+    {
+     "id": "rs3812718",
+     "allele_string": "C/A/T",
+     "frequencies": {
+      "A": {
+       "gnomade_fin": 0,
+       "gnomade_mid": 0,
+       "gnomade_remaining": 0,
+       "gnomade_afr": 0,
+       "gnomade_amr": 0,
+       "gnomade_asj": 0,
+       "gnomade": 0,
+       "gnomade_eas": 0,
+       "gnomade_sas": 0,
+       "gnomade_nfe": 0
+      }
+     },
+     "clin_sig": [
+      "benign",
+      "drug_response",
+      "risk_factor"
+     ],
+     "clin_sig_allele": "T:risk_factor;T:benign;T:drug_response",
+     "start": 166053034,
+     "end": 166053034
+    }
+   ]
+  },
+  {
+   "input": "2 166122240 . C A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 166122240,
+   "end": 166122240,
+   "allele_string": "C/A",
+   "most_severe_consequence": "intron_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000458774",
+     "gene_id": "ENSG00000238813",
+     "gene_symbol": "Y_RNA",
+     "canonical": 1,
+     "biotype": "misc_RNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "downstream_gene_variant"
+     ],
+     "cadd_phred": 0.018
+    },
+    {
+     "transcript_id": "ENST00000651574",
+     "gene_id": "ENSG00000236107",
+     "gene_symbol": "SCN1A-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant",
+      "non_coding_transcript_variant"
+     ],
+     "hgvsc": "ENST00000651574.1:n.937+17892C>A",
+     "cadd_phred": 0.018
+    },
+    {
+     "transcript_id": "ENST00000674923",
+     "gene_id": "ENSG00000144285",
+     "gene_symbol": "SCN1A",
+     "mane_select": "NM_001165963.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant"
+     ],
+     "hgvsc": "ENST00000674923.1:c.-142+4684G>T",
+     "cadd_phred": 0.018
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "rs7587026",
+     "allele_string": "C/A/G",
+     "frequencies": {
+      "A": {
+       "afr": 0.261,
+       "af": 0.2121,
+       "gnomadg": 0.2616,
+       "gnomadg_afr": 0.2771,
+       "eas": 0.1786,
+       "gnomadg_nfe": 0.2725,
+       "eur": 0.2545,
+       "gnomadg_ami": 0.1897,
+       "amr": 0.1816,
+       "gnomadg_fin": 0.2527,
+       "gnomadg_eas": 0.161,
+       "gnomadg_mid": 0.2211,
+       "sas": 0.1585,
+       "gnomadg_asj": 0.3283,
+       "gnomadg_sas": 0.1762,
+       "gnomadg_remaining": 0.278,
+       "gnomadg_amr": 0.2261
+      }
+     },
+     "start": 166122240,
+     "end": 166122240
+    }
+   ]
+  },
+  {
+   "input": "2 178560007 . C T . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 178560007,
+   "end": 178560007,
+   "allele_string": "C/T",
+   "most_severe_consequence": "missense_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000589042",
+     "gene_id": "ENSG00000155657",
+     "gene_symbol": "TTN",
+     "mane_select": "NM_001267550.2",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODERATE",
+     "consequence_terms": [
+      "missense_variant"
+     ],
+     "hgvsc": "ENST00000589042.5:c.86125G>A",
+     "hgvsp": "ENSP00000467141.1:p.Glu28709Lys",
+     "alphamissense": {
+      "am_pathogenicity": 0.1779,
+      "am_class": "likely_benign"
+     },
+     "cadd_phred": 20.3,
+     "spliceai": {
+      "DS_DG": 0,
+      "DP_DL": -8,
+      "DS_DL": 0,
+      "DS_AG": 0,
+      "DP_AL": 15,
+      "DS_AL": 0,
+      "DP_DG": -34,
+      "SYMBOL": "TTN",
+      "DP_AG": -47
+     }
+    },
+    {
+     "transcript_id": "ENST00000624360",
+     "gene_id": "ENSG00000279598",
+     "canonical": 1,
+     "biotype": "TEC",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "downstream_gene_variant"
+     ],
+     "cadd_phred": 20.3
+    },
+    {
+     "transcript_id": "ENST00000659121",
+     "gene_id": "ENSG00000237298",
+     "gene_symbol": "TTN-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant",
+      "non_coding_transcript_variant"
+     ],
+     "hgvsc": "ENST00000659121.1:n.416+36371C>T",
+     "cadd_phred": 20.3
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "rs562860372",
+     "allele_string": "C/T",
+     "frequencies": {
+      "T": {
+       "gnomadg_mid": 0,
+       "gnomadg_eas": 0,
+       "gnomadg_fin": 0,
+       "amr": 0,
+       "gnomadg_amr": 0,
+       "gnomadg_remaining": 0,
+       "gnomadg_asj": 0,
+       "gnomadg_sas": 0,
+       "sas": 0,
+       "gnomadg_afr": 0,
+       "gnomadg": 6.568e-06,
+       "af": 0.0002,
+       "afr": 0,
+       "gnomadg_ami": 0,
+       "gnomadg_nfe": 1.47e-05,
+       "eur": 0.001,
+       "eas": 0
+      }
+     },
+     "clin_sig": [
+      "uncertain_significance"
+     ],
+     "clin_sig_allele": "G:uncertain_significance",
+     "start": 178560007,
+     "end": 178560007
+    }
+   ]
+  },
+  {
+   "input": "2 178560163 . T A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "2",
+   "start": 178560163,
+   "end": 178560163,
+   "allele_string": "T/A",
+   "most_severe_consequence": "stop_gained",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000589042",
+     "gene_id": "ENSG00000155657",
+     "gene_symbol": "TTN",
+     "mane_select": "NM_001267550.2",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "HIGH",
+     "consequence_terms": [
+      "stop_gained"
+     ],
+     "hgvsc": "ENST00000589042.5:c.85969A>T",
+     "hgvsp": "ENSP00000467141.1:p.Lys28657Ter",
+     "cadd_phred": 66,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_DG": -36,
+      "DP_AG": -22,
+      "SYMBOL": "TTN",
+      "DS_DG": 0,
+      "DP_DL": -21,
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DP_AL": 37
+     }
+    },
+    {
+     "transcript_id": "ENST00000624360",
+     "gene_id": "ENSG00000279598",
+     "canonical": 1,
+     "biotype": "TEC",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "downstream_gene_variant"
+     ],
+     "cadd_phred": 66
+    },
+    {
+     "transcript_id": "ENST00000659121",
+     "gene_id": "ENSG00000237298",
+     "gene_symbol": "TTN-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant",
+      "non_coding_transcript_variant"
+     ],
+     "hgvsc": "ENST00000659121.1:n.416+36527T>A",
+     "cadd_phred": 66
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CM121831",
+     "allele_string": "HGMD_MUTATION",
+     "start": 178560163,
+     "end": 178560163
+    },
+    {
+     "id": "rs72648224",
+     "allele_string": "T/A",
+     "frequencies": {
+      "A": {
+       "gnomade": 6.842e-07,
+       "gnomade_asj": 0,
+       "gnomade_eas": 0,
+       "gnomade_sas": 0,
+       "gnomade_nfe": 8.995e-07,
+       "gnomade_fin": 0,
+       "gnomade_remaining": 0,
+       "gnomade_mid": 0,
+       "gnomade_afr": 0,
+       "gnomade_amr": 0
+      }
+     },
+     "clin_sig": [
+      "likely_pathogenic",
+      "pathogenic"
+     ],
+     "clin_sig_allele": "A:likely_pathogenic;A:pathogenic",
+     "start": 178560163,
+     "end": 178560163
+    }
+   ]
+  },
+  {
+   "input": "3 25751134 . G A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "3",
+   "start": 25751134,
+   "end": 25751134,
+   "allele_string": "G/A",
+   "most_severe_consequence": "stop_gained",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000280700",
+     "gene_id": "ENSG00000151092",
+     "gene_symbol": "NGLY1",
+     "mane_select": "NM_018297.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "HIGH",
+     "consequence_terms": [
+      "stop_gained"
+     ],
+     "hgvsc": "ENST00000280700.10:c.622C>T",
+     "hgvsp": "ENSP00000280700.5:p.Gln208Ter",
+     "cadd_phred": 36,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_DG": -39,
+      "SYMBOL": "NGLY1",
+      "DP_AG": -36,
+      "DS_DG": 0,
+      "DP_DL": -36,
+      "DS_AG": 0,
+      "DS_DL": 0.01,
+      "DP_AL": 48
+     }
+    },
+    {
+     "transcript_id": "ENST00000396646",
+     "gene_id": "ENSG00000213871",
+     "gene_symbol": "TAF9BP1",
+     "canonical": 1,
+     "biotype": "processed_pseudogene",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "upstream_gene_variant"
+     ],
+     "cadd_phred": 36
+    },
+    {
+     "transcript_id": "ENST00000458542",
+     "gene_id": "ENSG00000213872",
+     "gene_symbol": "RPL32P11",
+     "canonical": 1,
+     "biotype": "processed_pseudogene",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "downstream_gene_variant"
+     ],
+     "cadd_phred": 36
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CM154992",
+     "allele_string": "HGMD_MUTATION",
+     "start": 25751134,
+     "end": 25751134
+    },
+    {
+     "id": "rs200561967",
+     "allele_string": "G/A",
+     "frequencies": {
+      "A": {
+       "gnomade_afr": 0,
+       "gnomade_amr": 0,
+       "gnomade_mid": 0,
+       "gnomade_remaining": 0,
+       "gnomade_fin": 0,
+       "gnomade_nfe": 7.197e-06,
+       "gnomade_sas": 0,
+       "gnomade_eas": 0,
+       "gnomade": 5.476e-06,
+       "gnomade_asj": 0
+      }
+     },
+     "clin_sig": [
+      "likely_pathogenic",
+      "pathogenic"
+     ],
+     "clin_sig_allele": "A:likely_pathogenic;A:pathogenic",
+     "start": 25751134,
+     "end": 25751134
+    }
+   ]
+  },
+  {
+   "input": "5 126554292 . C G . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "5",
+   "start": 126554292,
+   "end": 126554292,
+   "allele_string": "C/G",
+   "most_severe_consequence": "missense_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000365212",
+     "gene_id": "ENSG00000202082",
+     "gene_symbol": "RNU6-290P",
+     "canonical": 1,
+     "biotype": "snRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "upstream_gene_variant"
+     ],
+     "cadd_phred": 28.2
+    },
+    {
+     "transcript_id": "ENST00000409134",
+     "gene_id": "ENSG00000164904",
+     "gene_symbol": "ALDH7A1",
+     "mane_select": "NM_001182.5",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODERATE",
+     "consequence_terms": [
+      "missense_variant"
+     ],
+     "hgvsc": "ENST00000409134.8:c.1195G>C",
+     "hgvsp": "ENSP00000387123.3:p.Gly399Arg",
+     "revel": 0.955,
+     "alphamissense": {
+      "am_pathogenicity": 0.9258,
+      "am_class": "likely_pathogenic"
+     },
+     "cadd_phred": 28.2,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_DG": -5,
+      "DP_AG": -6,
+      "SYMBOL": "ALDH7A1",
+      "DS_DG": 0,
+      "DP_DL": 21,
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DP_AL": 41
+     }
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CM1212562",
+     "allele_string": "HGMD_MUTATION",
+     "start": 126554292,
+     "end": 126554292
+    }
+   ]
+  },
+  {
+   "input": "7 117559479 . G A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "7",
+   "start": 117559479,
+   "end": 117559479,
+   "allele_string": "G/A",
+   "most_severe_consequence": "missense_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000003084",
+     "gene_id": "ENSG00000001626",
+     "gene_symbol": "CFTR",
+     "mane_select": "NM_000492.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODERATE",
+     "consequence_terms": [
+      "missense_variant"
+     ],
+     "hgvsc": "ENST00000003084.11:c.1408G>A",
+     "hgvsp": "ENSP00000003084.6:p.Val470Met",
+     "revel": 0.463,
+     "alphamissense": {
+      "am_class": "likely_benign",
+      "am_pathogenicity": 0.0489
+     },
+     "cadd_phred": 13.72,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_AG": 21,
+      "SYMBOL": "CFTR",
+      "DP_DG": 30,
+      "DS_DL": 0,
+      "DS_AG": 0,
+      "DP_DL": -1,
+      "DS_DG": 0,
+      "DP_AL": -1
+     }
+    },
+    {
+     "transcript_id": "ENST00000441019",
+     "gene_id": "ENSG00000232661",
+     "gene_symbol": "CFTR-AS1",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "downstream_gene_variant"
+     ],
+     "cadd_phred": 13.72
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CM034388",
+     "allele_string": "HGMD_MUTATION",
+     "start": 117559479,
+     "end": 117559479
+    },
+    {
+     "id": "COSV50040905",
+     "allele_string": "COSMIC_MUTATION",
+     "start": 117559479,
+     "end": 117559479
+    },
+    {
+     "id": "rs213950",
+     "allele_string": "G/A",
+     "frequencies": {
+      "A": {
+       "gnomade_sas": 0.4745,
+       "gnomadg_afr": 0.8614,
+       "gnomade": 0.4267,
+       "gnomadg": 0.5574,
+       "af": 0.5821,
+       "afr": 0.9349,
+       "gnomadg_ami": 0.3165,
+       "gnomadg_nfe": 0.4147,
+       "eur": 0.4384,
+       "eas": 0.3869,
+       "gnomade_afr": 0.8808,
+       "gnomade_amr": 0.5214,
+       "gnomade_eas": 0.4061,
+       "gnomadg_mid": 0.3776,
+       "gnomadg_eas": 0.419,
+       "gnomadg_fin": 0.5621,
+       "gnomade_asj": 0.2827,
+       "gnomade_nfe": 0.4033,
+       "amr": 0.513,
+       "gnomade_remaining": 0.4384,
+       "gnomadg_amr": 0.5185,
+       "gnomade_mid": 0.387,
+       "gnomadg_remaining": 0.51,
+       "gnomadg_sas": 0.488,
+       "gnomade_fin": 0.5468,
+       "gnomadg_asj": 0.2774,
+       "sas": 0.5031
+      }
+     },
+     "clin_sig": [
+      "benign",
+      "likely_benign"
+     ],
+     "clin_sig_allele": "A:benign/likely_benign;A:likely_benign;A:benign",
+     "start": 117559479,
+     "end": 117559479
+    }
+   ]
+  },
+  {
+   "input": "7 117587806 . G A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "7",
+   "start": 117587806,
+   "end": 117587806,
+   "allele_string": "G/A",
+   "most_severe_consequence": "missense_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000003084",
+     "gene_id": "ENSG00000001626",
+     "gene_symbol": "CFTR",
+     "mane_select": "NM_000492.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODERATE",
+     "consequence_terms": [
+      "missense_variant"
+     ],
+     "hgvsc": "ENST00000003084.11:c.1652G>A",
+     "hgvsp": "ENSP00000003084.6:p.Gly551Asp",
+     "revel": 0.99,
+     "alphamissense": {
+      "am_class": "likely_pathogenic",
+      "am_pathogenicity": 0.9897
+     },
+     "cadd_phred": 28.2,
+     "spliceai": {
+      "DP_DG": 27,
+      "DP_AG": -48,
+      "SYMBOL": "CFTR",
+      "DS_AL": 0,
+      "DP_AL": 27,
+      "DS_DG": 0,
+      "DP_DL": -1,
+      "DS_AG": 0,
+      "DS_DL": 0
+     }
+    },
+    {
+     "transcript_id": "ENST00000448200",
+     "gene_id": "ENSG00000234001",
+     "canonical": 1,
+     "biotype": "processed_pseudogene",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "upstream_gene_variant"
+     ],
+     "cadd_phred": 28.2
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CD910491",
+     "allele_string": "HGMD_MUTATION",
+     "start": 117587806,
+     "end": 117587806
+    },
+    {
+     "id": "CM900053",
+     "allele_string": "HGMD_MUTATION",
+     "start": 117587806,
+     "end": 117587806
+    },
+    {
+     "id": "CM980337",
+     "allele_string": "HGMD_MUTATION",
+     "start": 117587806,
+     "end": 117587806
+    },
+    {
+     "id": "rs75527207",
+     "allele_string": "G/A/T",
+     "frequencies": {
+      "A": {
+       "gnomade_sas": 0,
+       "gnomadg_afr": 7.239e-05,
+       "gnomadg": 0.0002761,
+       "gnomade": 0.0004041,
+       "gnomadg_ami": 0,
+       "gnomadg_nfe": 0.0005734,
+       "gnomade_amr": 0,
+       "gnomade_afr": 8.994e-05,
+       "gnomadg_mid": 0,
+       "gnomade_eas": 0,
+       "gnomadg_eas": 0,
+       "gnomade_asj": 0,
+       "gnomadg_fin": 0,
+       "gnomade_nfe": 0.0005062,
+       "gnomade_remaining": 0.0004152,
+       "gnomade_mid": 0,
+       "gnomadg_amr": 0,
+       "gnomadg_remaining": 0,
+       "gnomadg_sas": 0,
+       "gnomade_fin": 0,
+       "gnomadg_asj": 0
+      }
+     },
+     "clin_sig": [
+      "not_provided",
+      "likely_pathogenic",
+      "pathogenic",
+      "drug_response"
+     ],
+     "clin_sig_allele": "T:likely_pathogenic;A:not_provided;A:drug_response;A:pathogenic",
+     "start": 117587806,
+     "end": 117587806
+    }
+   ]
+  },
+  {
+   "input": "7 117652877 . C G . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "7",
+   "start": 117652877,
+   "end": 117652877,
+   "allele_string": "C/G",
+   "most_severe_consequence": "missense_variant",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000003084",
+     "gene_id": "ENSG00000001626",
+     "gene_symbol": "CFTR",
+     "mane_select": "NM_000492.4",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "MODERATE",
+     "consequence_terms": [
+      "missense_variant"
+     ],
+     "hgvsc": "ENST00000003084.11:c.3909C>G",
+     "hgvsp": "ENSP00000003084.6:p.Asn1303Lys",
+     "revel": 0.83,
+     "alphamissense": {
+      "am_class": "likely_pathogenic",
+      "am_pathogenicity": 0.9907
+     },
+     "cadd_phred": 22.2,
+     "spliceai": {
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DS_DG": 0,
+      "DP_DL": -15,
+      "DP_AL": -31,
+      "DS_AL": 0,
+      "DP_AG": -6,
+      "SYMBOL": "CFTR",
+      "DP_DG": -6
+     }
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CM910076",
+     "allele_string": "HGMD_MUTATION",
+     "start": 117652877,
+     "end": 117652877
+    },
+    {
+     "id": "CX067918",
+     "allele_string": "HGMD_MUTATION",
+     "start": 117652877,
+     "end": 117652877
+    },
+    {
+     "id": "rs80034486",
+     "allele_string": "C/G",
+     "frequencies": {
+      "G": {
+       "eas": 0,
+       "gnomade_amr": 0.0001124,
+       "gnomade_afr": 0,
+       "gnomadg_ami": 0,
+       "gnomadg_nfe": 0.0002354,
+       "eur": 0.001,
+       "afr": 0,
+       "gnomade_sas": 5.86e-05,
+       "gnomadg_afr": 2.407e-05,
+       "gnomadg": 0.0001577,
+       "gnomade": 0.0001577,
+       "af": 0.0002,
+       "sas": 0,
+       "gnomade_mid": 0.0005892,
+       "gnomadg_amr": 6.548e-05,
+       "gnomade_remaining": 0.0002007,
+       "gnomadg_remaining": 0.0009452,
+       "gnomade_fin": 1.875e-05,
+       "gnomadg_sas": 0.0002075,
+       "gnomadg_asj": 0.0008651,
+       "gnomade_nfe": 0.0001719,
+       "amr": 0,
+       "gnomadg_mid": 0,
+       "gnomade_eas": 0,
+       "gnomadg_eas": 0,
+       "gnomadg_fin": 0,
+       "gnomade_asj": 0.0005002
+      }
+     },
+     "clin_sig": [
+      "likely_benign",
+      "pathogenic"
+     ],
+     "clin_sig_allele": "G:pathogenic;T:likely_benign",
+     "start": 117652877,
+     "end": 117652877
+    }
+   ]
+  },
+  {
+   "input": "X 31178721 . G A . . .",
+   "assembly_name": "GRCh38",
+   "seq_region_name": "X",
+   "start": 31178721,
+   "end": 31178721,
+   "allele_string": "G/A",
+   "most_severe_consequence": "stop_gained",
+   "transcript_consequences": [
+    {
+     "transcript_id": "ENST00000357033",
+     "gene_id": "ENSG00000198947",
+     "gene_symbol": "DMD",
+     "mane_select": "NM_004006.3",
+     "canonical": 1,
+     "biotype": "protein_coding",
+     "impact": "HIGH",
+     "consequence_terms": [
+      "stop_gained"
+     ],
+     "hgvsc": "ENST00000357033.9:c.10171C>T",
+     "hgvsp": "ENSP00000354923.3:p.Arg3391Ter",
+     "cadd_phred": 46,
+     "spliceai": {
+      "DS_AL": 0,
+      "DP_AG": 49,
+      "SYMBOL": "DMD",
+      "DP_DG": 49,
+      "DS_AG": 0,
+      "DS_DL": 0,
+      "DS_DG": 0.13,
+      "DP_DL": 19,
+      "DP_AL": 19
+     }
+    },
+    {
+     "transcript_id": "ENST00000746482",
+     "gene_id": "ENSG00000297249",
+     "canonical": 1,
+     "biotype": "lncRNA",
+     "impact": "MODIFIER",
+     "consequence_terms": [
+      "intron_variant",
+      "non_coding_transcript_variant"
+     ],
+     "hgvsc": "ENST00000746482.1:n.271+9757G>A",
+     "cadd_phred": 46
+    }
+   ],
+   "colocated_variants": [
+    {
+     "id": "CM960493",
+     "allele_string": "HGMD_MUTATION",
+     "start": 31178721,
+     "end": 31178721
+    },
+    {
+     "id": "rs398123832",
+     "allele_string": "G/A",
+     "clin_sig": [
+      "pathogenic"
+     ],
+     "clin_sig_allele": "A:pathogenic",
+     "start": 31178721,
+     "end": 31178721
+    }
+   ]
+  }
+ ]
+}

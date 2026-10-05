@@ -1,0 +1,133 @@
+{
+  "data": {
+    "__count": 1,
+    "__licence": {
+      "identifier": "CC-BY-4.0",
+      "link": "https://creativecommons.org/licenses/by/4.0",
+      "name": "Creative Commons Attribution 4.0 International"
+    },
+    "results": [
+      {
+        "Date": "2026-06-23 07:53:50",
+        "DisorderDisorderAssociation": null,
+        "DisorderFlag": [
+          {
+            "Label": null,
+            "Value": 1
+          }
+        ],
+        "DisorderGroup": "Disorder",
+        "ExternalReference": [
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": null,
+            "DisorderMappingRelation": "E (Exact mapping: the two concepts are equivalent)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "10430",
+            "Source": "GARD"
+          },
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": "Attributed code (ICD-10/ICD-11: The targeted code is assigned by Orphanet)",
+            "DisorderMappingRelation": "NTBT (ORPHAcode is narrower than the targeted code used to represent it)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "G40.4",
+            "Source": "ICD-10"
+          },
+          {
+            "DisorderMappingICDRefUri": 1255654700,
+            "DisorderMappingICDRefUrl": "https://icd.who.int/browse/latest-release/mms/en#1255654700",
+            "DisorderMappingICDRelation": "Specific code (ICD-10/ICD-11: ORPHAcode has its own code in the targeted terminology)",
+            "DisorderMappingRelation": "E (Exact mapping: the two concepts are equivalent)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "8A61.11",
+            "Source": "ICD-11"
+          },
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": null,
+            "DisorderMappingRelation": "E (Exact mapping: the two concepts are equivalent)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "0011794",
+            "Source": "MONDO"
+          },
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": null,
+            "DisorderMappingRelation": "E (Exact mapping: the two concepts are equivalent)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "10073677",
+            "Source": "MedDRA"
+          },
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": null,
+            "DisorderMappingRelation": "E (Exact mapping: the two concepts are equivalent)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "607208",
+            "Source": "OMIM"
+          },
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": null,
+            "DisorderMappingRelation": "BTNT (ORPHAcode is broader than the targeted code used to represent it)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "612164",
+            "Source": "OMIM"
+          },
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": null,
+            "DisorderMappingRelation": "BTNT (ORPHAcode is broader than the targeted code used to represent it)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "615744",
+            "Source": "OMIM"
+          },
+          {
+            "DisorderMappingICDRefUri": null,
+            "DisorderMappingICDRefUrl": null,
+            "DisorderMappingICDRelation": null,
+            "DisorderMappingRelation": "E (Exact mapping: the two concepts are equivalent)",
+            "DisorderMappingValidationStatus": "Validated",
+            "Reference": "C0751122",
+            "Source": "UMLS"
+          }
+        ],
+        "ORPHAcode": 33069,
+        "OrphanetURL": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=33069",
+        "Preferred term": "Dravet syndrome",
+        "SummaryInformation": [
+          {
+            "Definition": "A rare, genetic, developmental and epileptic encephalopathy characterized by infantile onset of intractable seizures that are often febrile, and associated with cognitive and motor impairment."
+          }
+        ],
+        "Synonym": [
+          "SMEI",
+          "Severe myoclonic epilepsy of infancy",
+          "Severe myoclonus epilepsy of infancy"
+        ],
+        "Typology": "Disease"
+      }
+    ]
+  },
+  "datasetCategory": {
+    "lang": "en",
+    "name": "Rare diseases and cross-referencing"
+  },
+  "parameters": {
+    "path": {
+      "omim": "607208"
+    },
+    "query": {
+      "lang": "en"
+    }
+  },
+  "uri": "https://api.orphadata.com/rd-cross-referencing/omims/607208?lang=en"
+}

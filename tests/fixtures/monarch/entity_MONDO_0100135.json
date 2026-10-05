@@ -1,0 +1,79 @@
+{
+ "id": "MONDO:0100135",
+ "category": "biolink:Disease",
+ "name": "Dravet syndrome",
+ "description": "Dravet syndrome is a channelopathy with epilepsy of with onset during the first year of life, typically 4-5 months, characterized by status epilepticus and a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment. Dravet differs from other channelopathies usually due to a mutation in SCN1A.",
+ "xref": [
+  "DOID:0060171",
+  "DOID:0080422",
+  "GARD:0010430",
+  "ICD10CM:G40.83",
+  "ICD9:345.10",
+  "MEDGEN:148243",
+  "NANDO:1200587",
+  "NANDO:2200877",
+  "NCIT:C116573",
+  "NORD:1061",
+  "SCTID:230437002",
+  "UMLS:C0751122",
+  "icd11.foundation:1255654700"
+ ],
+ "synonym": [
+  "DS",
+  "Dravet",
+  "Dravet syndrome",
+  "SME",
+  "SMEB",
+  "myoclonic epilepsy, severe, of infancy",
+  "severe myoclonic epilepsy of infancy"
+ ],
+ "exact_synonym": [
+  "DS",
+  "Dravet",
+  "Dravet syndrome",
+  "SME",
+  "SMEB",
+  "myoclonic epilepsy, severe, of infancy",
+  "severe myoclonic epilepsy of infancy"
+ ],
+ "deprecated": null,
+ "subsets": [
+  "clingen",
+  "doid_rare",
+  "gard_rare",
+  "nord_rare",
+  "rare"
+ ],
+ "has_phenotype_count": 1,
+ "mappings": [
+  {
+   "id": "MEDGEN:148243",
+   "url": "http://identifiers.org/medgen/148243"
+  },
+  {
+   "id": "SCTID:230437002",
+   "url": "http://identifiers.org/snomedct/230437002"
+  },
+  {
+   "id": "icd11.foundation:1255654700",
+   "url": null
+  },
+  {
+   "id": "NCIT:C116573",
+   "url": "http://purl.obolibrary.org/obo/NCIT_C116573"
+  },
+  {
+   "id": "DOID:0080422",
+   "url": "http://purl.obolibrary.org/obo/DOID_0080422"
+  },
+  {
+   "id": "ICD10CM:G40.83",
+   "url": "https://www.icd10data.com/search?s=G40.83"
+  },
+  {
+   "id": "UMLS:C0751122",
+   "url": "http://identifiers.org/umls/C0751122"
+  }
+ ],
+ "symbol": null
+}

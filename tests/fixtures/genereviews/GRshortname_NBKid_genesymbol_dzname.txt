@@ -1,0 +1,6 @@
+fhm|NBK1388|ATP1A2|Familial Hemiplegic Migraine
+fhm|NBK1388|CACNA1A|Familial Hemiplegic Migraine
+fhm|NBK1388|SCN1A|Familial Hemiplegic Migraine
+gaucher|NBK1269|GBA1|Gaucher Disease
+ngly1-cddg|NBK481554|NGLY1|NGLY1-Related Congenital Disorder of Deglycosylation
+gefs|NBK1318|SCN1A|SCN1A Seizure Disorders

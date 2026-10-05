@@ -1,0 +1,13 @@
+{
+ "errors": [
+  {
+   "message": "Cannot query field 'knownDrugs' on type 'Disease'. (line 1, column 35):\n{ disease(efoId:\"MONDO_0010679\"){ knownDrugs(size:3){ count rows{ drug{ name } phase status } } } }\n                                  ^",
+   "locations": [
+    {
+     "line": 1,
+     "column": 35
+    }
+   ]
+  }
+ ]
+}

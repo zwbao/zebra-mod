@@ -1,0 +1,187 @@
+{
+ "input": "rs113993960",
+ "id": "rs113993960",
+ "assembly_name": "GRCh38",
+ "seq_region_name": "7",
+ "start": 117559591,
+ "end": 117559594,
+ "strand": 1,
+ "allele_string": "TCTT/T/TCTTCTT",
+ "most_severe_consequence": "inframe_insertion",
+ "variant_class": "indel",
+ "transcript_consequences": [
+  {
+   "hgvsp": "ENSP00000003084.6:p.Phe508del",
+   "gene_symbol": "CFTR",
+   "spliceai": {
+    "DS_DL": 0,
+    "DS_AG": 0,
+    "DS_DG": 0,
+    "DP_DL": -11,
+    "DP_AL": 28,
+    "DS_AL": 0,
+    "DP_AG": -40,
+    "SYMBOL": "CFTR",
+    "DP_DG": -40
+   },
+   "protein_end": 508,
+   "cds_start": 1520,
+   "gene_id": "ENSG00000001626",
+   "cadd_raw": 2.172925,
+   "cdna_start": 1590,
+   "hgvsc": "ENST00000003084.11:c.1521_1523del",
+   "amino_acids": "IF/I",
+   "cdna_end": 1593,
+   "canonical": 1,
+   "exon": "11/27",
+   "mane": [
+    "MANE_Select"
+   ],
+   "consequence_terms": [
+    "inframe_deletion"
+   ],
+   "protein_start": 507,
+   "impact": "MODERATE",
+   "strand": 1,
+   "variant_allele": "T",
+   "hgnc_id": "HGNC:1884",
+   "cds_end": 1523,
+   "protein_id": "ENSP00000003084",
+   "gene_symbol_source": "HGNC",
+   "transcript_id": "ENST00000003084",
+   "codons": "aTCTTt/aTt",
+   "cadd_phred": 17.55,
+   "mane_select": "NM_000492.4",
+   "biotype": "protein_coding"
+  },
+  {
+   "exon": "11/27",
+   "mane": [
+    "MANE_Select"
+   ],
+   "consequence_terms": [
+    "inframe_insertion"
+   ],
+   "impact": "MODERATE",
+   "strand": 1,
+   "protein_start": 507,
+   "hgvsp": "ENSP00000003084.6:p.Phe508dup",
+   "protein_end": 508,
+   "gene_symbol": "CFTR",
+   "cds_start": 1520,
+   "gene_id": "ENSG00000001626",
+   "amino_acids": "IF/IFF",
+   "cdna_start": 1590,
+   "hgvsc": "ENST00000003084.11:c.1523_1524insCTT",
+   "canonical": 1,
+   "cdna_end": 1593,
+   "codons": "aTCTTt/aTCTTCTTt",
+   "mane_select": "NM_000492.4",
+   "biotype": "protein_coding",
+   "hgnc_id": "HGNC:1884",
+   "variant_allele": "TCTTCTT",
+   "cds_end": 1523,
+   "protein_id": "ENSP00000003084",
+   "gene_symbol_source": "HGNC",
+   "transcript_id": "ENST00000003084"
+  },
+  {
+   "codons": "aTCTTt/aTt",
+   "cadd_phred": 17.55,
+   "biotype": "protein_coding",
+   "hgnc_id": "HGNC:1884",
+   "variant_allele": "T",
+   "cds_end": 1433,
+   "protein_id": "ENSP00000389119",
+   "transcript_id": "ENST00000426809",
+   "gene_symbol_source": "HGNC",
+   "flags": [
+    "cds_end_NF"
+   ],
+   "exon": "10/26",
+   "consequence_terms": [
+    "inframe_deletion"
+   ],
+   "strand": 1,
+   "protein_start": 477,
+   "impact": "MODERATE",
+   "hgvsp": "ENSP00000389119.1:p.Phe478del",
+   "spliceai": {
+    "DP_DL": -11,
+    "DS_DG": 0,
+    "DS_AG": 0,
+    "DS_DL": 0,
+    "DP_AL": 28,
+    "DS_AL": 0,
+    "DP_DG": -40,
+    "SYMBOL": "CFTR",
+    "DP_AG": -40
+   },
+   "gene_symbol": "CFTR",
+   "cds_start": 1430,
+   "protein_end": 478,
+   "gene_id": "ENSG00000001626",
+   "cadd_raw": 2.172925,
+   "cdna_start": 1430,
+   "amino_acids": "IF/I",
+   "hgvsc": "ENST00000426809.5:c.1431_1433del",
+   "cdna_end": 1433
+  }
+ ],
+ "colocated_variants": [
+  {
+   "end": 117559594,
+   "seq_region_name": "7",
+   "var_synonyms": {
+    "ClinVar": [
+     "VCV000634837",
+     "VCV000007105"
+    ]
+   },
+   "clin_sig_ref_allele": "CTT",
+   "strand": 1,
+   "allele_string": "TCTT/T/TCTTCTT",
+   "frequencies": {
+    "T": {
+     "gnomadg_asj": 0.004032,
+     "gnomadg_sas": 0.003108,
+     "gnomade_fin": 0.002757,
+     "gnomadg_amr": 0.003728,
+     "gnomade_remaining": 0.01009,
+     "gnomade_mid": 0.001735,
+     "gnomadg_remaining": 0.007583,
+     "sas": 0.0041,
+     "gnomadg_eas": 0,
+     "gnomadg_fin": 0.001508,
+     "gnomade_asj": 0.006319,
+     "gnomade_eas": 2.524e-05,
+     "gnomadg_mid": 0.003401,
+     "amr": 0.0101,
+     "gnomade_nfe": 0.01498,
+     "eur": 0.0089,
+     "gnomadg_nfe": 0.0143,
+     "gnomadg_ami": 0.001096,
+     "gnomade_amr": 0.003958,
+     "gnomade_afr": 0.002302,
+     "eas": 0,
+     "gnomade": 0.01235,
+     "gnomadg": 0.007884,
+     "af": 0.004,
+     "gnomade_sas": 0.00247,
+     "gnomadg_afr": 0.002599,
+     "afr": 0
+    }
+   },
+   "start": 117559591,
+   "phenotype_or_disease": 1,
+   "clin_sig_allele": ":risk_factor;:pathogenic;:drug_response;:likely_pathogenic",
+   "id": "rs113993960",
+   "clin_sig": [
+    "likely_pathogenic",
+    "pathogenic",
+    "drug_response",
+    "risk_factor"
+   ]
+  }
+ ]
+}

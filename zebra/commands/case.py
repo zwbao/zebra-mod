@@ -159,6 +159,12 @@ def _apply(args: argparse.Namespace) -> Outcome:
     warnings: List[str] = []
     errors: List[str] = []
 
+    if ops.get("profile"):
+        try:
+            done["profile"] = case_mod.set_profile(target, **{k: v for k, v in ops["profile"].items() if k in (
+                "title", "role", "language", "sex", "age", "ancestry", "consanguinity")})
+        except case_mod.CaseError as err:
+            errors.append(f"profile: {err}")
     phenos = ops.get("phenotypes") or []
     if phenos:
         from zebra.sources import hpo as hpo_src

@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'claude-code/testing'
 
+const FACTS = { model: 'claude-test', promptModel: 'claude-test', surfaces: [], tools: [], outputStyle: null, traits: [] } as const
+
 describe('zebra-mod hooks', () => {
   test('its own tools are allowed; identifiers and genome uploads are not', async ($, on) => {
     on('tool.check', () => ({ decision: 'ask' as const }))
@@ -21,7 +23,7 @@ describe('zebra-mod hooks', () => {
 
   test('adds the research doctrine to the system prompt', async ($, on) => {
     on('prompt.compose', () => ({ sections: [{ id: 'intro', text: 'You are Claude Code.', scope: 'shared' as const }] }))
-    const { sections } = await $.prompt.compose()
+    const { sections } = await $.prompt.compose(FACTS)
     const doctrine = sections.find(s => s.id === 'zebra-mod:doctrine')
     expect(doctrine?.scope).toBe('session')
     expect(doctrine?.text.includes('Evidence, not recall')).toBe(true)
@@ -30,7 +32,7 @@ describe('zebra-mod hooks', () => {
 
   test('doctrine off leaves the prompt alone', { options: { doctrine: 'off' } }, async ($, on) => {
     on('prompt.compose', () => ({ sections: [{ id: 'intro', text: 'You are Claude Code.', scope: 'shared' as const }] }))
-    const { sections } = await $.prompt.compose()
+    const { sections } = await $.prompt.compose(FACTS)
     expect(sections.length).toBe(1)
   })
 })

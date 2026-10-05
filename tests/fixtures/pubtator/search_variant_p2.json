@@ -1,0 +1,54 @@
+{
+ "results": [
+  {
+   "_id": "26544041",
+   "pmid": 26544041,
+   "pmcid": "PMC4636363",
+   "title": "Gene Mutation Analysis in 253 Chinese Children with Unexplained Epilepsy and Intellectual/Developmental Disabilities",
+   "journal": "PLoS One",
+   "authors": [
+    "Zhang Y",
+    "Kong W",
+    "Gao Y",
+    "Liu X",
+    "Gao K",
+    "Xie H",
+    "Wu Y",
+    "Zhang Y",
+    "Wang J",
+    "Gao F",
+    "Wu X",
+    "Jiang Y"
+   ],
+   "date": "2015-11-06T00:00:00Z",
+   "doi": "10.1371/journal.pone.0141782",
+   "score": 3.7186117
+  },
+  {
+   "_id": "33238377",
+   "pmid": 33238377,
+   "pmcid": "PMC7700506",
+   "title": "Fatal Status Epilepticus in Dravet Syndrome",
+   "journal": "Brain Sci",
+   "authors": [
+    "De Liso P",
+    "Pironi V",
+    "Mastrangelo M",
+    "Battaglia D",
+    "Craiu D",
+    "Trivisano M",
+    "Specchio N",
+    "Nabbout R",
+    "Vigevano F"
+   ],
+   "date": "2020-11-23T00:00:00Z",
+   "doi": "10.3390/brainsci10110889",
+   "score": 2.67669
+  }
+ ],
+ "facets": {},
+ "page_size": 10,
+ "current": 2,
+ "count": 12,
+ "total_pages": 2
+}

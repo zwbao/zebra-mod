@@ -1,0 +1,253 @@
+{
+ "count": 4,
+ "next": null,
+ "previous": null,
+ "results": [
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:17646",
+    "gene_symbol": "NGLY1",
+    "gene_name": "N-glycanase 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "NGLY1",
+   "confidence_level": "3",
+   "penetrance": null,
+   "mode_of_pathogenicity": "",
+   "publications": [
+    "24651605",
+    "27388694",
+    "32259258",
+    "29550355"
+   ],
+   "evidence": [
+    "Expert Review Green",
+    "Victorian Clinical Genetics Services"
+   ],
+   "phenotypes": [
+    "Congenital disorder of deglycosylation, MIM# 615273",
+    "alacrima, movement disorder, microcephaly, abnormal LFTs"
+   ],
+   "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+   "tags": [],
+   "panel": {
+    "id": 68,
+    "hash_id": null,
+    "name": "Congenital Disorders of Glycosylation",
+    "disease_group": "Metabolic disorders",
+    "disease_sub_group": "",
+    "status": "public",
+    "version": "2.2",
+    "version_created": "2026-08-19T10:45:54.770820+10:00",
+    "relevant_disorders": [
+     "Abnormal transferrin saturation",
+     "HP:0040135"
+    ],
+    "stats": {
+     "number_of_genes": 141,
+     "number_of_strs": 1,
+     "number_of_regions": 0
+    },
+    "types": [
+     {
+      "name": "Victorian Clinical Genetics Services",
+      "slug": "victorian-clinical-genetics-services",
+      "description": "Panel used by VCGS."
+     },
+     {
+      "name": "Rare Disease",
+      "slug": "rare-disease",
+      "description": "Rare disease panels"
+     }
+    ],
+    "child_panel_ids": []
+   },
+   "transcript": null
+  },
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:17646",
+    "gene_symbol": "NGLY1",
+    "gene_name": "N-glycanase 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "NGLY1",
+   "confidence_level": "3",
+   "penetrance": null,
+   "mode_of_pathogenicity": null,
+   "publications": [
+    "PMID:33528536"
+   ],
+   "evidence": [
+    "Expert Review Green",
+    "Literature"
+   ],
+   "phenotypes": [
+    "Congenital disorder of deglycosylation (OMIM 615273)"
+   ],
+   "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+   "tags": [],
+   "panel": {
+    "id": 73,
+    "hash_id": null,
+    "name": "Cerebral Palsy",
+    "disease_group": "Neurology and neurodevelopmental disorders",
+    "disease_sub_group": "",
+    "status": "public",
+    "version": "2.2",
+    "version_created": "2026-10-02T12:20:33.668678+10:00",
+    "relevant_disorders": [
+     "Cerebral palsy HP:0100021"
+    ],
+    "stats": {
+     "number_of_genes": 365,
+     "number_of_strs": 0,
+     "number_of_regions": 1
+    },
+    "types": [
+     {
+      "name": "Victorian Clinical Genetics Services",
+      "slug": "victorian-clinical-genetics-services",
+      "description": "Panel used by VCGS."
+     },
+     {
+      "name": "Rare Disease",
+      "slug": "rare-disease",
+      "description": "Rare disease panels"
+     },
+     {
+      "name": "Royal Melbourne Hospital",
+      "slug": "royal-melbourne-hospital",
+      "description": "Royal Melbourne Hospital"
+     }
+    ],
+    "child_panel_ids": []
+   },
+   "transcript": null
+  },
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:17646",
+    "gene_symbol": "NGLY1",
+    "gene_name": "N-glycanase 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "NGLY1",
+   "confidence_level": "3",
+   "penetrance": null,
+   "mode_of_pathogenicity": "",
+   "publications": [
+    "24651605",
+    "27388694",
+    "32259258"
+   ],
+   "evidence": [
+    "Expert Review Green",
+    "Victorian Clinical Genetics Services"
+   ],
+   "phenotypes": [
+    "Congenital disorder of deglycosylation, MIM# 615273"
+   ],
+   "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+   "tags": [],
+   "panel": {
+    "id": 137,
+    "hash_id": null,
+    "name": "Mendeliome",
+    "disease_group": "",
+    "disease_sub_group": "",
+    "status": "public",
+    "version": "2.673",
+    "version_created": "2026-10-05T17:49:26.824475+11:00",
+    "relevant_disorders": [],
+    "stats": {
+     "number_of_genes": 6217,
+     "number_of_strs": 47,
+     "number_of_regions": 18
+    },
+    "types": [
+     {
+      "name": "Victorian Clinical Genetics Services",
+      "slug": "victorian-clinical-genetics-services",
+      "description": "Panel used by VCGS."
+     },
+     {
+      "name": "Rare Disease",
+      "slug": "rare-disease",
+      "description": "Rare disease panels"
+     },
+     {
+      "name": "Royal Melbourne Hospital",
+      "slug": "royal-melbourne-hospital",
+      "description": "Royal Melbourne Hospital"
+     }
+    ],
+    "child_panel_ids": []
+   },
+   "transcript": null
+  },
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:17646",
+    "gene_symbol": "NGLY1",
+    "gene_name": "N-glycanase 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "NGLY1",
+   "confidence_level": "1",
+   "penetrance": null,
+   "mode_of_pathogenicity": null,
+   "publications": [
+    "38070824",
+    "32395402",
+    "29997391"
+   ],
+   "evidence": [
+    "Literature"
+   ],
+   "phenotypes": [
+    "congenital disorder of deglycosylation 1, MONDO:0800044"
+   ],
+   "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+   "tags": [],
+   "panel": {
+    "id": 271,
+    "hash_id": null,
+    "name": "Ataxia",
+    "disease_group": "Neurology and neurodevelopmental disorders",
+    "disease_sub_group": "",
+    "status": "public",
+    "version": "2.274",
+    "version_created": "2026-10-02T13:32:03.047885+10:00",
+    "relevant_disorders": [
+     "Ataxia",
+     "HP:0001251"
+    ],
+    "stats": {
+     "number_of_genes": 447,
+     "number_of_strs": 24,
+     "number_of_regions": 3
+    },
+    "types": [
+     {
+      "name": "Royal Melbourne Hospital",
+      "slug": "royal-melbourne-hospital",
+      "description": "Royal Melbourne Hospital"
+     },
+     {
+      "name": "Rare Disease",
+      "slug": "rare-disease",
+      "description": "Rare disease panels"
+     },
+     {
+      "name": "Victorian Clinical Genetics Services",
+      "slug": "victorian-clinical-genetics-services",
+      "description": "Panel used by VCGS."
+     }
+    ],
+    "child_panel_ids": []
+   },
+   "transcript": []
+  }
+ ]
+}

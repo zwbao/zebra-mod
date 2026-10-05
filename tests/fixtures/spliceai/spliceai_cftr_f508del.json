@@ -1,0 +1,55 @@
+{
+ "variant": "chr7-117559590-ATCT-A",
+ "hg": "38",
+ "bc": "basic",
+ "distance": 500,
+ "mask": 0,
+ "genomeVersion": "38",
+ "chrom": "7",
+ "pos": 117559590,
+ "ref": "ATCT",
+ "alt": "A",
+ "scores": [
+  {
+   "DS_AG": "0.002",
+   "DS_AL": "0.007",
+   "DS_DG": "0.000",
+   "DS_DL": "0.001",
+   "DP_AG": -39,
+   "DP_AL": 29,
+   "DP_DG": -112,
+   "DP_DL": 65,
+   "DS_AG_REF": "0.131",
+   "DS_AL_REF": "0.013",
+   "DS_DG_REF": "0.001",
+   "DS_DL_REF": "0.999",
+   "DS_AG_ALT": "0.133",
+   "DS_AL_ALT": "0.006",
+   "DS_DG_ALT": "0.001",
+   "DS_DL_ALT": "0.998",
+   "SCORES_FOR_INSERTED_BASES": [],
+   "g_id": "ENSG00000001626.20",
+   "g_name": "CFTR",
+   "t_id": "ENST00000003084.11",
+   "t_priority": "MS",
+   "t_refseq_ids": [
+    "NM_000492.4"
+   ],
+   "t_strand": "+",
+   "t_type": "protein_coding",
+   "CDS_START": 117480095,
+   "CDS_END": 117667108,
+   "nNonZeroScores": 4
+  }
+ ],
+ "source": "spliceai:model",
+ "allNonZeroScoresStrand": "+",
+ "allNonZeroScoresTranscriptId": "ENST00000003084.11",
+ "sai10kPredictions": {
+  "aberrations": [],
+  "transcript_id": "ENST00000003084.11",
+  "transcript_priority": "MS",
+  "gene_name": "CFTR"
+ },
+ "sai10kPredictionsError": null
+}

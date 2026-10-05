@@ -1,0 +1,87 @@
+[
+ {
+  "_id": "litvar@rs113993960##",
+  "rsid": "rs113993960",
+  "gene": [
+   "CFTR",
+   "CFTR-AS1"
+  ],
+  "name": "p.F508del",
+  "hgvs": "p.F508del",
+  "pmids_count": 6409,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": true,
+  "data_clinical_significance": [
+   "drug-response",
+   "risk-factor",
+   "pathogenic",
+   "likely-pathogenic"
+  ],
+  "match": null
+ },
+ {
+  "_id": "litvar@rs121909011##",
+  "rsid": "rs121909011",
+  "gene": [
+   "CFTR"
+  ],
+  "name": "p.R334W",
+  "hgvs": "p.R334W",
+  "pmids_count": 282,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": true,
+  "data_clinical_significance": [
+   "pathogenic"
+  ],
+  "match": null
+ },
+ {
+  "_id": "litvar@rs75541969##",
+  "rsid": "rs75541969",
+  "gene": [
+   "CFTR"
+  ],
+  "name": "p.D1152H",
+  "hgvs": "p.D1152H",
+  "pmids_count": 230,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": true,
+  "data_clinical_significance": [
+   "pathogenic",
+   "pathogenic-likely-pathogenic",
+   "drug-response"
+  ],
+  "match": null
+ },
+ {
+  "_id": "litvar@#1080#p.F508del",
+  "gene": [
+   "CFTR"
+  ],
+  "name": "p.F508del",
+  "hgvs": "p.F508del",
+  "pmids_count": 57,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": false,
+  "match": null
+ },
+ {
+  "_id": "litvar@rs121909001##",
+  "rsid": "rs121909001",
+  "gene": [
+   "CFTR",
+   "CFTR-AS1"
+  ],
+  "name": "p.F508del",
+  "hgvs": "p.F508del",
+  "pmids_count": 18,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": true,
+  "match": null
+ }
+]

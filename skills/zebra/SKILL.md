@@ -51,3 +51,5 @@ Undiagnosed with records, typical chain: intake → diagnose → (variant / rean
 ## 5. When a tool fails
 
 Say which source failed and what that leaves unchecked; try the CLI (`zebra ... --json`) once; never fill the gap from memory. `/zebra doctor` checks the environment.
+
+Outside Claude Code (Codex, OpenCode, Cursor) the `mcp__zebra-mod__*` tools do not exist: run the same commands with the bundled CLI, `bin/zebra <command> --json` (`zebra --help` lists them; each tool's command is in `hooks/tools.ts`).

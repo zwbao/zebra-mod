@@ -1,0 +1,408 @@
+{
+ "version": "6.9",
+ "hitCount": 3,
+ "request": {
+  "queryString": "EXT_ID:(38785537 OR 27397505 OR 34055682) AND SRC:MED",
+  "resultType": "core",
+  "cursorMark": "*",
+  "pageSize": 3,
+  "sort": "",
+  "synonym": false
+ },
+ "resultList": {
+  "result": [
+   {
+    "id": "38785537",
+    "source": "MED",
+    "pmid": "38785537",
+    "pmcid": "PMC11119865",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC11119865"
+     ]
+    },
+    "doi": "10.3390/cimb46050269",
+    "title": "<i>SCN1A</i>-Characterization of the Gene's Variants in the Polish Cohort of Patients with Dravet Syndrome: One Center Experience.",
+    "authorString": "Stawicka E, Zielińska A, Górka-Skoczylas P, Kanabus K, Tataj R, Mazurczak T, Hoffman-Zacharska D.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Stawicka E",
+       "lastName": "Stawicka"
+      },
+      {
+       "fullName": "Zielińska A",
+       "lastName": "Zielińska"
+      },
+      {
+       "fullName": "Górka-Skoczylas P",
+       "lastName": "Górka-Skoczylas"
+      }
+     ]
+    },
+    "dataLinksTagsList": {
+     "dataLinkstag": [
+      "supporting_data"
+     ]
+    },
+    "journalInfo": {
+     "issue": "5",
+     "volume": "46",
+     "journalIssueId": 3775174,
+     "dateOfPublication": "2024 May",
+     "monthOfPublication": 5,
+     "yearOfPublication": 2024,
+     "journal": {
+      "medlineAbbreviation": "Curr Issues Mol Biol",
+      "title": "Current issues in molecular biology",
+      "essn": "1467-3045",
+      "issn": "1467-3037",
+      "isoabbreviation": "Curr Issues Mol Biol",
+      "nlmid": "100931761"
+     },
+     "printPublicationDate": "2024-05-01"
+    },
+    "pubYear": "2024",
+    "pageInfo": "4437-4451",
+    "publicationStatus": "epublish",
+    "language": "eng",
+    "pubModel": "Electronic",
+    "pubTypeList": {
+     "pubType": [
+      "research-article",
+      "Journal Article"
+     ]
+    },
+    "keywordList": {
+     "keyword": [
+      "Dravet Syndrome",
+      "Genotype–phenotype Correlation",
+      "Scn1a Gene",
+      "Drvt"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.3390/cimb46050269"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC11119865"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC11119865?pdf=render"
+      }
+     ]
+    },
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 3,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "N",
+    "hasLabsLinks": "N",
+    "hasData": "Y",
+    "license": "cc by",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "omim",
+      "refseq"
+     ]
+    },
+    "electronicPublicationDate": "2024-05-07",
+    "firstPublicationDate": "2024-05-07",
+    "fullTextReceivedDate": "2025-02-02",
+    "hasEvaluations": "N"
+   },
+   {
+    "id": "34055682",
+    "source": "MED",
+    "pmid": "34055682",
+    "pmcid": "PMC8155357",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC8155357"
+     ]
+    },
+    "doi": "10.3389/fped.2021.635703",
+    "title": "Detection of Disease-Causing SNVs/Indels and CNVs in Single Test Based on Whole Exome Sequencing: A Retrospective Case Study in Epileptic Encephalopathies.",
+    "authorString": "Sun D, Liu Y, Cai W, Ma J, Ni K, Chen M, Wang C, Liu Y, Zhu Y, Liu Z, Zhu F.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Sun D",
+       "lastName": "Sun"
+      },
+      {
+       "fullName": "Liu Y",
+       "lastName": "Liu"
+      },
+      {
+       "fullName": "Cai W",
+       "lastName": "Cai"
+      }
+     ]
+    },
+    "dataLinksTagsList": {
+     "dataLinkstag": [
+      "supporting_data"
+     ]
+    },
+    "journalInfo": {
+     "volume": "9",
+     "journalIssueId": 3111662,
+     "dateOfPublication": "2021 ",
+     "monthOfPublication": 0,
+     "yearOfPublication": 2021,
+     "journal": {
+      "medlineAbbreviation": "Front Pediatr",
+      "title": "Frontiers in pediatrics",
+      "essn": "2296-2360",
+      "issn": "2296-2360",
+      "isoabbreviation": "Front Pediatr",
+      "nlmid": "101615492"
+     },
+     "printPublicationDate": "2021-01-01"
+    },
+    "pubYear": "2021",
+    "pageInfo": "635703",
+    "publicationStatus": "epublish",
+    "language": "eng",
+    "pubModel": "Electronic-eCollection",
+    "pubTypeList": {
+     "pubType": [
+      "research-article",
+      "Journal Article"
+     ]
+    },
+    "keywordList": {
+     "keyword": [
+      "Genetics",
+      "Variant",
+      "Copy Number Variation",
+      "Whole Exome Sequencing",
+      "Epileptic Encephalopathies"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Unpaywall",
+       "url": "https://www.frontiersin.org/articles/10.3389/fped.2021.635703/pdf"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Unpaywall",
+       "url": "https://www.frontiersin.org/articles/10.3389/fped.2021.635703/pdf"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Unpaywall",
+       "url": "https://www.frontiersin.org/articles/10.3389/fped.2021.635703/pdf"
+      },
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.3389/fped.2021.635703"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC8155357"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC8155357?pdf=render"
+      }
+     ]
+    },
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 18,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasData": "Y",
+    "license": "cc by",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "refseq"
+     ]
+    },
+    "electronicPublicationDate": "2021-05-13",
+    "firstPublicationDate": "2021-05-13",
+    "fullTextReceivedDate": "2025-02-02",
+    "hasEvaluations": "N"
+   },
+   {
+    "id": "27397505",
+    "source": "MED",
+    "pmid": "27397505",
+    "pmcid": "PMC4967469",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC4967469"
+     ]
+    },
+    "doi": "10.1016/j.cell.2016.06.017",
+    "title": "A Landscape of Pharmacogenomic Interactions in Cancer.",
+    "authorString": "Iorio F, Knijnenburg TA, Vis DJ, Bignell GR, Menden MP, Schubert M, Aben N, Gonçalves E, Barthorpe S, Lightfoot H, Cokelaer T, Greninger P, van Dyk E, Chang H, de Silva H, Heyn H, Deng X, Egan RK, Liu Q, Mironenko T, Mitropoulos X, Richardson L, Wang J, Zhang T, Moran S, Sayols S, Soleimani M, Tamborero D, Lopez-Bigas N, Ross-Macdonald P, Esteller M, Gray NS, Haber DA, Stratton MR, Benes CH, Wessels LFA, Saez-Rodriguez J, McDermott U, Garnett MJ.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Iorio F",
+       "lastName": "Iorio"
+      },
+      {
+       "fullName": "Knijnenburg TA",
+       "lastName": "Knijnenburg"
+      },
+      {
+       "fullName": "Vis DJ",
+       "lastName": "Vis"
+      }
+     ]
+    },
+    "dataLinksTagsList": {
+     "dataLinkstag": [
+      "full_text",
+      "recommended_reviews",
+      "related_data"
+     ]
+    },
+    "journalInfo": {
+     "issue": "3",
+     "volume": "166",
+     "journalIssueId": 2434623,
+     "dateOfPublication": "2016 Jul",
+     "monthOfPublication": 7,
+     "yearOfPublication": 2016,
+     "journal": {
+      "medlineAbbreviation": "Cell",
+      "title": "Cell",
+      "essn": "1097-4172",
+      "issn": "0092-8674",
+      "isoabbreviation": "Cell",
+      "nlmid": "0413066"
+     },
+     "printPublicationDate": "2016-07-01"
+    },
+    "pubYear": "2016",
+    "pageInfo": "740-754",
+    "publicationStatus": "ppublish",
+    "language": "eng",
+    "pubModel": "Print-Electronic",
+    "pubTypeList": {
+     "pubType": [
+      "Research Support, Non-U.S. Gov't",
+      "research-article",
+      "Journal Article",
+      "Research Support, N.I.H., Extramural"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Unpaywall",
+       "url": "http://www.cell.com/article/S0092867416307462/pdf"
+      },
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.1016/j.cell.2016.06.017"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC4967469"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC4967469?pdf=render"
+      }
+     ]
+    },
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 1677,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "Y",
+    "dbCrossReferenceList": {
+     "dbName": [
+      "EMBL"
+     ]
+    },
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasData": "Y",
+    "license": "cc by",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "N",
+    "dateOfCompletion": "2016-12-13",
+    "electronicPublicationDate": "2016-07-07",
+    "firstPublicationDate": "2016-07-07",
+    "fullTextReceivedDate": "2020-07-10",
+    "hasEvaluations": "N"
+   }
+  ]
+ }
+}

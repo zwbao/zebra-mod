@@ -1,0 +1,1281 @@
+{
+ "schema": "zebra.china_rare/1",
+ "title": "国家罕见病目录 (China national rare disease lists)",
+ "provenance": {
+  "retrieved_at": "2026-10-05T15:01:53Z",
+  "counts": {
+   "1": 121,
+   "2": 86,
+   "total": 207
+  },
+  "lists": {
+   "1": {
+    "name_zh": "第一批罕见病目录",
+    "document": "关于公布第一批罕见病目录的通知 国卫医发〔2018〕10号",
+    "date": "2018-05-11",
+    "issuers": "国家卫生健康委员会 科学技术部 工业和信息化部 国家药品监督管理局 国家中医药管理局",
+    "source_url": "https://www.gov.cn/zhengce/zhengceku/2018-12/31/content_5435167.htm",
+    "source_sha256": "0657e5c6ac1ff1878ee68a9a7a7c25bc8301a5d9a1fe61619b60761bd35661e2",
+    "cross_checked_against": "https://www.gov.cn/gongbao/content/2018/content_5338244.htm",
+    "cross_check": "same 121 numbered entries and Chinese names (whitespace/bracket style and one 症 suffix differ); the State Council Gazette copy has English typos (e.g. \"21-Hydroxyulase\", \"Ldrenoleuko Dystrophy\") that the policy-library copy used here does not",
+    "origin": "NHC (www.nhc.gov.cn/yzygj/c100068/201806/bd1611850ff14bc8888c149567fe0a55.shtml); nhc.gov.cn serves a JavaScript challenge to scripts, so the gov.cn reproduction (来源：卫生健康委网站) was used"
+   },
+   "2": {
+    "name_zh": "第二批罕见病目录",
+    "document": "关于公布第二批罕见病目录的通知 国卫医政发〔2023〕26号",
+    "date": "2023-09-18",
+    "issuers": "国家卫生健康委 科技部 工业和信息化部 国家药监局 国家中医药局 中央军委后勤保障部",
+    "source_url": "https://www.gov.cn/zhengce/zhengceku/202309/content_6905273.htm",
+    "attachment_url": "https://www.gov.cn/zhengce/zhengceku/202309/P020260429440050482485.doc",
+    "source_sha256": "039aa85f45a89fc6f938ad3fa246bd6b9518ef1fd402a9bfecb2ccb8a68fa584",
+    "cross_checked_against": "https://www.miit.gov.cn/jgsj/xfpgys/wjfb/art/2023/art_f25169aef87b47afa03862549f2125ed.html (attachment d1b717ee57c14f7bb674822c0383a459.doc)",
+    "cross_check": "identical 86 entries except no. 64, where the MIIT copy gives the English name \"Primary ciliary dyskinesia\" against the Chinese 原发性生长激素缺乏症; the gov.cn attachment (used here) reads \"Primary growth hormone deficiency\""
+   }
+  },
+  "method": "list 1 parsed from the HTML table of the gov.cn policy-library page; list 2 from the gov.cn .doc attachment converted to text (macOS textutil); names stored exactly as published"
+ },
+ "diseases": [
+  {
+   "list": 1,
+   "no": 1,
+   "name_zh": "21-羟化酶缺乏症",
+   "name_en": "21-Hydroxylase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 2,
+   "name_zh": "白化病",
+   "name_en": "Albinism"
+  },
+  {
+   "list": 1,
+   "no": 3,
+   "name_zh": "Alport 综合征",
+   "name_en": "Alport Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 4,
+   "name_zh": "肌萎缩侧索硬化",
+   "name_en": "Amyotrophic Lateral Sclerosis"
+  },
+  {
+   "list": 1,
+   "no": 5,
+   "name_zh": "Angelman 氏症候群（天使综合征）",
+   "name_en": "Angelman Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 6,
+   "name_zh": "精氨酸酶缺乏症",
+   "name_en": "Arginase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 7,
+   "name_zh": "热纳综合征（窒息性胸腔失养症）",
+   "name_en": "Asphyxiating Thoracic Dystrophy (Jeune Syndrome)"
+  },
+  {
+   "list": 1,
+   "no": 8,
+   "name_zh": "非典型溶血性尿毒症",
+   "name_en": "Atypical Hemolytic Uremic Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 9,
+   "name_zh": "自身免疫性脑炎",
+   "name_en": "Autoimmune Encephalitis"
+  },
+  {
+   "list": 1,
+   "no": 10,
+   "name_zh": "自身免疫性垂体炎",
+   "name_en": "Autoimmune Hypophysitis"
+  },
+  {
+   "list": 1,
+   "no": 11,
+   "name_zh": "自身免疫性胰岛素受体病",
+   "name_en": "Autoimmune Insulin Receptopathy (Type B insulin resistance)"
+  },
+  {
+   "list": 1,
+   "no": 12,
+   "name_zh": "β-酮硫解酶缺乏症",
+   "name_en": "Beta-ketothiolase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 13,
+   "name_zh": "生物素酶缺乏症",
+   "name_en": "Biotinidase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 14,
+   "name_zh": "心脏离子通道病",
+   "name_en": "Cardic Ion Channelopathies"
+  },
+  {
+   "list": 1,
+   "no": 15,
+   "name_zh": "原发性肉碱缺乏症",
+   "name_en": "Carnitine Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 16,
+   "name_zh": "Castleman病",
+   "name_en": "Castleman Disease"
+  },
+  {
+   "list": 1,
+   "no": 17,
+   "name_zh": "腓骨肌萎缩症",
+   "name_en": "Charcot-Marie-Tooth Disease"
+  },
+  {
+   "list": 1,
+   "no": 18,
+   "name_zh": "瓜氨酸血症",
+   "name_en": "Citrullinemia"
+  },
+  {
+   "list": 1,
+   "no": 19,
+   "name_zh": "先天性肾上腺发育不良",
+   "name_en": "Congenital Adrenal Hypoplasia"
+  },
+  {
+   "list": 1,
+   "no": 20,
+   "name_zh": "先天性高胰岛素性低血糖血症",
+   "name_en": "Congenital Hyperinsulinemic Hypoglycemia"
+  },
+  {
+   "list": 1,
+   "no": 21,
+   "name_zh": "先天性肌无力综合征",
+   "name_en": "Congenital Myasthenic Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 22,
+   "name_zh": "先天性肌强直（非营养不良性肌强直综合征）",
+   "name_en": "Congenital Myotonia Syndrome (Non-Dystrophic Myotonia, NDM)"
+  },
+  {
+   "list": 1,
+   "no": 23,
+   "name_zh": "先天性脊柱侧弯",
+   "name_en": "Congenital Scoliosis"
+  },
+  {
+   "list": 1,
+   "no": 24,
+   "name_zh": "冠状动脉扩张病",
+   "name_en": "Coronary Artery Ectasia"
+  },
+  {
+   "list": 1,
+   "no": 25,
+   "name_zh": "先天性纯红细胞再生障碍性贫血",
+   "name_en": "Diamond-Blackfan Anemia"
+  },
+  {
+   "list": 1,
+   "no": 26,
+   "name_zh": "Erdheim-Chester病",
+   "name_en": "Erdheim-Chester Disease"
+  },
+  {
+   "list": 1,
+   "no": 27,
+   "name_zh": "法布雷病",
+   "name_en": "Fabry Disease"
+  },
+  {
+   "list": 1,
+   "no": 28,
+   "name_zh": "家族性地中海热",
+   "name_en": "Familial Mediterranean Fever"
+  },
+  {
+   "list": 1,
+   "no": 29,
+   "name_zh": "范可尼贫血",
+   "name_en": "Fanconi Anemia"
+  },
+  {
+   "list": 1,
+   "no": 30,
+   "name_zh": "半乳糖血症",
+   "name_en": "Galactosemia"
+  },
+  {
+   "list": 1,
+   "no": 31,
+   "name_zh": "戈谢病",
+   "name_en": "Gaucher’s Disease"
+  },
+  {
+   "list": 1,
+   "no": 32,
+   "name_zh": "全身型重症肌无力",
+   "name_en": "Generalized Myasthenia Gravis"
+  },
+  {
+   "list": 1,
+   "no": 33,
+   "name_zh": "Gitelman 综合征",
+   "name_en": "Gitelman Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 34,
+   "name_zh": "戊二酸血症I型",
+   "name_en": "Glutaric Acidemia Type I"
+  },
+  {
+   "list": 1,
+   "no": 35,
+   "name_zh": "糖原累积病（I型、Ⅱ型）",
+   "name_en": "Glycogen Storage Disease (Type I、II）"
+  },
+  {
+   "list": 1,
+   "no": 36,
+   "name_zh": "血友病",
+   "name_en": "Hemophilia"
+  },
+  {
+   "list": 1,
+   "no": 37,
+   "name_zh": "肝豆状核变性",
+   "name_en": "Hepatolenticular Degeneration(Wilson Disease)"
+  },
+  {
+   "list": 1,
+   "no": 38,
+   "name_zh": "遗传性血管性水肿",
+   "name_en": "Hereditary Angioedema (HAE)"
+  },
+  {
+   "list": 1,
+   "no": 39,
+   "name_zh": "遗传性大疱性表皮松解症",
+   "name_en": "Hereditary Epidermolysis Bullosa"
+  },
+  {
+   "list": 1,
+   "no": 40,
+   "name_zh": "遗传性果糖不耐受症",
+   "name_en": "Hereditary Fructose Intolerance"
+  },
+  {
+   "list": 1,
+   "no": 41,
+   "name_zh": "遗传性低镁血症",
+   "name_en": "Hereditary Hypomagnesemia"
+  },
+  {
+   "list": 1,
+   "no": 42,
+   "name_zh": "遗传性多发脑梗死性痴呆",
+   "name_en": "Hereditary Multi-infarct Dementia (Cerebral Autosomal Dominant Arteriopathy with Subcortical Infarcts and Leukoencephalopathy, CADASIL)"
+  },
+  {
+   "list": 1,
+   "no": 43,
+   "name_zh": "遗传性痉挛性截瘫",
+   "name_en": "Hereditary Spastic Paraplegia"
+  },
+  {
+   "list": 1,
+   "no": 44,
+   "name_zh": "全羧化酶合成酶缺乏症",
+   "name_en": "Holocarboxylase Synthetase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 45,
+   "name_zh": "同型半胱氨酸血症",
+   "name_en": "Homocysteinemia"
+  },
+  {
+   "list": 1,
+   "no": 46,
+   "name_zh": "纯合子家族性高胆固醇血症",
+   "name_en": "Homozygous Hypercholesterolemia"
+  },
+  {
+   "list": 1,
+   "no": 47,
+   "name_zh": "亨廷顿舞蹈病",
+   "name_en": "Huntington Disease"
+  },
+  {
+   "list": 1,
+   "no": 48,
+   "name_zh": "HHH综合征",
+   "name_en": "Hyperornithinaemia-Hyperammonaemia-Homocitrullinuria Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 49,
+   "name_zh": "高苯丙氨酸血症",
+   "name_en": "Hyperphenylalaninemia"
+  },
+  {
+   "list": 1,
+   "no": 50,
+   "name_zh": "低碱性磷酸酶血症",
+   "name_en": "Hypophosphatasia"
+  },
+  {
+   "list": 1,
+   "no": 51,
+   "name_zh": "低磷性佝偻病",
+   "name_en": "Hypophosphatemic Rickets"
+  },
+  {
+   "list": 1,
+   "no": 52,
+   "name_zh": "特发性心肌病",
+   "name_en": "Idiopathic Cardiomyopathy"
+  },
+  {
+   "list": 1,
+   "no": 53,
+   "name_zh": "特发性低促性腺激素性性腺功能减退症",
+   "name_en": "Idiopathic Hypogonadotropic Hypogonadism"
+  },
+  {
+   "list": 1,
+   "no": 54,
+   "name_zh": "特发性肺动脉高压",
+   "name_en": "Idiopathic Pulmonary Arterial Hypertension"
+  },
+  {
+   "list": 1,
+   "no": 55,
+   "name_zh": "特发性肺纤维化",
+   "name_en": "Idiopathic Pulmonary Fibrosis"
+  },
+  {
+   "list": 1,
+   "no": 56,
+   "name_zh": "IgG4相关性疾病",
+   "name_en": "IgG4 related Disease"
+  },
+  {
+   "list": 1,
+   "no": 57,
+   "name_zh": "先天性胆汁酸合成障碍",
+   "name_en": "Inborn Errors of Bile Acid Synthesis"
+  },
+  {
+   "list": 1,
+   "no": 58,
+   "name_zh": "异戊酸血症",
+   "name_en": "Isovaleric Acidemia"
+  },
+  {
+   "list": 1,
+   "no": 59,
+   "name_zh": "卡尔曼综合征",
+   "name_en": "Kallmann Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 60,
+   "name_zh": "朗格汉斯组织细胞增生症",
+   "name_en": "Langerhans Cell Histiocytosis"
+  },
+  {
+   "list": 1,
+   "no": 61,
+   "name_zh": "莱伦氏综合征",
+   "name_en": "Laron Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 62,
+   "name_zh": "Leber遗传性视神经病变",
+   "name_en": "Leber Hereditary Optic Neuropathy"
+  },
+  {
+   "list": 1,
+   "no": 63,
+   "name_zh": "长链3-羟酰基辅酶A脱氢酶缺乏症",
+   "name_en": "Long Chain 3-hydroxyacyl-CoA Dehydrogenase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 64,
+   "name_zh": "淋巴管肌瘤病",
+   "name_en": "Lymphangioleiomyomatosis (LAM)"
+  },
+  {
+   "list": 1,
+   "no": 65,
+   "name_zh": "赖氨酸尿蛋白不耐受症",
+   "name_en": "Lysinuric Protein Intolerance"
+  },
+  {
+   "list": 1,
+   "no": 66,
+   "name_zh": "溶酶体酸性脂肪酶缺乏症",
+   "name_en": "Lysosomal Acid Lipase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 67,
+   "name_zh": "枫糖尿症",
+   "name_en": "Maple Syrup Urine Disease"
+  },
+  {
+   "list": 1,
+   "no": 68,
+   "name_zh": "马凡综合征",
+   "name_en": "Marfan Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 69,
+   "name_zh": "McCune-Albrigh综合征",
+   "name_en": "McCune-Albright Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 70,
+   "name_zh": "中链酰基辅酶A脱氢酶缺乏症",
+   "name_en": "Medium Chain Acyl-CoA Dehydrogenase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 71,
+   "name_zh": "甲基丙二酸血症",
+   "name_en": "Methylmalonic Academia"
+  },
+  {
+   "list": 1,
+   "no": 72,
+   "name_zh": "线粒体脑肌病",
+   "name_en": "Mitochodrial Encephalomyopathy"
+  },
+  {
+   "list": 1,
+   "no": 73,
+   "name_zh": "黏多糖贮积症",
+   "name_en": "Mucopolysaccharidosis"
+  },
+  {
+   "list": 1,
+   "no": 74,
+   "name_zh": "多灶性运动神经病",
+   "name_en": "Multifocal Motor Neuropathy"
+  },
+  {
+   "list": 1,
+   "no": 75,
+   "name_zh": "多种酰基辅酶A脱氢酶缺乏症",
+   "name_en": "Multiple Acyl-CoA Dehydrogenase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 76,
+   "name_zh": "多发性硬化",
+   "name_en": "Multiple Sclerosis"
+  },
+  {
+   "list": 1,
+   "no": 77,
+   "name_zh": "多系统萎缩",
+   "name_en": "Multiple System Atrophy"
+  },
+  {
+   "list": 1,
+   "no": 78,
+   "name_zh": "肌强直性营养不良",
+   "name_en": "Myotonic Dystrophy"
+  },
+  {
+   "list": 1,
+   "no": 79,
+   "name_zh": "N-乙酰谷氨酸合成酶缺乏症",
+   "name_en": "N-acetylglutamate Synthase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 80,
+   "name_zh": "新生儿糖尿病",
+   "name_en": "Neonatal Diabetes Mellitus"
+  },
+  {
+   "list": 1,
+   "no": 81,
+   "name_zh": "视神经脊髓炎",
+   "name_en": "Neuromyelitis Optica"
+  },
+  {
+   "list": 1,
+   "no": 82,
+   "name_zh": "尼曼匹克病",
+   "name_en": "Niemann-Pick Disease"
+  },
+  {
+   "list": 1,
+   "no": 83,
+   "name_zh": "非综合征性耳聋",
+   "name_en": "Non-Syndromic Deafness"
+  },
+  {
+   "list": 1,
+   "no": 84,
+   "name_zh": "Noonan综合征",
+   "name_en": "Noonan Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 85,
+   "name_zh": "鸟氨酸氨甲酰基转移酶缺乏症",
+   "name_en": "Ornithine Transcarbamylase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 86,
+   "name_zh": "成骨不全症（脆骨病）",
+   "name_en": "Osteogenesis Imperfecta (Brittle Bone Disease)"
+  },
+  {
+   "list": 1,
+   "no": 87,
+   "name_zh": "帕金森病（青年型、早发型）",
+   "name_en": "Parkinson Disease (Young-onset , Early-onset)"
+  },
+  {
+   "list": 1,
+   "no": 88,
+   "name_zh": "阵发性睡眠性血红蛋白尿",
+   "name_en": "Paroxysmal Nocturnal Hemoglobinuria"
+  },
+  {
+   "list": 1,
+   "no": 89,
+   "name_zh": "黑斑息肉综合征",
+   "name_en": "Peutz-Jeghers Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 90,
+   "name_zh": "苯丙酮尿症",
+   "name_en": "Phenylketonuria"
+  },
+  {
+   "list": 1,
+   "no": 91,
+   "name_zh": "POEMS综合征",
+   "name_en": "POEMS Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 92,
+   "name_zh": "卟啉病",
+   "name_en": "Porphyria"
+  },
+  {
+   "list": 1,
+   "no": 93,
+   "name_zh": "Prader-Willi综合征",
+   "name_en": "Prader-Willi Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 94,
+   "name_zh": "原发性联合免疫缺陷",
+   "name_en": "Primary Combined Immune Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 95,
+   "name_zh": "原发性遗传性肌张力不全",
+   "name_en": "Primary Hereditary Dystonia"
+  },
+  {
+   "list": 1,
+   "no": 96,
+   "name_zh": "原发性轻链型淀粉样变",
+   "name_en": "Primary Light Chain Amyloidosis"
+  },
+  {
+   "list": 1,
+   "no": 97,
+   "name_zh": "进行性家族性肝内胆汁淤积症",
+   "name_en": "Progressive Familial Intrahepatic Cholestasis"
+  },
+  {
+   "list": 1,
+   "no": 98,
+   "name_zh": "进行性肌营养不良",
+   "name_en": "Progressive Muscular Dystrophy"
+  },
+  {
+   "list": 1,
+   "no": 99,
+   "name_zh": "丙酸血症",
+   "name_en": "Propionic Acidemia"
+  },
+  {
+   "list": 1,
+   "no": 100,
+   "name_zh": "肺泡蛋白沉积症",
+   "name_en": "Pulmonary Alveolar Proteinosis"
+  },
+  {
+   "list": 1,
+   "no": 101,
+   "name_zh": "肺囊性纤维化",
+   "name_en": "Pulmonary Cystic Fibrosis"
+  },
+  {
+   "list": 1,
+   "no": 102,
+   "name_zh": "视网膜色素变性",
+   "name_en": "Retinitis Pigmentosa"
+  },
+  {
+   "list": 1,
+   "no": 103,
+   "name_zh": "视网膜母细胞瘤",
+   "name_en": "Retinoblastoma"
+  },
+  {
+   "list": 1,
+   "no": 104,
+   "name_zh": "重症先天性粒细胞缺乏症",
+   "name_en": "Severe Congenital Neutropenia"
+  },
+  {
+   "list": 1,
+   "no": 105,
+   "name_zh": "婴儿严重肌阵挛性癫痫(Dravet综合征)",
+   "name_en": "Severe Myoclonic Epilepsy in Infancy (Dravet Syndrome)"
+  },
+  {
+   "list": 1,
+   "no": 106,
+   "name_zh": "镰刀型细胞贫血病",
+   "name_en": "Sickle Cell Disease"
+  },
+  {
+   "list": 1,
+   "no": 107,
+   "name_zh": "Silver-Russell综合征",
+   "name_en": "Silver-Russell Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 108,
+   "name_zh": "谷固醇血症",
+   "name_en": "Sitosterolemia"
+  },
+  {
+   "list": 1,
+   "no": 109,
+   "name_zh": "脊髓延髓肌萎缩症（肯尼迪病）",
+   "name_en": "Spinal and Bulbar Muscular Atrophy (Kennedy Disease)"
+  },
+  {
+   "list": 1,
+   "no": 110,
+   "name_zh": "脊髓性肌萎缩症",
+   "name_en": "Spinal Muscular Atrophy"
+  },
+  {
+   "list": 1,
+   "no": 111,
+   "name_zh": "脊髓小脑性共济失调",
+   "name_en": "Spinocerebellar Ataxia"
+  },
+  {
+   "list": 1,
+   "no": 112,
+   "name_zh": "系统性硬化症",
+   "name_en": "Systemic Sclerosis"
+  },
+  {
+   "list": 1,
+   "no": 113,
+   "name_zh": "四氢生物蝶呤缺乏症",
+   "name_en": "Tetrahydrobiopterin Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 114,
+   "name_zh": "结节性硬化症",
+   "name_en": "Tuberous Sclerosis Complex"
+  },
+  {
+   "list": 1,
+   "no": 115,
+   "name_zh": "原发性酪氨酸血症",
+   "name_en": "Tyrosinemia"
+  },
+  {
+   "list": 1,
+   "no": 116,
+   "name_zh": "极长链酰基辅酶A脱氢酶缺乏症",
+   "name_en": "Very Long Chain Acyl-CoA Dehydrogenase Deficiency"
+  },
+  {
+   "list": 1,
+   "no": 117,
+   "name_zh": "威廉姆斯综合征",
+   "name_en": "Williams Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 118,
+   "name_zh": "湿疹血小板减少伴免疫缺陷综合征",
+   "name_en": "Wiskott-Aldrich Syndrome"
+  },
+  {
+   "list": 1,
+   "no": 119,
+   "name_zh": "X-连锁无丙种球蛋白血症",
+   "name_en": "X-linked Agammaglobulinemia"
+  },
+  {
+   "list": 1,
+   "no": 120,
+   "name_zh": "X-连锁肾上腺脑白质营养不良",
+   "name_en": "X-linked Adrenoleukodystrophy"
+  },
+  {
+   "list": 1,
+   "no": 121,
+   "name_zh": "X-连锁淋巴增生症",
+   "name_en": "X-linked Lymphoproliferative Disease"
+  },
+  {
+   "list": 2,
+   "no": 1,
+   "name_zh": "软骨发育不全",
+   "name_en": "Achondroplasia"
+  },
+  {
+   "list": 2,
+   "no": 2,
+   "name_zh": "获得性血友病",
+   "name_en": "Acquired hemophilia"
+  },
+  {
+   "list": 2,
+   "no": 3,
+   "name_zh": "肢端肥大症",
+   "name_en": "Acromegaly"
+  },
+  {
+   "list": 2,
+   "no": 4,
+   "name_zh": "成人斯蒂尔病",
+   "name_en": "Adult-onset Still disease"
+  },
+  {
+   "list": 2,
+   "no": 5,
+   "name_zh": "Alagille综合征",
+   "name_en": "Alagille syndrome"
+  },
+  {
+   "list": 2,
+   "no": 6,
+   "name_zh": "α-１-抗胰蛋白酶缺乏症",
+   "name_en": "Alpha-1-antitrypsin deficiency"
+  },
+  {
+   "list": 2,
+   "no": 7,
+   "name_zh": "ANCA相关性血管炎",
+   "name_en": "ANCA-associated vasculitis"
+  },
+  {
+   "list": 2,
+   "no": 8,
+   "name_zh": "Bardet-Biedl 综合征",
+   "name_en": "Bardet-Biedl syndrome"
+  },
+  {
+   "list": 2,
+   "no": 9,
+   "name_zh": "白塞病/贝赫切特综合征",
+   "name_en": "Behçet's disease"
+  },
+  {
+   "list": 2,
+   "no": 10,
+   "name_zh": "蓝色橡皮疱样痣",
+   "name_en": "Blue rubber bleb nevus"
+  },
+  {
+   "list": 2,
+   "no": 11,
+   "name_zh": "CDKL5缺乏症",
+   "name_en": "CDKL5-deficiency disorder"
+  },
+  {
+   "list": 2,
+   "no": 12,
+   "name_zh": "无脉络膜症",
+   "name_en": "Choroideremia"
+  },
+  {
+   "list": 2,
+   "no": 13,
+   "name_zh": "慢性炎性脱髓鞘性多发性神经根神经病",
+   "name_en": "Chronic inflammatory demyelinating polyneuropathy"
+  },
+  {
+   "list": 2,
+   "no": 14,
+   "name_zh": "肾透明细胞肉瘤",
+   "name_en": "Clear cell sarcoma of kidney"
+  },
+  {
+   "list": 2,
+   "no": 15,
+   "name_zh": "冷凝集素病",
+   "name_en": "Cold agglutinin disease"
+  },
+  {
+   "list": 2,
+   "no": 16,
+   "name_zh": "先天性胆道闭锁",
+   "name_en": "Congenital biliary atresia"
+  },
+  {
+   "list": 2,
+   "no": 17,
+   "name_zh": "先天性凝血因子VII缺乏症",
+   "name_en": "Congenital factor VII deficiency"
+  },
+  {
+   "list": 2,
+   "no": 18,
+   "name_zh": "冷吡啉（冷炎素）相关周期性综合征/NLRP3相关自身炎症性疾病",
+   "name_en": "Cryopyrin associated periodic syndrome/ NLRP3-associated systemic autoinflammatory disease"
+  },
+  {
+   "list": 2,
+   "no": 19,
+   "name_zh": "皮肤神经内分泌癌（梅克尔细胞癌）",
+   "name_en": "Cutaneous neuroendocrine carcinoma(Merkel cell carcinoma)"
+  },
+  {
+   "list": 2,
+   "no": 20,
+   "name_zh": "皮肤T细胞淋巴瘤",
+   "name_en": "Cutaneous T-cell lymphomas"
+  },
+  {
+   "list": 2,
+   "no": 21,
+   "name_zh": "胱氨酸贮积症",
+   "name_en": "Cystinosis"
+  },
+  {
+   "list": 2,
+   "no": 22,
+   "name_zh": "隆突性皮肤纤维肉瘤",
+   "name_en": "Dermatofibrosarcoma protuberans"
+  },
+  {
+   "list": 2,
+   "no": 23,
+   "name_zh": "嗜酸性粒细胞性胃肠炎",
+   "name_en": "Eosinophilic gastroenteritis"
+  },
+  {
+   "list": 2,
+   "no": 24,
+   "name_zh": "上皮样肉瘤",
+   "name_en": "Epithelioid sarcoma"
+  },
+  {
+   "list": 2,
+   "no": 25,
+   "name_zh": "面肩肱型肌营养不良症",
+   "name_en": "Facioscapulohumeral muscular dystrophy"
+  },
+  {
+   "list": 2,
+   "no": 26,
+   "name_zh": "家族性噬血细胞淋巴组织细胞增生症",
+   "name_en": "Familial hemophagocytic lymphohistiocytosis"
+  },
+  {
+   "list": 2,
+   "no": 27,
+   "name_zh": "家族性腺瘤性息肉病",
+   "name_en": "Familial adenomatous polyposis"
+  },
+  {
+   "list": 2,
+   "no": 28,
+   "name_zh": "进行性骨化性纤维发育不良",
+   "name_en": "Fibrodysplasia ossificans progressiva"
+  },
+  {
+   "list": 2,
+   "no": 29,
+   "name_zh": "脆性X综合征",
+   "name_en": "Fragile X syndrome"
+  },
+  {
+   "list": 2,
+   "no": 30,
+   "name_zh": "神经节苷脂贮积症",
+   "name_en": "Gangliosidosis"
+  },
+  {
+   "list": 2,
+   "no": 31,
+   "name_zh": "胃肠胰神经内分泌肿瘤",
+   "name_en": "Gastroenteropancreatic neuroendocrine neoplasm"
+  },
+  {
+   "list": 2,
+   "no": 32,
+   "name_zh": "胃肠间质瘤",
+   "name_en": "Gastrointestinal stromal tumor"
+  },
+  {
+   "list": 2,
+   "no": 33,
+   "name_zh": "泛发性脓疱型银屑病",
+   "name_en": "Generalized pustular psoriasis"
+  },
+  {
+   "list": 2,
+   "no": 34,
+   "name_zh": "遗传性甲状旁腺功能减退症",
+   "name_en": "Genetic hypoparathyroidism"
+  },
+  {
+   "list": 2,
+   "no": 35,
+   "name_zh": "巨细胞动脉炎",
+   "name_en": "Giant cell arteritis"
+  },
+  {
+   "list": 2,
+   "no": 36,
+   "name_zh": "骨巨细胞瘤",
+   "name_en": "Giant cell tumor of bone"
+  },
+  {
+   "list": 2,
+   "no": 37,
+   "name_zh": "血小板无力症",
+   "name_en": "Glanzmann thrombasthenia"
+  },
+  {
+   "list": 2,
+   "no": 38,
+   "name_zh": "胶质母细胞瘤",
+   "name_en": "Glioblastoma"
+  },
+  {
+   "list": 2,
+   "no": 39,
+   "name_zh": "高林综合征",
+   "name_en": "Gorlin syndrome"
+  },
+  {
+   "list": 2,
+   "no": 40,
+   "name_zh": "化脓性汗腺炎",
+   "name_en": "Hidradenitis suppurativa"
+  },
+  {
+   "list": 2,
+   "no": 41,
+   "name_zh": "早老症",
+   "name_en": "Hutchinson-Gilford progeria syndrome"
+  },
+  {
+   "list": 2,
+   "no": 42,
+   "name_zh": "炎性肌纤维母细胞瘤",
+   "name_en": "Inflammatory myofibroblastic tumor"
+  },
+  {
+   "list": 2,
+   "no": 43,
+   "name_zh": "Leber先天性黑矇",
+   "name_en": "Leber congenital amaurosis"
+  },
+  {
+   "list": 2,
+   "no": 44,
+   "name_zh": "Lennox-Gastaut 综合征",
+   "name_en": "Lennox-Gastaut syndrome"
+  },
+  {
+   "list": 2,
+   "no": 45,
+   "name_zh": "角膜缘干细胞缺乏症",
+   "name_en": "Limbal stem cell deficiency"
+  },
+  {
+   "list": 2,
+   "no": 46,
+   "name_zh": "恶性高热",
+   "name_en": "Malignant hyperthermia"
+  },
+  {
+   "list": 2,
+   "no": 47,
+   "name_zh": "恶性胸膜间皮瘤",
+   "name_en": "Malignant pleural mesothelioma"
+  },
+  {
+   "list": 2,
+   "no": 48,
+   "name_zh": "黑色素瘤",
+   "name_en": "Melanoma"
+  },
+  {
+   "list": 2,
+   "no": 49,
+   "name_zh": "异染性脑白质营养不良",
+   "name_en": "Metachromatic leukodystrophy"
+  },
+  {
+   "list": 2,
+   "no": 50,
+   "name_zh": "单基因非综合征性肥胖",
+   "name_en": "Monogenic non-syndromic obesity"
+  },
+  {
+   "list": 2,
+   "no": 51,
+   "name_zh": "多发性内分泌腺瘤病",
+   "name_en": "Multiple endocrine neoplasia"
+  },
+  {
+   "list": 2,
+   "no": 52,
+   "name_zh": "发作性睡病",
+   "name_en": "Narcolepsy"
+  },
+  {
+   "list": 2,
+   "no": 53,
+   "name_zh": "神经母细胞瘤",
+   "name_en": "Neuroblastoma"
+  },
+  {
+   "list": 2,
+   "no": 54,
+   "name_zh": "神经纤维瘤病",
+   "name_en": "Neurofibromatosis"
+  },
+  {
+   "list": 2,
+   "no": 55,
+   "name_zh": "神经元蜡样脂褐质沉积症",
+   "name_en": "Neuronal ceroid lipofuscinosis"
+  },
+  {
+   "list": 2,
+   "no": 56,
+   "name_zh": "神经营养性角膜炎",
+   "name_en": "Neurotrophic keratitis"
+  },
+  {
+   "list": 2,
+   "no": 57,
+   "name_zh": "骨肉瘤",
+   "name_en": "Osteosarcoma"
+  },
+  {
+   "list": 2,
+   "no": 58,
+   "name_zh": "天疱疮",
+   "name_en": "Pemphigus"
+  },
+  {
+   "list": 2,
+   "no": 59,
+   "name_zh": "新生儿持续肺动脉高压",
+   "name_en": "Persistent pulmonary hypertension of the newborn"
+  },
+  {
+   "list": 2,
+   "no": 60,
+   "name_zh": "嗜铬细胞瘤",
+   "name_en": "Pheochromocytoma"
+  },
+  {
+   "list": 2,
+   "no": 61,
+   "name_zh": "PIK3CA相关过度生长综合征",
+   "name_en": "PIK3CA related overgrowth syndrome"
+  },
+  {
+   "list": 2,
+   "no": 62,
+   "name_zh": "真性红细胞增多症",
+   "name_en": "Polycythaemia vera"
+  },
+  {
+   "list": 2,
+   "no": 63,
+   "name_zh": "原发性胆汁性胆管炎",
+   "name_en": "Primary biliary cholangitis"
+  },
+  {
+   "list": 2,
+   "no": 64,
+   "name_zh": "原发性生长激素缺乏症",
+   "name_en": "Primary growth hormone deficiency"
+  },
+  {
+   "list": 2,
+   "no": 65,
+   "name_zh": "原发性胰岛素样生长因子-1缺乏症",
+   "name_en": "Primary IGF1 deficiency"
+  },
+  {
+   "list": 2,
+   "no": 66,
+   "name_zh": "原发性免疫缺陷",
+   "name_en": "Primary immunodeficiency"
+  },
+  {
+   "list": 2,
+   "no": 67,
+   "name_zh": "原发性骨髓纤维化",
+   "name_en": "Primary myelofibrosis"
+  },
+  {
+   "list": 2,
+   "no": 68,
+   "name_zh": "原发性硬化性胆管炎",
+   "name_en": "Primary sclerosing cholangitis"
+  },
+  {
+   "list": 2,
+   "no": 69,
+   "name_zh": "进行性纤维化性间质性肺疾病",
+   "name_en": "Progressive fibrosing interstitial lung disease"
+  },
+  {
+   "list": 2,
+   "no": 70,
+   "name_zh": "复发性心包炎",
+   "name_en": "Recurrent pericarditis"
+  },
+  {
+   "list": 2,
+   "no": 71,
+   "name_zh": "早产儿视网膜病",
+   "name_en": "Retinopathy of prematurity"
+  },
+  {
+   "list": 2,
+   "no": 72,
+   "name_zh": "Rett综合征",
+   "name_en": "Rett syndrome"
+  },
+  {
+   "list": 2,
+   "no": 73,
+   "name_zh": "短肠综合征",
+   "name_en": "Short bowel syndrome"
+  },
+  {
+   "list": 2,
+   "no": 74,
+   "name_zh": "全身型幼年特发性关节炎",
+   "name_en": "Systemic juvenile idiopathic arthritis"
+  },
+  {
+   "list": 2,
+   "no": 75,
+   "name_zh": "系统性肥大细胞增多症",
+   "name_en": "Systemic mastocytosis"
+  },
+  {
+   "list": 2,
+   "no": 76,
+   "name_zh": "大动脉炎/多发性大动脉炎",
+   "name_en": "Takayasu arteritis"
+  },
+  {
+   "list": 2,
+   "no": 77,
+   "name_zh": "腱鞘巨细胞瘤/色素沉着绒毛结节性滑膜炎",
+   "name_en": "Tenosynovial giant cell tumor/Pigmented villonodular synovitis"
+  },
+  {
+   "list": 2,
+   "no": 78,
+   "name_zh": "地中海贫血（重型）",
+   "name_en": "Thalassemia major"
+  },
+  {
+   "list": 2,
+   "no": 79,
+   "name_zh": "血栓性血小板减少性紫癜",
+   "name_en": "Thrombotic thrombocytopenic purpura"
+  },
+  {
+   "list": 2,
+   "no": 80,
+   "name_zh": "转甲状腺素蛋白淀粉样变性",
+   "name_en": "Transthyretin amyloidosis"
+  },
+  {
+   "list": 2,
+   "no": 81,
+   "name_zh": "肿瘤坏死因子受体相关周期性综合征",
+   "name_en": "Tumor necrosis factor receptor associated periodic syndrome"
+  },
+  {
+   "list": 2,
+   "no": 82,
+   "name_zh": "肿瘤相关骨软化症",
+   "name_en": "Tumor-induced osteomalacia"
+  },
+  {
+   "list": 2,
+   "no": 83,
+   "name_zh": "Von Hippel-Lindau综合征",
+   "name_en": "Von Hippel-Lindau syndrome"
+  },
+  {
+   "list": 2,
+   "no": 84,
+   "name_zh": "血管性血友病Ⅲ型",
+   "name_en": "Von Willebrand disease type3"
+  },
+  {
+   "list": 2,
+   "no": 85,
+   "name_zh": "华氏巨球蛋白血症/淋巴浆细胞淋巴瘤",
+   "name_en": "Waldenström macroglobulinemia/ Lymphoplasmacytic lymphoma"
+  },
+  {
+   "list": 2,
+   "no": 86,
+   "name_zh": "West综合征/婴儿痉挛综合征",
+   "name_en": "West syndrome/Infantile spasms syndrome"
+  }
+ ]
+}

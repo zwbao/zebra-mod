@@ -1,0 +1,15 @@
+[
+ {
+  "_id": "litvar@#6323#p.R712*",
+  "gene": [
+   "SCN1A"
+  ],
+  "name": "p.R712*",
+  "hgvs": "p.R712*",
+  "pmids_count": 1,
+  "flag_gene_variant": false,
+  "flag_clingen_variant": false,
+  "flag_rsid_variant": false,
+  "match": null
+ }
+]

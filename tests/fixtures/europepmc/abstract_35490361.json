@@ -1,0 +1,146 @@
+{
+ "version": "6.9",
+ "hitCount": 1,
+ "request": {
+  "queryString": "EXT_ID:35490361 AND SRC:MED",
+  "internalQuery": "EXT_ID:35490361 AND SRC:MED",
+  "resultType": "CORE",
+  "cursorMark": "*",
+  "pageSize": 1,
+  "sort": "",
+  "synonym": false
+ },
+ "resultList": {
+  "result": [
+   {
+    "id": "35490361",
+    "source": "MED",
+    "pmid": "35490361",
+    "pmcid": "PMC9543220",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC9543220"
+     ]
+    },
+    "doi": "10.1111/epi.17274",
+    "title": "International consensus on diagnosis and management of Dravet syndrome.",
+    "authorString": "Wirrell EC, Hood V, Knupp KG, Meskis MA, Nabbout R, Scheffer IE, Wilmshurst J, Sullivan J.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Wirrell EC",
+       "lastName": "Wirrell"
+      },
+      {
+       "fullName": "Hood V",
+       "lastName": "Hood"
+      },
+      {
+       "fullName": "Knupp KG",
+       "lastName": "Knupp"
+      }
+     ]
+    },
+    "dataLinksTagsList": {
+     "dataLinkstag": [
+      "altmetrics",
+      "supporting_data"
+     ]
+    },
+    "journalInfo": {
+     "issue": "7",
+     "volume": "63",
+     "journalIssueId": 3390106,
+     "dateOfPublication": "2022 Jul",
+     "monthOfPublication": 7,
+     "yearOfPublication": 2022,
+     "journal": {
+      "medlineAbbreviation": "Epilepsia",
+      "title": "Epilepsia",
+      "essn": "1528-1167",
+      "issn": "0013-9580",
+      "isoabbreviation": "Epilepsia",
+      "nlmid": "2983306R"
+     },
+     "printPublicationDate": "2022-07-01"
+    },
+    "pubYear": "2022",
+    "pageInfo": "1761-1777",
+    "publicationStatus": "ppublish",
+    "language": "eng",
+    "pubModel": "Print-Electronic",
+    "pubTypeList": {
+     "pubType": [
+      "research-article",
+      "Consensus Statement",
+      "Journal Article"
+     ]
+    },
+    "keywordList": {
+     "keyword": [
+      "Cannabidiol",
+      "Fenfluramine",
+      "Scn1a",
+      "Disease-modifying Treatment",
+      "Stiripentol",
+      "Developmental And Epileptic Encephalopathy"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.1111/epi.17274"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC9543220"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC9543220?pdf=render"
+      }
+     ]
+    },
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 201,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasData": "Y",
+    "license": "cc by-nc",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "nct",
+      "doi"
+     ]
+    },
+    "dateOfCompletion": "2022-07-14",
+    "electronicPublicationDate": "2022-05-12",
+    "firstPublicationDate": "2022-05-12",
+    "fullTextReceivedDate": "2025-02-04",
+    "hasEvaluations": "N",
+    "abstractText": "<h4>Objective</h4>This study was undertaken to gain consensus from experienced physicians and caregivers regarding optimal diagnosis and management of Dravet syndrome (DS), in the context of recently approved, DS-specific therapies and emerging disease-modifying treatments.<h4>Methods</h4>A core working group was convened consisting of six physicians with recognized expertise in DS and two representatives of the Dravet Syndrome Foundation. This core group summarized the current literature (focused on clinical presentation, comorbidities, maintenance and rescue therapies, and evolving disease-modifying therapies) and nominated the 31-member expert panel (ensuring international representation), which participated in two rounds of a Delphi process to gain consensus on diagnosis and management of DS.<h4>Results</h4>There was strong consensus that infants 2-15 months old, presenting with either a first prolonged hemiclonic seizure or first convulsive status epilepticus with fever or following vaccination, in the absence of another cause, should undergo genetic testing for DS. Panelists agreed on evolution of specific comorbidities with time, but less agreement was achieved on optimal management. There was also agreement on appropriate first- to third-line maintenance therapies, which included the newly approved agents. Whereas there was agreement for recommendation of disease-modifying therapies, if they are proven safe and efficacious for seizures and/or reduction of comorbidities, there was less consensus for when these should be started, with caregivers being more conservative than physicians.<h4>Significance</h4>This International DS Consensus, informed by both experienced global caregiver and physician voices, provides a strong overview of the impact of DS, therapeutic goals and optimal management strategies incorporating the recent therapeutic advances in DS, and evolving disease-modifying therapies."
+   }
+  ]
+ }
+}

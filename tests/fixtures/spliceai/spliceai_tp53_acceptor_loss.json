@@ -1,0 +1,129 @@
+{
+ "variant": "chr17-7674291-C-T",
+ "hg": "38",
+ "bc": "basic",
+ "distance": 500,
+ "mask": 0,
+ "genomeVersion": "38",
+ "chrom": "17",
+ "pos": 7674291,
+ "ref": "C",
+ "alt": "T",
+ "scores": [
+  {
+   "DS_AG": "0.903",
+   "DS_AL": "0.998",
+   "DS_DG": "0.000",
+   "DS_DL": "0.029",
+   "DP_AG": -2,
+   "DP_AL": -1,
+   "DP_DG": -400,
+   "DP_DL": -110,
+   "DS_AG_REF": "0.000",
+   "DS_AL_REF": "0.998",
+   "DS_DG_REF": "0.004",
+   "DS_DL_REF": "0.998",
+   "DS_AG_ALT": "0.903",
+   "DS_AL_ALT": "0.000",
+   "DS_DG_ALT": "0.004",
+   "DS_DL_ALT": "0.969",
+   "SCORES_FOR_INSERTED_BASES": [],
+   "g_id": "ENSG00000141510.21",
+   "g_name": "TP53",
+   "t_id": "ENST00000269305.9",
+   "t_priority": "MS",
+   "t_refseq_ids": [
+    "NM_000546.6"
+   ],
+   "t_strand": "-",
+   "t_type": "protein_coding",
+   "CDS_START": 7669609,
+   "CDS_END": 7676594,
+   "nNonZeroScores": 11
+  },
+  {
+   "DS_AG": "0.902",
+   "DS_AL": "0.998",
+   "DS_DG": "0.000",
+   "DS_DL": "0.029",
+   "DP_AG": -2,
+   "DP_AL": -1,
+   "DP_DG": -400,
+   "DP_DL": -110,
+   "DS_AG_REF": "0.000",
+   "DS_AL_REF": "0.998",
+   "DS_DG_REF": "0.004",
+   "DS_DL_REF": "0.998",
+   "DS_AG_ALT": "0.902",
+   "DS_AL_ALT": "0.000",
+   "DS_DG_ALT": "0.004",
+   "DS_DL_ALT": "0.969",
+   "SCORES_FOR_INSERTED_BASES": [],
+   "g_id": "ENSG00000141510.21",
+   "g_name": "TP53",
+   "t_id": "ENST00000413465.6",
+   "t_priority": "N",
+   "t_refseq_ids": null,
+   "t_strand": "-",
+   "t_type": "protein_coding",
+   "CDS_START": 7661939,
+   "CDS_END": 7676594,
+   "nNonZeroScores": 11
+  }
+ ],
+ "source": "spliceai:model:cache",
+ "allNonZeroScoresStrand": "-",
+ "allNonZeroScoresTranscriptId": "ENST00000269305.9",
+ "sai10kPredictions": {
+  "aberrations": [
+   {
+    "aberration_type": "exon_skipping",
+    "affected_region": {
+     "region_type": "intron",
+     "region_number": 6,
+     "distance_to_boundary": 1,
+     "nearest_boundary": "acceptor"
+    },
+    "size": 110,
+    "affects_coding": true,
+    "frameshift": true,
+    "description": {
+     "label": "Potential exon 7 skipping",
+     "size_bp": 110,
+     "size_is_coding": true,
+     "consequence": null,
+     "status": "frameshift",
+     "introduces_stop_codon": true,
+     "extends_past_native_stop": false
+    },
+    "delta_type": "acceptor loss"
+   },
+   {
+    "aberration_type": "partial_exon_deletion",
+    "affected_region": {
+     "region_type": "intron",
+     "region_number": 6,
+     "distance_to_boundary": 1,
+     "nearest_boundary": "acceptor"
+    },
+    "size": 1,
+    "affects_coding": true,
+    "frameshift": true,
+    "description": {
+     "label": "Acceptor shift",
+     "size_bp": 1,
+     "size_is_coding": true,
+     "consequence": "partial exon 7 deletion",
+     "status": "frameshift",
+     "introduces_stop_codon": true,
+     "extends_past_native_stop": false
+    },
+    "delta_type": "acceptor loss"
+   }
+  ],
+  "transcript_id": "ENST00000269305.9",
+  "transcript_priority": "MS",
+  "gene_name": "TP53"
+ },
+ "sai10kPredictionsError": null
+}

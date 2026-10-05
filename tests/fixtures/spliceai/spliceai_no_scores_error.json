@@ -1,0 +1,10 @@
+{
+ "variant": "chr1-1000-A-G",
+ "hg": "38",
+ "bc": "basic",
+ "distance": "500",
+ "mask": "0",
+ "source": "spliceai",
+ "error": "The SpliceAI model did not return any scores for chr1-1000-A-G. This may be because the variant does not overlap any exons or introns defined by the GENCODE 'basic' annotation.",
+ "scores": []
+}

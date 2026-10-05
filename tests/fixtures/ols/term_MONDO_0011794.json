@@ -1,0 +1,72 @@
+{
+ "_embedded": {
+  "terms": [
+   {
+    "iri": "http://purl.obolibrary.org/obo/MONDO_0011794",
+    "lang": "en",
+    "description": [
+     "This is a distinct class from MONDO:0100079 epileptic encephalopathy, early infantile 6. See https://github.com/monarch-initiative/mondo/issues/745",
+     "OBSOLETE. Dravet syndrome (DS) is a genetic epilepsy of childhood characterized by a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment."
+    ],
+    "synonyms": [],
+    "annotation": {
+     "curated content resource": [
+      "https://www.malacards.org/card/dravet_syndrome"
+     ],
+     "database_cross_reference": [
+      "Orphanet:33069"
+     ],
+     "has exact match": [
+      "http://www.orpha.net/ORDO/Orphanet_33069"
+     ],
+     "id": [
+      "MONDO:0011794"
+     ],
+     "term replaced by": [
+      "http://purl.obolibrary.org/obo/MONDO_0100135"
+     ],
+     "term tracker item": [
+      "https://github.com/monarch-initiative/mondo/issues/7693"
+     ]
+    },
+    "label": "obsolete Dravet syndrome",
+    "ontology_name": "mondo",
+    "ontology_prefix": "MONDO",
+    "ontology_iri": "http://purl.obolibrary.org/obo/mondo/mondo-international.owl",
+    "is_obsolete": true,
+    "term_replaced_by": "MONDO_0100135",
+    "is_defining_ontology": true,
+    "has_children": false,
+    "is_root": true,
+    "short_form": "MONDO_0011794",
+    "obo_id": "MONDO:0011794",
+    "in_subset": [
+     "ordo_disorder"
+    ],
+    "obo_definition_citation": [
+     {
+      "definition": "OBSOLETE. Dravet syndrome (DS) is a genetic epilepsy of childhood characterized by a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment.",
+      "oboXrefs": [
+       {
+        "database": "Orphanet",
+        "id": "33069",
+        "description": null,
+        "url": "http://www.orpha.net/ORDO/Orphanet_33069"
+       }
+      ]
+     }
+    ],
+    "obo_xref": [
+     {
+      "database": "Orphanet",
+      "id": "33069",
+      "description": "OMIM:607208",
+      "url": "http://www.orpha.net/ORDO/Orphanet_33069"
+     }
+    ],
+    "obo_synonym": null,
+    "is_preferred_root": false
+   }
+  ]
+ }
+}

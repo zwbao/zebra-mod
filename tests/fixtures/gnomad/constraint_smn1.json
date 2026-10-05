@@ -1,0 +1,31 @@
+{
+ "data": {
+  "gene": {
+   "gene_id": "ENSG00000172062",
+   "symbol": "SMN1",
+   "hgnc_id": "HGNC:11117",
+   "chrom": "5",
+   "start": 70925030,
+   "stop": 70953942,
+   "gnomad_constraint": {
+    "pLI": null,
+    "oe_lof": null,
+    "oe_lof_lower": null,
+    "oe_lof_upper": null,
+    "mis_z": 0.21535949437243787,
+    "oe_mis": 0.8778427923482652,
+    "oe_mis_lower": 0.5873328187830603,
+    "oe_mis_upper": 1.3517099255913891,
+    "syn_z": 0.5640119761149971,
+    "oe_syn": 0.5832173937653813,
+    "exp_lof": null,
+    "obs_lof": null,
+    "exp_mis": 17.087341982810372,
+    "obs_mis": 15,
+    "flags": [
+     "no_exp_lof"
+    ]
+   }
+  }
+ }
+}

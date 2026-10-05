@@ -19,7 +19,7 @@ def _fetch(args: argparse.Namespace) -> Outcome:
     done: List[Dict[str, Any]] = []
     for name in hpo_local.FILES:
         path = target / name
-        if path.exists() and path.stat().st_size > 1000 and not args.force:
+        if path.exists() and path.stat().st_size > 0 and not args.force:
             done.append({"file": name, "bytes": path.stat().st_size, "status": "present"})
             continue
         url = hpo_local.RELEASE_URL.format(name=name)
@@ -29,11 +29,24 @@ def _fetch(args: argparse.Namespace) -> Outcome:
             shutil.copyfileobj(resp, fh, length=1 << 20)
         os.replace(tmp, path)
         done.append({"file": name, "bytes": path.stat().st_size, "status": "downloaded", "url": url})
+    warnings: List[str] = []
+    zh_path = target / hpo_local.ZH_FILE
+    if not zh_path.exists() or args.force:
+        try:
+            tmp = zh_path.with_suffix(".part")
+            req = urllib.request.Request(hpo_local.ZH_URL, headers={"User-Agent": USER_AGENT})
+            with _opener().open(req, timeout=600) as resp, open(tmp, "wb") as fh:
+                shutil.copyfileobj(resp, fh, length=1 << 20)
+            os.replace(tmp, zh_path)
+            done.append({"file": hpo_local.ZH_FILE, "bytes": zh_path.stat().st_size, "status": "downloaded", "url": hpo_local.ZH_URL})
+        except Exception as err:  # noqa: BLE001 - optional file
+            warnings.append(f"Chinese HPO labels not downloaded ({err}); Chinese phenotype search stays off")
     idx = hpo_local.load(rebuild=True)
-    result = {"dir": str(target), "files": done, "hpo_version": idx.version, "terms": len(idx.names),
+    result = {"dir": str(target), "files": done, "chinese_labels": len(idx.zh), "hpo_version": idx.version, "terms": len(idx.names),
               "diseases": len(idx.disease_list)}
     text = f"HPO {idx.version}: {len(idx.names)} terms, {len(idx.disease_list)} annotated diseases in {target}"
-    return Outcome(result, text=text, sources=[source_record("HPO release", idx.version, url=hpo_local.RELEASE_URL.format(name="hp.json"))])
+    return Outcome(result, text=text, warnings=warnings,
+                   sources=[source_record("HPO release", idx.version, url=hpo_local.RELEASE_URL.format(name="hp.json"))])
 
 
 def _local_or_none():
@@ -51,7 +64,9 @@ def _search(args: argparse.Namespace) -> Outcome:
         hits = hpo_local.search(idx, text, limit=args.limit)
         return Outcome({"query": text, "hits": hits, "backend": f"local HPO {idx.version}"},
                        sources=[source_record("HPO", idx.version, url="https://hpo.jax.org", note="local release files")],
-                       text="\n".join(f"{h['id']}\t{h['label']}" + (f"\t(matched: {h['matched']})" if h['matched'] != h['label'] else "") for h in hits) or "no match",
+                       text="\n".join(f"{h['id']}\t{h['label']}" + (f"\t{h['label_zh']}" if h.get('label_zh') else "")
+                                       + (f"\t(matched: {h['matched']})" if h['matched'] not in (h['label'], h.get('label_zh')) else "") for h in hits)
+                       or "no match",
                        query={"text": text})
     from zebra.sources import hpo as hpo_src
 
@@ -72,7 +87,7 @@ def _term(args: argparse.Namespace) -> Outcome:
     for tid in args.ids:
         if idx is not None and not args.online:
             pid, note = idx.primary(tid)
-            row = {"id": tid, "name": idx.names.get(pid) if pid else None, "primary": pid, "note": note,
+            row = {"id": tid, "name": idx.names.get(pid) if pid else None, "name_zh": idx.zh.get(pid or ""), "primary": pid, "note": note,
                    "obsolete": tid in idx.obsolete, "replaced_by": idx.obsolete.get(tid),
                    "parents": [{"id": p, "name": idx.names.get(p)} for p in idx.parents.get(pid or "", [])],
                    "synonyms": idx.synonyms.get(pid or "", [])[:8]}

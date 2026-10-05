@@ -1,0 +1,14 @@
+{
+  "name": "zebra-mod",
+  "owner": { "name": "Zhiwei Bao", "url": "https://github.com/zwbao" },
+  "metadata": { "description": "zebra-mod: a rare-disease research workstation for Claude Code" },
+  "plugins": [
+    {
+      "name": "zebra-mod",
+      "source": "./",
+      "description": "Rare-disease research workstation: phenotype-driven diagnosis, ACMG variant interpretation, sequence-to-function models, genotype-to-therapy, classical statistics — every answer anchored to live public databases.",
+      "version": "0.1.0",
+      "category": "science"
+    }
+  ]
+}

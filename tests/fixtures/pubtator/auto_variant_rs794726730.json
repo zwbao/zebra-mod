@@ -1,0 +1,11 @@
+[
+ {
+  "_id": "@VARIANT_p.R712X_SCN1A_human",
+  "biotype": "variant",
+  "db_id": "rs794726730##",
+  "db": "litvar",
+  "name": "p.R701X",
+  "description": "SCN1A (human)",
+  "match": "Multiple matches"
+ }
+]

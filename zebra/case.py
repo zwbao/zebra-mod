@@ -205,6 +205,22 @@ def add_question(case_dir: str, text: str) -> List[str]:
         return list(data["questions"])
 
 
+def set_profile(case_dir: str, **fields: Any) -> Dict[str, Any]:
+    """Title, role, language and proband basics (sex, age, ancestry, consanguinity)."""
+    with editing(case_dir) as data:
+        for key in ("title", "role", "language"):
+            value = fields.get(key)
+            if value is None:
+                continue
+            if key == "role" and value not in ROLES:
+                raise CaseError(f"role must be one of {', '.join(ROLES)}")
+            data[key] = value
+        for key in ("sex", "age", "ancestry", "consanguinity"):
+            if fields.get(key) is not None:
+                data["proband"][key] = fields[key]
+        return {"title": data["title"], "role": data["role"], "language": data["language"], "proband": dict(data["proband"])}
+
+
 def set_identifiers(case_dir: str, identifiers: List[str]) -> List[str]:
     clean = sorted({s.strip() for s in identifiers if s and len(s.strip()) >= 2})
     with editing(case_dir) as data:

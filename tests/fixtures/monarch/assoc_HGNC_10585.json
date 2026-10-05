@@ -1,0 +1,79 @@
+{
+ "limit": 50,
+ "offset": 0,
+ "total": 16,
+ "items": [
+  {
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:omim",
+   "original_predicate": null,
+   "original_object": "OMIM:604403",
+   "object": "MONDO:0011461",
+   "object_label": "generalized epilepsy with febrile seizures plus, type 2",
+   "publications": null
+  },
+  {
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:omim",
+   "original_predicate": null,
+   "original_object": "OMIM:609634",
+   "object": "MONDO:0012320",
+   "object_label": "migraine, familial hemiplegic, 3",
+   "publications": null
+  },
+  {
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "predicate": "biolink:gene_associated_with_condition",
+   "category": "biolink:CorrelatedGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:orphanet",
+   "original_predicate": null,
+   "original_object": "Orphanet:36387",
+   "object": "MONDO:0018214",
+   "object_label": "generalized epilepsy with febrile seizures plus",
+   "publications": null
+  },
+  {
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "predicate": "biolink:gene_associated_with_condition",
+   "category": "biolink:CorrelatedGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:orphanet",
+   "original_predicate": null,
+   "original_object": "Orphanet:442835",
+   "object": "MONDO:0018614",
+   "object_label": "undetermined early-onset epileptic encephalopathy",
+   "publications": null
+  },
+  {
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "predicate": "biolink:gene_associated_with_condition",
+   "category": "biolink:CorrelatedGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:orphanet",
+   "original_predicate": null,
+   "original_object": "Orphanet:33069",
+   "object": "MONDO:0011794",
+   "object_label": "obsolete Dravet syndrome",
+   "publications": null
+  },
+  {
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "predicate": "biolink:gene_associated_with_condition",
+   "category": "biolink:CorrelatedGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:orphanet",
+   "original_predicate": null,
+   "original_object": "Orphanet:2382",
+   "object": "MONDO:0016532",
+   "object_label": "Lennox-Gastaut syndrome",
+   "publications": null
+  }
+ ]
+}

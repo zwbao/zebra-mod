@@ -1,0 +1,69 @@
+{
+ "data": {
+  "search": {
+   "total": 586,
+   "hits": [
+    {
+     "id": "ENSG00000001626",
+     "name": "CFTR",
+     "entity": "target",
+     "description": "CF transmembrane conductance regulator"
+    },
+    {
+     "id": "MONDO_7770004",
+     "name": "CFTR-related disorder",
+     "entity": "disease",
+     "description": "A disease associated with CFTR (cystic fibrosis transmembrane conductance regulator) dysfunction that does not fulfill the diagnostic criteria for cystic fibrosis (CF). CFTR-related disorders are characterized by clinical evidence of CFTR dysfunction limited to a single organ system, a sweat chloride concentration below the CF diagnostic threshold (typically less than 60 mmol/L), and CFTR genotypes that often include at least one variant not classified as CF-causing. Recognized CFTR-related disorders include congenital bilateral absence of the vas deferens (CBAVD), acute recurrent or chronic pancreatitis, and disseminated bronchiectasis."
+    },
+    {
+     "id": "MONDO_0100627",
+     "name": "CFTR-related metabolic syndrome/CF screen positive, inconclusive diagnosis",
+     "entity": "disease",
+     "description": "A condition identified in infants with hypertrypsinogenemia on newborn screening who have an inconclusive diagnosis, defined as having a sweat chloride value less than 60 mmol/L and two CFTR variants, at least one of which has unclear phenotypic consequences, and who thus do not meet diagnostic criteria for cystic fibrosis (CF). CRMS is the designation used in the United States; CFSPID (CF screen positive, inconclusive diagnosis) is the international equivalent. A proportion of these infants may later develop CFTR-related symptoms."
+    },
+    {
+     "id": "EFO_0021794",
+     "name": "CFTR mutation carrier status",
+     "entity": "disease",
+     "description": "Quantification of the presence or absence of the CFTR mutation in an individual."
+    },
+    {
+     "id": "MONDO_0010178",
+     "name": "congenital bilateral aplasia of vas deferens from CFTR mutation",
+     "entity": "disease",
+     "description": "An autosomal recessive disorder that is associated with mutation(s) in the CFTR gene, encoding cystic fibrosis transmembrane conductance regulator. Mutation(s) in the same gene are associated with cystic fibrosis."
+    },
+    {
+     "id": "MONDO_0009061",
+     "name": "cystic fibrosis",
+     "entity": "disease",
+     "description": "Autosomal recessive disorder caused by pathogenic variants in the CFTR gene (cystic fibrosis transmembrane conductance regulator), which encodes a chloride and bicarbonate channel expressed in epithelial cells, and follow the diagnosis criteria. Diagnosis requires evidence of CFTR dysfunction, defined as a sweat chloride concentration of 60 mmol/L or greater, or identification of two CF-causing CFTR pathogenic variants, or an abnormal nasal potential difference measurement. CF is a progressive, multi-organ disease characterized by chronic obstructive lung disease with recurrent infections, exocrine pancreatic insufficiency, intestinal obstruction (including meconium ileus in neonates), male infertility due to obstructive azoospermia, hepatobiliary complications, and elevated sweat chloride concentrations."
+    },
+    {
+     "id": "ENSG00000083622",
+     "name": "CFTR-AS2",
+     "entity": "target",
+     "description": "CFTR antisense RNA 2"
+    },
+    {
+     "id": "ENSG00000232661",
+     "name": "CFTR-AS1",
+     "entity": "target",
+     "description": "CFTR antisense RNA 1"
+    },
+    {
+     "id": "MONDO_0000429",
+     "name": "autosomal genetic disease",
+     "entity": "disease",
+     "description": "A monogenic disease that is has material basis in a mutation in a single gene on one of the non-sex chromosomes."
+    },
+    {
+     "id": "MONDO_0006025",
+     "name": "autosomal recessive disease",
+     "entity": "disease",
+     "description": "Autosomal recessive form of disease."
+    }
+   ]
+  }
+ }
+}

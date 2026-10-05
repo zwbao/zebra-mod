@@ -1,0 +1,122 @@
+{
+ "input": "2 166898844 . G A . . .",
+ "id": ".",
+ "assembly_name": "GRCh37",
+ "seq_region_name": "2",
+ "start": 166898844,
+ "end": 166898844,
+ "strand": 1,
+ "allele_string": "G/A",
+ "most_severe_consequence": "stop_gained",
+ "variant_class": "SNV",
+ "transcript_consequences": [
+  {
+   "hgvsc": "ENST00000303395.4:c.2134C>T",
+   "cadd_raw": 8.88209,
+   "biotype": "protein_coding",
+   "cadd_phred": 37,
+   "exon": "12/26",
+   "strand": -1,
+   "consequence_terms": [
+    "stop_gained"
+   ],
+   "gene_id": "ENSG00000144285",
+   "cdna_start": 2134,
+   "impact": "HIGH",
+   "transcript_id": "ENST00000303395",
+   "cds_start": 2134,
+   "amino_acids": "R/*",
+   "cds_end": 2134,
+   "protein_start": 712,
+   "hgnc_id": 10585,
+   "hgvsp": "ENSP00000303540.4:p.Arg712Ter",
+   "gene_symbol_source": "HGNC",
+   "codons": "Cga/Tga",
+   "gene_symbol": "SCN1A",
+   "canonical": 1,
+   "cdna_end": 2134,
+   "protein_end": 712,
+   "variant_allele": "A",
+   "protein_id": "ENSP00000303540"
+  },
+  {
+   "impact": "HIGH",
+   "cdna_start": 2119,
+   "strand": -1,
+   "consequence_terms": [
+    "stop_gained"
+   ],
+   "gene_id": "ENSG00000144285",
+   "exon": "12/26",
+   "cadd_raw": 8.88209,
+   "hgvsc": "ENST00000375405.3:c.2101C>T",
+   "biotype": "protein_coding",
+   "cadd_phred": 37,
+   "protein_id": "ENSP00000364554",
+   "protein_end": 701,
+   "cdna_end": 2119,
+   "variant_allele": "A",
+   "gene_symbol": "SCN1A",
+   "hgnc_id": 10585,
+   "hgvsp": "ENSP00000364554.3:p.Arg701Ter",
+   "gene_symbol_source": "HGNC",
+   "codons": "Cga/Tga",
+   "cds_end": 2101,
+   "protein_start": 701,
+   "amino_acids": "R/*",
+   "transcript_id": "ENST00000375405",
+   "cds_start": 2101
+  }
+ ],
+ "colocated_variants": [
+  {
+   "seq_region_name": "2",
+   "start": 166898844,
+   "phenotype_or_disease": 1,
+   "end": 166898844,
+   "id": "CM024300",
+   "allele_string": "HGMD_MUTATION",
+   "strand": 1
+  },
+  {
+   "seq_region_name": "2",
+   "end": 166898844,
+   "phenotype_or_disease": 1,
+   "start": 166898844,
+   "var_synonyms": {
+    "ClinVar": []
+   },
+   "strand": 1,
+   "somatic": 1,
+   "allele_string": "COSMIC_MUTATION",
+   "id": "COSV57668399"
+  },
+  {
+   "end": 166898844,
+   "phenotype_or_disease": 1,
+   "start": 166898844,
+   "seq_region_name": "2",
+   "strand": 1,
+   "allele_string": "HGMD_MUTATION",
+   "id": "CX096176"
+  },
+  {
+   "clin_sig": [
+    "pathogenic"
+   ],
+   "var_synonyms": {
+    "ClinVar": [
+     "VCV000189886"
+    ]
+   },
+   "id": "rs794726730",
+   "clin_sig_allele": "A:pathogenic",
+   "allele_string": "G/A",
+   "strand": 1,
+   "seq_region_name": "2",
+   "start": 166898844,
+   "phenotype_or_disease": 1,
+   "end": 166898844
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+[
+ {
+  "_id": "@GENE_SCN1A",
+  "biotype": "gene",
+  "db_id": "6323",
+  "db": "ncbi_gene",
+  "name": "SCN1A",
+  "description": "All Species",
+  "match": "Matched on name <m>SCN1A</m>"
+ },
+ {
+  "_id": "@GENE_SCN1A.S",
+  "biotype": "gene",
+  "db_id": "378652",
+  "db": "ncbi_gene",
+  "name": "scn1a.S",
+  "description": "All Species",
+  "match": "Matched on name <m>scn1a.S</m>"
+ },
+ {
+  "_id": "@GENE_SCN1LAA",
+  "biotype": "gene",
+  "db_id": "393101",
+  "db": "ncbi_gene",
+  "name": "scn1laa",
+  "description": "All Species",
+  "match": "Matched on synonyms <m>scn1a</m>"
+ },
+ {
+  "_id": "@GENE_SCN1A_AS1",
+  "biotype": "gene",
+  "db_id": "101929680",
+  "db": "ncbi_gene",
+  "name": "SCN1A-AS1",
+  "description": "All Species",
+  "match": "Matched on name <m>SCN1A-AS1</m>"
+ },
+ {
+  "_id": "@GENE_LOC100715839",
+  "biotype": "gene",
+  "db_id": "100715839",
+  "db": "ncbi_gene",
+  "name": "LOC100715839",
+  "description": "All Species",
+  "match": "Matched on synonyms <m>Scn1a</m>"
+ },
+ {
+  "_id": "@GENE_LOC100386406",
+  "biotype": "gene",
+  "db_id": "100386406",
+  "db": "ncbi_gene",
+  "name": "LOC100386406",
+  "description": "All Species",
+  "match": "Matched on synonyms <m>SCN1A</m>"
+ },
+ {
+  "_id": "@GENE_LOC106541394",
+  "biotype": "gene",
+  "db_id": "106541394",
+  "db": "ncbi_gene",
+  "name": "LOC106541394",
+  "description": "All Species",
+  "match": "Matched on synonyms <m>SCN1A</m>"
+ },
+ {
+  "_id": "@GENE_LOC101798680",
+  "biotype": "gene",
+  "db_id": "101798680",
+  "db": "ncbi_gene",
+  "name": "LOC101798680",
+  "description": "All Species",
+  "match": "Matched on synonyms <m>SCN1A</m>"
+ }
+]

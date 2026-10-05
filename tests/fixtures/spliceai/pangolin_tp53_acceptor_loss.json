@@ -1,0 +1,37 @@
+{
+ "variant": "chr17-7674291-C-T",
+ "hg": "38",
+ "bc": "basic",
+ "distance": 500,
+ "mask": "False",
+ "genomeVersion": "38",
+ "chrom": "17",
+ "pos": 7674291,
+ "ref": "C",
+ "alt": "T",
+ "scores": [
+  {
+   "DS_SG": "0.739",
+   "DS_SL": "-0.893",
+   "DP_SG": -2,
+   "DP_SL": -1,
+   "SG_REF": "0.051",
+   "SG_ALT": "0.790",
+   "SL_REF": "0.949",
+   "SL_ALT": "0.055",
+   "g_id": "ENSG00000141510.21",
+   "g_name": "TP53",
+   "t_id": "ENST00000269305.9",
+   "t_priority": "MS",
+   "t_refseq_ids": [
+    "NM_000546.6"
+   ],
+   "t_strand": "-",
+   "t_type": "protein_coding",
+   "nNonZeroScores": 6
+  }
+ ],
+ "source": "pangolin:model:cache",
+ "allNonZeroScoresStrand": "-",
+ "allNonZeroScoresTranscriptId": "ENST00000269305.9"
+}

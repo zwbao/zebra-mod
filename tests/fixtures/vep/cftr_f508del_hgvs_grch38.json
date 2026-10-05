@@ -1,0 +1,181 @@
+{
+ "input": "NM_000492.4:c.1521_1523del",
+ "id": "NM_000492.4:c.1521_1523del",
+ "assembly_name": "GRCh38",
+ "seq_region_name": "7",
+ "start": 117559592,
+ "end": 117559594,
+ "strand": 1,
+ "allele_string": "CTT/-",
+ "most_severe_consequence": "inframe_deletion",
+ "variant_class": "deletion",
+ "transcript_consequences": [
+  {
+   "consequence_terms": [
+    "inframe_deletion"
+   ],
+   "mane_select": "NM_000492.4",
+   "hgvsc": "ENST00000003084.11:c.1521_1523del",
+   "impact": "MODERATE",
+   "biotype": "protein_coding",
+   "mane": [
+    "MANE_Select"
+   ],
+   "strand": 1,
+   "protein_id": "ENSP00000003084",
+   "codons": "atCTTt/att",
+   "spliceai": {
+    "DS_AG": 0,
+    "SYMBOL": "CFTR",
+    "DP_AG": -40,
+    "DP_DL": -11,
+    "DS_DG": 0,
+    "DP_DG": -40,
+    "DS_AL": 0,
+    "DS_DL": 0,
+    "DP_AL": 28
+   },
+   "gene_symbol": "CFTR",
+   "gene_id": "ENSG00000001626",
+   "cds_start": 1521,
+   "hgvsp": "ENSP00000003084.6:p.Phe508del",
+   "cds_end": 1523,
+   "hgnc_id": "HGNC:1884",
+   "variant_allele": "-",
+   "protein_start": 507,
+   "cdna_end": 1593,
+   "transcript_id": "ENST00000003084",
+   "protein_end": 508,
+   "canonical": 1,
+   "cdna_start": 1591,
+   "exon": "11/27",
+   "amino_acids": "IF/I",
+   "gene_symbol_source": "HGNC"
+  },
+  {
+   "hgnc_id": "HGNC:40144",
+   "distance": 1139,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "variant_allele": "-",
+   "strand": -1,
+   "transcript_id": "ENST00000441019",
+   "canonical": 1,
+   "impact": "MODIFIER",
+   "biotype": "lncRNA",
+   "gene_symbol": "CFTR-AS1",
+   "gene_id": "ENSG00000232661",
+   "gene_symbol_source": "HGNC"
+  },
+  {
+   "cds_start": 1431,
+   "hgvsp": "ENSP00000389119.1:p.Phe478del",
+   "hgnc_id": "HGNC:1884",
+   "cds_end": 1433,
+   "variant_allele": "-",
+   "protein_start": 477,
+   "cdna_end": 1433,
+   "protein_end": 478,
+   "transcript_id": "ENST00000426809",
+   "cdna_start": 1431,
+   "exon": "10/26",
+   "amino_acids": "IF/I",
+   "gene_symbol_source": "HGNC",
+   "flags": [
+    "cds_end_NF"
+   ],
+   "consequence_terms": [
+    "inframe_deletion"
+   ],
+   "hgvsc": "ENST00000426809.5:c.1431_1433del",
+   "impact": "MODERATE",
+   "biotype": "protein_coding",
+   "strand": 1,
+   "protein_id": "ENSP00000389119",
+   "codons": "atCTTt/att",
+   "spliceai": {
+    "DP_AL": 28,
+    "DS_DL": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DP_DG": -40,
+    "DP_DL": -11,
+    "DP_AG": -40,
+    "SYMBOL": "CFTR",
+    "DS_AG": 0
+   },
+   "gene_id": "ENSG00000001626",
+   "gene_symbol": "CFTR"
+  }
+ ],
+ "colocated_variants": [
+  {
+   "start": 117559591,
+   "end": 117559594,
+   "clin_sig_ref_allele": "CTT",
+   "frequencies": {
+    "-": {
+     "gnomadg_ami": 0.001096,
+     "gnomade_sas": 0.00247,
+     "gnomade_remaining": 0.01009,
+     "gnomadg_nfe": 0.0143,
+     "amr": 0.0101,
+     "gnomadg": 0.007884,
+     "gnomade_nfe": 0.01498,
+     "gnomade": 0.01235,
+     "gnomade_fin": 0.002757,
+     "eur": 0.0089,
+     "gnomade_asj": 0.006319,
+     "gnomadg_mid": 0.003401,
+     "sas": 0.0041,
+     "gnomadg_sas": 0.003108,
+     "gnomadg_eas": 0,
+     "gnomade_amr": 0.003958,
+     "gnomadg_amr": 0.003728,
+     "gnomade_eas": 2.524e-05,
+     "gnomadg_remaining": 0.007583,
+     "afr": 0,
+     "gnomade_afr": 0.002302,
+     "gnomade_mid": 0.001735,
+     "gnomadg_fin": 0.001508,
+     "gnomadg_asj": 0.004032,
+     "gnomadg_afr": 0.002599,
+     "af": 0.004,
+     "eas": 0
+    }
+   },
+   "var_synonyms": {
+    "ClinVar": [
+     "VCV000634837",
+     "VCV000007105"
+    ]
+   },
+   "strand": 1,
+   "allele_string": "TCTT/T/TCTTCTT",
+   "id": "rs113993960",
+   "phenotype_or_disease": 1,
+   "seq_region_name": "7",
+   "clin_sig_allele": ":risk_factor;:pathogenic;:drug_response;:likely_pathogenic",
+   "clin_sig": [
+    "likely_pathogenic",
+    "pathogenic",
+    "drug_response",
+    "risk_factor"
+   ]
+  },
+  {
+   "end": 117559594,
+   "start": 117559592,
+   "somatic": 1,
+   "strand": 1,
+   "var_synonyms": {
+    "ClinVar": []
+   },
+   "seq_region_name": "7",
+   "phenotype_or_disease": 1,
+   "id": "COSV50043929",
+   "allele_string": "COSMIC_MUTATION"
+  }
+ ]
+}

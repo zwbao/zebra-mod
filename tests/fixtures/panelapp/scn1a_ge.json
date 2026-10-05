@@ -1,0 +1,247 @@
+{
+ "count": 4,
+ "next": null,
+ "previous": null,
+ "results": [
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:10585",
+    "gene_symbol": "SCN1A",
+    "gene_name": "sodium voltage-gated channel alpha subunit 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "SCN1A",
+   "confidence_level": "3",
+   "penetrance": "Incomplete",
+   "mode_of_pathogenicity": "",
+   "publications": [
+    "16054936",
+    "19332696"
+   ],
+   "evidence": [
+    "Expert Review Green",
+    "UKGTN"
+   ],
+   "phenotypes": [
+    "familial hemiplegic migraine 3",
+    "Dravet syndrome",
+    "several epilepsy, convulsion and migraine disorders."
+   ],
+   "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+   "tags": [],
+   "panel": {
+    "id": 90,
+    "hash_id": "55c2321822c1fc0fe5e416e1",
+    "name": "Brain channelopathy",
+    "disease_group": "Neurology and neurodevelopmental disorders",
+    "disease_sub_group": "Channelopathies",
+    "status": "public",
+    "version": "1.83",
+    "version_created": "2025-11-17T21:37:54.033731Z",
+    "relevant_disorders": [],
+    "stats": {
+     "number_of_genes": 26,
+     "number_of_strs": 5,
+     "number_of_regions": 1
+    },
+    "types": [
+     {
+      "name": "Rare Disease 100K",
+      "slug": "rare-disease-100k",
+      "description": "Rare Disease 100K"
+     }
+    ]
+   },
+   "transcript": null
+  },
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:10585",
+    "gene_symbol": "SCN1A",
+    "gene_name": "sodium voltage-gated channel alpha subunit 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "SCN1A",
+   "confidence_level": "3",
+   "penetrance": null,
+   "mode_of_pathogenicity": null,
+   "publications": [
+    "11359211",
+    "12566275",
+    "17000989",
+    "18680191",
+    "21555645",
+    "21753172",
+    "27264139",
+    "27817982",
+    "28732259"
+   ],
+   "evidence": [
+    "NHS GMS",
+    "Expert Review Green",
+    "Expert list"
+   ],
+   "phenotypes": [
+    "Dravet syndrome OMIM:607208",
+    "developmental and epileptic encephalopathy, 6 MONDO:0100079"
+   ],
+   "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+   "tags": [],
+   "panel": {
+    "id": 477,
+    "hash_id": null,
+    "name": "Ataxia and cerebellar anomalies - childhood onset",
+    "disease_group": "Neurology",
+    "disease_sub_group": "",
+    "status": "public",
+    "version": "9.35",
+    "version_created": "2026-09-03T18:06:55.864890Z",
+    "relevant_disorders": [
+     "Ataxia and cerebellar anomalies - narrow panel"
+    ],
+    "stats": {
+     "number_of_genes": 330,
+     "number_of_strs": 16,
+     "number_of_regions": 4
+    },
+    "types": [
+     {
+      "name": "Component Of Super Panel",
+      "slug": "component-of-super-panel",
+      "description": "This panel is a component of a Super Panel"
+     },
+     {
+      "name": "GMS signed-off",
+      "slug": "gms-signed-off",
+      "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+     }
+    ]
+   },
+   "transcript": null
+  },
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:10585",
+    "gene_symbol": "SCN1A",
+    "gene_name": "sodium voltage-gated channel alpha subunit 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "SCN1A",
+   "confidence_level": "3",
+   "penetrance": null,
+   "mode_of_pathogenicity": "",
+   "publications": [
+    "16054936",
+    "19332696"
+   ],
+   "evidence": [
+    "Expert Review Green",
+    "NHS GMS",
+    "London North GLH",
+    "Wessex and West Midlands GLH"
+   ],
+   "phenotypes": [
+    "Epileptic encephalopathy, early infantile, 6 (Dravet syndrome), 607208",
+    "Epilepsy, generalized, with febrile seizures plus, type 2, 604403",
+    "Migraine, familial hemiplegic, 3, 609634",
+    "several epilepsy, convulsion and migraine disorders"
+   ],
+   "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+   "tags": [],
+   "panel": {
+    "id": 541,
+    "hash_id": null,
+    "name": "Paroxysmal central nervous system disorders",
+    "disease_group": "Neurology",
+    "disease_sub_group": "",
+    "status": "public",
+    "version": "4.7",
+    "version_created": "2026-08-12T16:08:13.969357Z",
+    "relevant_disorders": [
+     "Paroxysmal neurological disorders",
+     "pain disorders and sleep disorders",
+     "R66",
+     "GT801",
+     "TP74"
+    ],
+    "stats": {
+     "number_of_genes": 86,
+     "number_of_strs": 5,
+     "number_of_regions": 1
+    },
+    "types": [
+     {
+      "name": "GMS Rare Disease",
+      "slug": "gms-rare-disease",
+      "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+     },
+     {
+      "name": "GMS signed-off",
+      "slug": "gms-signed-off",
+      "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+     },
+     {
+      "name": "GMS Rare Disease Virtual",
+      "slug": "gms-rare-disease-virtual",
+      "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+     }
+    ]
+   },
+   "transcript": null
+  },
+  {
+   "gene_data": {
+    "hgnc_id": "HGNC:10585",
+    "gene_symbol": "SCN1A",
+    "gene_name": "sodium voltage-gated channel alpha subunit 1"
+   },
+   "entity_type": "gene",
+   "entity_name": "SCN1A",
+   "confidence_level": "1",
+   "penetrance": "Complete",
+   "mode_of_pathogenicity": "",
+   "publications": [],
+   "evidence": [
+    "Expert Review Red",
+    "Expert list",
+    "Radboud University Medical Center, Nijmegen",
+    "Illumina TruGenome Clinical Sequencing Services",
+    "UKGTN",
+    "Literature"
+   ],
+   "phenotypes": [
+    "Cerebral small vessel disease",
+    "Dravet syndrome\t607208",
+    "Epilepsy, generalized, with febrile seizures plus, type 2\t604403",
+    "Febrile seizures, familial, 3A\t604403",
+    "Migraine, familial hemiplegic, 3\t609634"
+   ],
+   "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+   "tags": [],
+   "panel": {
+    "id": 50,
+    "hash_id": "5693787622c1fc25158f3c9a",
+    "name": "Familial cerebral small vessel disease",
+    "disease_group": "Cardiovascular disorders",
+    "disease_sub_group": "Arteriopathies",
+    "status": "public",
+    "version": "1.18",
+    "version_created": "2025-11-23T17:04:36.138894Z",
+    "relevant_disorders": [],
+    "stats": {
+     "number_of_genes": 17,
+     "number_of_strs": 0,
+     "number_of_regions": 0
+    },
+    "types": [
+     {
+      "name": "Rare Disease 100K",
+      "slug": "rare-disease-100k",
+      "description": "Rare Disease 100K"
+     }
+    ]
+   },
+   "transcript": null
+  }
+ ]
+}

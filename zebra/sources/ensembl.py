@@ -124,13 +124,27 @@ def spliceai_max(tc: Optional[Dict[str, Any]]) -> Optional[float]:
     return max(vals) if vals else None
 
 
-def frequencies(rec: Dict[str, Any], alt: Optional[str] = None) -> Dict[str, Any]:
-    """gnomAD frequencies VEP reports for the colocated known variant (exomes 'gnomade_*', genomes 'gnomadg_*')."""
+def vep_allele(ref: str, alt: str) -> str:
+    """The allele as VEP keys colocated frequencies: shared leading bases trimmed, '-' when nothing is left."""
+    i = 0
+    while i < min(len(ref), len(alt)) and ref[i] == alt[i]:
+        i += 1
+    rest = alt[i:]
+    return rest if rest else "-"
+
+
+def frequencies(rec: Dict[str, Any], alt: Optional[str] = None, ref: Optional[str] = None) -> Dict[str, Any]:
+    """gnomAD frequencies VEP reports for the colocated known variant (exomes 'gnomade_*', genomes 'gnomadg_*').
+
+    With `ref` and `alt` only that exact allele is accepted (a multi-allelic site's other alleles are ignored);
+    with `alt` alone it must equal the VEP allele key; with neither, the best-populated entry is taken.
+    """
+    want = vep_allele(ref, alt) if (ref and alt) else alt
     best: Dict[str, Any] = {}
     for cv in rec.get("colocated_variants") or []:
         freqs = cv.get("frequencies") or {}
         for allele, groups in freqs.items():
-            if alt and allele not in (alt, "-") and len(alt) == 1 and allele != alt:
+            if want is not None and allele != want:
                 continue
             if groups and len(groups) > len(best.get("groups", {})):
                 best = {"id": cv.get("id"), "allele": allele, "groups": groups,

@@ -34,9 +34,13 @@ from zebra.http import cache_dir
 
 FILES = ("hp.json", "phenotype.hpoa", "genes_to_phenotype.txt")
 RELEASE_URL = "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/{name}"
+# official Chinese labels (HPO translation project); optional, enables Chinese search
+ZH_FILE = "hp-zh.babelon.tsv"
+ZH_URL = "https://raw.githubusercontent.com/obophenotype/hpo-translations/main/babelon/hp-zh.babelon.tsv"
+_CJK = re.compile(r"[\u3400-\u9fff]")
 ROOT_PHENO = "HP:0000118"  # Phenotypic abnormality
 _PURL = re.compile(r"^http://purl\.obolibrary\.org/obo/HP_(\d{7})$")
-INDEX_VERSION = 2
+INDEX_VERSION = 3
 
 
 class HpoDataMissing(Exception):
@@ -48,7 +52,7 @@ def data_dir() -> Path:
 
 
 def missing_files() -> List[str]:
-    return [f for f in FILES if not (data_dir() / f).exists() or (data_dir() / f).stat().st_size < 1000]
+    return [f for f in FILES if not (data_dir() / f).exists() or (data_dir() / f).stat().st_size == 0]
 
 
 def _curie(iri: str) -> Optional[str]:
@@ -88,6 +92,7 @@ class Index:
     term_diseases: Dict[str, Set[int]] = field(default_factory=dict)
     disease_list: List[str] = field(default_factory=list)
     version: str = ""
+    zh: Dict[str, str] = field(default_factory=dict)
 
     def ancestors(self, term: str) -> Set[str]:
         seen: Set[str] = set()
@@ -185,12 +190,22 @@ def _parse_g2p(path: Path) -> Dict[str, List[str]]:
     return {d: sorted(g) for d, g in genes.items()}
 
 
+def _parse_zh(path: Path) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    with open(path, encoding="utf-8") as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            if row.get("predicate_id") == "rdfs:label" and row.get("translation_value") and row.get("subject_id", "").startswith("HP:"):
+                out[row["subject_id"]] = row["translation_value"].strip()
+    return out
+
+
 def load(rebuild: bool = False) -> Index:
     missing = missing_files()
     if missing:
         raise HpoDataMissing(f"HPO files missing in {data_dir()}: {', '.join(missing)} (run: zebra hpo fetch)")
     d = data_dir()
-    stamp = "|".join(f"{f}:{(d / f).stat().st_size}:{int((d / f).stat().st_mtime)}" for f in FILES)
+    present = list(FILES) + ([ZH_FILE] if (d / ZH_FILE).exists() else [])
+    stamp = "|".join(f"{f}:{(d / f).stat().st_size}:{int((d / f).stat().st_mtime)}" for f in present)
     cache = d / "index.pickle"
     if cache.exists() and not rebuild:
         try:
@@ -204,6 +219,8 @@ def load(rebuild: bool = False) -> Index:
     disease_names, disease_terms = _parse_hpoa(d / "phenotype.hpoa")
     disease_genes = _parse_g2p(d / "genes_to_phenotype.txt")
     idx = Index(names, synonyms, parents, obsolete, alt, disease_names, disease_terms, disease_genes, version=version)
+    if (d / ZH_FILE).exists():
+        idx.zh = _parse_zh(d / ZH_FILE)
     _build_ic(idx)
     try:
         with open(cache, "wb") as fh:
@@ -232,33 +249,83 @@ def _build_ic(idx: Index) -> None:
     idx.ic = {t: -math.log(len(ds) / n) for t, ds in term_diseases.items() if ds}
 
 
+def _norm(text: str) -> str:
+    words = re.sub(r"[^a-z0-9]+", " ", text.lower()).split()
+    out = []
+    for w in words:
+        if len(w) > 3 and w.endswith("s") and not w.endswith(("ss", "is", "us")):
+            w = w[:-1]
+        out.append(w)
+    return " ".join(out)
+
+
 def search(idx: Index, text: str, limit: int = 10) -> List[Dict[str, str]]:
-    """Offline label/synonym search (case-insensitive; exact > prefix > word > substring)."""
-    q = text.strip().lower()
+    """Offline label/synonym search: exact > prefix > whole words > substring, after normalising
+    case, punctuation and simple plurals; ties go to the shorter (more general) wording."""
+    if _CJK.search(text):
+        return _search_zh(idx, text, limit)
+    q = _norm(text)
     if not q:
         return []
+    q_words = set(q.split())
     scored = []
     for tid, label in idx.names.items():
         best = None
         for cand in [label] + idx.synonyms.get(tid, []):
-            c = cand.lower()
+            c = _norm(cand)
             if c == q:
                 rank = 0
-            elif c.startswith(q):
+            elif c.startswith(q + " ") or c.startswith(q):
                 rank = 1
             elif re.search(rf"\b{re.escape(q)}\b", c):
                 rank = 2
-            elif q in c:
+            elif q_words <= set(c.split()):
                 rank = 3
+            elif q in c:
+                rank = 4
             else:
                 continue
-            if best is None or rank < best[0]:
-                best = (rank, cand)
+            key = (rank, len(c))
+            if best is None or key < best[0]:
+                best = (key, cand)
         if best:
             under_pheno = ROOT_PHENO in idx.ancestors(tid)
-            scored.append((best[0], 0 if under_pheno else 1, len(label), tid, label, best[1]))
+            scored.append((best[0][0], 0 if under_pheno else 1, best[0][1], len(label), tid, label, best[1]))
     scored.sort()
-    return [{"id": s[3], "label": s[4], "matched": s[5]} for s in scored[:limit]]
+    return [{"id": s[4], "label": s[5], "matched": s[6], **({"label_zh": idx.zh[s[4]]} if s[4] in idx.zh else {})}
+            for s in scored[:limit]]
+
+
+def _bigrams(text: str) -> Set[str]:
+    return {text[i:i + 2] for i in range(len(text) - 1)} or {text}
+
+
+def _search_zh(idx: Index, text: str, limit: int) -> List[Dict[str, str]]:
+    """Chinese search over the official Chinese labels: exact > prefix > contains > character-bigram overlap."""
+    if not idx.zh:
+        return []
+    q = re.sub(r"[\s，。、；：,.;:()（）]+", "", text)
+    qb = _bigrams(q)
+    scored = []
+    for tid, zh in idx.zh.items():
+        if tid not in idx.names:
+            continue
+        z = re.sub(r"[\s，。、；：,.;:()（）]+", "", zh)
+        if z == q:
+            key = (0, 0.0)
+        elif z.startswith(q):
+            key = (1, 0.0)
+        elif q in z:
+            key = (2, 0.0)
+        else:
+            overlap = len(qb & _bigrams(z)) / len(qb | _bigrams(z))
+            if overlap < 0.2:
+                continue
+            key = (3, -overlap)
+        under_pheno = ROOT_PHENO in idx.ancestors(tid)
+        scored.append((key[0], key[1], 0 if under_pheno else 1, len(z), tid, zh))
+    scored.sort()
+    return [{"id": s[4], "label": idx.names[s[4]], "label_zh": s[5], "matched": s[5]} for s in scored[:limit]]
 
 
 def rank(idx: Index, present: Sequence[str], excluded: Sequence[str] = (), top: int = 20,
@@ -355,7 +422,7 @@ def rank(idx: Index, present: Sequence[str], excluded: Sequence[str] = (), top: 
     return {
         "method": "Resnik best-match average (query→disease), IC from HPO disease annotations; excluded terms penalised",
         "hpo_version": idx.version,
-        "query": [{"id": q, "label": idx.names.get(q)} for q in query],
+        "query": [{"id": q, "label": idx.names.get(q), **({"label_zh": idx.zh[q]} if q in idx.zh else {})} for q in query],
         "excluded": [{"id": e, "label": idx.names.get(e)} for e in excl],
         "diseases_scored": len(keep),
         "max_possible": round(max_possible, 4),

@@ -1,0 +1,190 @@
+{
+ "data": {
+  "__count": 1,
+  "__licence": {
+   "identifier": "CC-BY-4.0",
+   "link": "https://creativecommons.org/licenses/by/4.0",
+   "name": "Creative Commons Attribution 4.0 International"
+  },
+  "results": {
+   "Date": "2026-06-23 07:57:31",
+   "DisorderGeneAssociation": [
+    {
+     "DisorderGeneAssociationStatus": "Assessed",
+     "DisorderGeneAssociationType": "Disease-causing germline mutation(s) in",
+     "Gene": {
+      "ExternalReference": [
+       {
+        "Reference": "SCN1A",
+        "Source": "ClinVar"
+       },
+       {
+        "Reference": "ENSG00000144285",
+        "Source": "Ensembl"
+       },
+       {
+        "Reference": "SCN1A",
+        "Source": "Genatlas"
+       },
+       {
+        "Reference": "10585",
+        "Source": "HGNC"
+       },
+       {
+        "Reference": "578",
+        "Source": "IUPHAR"
+       },
+       {
+        "Reference": "182389",
+        "Source": "OMIM"
+       },
+       {
+        "Reference": "P35498",
+        "Source": "Reactome"
+       },
+       {
+        "Reference": "P35498",
+        "Source": "SwissProt"
+       }
+      ],
+      "GeneType": "gene with protein product",
+      "Locus": [
+       {
+        "GeneLocus": "2q24.3",
+        "LocusKey": 1
+       }
+      ],
+      "Symbol": "SCN1A",
+      "Synonym": [
+       "GEFSP2",
+       "HBSCI",
+       "NAC1",
+       "Nav1.1",
+       "SMEI"
+      ],
+      "name": "sodium voltage-gated channel alpha subunit 1"
+     },
+     "SourceOfValidation": "20301494[PMID]_23093055[PMID]_21463275[PMID]_22787626[PMID]_11359211[PMID]_12754708[PMID]_16458823[PMID]"
+    },
+    {
+     "DisorderGeneAssociationStatus": "Assessed",
+     "DisorderGeneAssociationType": "Disease-causing germline mutation(s) (loss of function) in",
+     "Gene": {
+      "ExternalReference": [
+       {
+        "Reference": "SCN1B",
+        "Source": "ClinVar"
+       },
+       {
+        "Reference": "ENSG00000105711",
+        "Source": "Ensembl"
+       },
+       {
+        "Reference": "SCN1B",
+        "Source": "Genatlas"
+       },
+       {
+        "Reference": "10586",
+        "Source": "HGNC"
+       },
+       {
+        "Reference": "600235",
+        "Source": "OMIM"
+       },
+       {
+        "Reference": "Q07699",
+        "Source": "Reactome"
+       },
+       {
+        "Reference": "Q07699",
+        "Source": "SwissProt"
+       }
+      ],
+      "GeneType": "gene with protein product",
+      "Locus": [
+       {
+        "GeneLocus": "19q13.11",
+        "LocusKey": 1
+       }
+      ],
+      "Symbol": "SCN1B",
+      "Synonym": null,
+      "name": "sodium voltage-gated channel beta subunit 1"
+     },
+     "SourceOfValidation": "19710327[PMID]_23148524[PMID]_23093055[PMID]_21463275[PMID]_22787626[PMID]"
+    },
+    {
+     "DisorderGeneAssociationStatus": "Assessed",
+     "DisorderGeneAssociationType": "Disease-causing germline mutation(s) in",
+     "Gene": {
+      "ExternalReference": [
+       {
+        "Reference": "SCN2A",
+        "Source": "ClinVar"
+       },
+       {
+        "Reference": "ENSG00000136531",
+        "Source": "Ensembl"
+       },
+       {
+        "Reference": "SCN2A",
+        "Source": "Genatlas"
+       },
+       {
+        "Reference": "10588",
+        "Source": "HGNC"
+       },
+       {
+        "Reference": "579",
+        "Source": "IUPHAR"
+       },
+       {
+        "Reference": "182390",
+        "Source": "OMIM"
+       },
+       {
+        "Reference": "Q99250",
+        "Source": "Reactome"
+       },
+       {
+        "Reference": "Q99250",
+        "Source": "SwissProt"
+       }
+      ],
+      "GeneType": "gene with protein product",
+      "Locus": [
+       {
+        "GeneLocus": "2q24.3",
+        "LocusKey": 1
+       }
+      ],
+      "Symbol": "SCN2A",
+      "Synonym": [
+       "HBSCI",
+       "HBSCII",
+       "Nav1.2"
+      ],
+      "name": "sodium voltage-gated channel alpha subunit 2"
+     },
+     "SourceOfValidation": "19783390[PMID]"
+    }
+   ],
+   "DisorderGroup": "Disorder",
+   "ORPHAcode": 33069,
+   "OrphanetURL": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=33069",
+   "Preferred term": "Dravet syndrome",
+   "Typology": "Disease"
+  }
+ },
+ "datasetCategory": {
+  "lang": "en",
+  "name": "Rare diseases and associated genes"
+ },
+ "parameters": {
+  "path": {
+   "ORPHAcode": 33069
+  },
+  "query": {}
+ },
+ "uri": "https://api.orphadata.com/rd-associated-genes/orphacodes/33069"
+}

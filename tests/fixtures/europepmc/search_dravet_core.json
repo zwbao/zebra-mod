@@ -1,0 +1,570 @@
+{
+ "version": "6.9",
+ "hitCount": 6494,
+ "nextCursorMark": "AoIIQJYhWSg1NjIzMTE0MQ==",
+ "nextPageUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=%22Dravet+syndrome%22&cursorMark=AoIIQJYhWSg1NjIzMTE0MQ%3D%3D&resultType=core&pageSize=6&format=json",
+ "request": {
+  "queryString": "\"Dravet syndrome\"",
+  "resultType": "core",
+  "cursorMark": "*",
+  "pageSize": 6,
+  "sort": "",
+  "synonym": false
+ },
+ "resultList": {
+  "result": [
+   {
+    "id": "42814106",
+    "source": "MED",
+    "pmid": "42814106",
+    "doi": "10.1002/epi.70511",
+    "title": "Kv3.1 activation suppresses provoked and spontaneous seizures in a mouse Dravet syndrome model.",
+    "authorString": "Vermudez SAD, Hameed MQ, Choe Y, McGinty GE, Liebhardt AM, Lin R, Hui B, Liang Y, Arce DJ, Lee HHC, Sahin M, Rotenberg A.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Vermudez SAD",
+       "lastName": "Vermudez"
+      },
+      {
+       "fullName": "Hameed MQ",
+       "lastName": "Hameed"
+      },
+      {
+       "fullName": "Choe Y",
+       "lastName": "Choe"
+      }
+     ]
+    },
+    "journalInfo": {
+     "journalIssueId": 4252088,
+     "dateOfPublication": "2026 Sep",
+     "monthOfPublication": 9,
+     "yearOfPublication": 2026,
+     "journal": {
+      "medlineAbbreviation": "Epilepsia",
+      "title": "Epilepsia",
+      "essn": "1528-1167",
+      "issn": "0013-9580",
+      "nlmid": "2983306R",
+      "isoabbreviation": "Epilepsia"
+     },
+     "printPublicationDate": "2026-09-01"
+    },
+    "pubYear": "2026",
+    "publicationStatus": "aheadofprint",
+    "language": "eng",
+    "pubModel": "Print-Electronic",
+    "pubTypeList": {
+     "pubType": [
+      "Journal Article"
+     ]
+    },
+    "keywordList": {
+     "keyword": [
+      "Epilepsy",
+      "EEG",
+      "Scn1a",
+      "Nav1.1",
+      "Developmental And Epileptic Encephalopathy (Dee)"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.1002/epi.70511"
+      }
+     ]
+    },
+    "isOpenAccess": "N",
+    "inEPMC": "N",
+    "inPMC": "N",
+    "citedByCount": 0,
+    "hasReferences": "N",
+    "hasTextMinedTerms": "N",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "N",
+    "hasBook": "N",
+    "hasSuppl": "N",
+    "hasLabsLinks": "N",
+    "hasData": "N",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "N",
+    "electronicPublicationDate": "2026-09-30",
+    "firstPublicationDate": "2026-09-30",
+    "hasEvaluations": "N"
+   },
+   {
+    "id": "PPR1332559",
+    "source": "PPR",
+    "doi": "10.64898/2026.09.25.754424",
+    "title": "Seizures in a Dravet Syndrome mouse model inhibit the locus coeruleus but locally evoke supraphysiologic norepinephrine release",
+    "authorString": "Zhao M, Demetriou Y, Noor A, Barden J, Zhu L, Yu Q, Sajdak A, Akhaury A, Rana C, Yang P, Li Y, Burgess C, McKenzie S, Kramer P, Mattis JH.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Zhao M",
+       "lastName": "Zhao"
+      },
+      {
+       "fullName": "Demetriou Y",
+       "lastName": "Demetriou"
+      },
+      {
+       "fullName": "Noor A",
+       "lastName": "Noor"
+      }
+     ]
+    },
+    "pubYear": "2026",
+    "pubTypeList": {
+     "pubType": [
+      "Preprint"
+     ]
+    },
+    "bookOrReportDetails": {
+     "publisher": "bioRxiv",
+     "yearOfPublication": 2026
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.64898/2026.09.25.754424"
+      }
+     ]
+    },
+    "isOpenAccess": "N",
+    "inEPMC": "N",
+    "inPMC": "N",
+    "citedByCount": 0,
+    "hasReferences": "N",
+    "hasTextMinedTerms": "N",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "N",
+    "hasBook": "N",
+    "hasSuppl": "N",
+    "hasLabsLinks": "N",
+    "hasData": "N",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "N",
+    "firstPublicationDate": "2026-10-01",
+    "hasEvaluations": "N"
+   },
+   {
+    "id": "42751003",
+    "source": "MED",
+    "pmid": "42751003",
+    "doi": "10.1016/j.ebr.2026.100892",
+    "title": "Severe acute respiratory distress syndrome in Dravet syndrome: Clinical cases expanding the extraneurological phenotype.",
+    "authorString": "Montero-Yéboles R, de Frutos-Porras E, Ulloa-Santamaría E, García Pérez MA, Bueno-Campaña M, Ruiz-Sáez B.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Montero-Yéboles R",
+       "lastName": "Montero-Yéboles"
+      },
+      {
+       "fullName": "de Frutos-Porras E",
+       "lastName": "de Frutos-Porras"
+      },
+      {
+       "fullName": "Ulloa-Santamaría E",
+       "lastName": "Ulloa-Santamaría"
+      }
+     ]
+    },
+    "journalInfo": {
+     "volume": "35",
+     "journalIssueId": 4224859,
+     "dateOfPublication": "2026 Sep",
+     "monthOfPublication": 9,
+     "yearOfPublication": 2026,
+     "journal": {
+      "medlineAbbreviation": "Epilepsy Behav Rep",
+      "title": "Epilepsy & behavior reports",
+      "essn": "2589-9864",
+      "issn": "2589-9864",
+      "nlmid": "101750909",
+      "isoabbreviation": "Epilepsy Behav Rep"
+     },
+     "printPublicationDate": "2026-09-01"
+    },
+    "pubYear": "2026",
+    "pageInfo": "100892",
+    "publicationStatus": "epublish",
+    "language": "eng",
+    "pubModel": "Electronic-eCollection",
+    "pubTypeList": {
+     "pubType": [
+      "Journal Article",
+      "Case Reports"
+     ]
+    },
+    "keywordList": {
+     "keyword": [
+      "ARDS",
+      "Acute respiratory distress syndrome",
+      "Extracorporeal Membrane Oxygenation",
+      "Scn1a",
+      "Dravet Syndrome",
+      "Pediatric Epilepsy",
+      "Multisystem Disease"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.1016/j.ebr.2026.100892"
+      }
+     ]
+    },
+    "isOpenAccess": "N",
+    "inEPMC": "N",
+    "inPMC": "N",
+    "citedByCount": 0,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "N",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "N",
+    "hasBook": "N",
+    "hasSuppl": "N",
+    "hasLabsLinks": "N",
+    "hasData": "N",
+    "license": "cc by-nc-nd",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "N",
+    "dateOfCompletion": "2026-09-17",
+    "electronicPublicationDate": "2026-08-16",
+    "firstPublicationDate": "2026-08-16",
+    "hasEvaluations": "N"
+   },
+   {
+    "id": "PMC13579307",
+    "source": "PMC",
+    "pmcid": "PMC13579307",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC13579307"
+     ]
+    },
+    "title": "Severe acute respiratory distress syndrome in Dravet syndrome: Clinical cases expanding the extraneurological phenotype",
+    "authorString": "Montero-Yéboles R, de Frutos-Porras E, Ulloa-Santamaría E, García Pérez M, Bueno-Campaña M, Ruiz-Sáez B.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Montero-Yéboles R",
+       "lastName": "Montero-Yéboles"
+      },
+      {
+       "fullName": "de Frutos-Porras E",
+       "lastName": "de Frutos-Porras"
+      },
+      {
+       "fullName": "Ulloa-Santamaría E",
+       "lastName": "Ulloa-Santamaría"
+      }
+     ]
+    },
+    "journalInfo": {
+     "volume": "35",
+     "journalIssueId": 4265448,
+     "dateOfPublication": "2026 Aug",
+     "monthOfPublication": 8,
+     "yearOfPublication": 2026,
+     "journal": {
+      "medlineAbbreviation": "Epilepsy Behav Rep",
+      "title": "Epilepsy & behavior reports",
+      "essn": "2589-9864",
+      "issn": "2589-9864",
+      "nlmid": "101750909",
+      "isoabbreviation": "Epilepsy Behav Rep"
+     },
+     "printPublicationDate": "2026-08-01"
+    },
+    "pubYear": "2026",
+    "language": "eng",
+    "pubModel": "Undetermined",
+    "pubTypeList": {
+     "pubType": [
+      "Case Reports",
+      "case-report"
+     ]
+    },
+    "keywordList": {
+     "keyword": [
+      "ARDS",
+      "Acute respiratory distress syndrome",
+      "Extracorporeal Membrane Oxygenation",
+      "Scn1a",
+      "Dravet Syndrome",
+      "Pediatric Epilepsy",
+      "Multisystem Disease"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "html",
+       "site": "PubMedCentral",
+       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC13579307/?tool=EBI"
+      },
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "pdf",
+       "site": "PubMedCentral",
+       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC13579307/pdf/?tool=EBI"
+      },
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC13579307"
+      },
+      {
+       "availability": "Free",
+       "availabilityCode": "F",
+       "documentStyle": "pdf",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC13579307?pdf=render"
+      }
+     ]
+    },
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 0,
+    "hasReferences": "N",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "N",
+    "hasLabsLinks": "N",
+    "hasData": "N",
+    "license": "cc by-nc-nd",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "N",
+    "electronicPublicationDate": "2026-08-16",
+    "firstPublicationDate": "2026-08-16",
+    "fullTextReceivedDate": "2026-09-17",
+    "hasEvaluations": "N"
+   },
+   {
+    "id": "42731411",
+    "source": "MED",
+    "pmid": "42731411",
+    "doi": "10.1016/j.actpsy.2026.107805",
+    "title": "Linguistic and communicative profile of children with Dravet Syndrome: A descriptive case series.",
+    "authorString": "Moraleda-Sepúlveda E, Perantón-Millán A, Pulido-García N, Durán-Heras P, Benomar-Simou H.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Moraleda-Sepúlveda E",
+       "lastName": "Moraleda-Sepúlveda"
+      },
+      {
+       "fullName": "Perantón-Millán A",
+       "lastName": "Perantón-Millán"
+      },
+      {
+       "fullName": "Pulido-García N",
+       "lastName": "Pulido-García"
+      }
+     ]
+    },
+    "journalInfo": {
+     "volume": "270",
+     "journalIssueId": 4252268,
+     "dateOfPublication": "2026 Sep",
+     "monthOfPublication": 9,
+     "yearOfPublication": 2026,
+     "journal": {
+      "medlineAbbreviation": "Acta Psychol (Amst)",
+      "title": "Acta psychologica",
+      "essn": "1873-6297",
+      "issn": "0001-6918",
+      "nlmid": "0370366",
+      "isoabbreviation": "Acta Psychol (Amst)"
+     },
+     "printPublicationDate": "2026-09-01"
+    },
+    "pubYear": "2026",
+    "pageInfo": "107805",
+    "publicationStatus": "aheadofprint",
+    "language": "eng",
+    "pubModel": "Print-Electronic",
+    "pubTypeList": {
+     "pubType": [
+      "Journal Article"
+     ]
+    },
+    "keywordList": {
+     "keyword": [
+      "Expression",
+      "Communication",
+      "Language Difficulties",
+      "Dravet Syndrome (Ds)"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.1016/j.actpsy.2026.107805"
+      }
+     ]
+    },
+    "isOpenAccess": "N",
+    "inEPMC": "N",
+    "inPMC": "N",
+    "citedByCount": 0,
+    "hasReferences": "N",
+    "hasTextMinedTerms": "N",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "N",
+    "hasBook": "N",
+    "hasSuppl": "N",
+    "hasLabsLinks": "N",
+    "hasData": "N",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "N",
+    "electronicPublicationDate": "2026-09-11",
+    "firstPublicationDate": "2026-09-11",
+    "hasEvaluations": "N"
+   },
+   {
+    "id": "42632955",
+    "source": "MED",
+    "pmid": "42632955",
+    "pmcid": "PMC13498680",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC13498680"
+     ]
+    },
+    "doi": "10.1177/15357597261456005",
+    "title": "Advancing Disease Modification in Dravet Syndrome.",
+    "authorString": "Fine AL.",
+    "authorList": {
+     "author": [
+      {
+       "fullName": "Fine AL",
+       "lastName": "Fine"
+      }
+     ]
+    },
+    "dataLinksTagsList": {
+     "dataLinkstag": [
+      "supporting_data"
+     ]
+    },
+    "journalInfo": {
+     "journalIssueId": 4242481,
+     "dateOfPublication": "2026 Aug",
+     "monthOfPublication": 8,
+     "yearOfPublication": 2026,
+     "journal": {
+      "medlineAbbreviation": "Epilepsy Curr",
+      "title": "Epilepsy currents",
+      "essn": "1535-7511",
+      "issn": "1535-7597",
+      "nlmid": "101135954",
+      "isoabbreviation": "Epilepsy Curr"
+     },
+     "printPublicationDate": "2026-08-01"
+    },
+    "pubYear": "2026",
+    "pageInfo": "15357597261456005",
+    "publicationStatus": "aheadofprint",
+    "language": "eng",
+    "pubModel": "Print-Electronic",
+    "pubTypeList": {
+     "pubType": [
+      "article-commentary",
+      "Journal Article"
+     ]
+    },
+    "fullTextUrlList": {
+     "fullTextUrl": [
+      {
+       "availability": "Subscription required",
+       "availabilityCode": "S",
+       "documentStyle": "doi",
+       "site": "DOI",
+       "url": "https://doi.org/10.1177/15357597261456005"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "html",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC13498680"
+      },
+      {
+       "availability": "Open access",
+       "availabilityCode": "OA",
+       "documentStyle": "pdf",
+       "site": "Europe_PMC",
+       "url": "https://europepmc.org/articles/PMC13498680?pdf=render"
+      }
+     ]
+    },
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 0,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "N",
+    "hasLabsLinks": "N",
+    "hasData": "Y",
+    "license": "cc by-nc",
+    "authMan": "N",
+    "epmcAuthMan": "N",
+    "nihAuthMan": "N",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "nct"
+     ]
+    },
+    "electronicPublicationDate": "2026-08-21",
+    "firstPublicationDate": "2026-08-21",
+    "fullTextReceivedDate": "2026-09-10",
+    "hasEvaluations": "N"
+   }
+  ]
+ }
+}

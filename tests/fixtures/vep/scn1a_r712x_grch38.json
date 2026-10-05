@@ -1,0 +1,169 @@
+{
+ "input": "NM_001165963.4:c.2134C>T",
+ "id": "NM_001165963.4:c.2134C>T",
+ "assembly_name": "GRCh38",
+ "seq_region_name": "2",
+ "start": 166042334,
+ "end": 166042334,
+ "strand": -1,
+ "allele_string": "C/T",
+ "most_severe_consequence": "stop_gained",
+ "variant_class": "SNV",
+ "transcript_consequences": [
+  {
+   "gene_symbol": "SCN1A-AS1",
+   "biotype": "lncRNA",
+   "canonical": 1,
+   "gene_id": "ENSG00000236107",
+   "impact": "MODIFIER",
+   "consequence_terms": [
+    "intron_variant",
+    "non_coding_transcript_variant"
+   ],
+   "cadd_raw": 8.174704,
+   "transcript_id": "ENST00000651574",
+   "variant_allele": "T",
+   "intron": "4/18",
+   "hgvsc": "ENST00000651574.1:n.487+6204G>A",
+   "hgnc_id": "HGNC:54069",
+   "strand": 1,
+   "gene_symbol_source": "HGNC",
+   "cadd_phred": 37
+  },
+  {
+   "exon": "15/29",
+   "canonical": 1,
+   "gene_id": "ENSG00000144285",
+   "protein_start": 712,
+   "mane": [
+    "MANE_Select"
+   ],
+   "cds_end": 2134,
+   "cds_start": 2134,
+   "consequence_terms": [
+    "stop_gained"
+   ],
+   "impact": "HIGH",
+   "gene_symbol": "SCN1A",
+   "cdna_end": 2612,
+   "protein_end": 712,
+   "biotype": "protein_coding",
+   "hgvsp": "ENSP00000501589.1:p.Arg712Ter",
+   "amino_acids": "R/*",
+   "codons": "Cga/Tga",
+   "mane_select": "NM_001165963.4",
+   "hgvsc": "ENST00000674923.1:c.2134C>T",
+   "hgnc_id": "HGNC:10585",
+   "strand": -1,
+   "gene_symbol_source": "HGNC",
+   "cadd_phred": 37,
+   "cdna_start": 2612,
+   "transcript_id": "ENST00000674923",
+   "cadd_raw": 8.174704,
+   "spliceai": {
+    "DP_AG": 5,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DP_DG": -46,
+    "DP_AL": 20,
+    "SYMBOL": "SCN1A",
+    "DP_DL": -42,
+    "DS_DL": 0,
+    "DS_DG": 0
+   },
+   "variant_allele": "T",
+   "protein_id": "ENSP00000501589"
+  },
+  {
+   "hgnc_id": "HGNC:10585",
+   "cadd_phred": 37,
+   "gene_symbol_source": "HGNC",
+   "strand": -1,
+   "hgvsc": "ENST00000303395.10:c.2134C>T",
+   "protein_id": "ENSP00000303540",
+   "variant_allele": "T",
+   "spliceai": {
+    "DP_DL": -42,
+    "SYMBOL": "SCN1A",
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "DS_AL": 0,
+    "DS_AG": 0,
+    "DP_AG": 5,
+    "DP_DG": -46,
+    "DP_AL": 20
+   },
+   "cdna_start": 2525,
+   "transcript_id": "ENST00000303395",
+   "cadd_raw": 8.174704,
+   "protein_start": 712,
+   "impact": "HIGH",
+   "consequence_terms": [
+    "stop_gained"
+   ],
+   "cds_start": 2134,
+   "cds_end": 2134,
+   "exon": "14/28",
+   "gene_id": "ENSG00000144285",
+   "hgvsp": "ENSP00000303540.4:p.Arg712Ter",
+   "protein_end": 712,
+   "biotype": "protein_coding",
+   "codons": "Cga/Tga",
+   "amino_acids": "R/*",
+   "cdna_end": 2525,
+   "gene_symbol": "SCN1A"
+  }
+ ],
+ "colocated_variants": [
+  {
+   "seq_region_name": "2",
+   "start": 166042334,
+   "allele_string": "HGMD_MUTATION",
+   "phenotype_or_disease": 1,
+   "strand": 1,
+   "end": 166042334,
+   "id": "CM024300"
+  },
+  {
+   "somatic": 1,
+   "seq_region_name": "2",
+   "var_synonyms": {
+    "ClinVar": []
+   },
+   "start": 166042334,
+   "id": "COSV57668399",
+   "end": 166042334,
+   "strand": 1,
+   "phenotype_or_disease": 1,
+   "allele_string": "COSMIC_MUTATION"
+  },
+  {
+   "seq_region_name": "2",
+   "start": 166042334,
+   "strand": 1,
+   "end": 166042334,
+   "id": "CX096176",
+   "allele_string": "HGMD_MUTATION",
+   "phenotype_or_disease": 1
+  },
+  {
+   "start": 166042334,
+   "allele_string": "G/A",
+   "phenotype_or_disease": 1,
+   "end": 166042334,
+   "strand": 1,
+   "id": "rs794726730",
+   "seq_region_name": "2",
+   "var_synonyms": {
+    "ClinVar": [
+     "VCV000189886"
+    ]
+   },
+   "clin_sig_ref_allele": "G",
+   "clin_sig_allele": "A:pathogenic",
+   "clin_sig": [
+    "pathogenic"
+   ]
+  }
+ ]
+}

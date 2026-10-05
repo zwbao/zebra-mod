@@ -1,0 +1,93 @@
+{
+ "responseHeader": {
+  "status": 0,
+  "QTime": 1
+ },
+ "response": {
+  "numFound": 1,
+  "start": 0,
+  "numFoundExact": true,
+  "docs": [
+   {
+    "date_modified": "2023-01-20T00:00:00Z",
+    "omim_id": [
+     "182389"
+    ],
+    "rgd_id": [
+     "RGD:69364"
+    ],
+    "ensembl_gene_id": "ENSG00000144285",
+    "location": "2q24.3",
+    "ccds_id": [
+     "CCDS33316",
+     "CCDS54413",
+     "CCDS54414",
+     "CCDS86891"
+    ],
+    "lsdb": [
+     "Global Variome shared LOVD|https://databases.lovd.nl/shared/genes/SCN1A",
+     "LRG_8|http://ftp.ebi.ac.uk/pub/databases/lrgex/LRG_8.xml"
+    ],
+    "gencc": "HGNC:10585",
+    "iuphar": "HGNC:10585",
+    "entrez_id": "6323",
+    "symbol": "SCN1A",
+    "ucsc_id": "uc061peu.1",
+    "vega_id": "OTTHUMG00000044173",
+    "ena": [
+     "AB093548"
+    ],
+    "agr": "HGNC:10585",
+    "uniprot_ids": [
+     "P35498"
+    ],
+    "status": "Approved",
+    "uuid": "d7c7182c-fdc7-4991-b3ee-57c2fd2812c9",
+    "alias_symbol": [
+     "Nav1.1",
+     "GEFSP2",
+     "HBSCI",
+     "NAC1",
+     "SMEI"
+    ],
+    "date_name_changed": "2016-02-05T00:00:00Z",
+    "refseq_accession": [
+     "NM_006920"
+    ],
+    "prev_name": [
+     "febrile convulsions 3",
+     "sodium channel, voltage-gated, type I, alpha subunit",
+     "sodium channel, voltage gated, type I alpha subunit"
+    ],
+    "orphanet": 118489,
+    "gene_group": [
+     "Sodium voltage-gated channel alpha subunits"
+    ],
+    "date_approved_reserved": "1988-11-28T00:00:00Z",
+    "name": "sodium voltage-gated channel alpha subunit 1",
+    "pubmed_id": [
+     8062593,
+     16382098,
+     11823106
+    ],
+    "hgnc_id": "HGNC:10585",
+    "mane_select": [
+     "ENST00000674923.1",
+     "NM_001165963.4"
+    ],
+    "mgd_id": [
+     "MGI:98246"
+    ],
+    "locus_group": "protein-coding gene",
+    "prev_symbol": [
+     "SCN1",
+     "FEB3"
+    ],
+    "gene_group_id": [
+     1203
+    ],
+    "locus_type": "gene with protein product"
+   }
+  ]
+ }
+}

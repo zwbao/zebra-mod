@@ -1,0 +1,10 @@
+[
+ {
+  "_id": "@DISEASE_Epilepsies_Myoclonic",
+  "biotype": "disease",
+  "db_id": "D004831",
+  "db": "ncbi_mesh",
+  "name": "Epilepsies Myoclonic",
+  "match": "Multiple matches"
+ }
+]

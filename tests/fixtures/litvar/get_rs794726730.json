@@ -1,0 +1,37 @@
+{
+ "_id": "litvar@rs794726730##",
+ "concept": "variant",
+ "rsid": "rs794726730",
+ "clingen_ids": [
+  "CA274966"
+ ],
+ "gene": [
+  "SCN1A"
+ ],
+ "name": "c.2134C>T",
+ "hgvs": "c.2134C>T",
+ "flag_gene_variant": false,
+ "flag_clingen_variant": false,
+ "flag_rsid_variant": true,
+ "data_species": [
+  "Homo sapiens"
+ ],
+ "data_snp_id": [
+  "794726730"
+ ],
+ "data_tax_id": [
+  "9606"
+ ],
+ "data_allele": [
+  "R"
+ ],
+ "data_snp_class": [
+  "snv"
+ ],
+ "data_chromosome_base_position": [
+  "2:166042334"
+ ],
+ "data_maf.alfa": [
+  "A=0./0"
+ ]
+}

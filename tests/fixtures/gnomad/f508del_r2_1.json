@@ -1,0 +1,314 @@
+{
+ "data": {
+  "variant": {
+   "variant_id": "7-117199644-ATCT-A",
+   "reference_genome": "GRCh37",
+   "rsids": [
+    "rs1801178"
+   ],
+   "caid": "CA118639",
+   "flags": [],
+   "exome": {
+    "ac": 1776,
+    "an": 251256,
+    "af": 0.007068487916706467,
+    "homozygote_count": 1,
+    "hemizygote_count": 0,
+    "filters": [],
+    "flags": [],
+    "faf95": {
+     "popmax": 0.011732529999999996,
+     "popmax_population": "nfe"
+    },
+    "populations": [
+     {
+      "id": "afr",
+      "ac": 48,
+      "an": 16248,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "afr_XX",
+      "ac": 27,
+      "an": 10064,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "afr_XY",
+      "ac": 21,
+      "an": 6184,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "amr",
+      "ac": 127,
+      "an": 34578,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "amr_XX",
+      "ac": 69,
+      "an": 20264,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "asj",
+      "ac": 56,
+      "an": 10078,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "eas",
+      "ac": 0,
+      "an": 18392,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "fin",
+      "ac": 48,
+      "an": 21600,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "nfe",
+      "ac": 1394,
+      "an": 113626,
+      "homozygote_count": 1,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "oth",
+      "ac": 42,
+      "an": 6126,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "sas",
+      "ac": 61,
+      "an": 30608,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "XX",
+      "ac": 835,
+      "an": 115456,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "XY",
+      "ac": 941,
+      "an": 135800,
+      "homozygote_count": 1,
+      "hemizygote_count": 0
+     }
+    ]
+   },
+   "genome": {
+    "ac": 251,
+    "an": 31374,
+    "af": 0.008000254988206796,
+    "homozygote_count": 0,
+    "hemizygote_count": 0,
+    "filters": [],
+    "flags": [],
+    "faf95": {
+     "popmax": 0.011752839999999973,
+     "popmax_population": "nfe"
+    },
+    "populations": [
+     {
+      "id": "afr",
+      "ac": 17,
+      "an": 8710,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "afr_XX",
+      "ac": 4,
+      "an": 3680,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "afr_XY",
+      "ac": 13,
+      "an": 5030,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "amr",
+      "ac": 8,
+      "an": 848,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "amr_XX",
+      "ac": 3,
+      "an": 414,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "asj",
+      "ac": 2,
+      "an": 290,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "eas",
+      "ac": 0,
+      "an": 1556,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "fin",
+      "ac": 13,
+      "an": 3474,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "nfe",
+      "ac": 204,
+      "an": 15408,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "oth",
+      "ac": 7,
+      "an": 1088,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "sas",
+      "ac": 0,
+      "an": 0,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "XX",
+      "ac": 104,
+      "an": 13918,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     },
+     {
+      "id": "XY",
+      "ac": 147,
+      "an": 17456,
+      "homozygote_count": 0,
+      "hemizygote_count": 0
+     }
+    ]
+   },
+   "coverage": {
+    "exome": {
+     "mean": 75.43581900643392,
+     "median": 76,
+     "over_20": 0.9985233625145027
+    },
+    "genome": {
+     "mean": 30.923515052888526,
+     "median": 30,
+     "over_20": 0.9462978030919447
+    }
+   },
+   "in_silico_predictors": null
+  },
+  "region": {
+   "coverage": {
+    "exome": [
+     {
+      "pos": 117199642,
+      "mean": 74.96698660478853,
+      "median": 76,
+      "over_20": 1
+     },
+     {
+      "pos": 117199643,
+      "mean": 75.67461238266006,
+      "median": 76,
+      "over_20": 1
+     },
+     {
+      "pos": 117199644,
+      "mean": 75.43581900643392,
+      "median": 76,
+      "over_20": 1
+     },
+     {
+      "pos": 117199645,
+      "mean": 74.72734943571353,
+      "median": 75,
+      "over_20": 1
+     },
+     {
+      "pos": 117199646,
+      "mean": 74.6327391625356,
+      "median": 75,
+      "over_20": 1
+     }
+    ],
+    "genome": [
+     {
+      "pos": 117199642,
+      "mean": 30.884458909682667,
+      "median": 30,
+      "over_20": 0.95
+     },
+     {
+      "pos": 117199643,
+      "mean": 30.605370219690805,
+      "median": 30,
+      "over_20": 0.94
+     },
+     {
+      "pos": 117199644,
+      "mean": 30.923515052888526,
+      "median": 30,
+      "over_20": 0.95
+     },
+     {
+      "pos": 117199645,
+      "mean": 30.661513425549227,
+      "median": 30,
+      "over_20": 0.94
+     },
+     {
+      "pos": 117199646,
+      "mean": 30.387306753458095,
+      "median": 30,
+      "over_20": 0.94
+     }
+    ]
+   }
+  },
+  "liftover": [
+   {
+    "liftover": {
+     "variant_id": "7-117559590-ATCT-A",
+     "reference_genome": "GRCh38"
+    }
+   }
+  ]
+ }
+}

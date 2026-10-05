@@ -1,0 +1,665 @@
+{
+ "data": {
+  "meta": {
+   "dataVersion": {
+    "year": "26",
+    "month": "09"
+   }
+  },
+  "target": {
+   "id": "ENSG00000001626",
+   "approvedSymbol": "CFTR",
+   "approvedName": "CF transmembrane conductance regulator",
+   "biotype": "protein_coding",
+   "tractability": [
+    {
+     "label": "Approved Drug",
+     "modality": "SM",
+     "value": true
+    },
+    {
+     "label": "Advanced Clinical",
+     "modality": "SM",
+     "value": false
+    },
+    {
+     "label": "Phase 1 Clinical",
+     "modality": "SM",
+     "value": false
+    },
+    {
+     "label": "Structure with Ligand",
+     "modality": "SM",
+     "value": true
+    },
+    {
+     "label": "High-Quality Ligand",
+     "modality": "SM",
+     "value": true
+    },
+    {
+     "label": "High-Quality Pocket",
+     "modality": "SM",
+     "value": true
+    },
+    {
+     "label": "Med-Quality Pocket",
+     "modality": "SM",
+     "value": false
+    },
+    {
+     "label": "Druggable Family",
+     "modality": "SM",
+     "value": true
+    },
+    {
+     "label": "Approved Drug",
+     "modality": "AB",
+     "value": false
+    },
+    {
+     "label": "Advanced Clinical",
+     "modality": "AB",
+     "value": false
+    },
+    {
+     "label": "Phase 1 Clinical",
+     "modality": "AB",
+     "value": false
+    },
+    {
+     "label": "UniProt loc high conf",
+     "modality": "AB",
+     "value": true
+    },
+    {
+     "label": "GO CC high conf",
+     "modality": "AB",
+     "value": true
+    },
+    {
+     "label": "UniProt loc med conf",
+     "modality": "AB",
+     "value": false
+    },
+    {
+     "label": "UniProt SigP or TMHMM",
+     "modality": "AB",
+     "value": true
+    },
+    {
+     "label": "GO CC med conf",
+     "modality": "AB",
+     "value": false
+    },
+    {
+     "label": "Human Protein Atlas loc",
+     "modality": "AB",
+     "value": false
+    },
+    {
+     "label": "Approved Drug",
+     "modality": "PR",
+     "value": false
+    },
+    {
+     "label": "Advanced Clinical",
+     "modality": "PR",
+     "value": false
+    },
+    {
+     "label": "Phase 1 Clinical",
+     "modality": "PR",
+     "value": false
+    },
+    {
+     "label": "Literature",
+     "modality": "PR",
+     "value": false
+    },
+    {
+     "label": "UniProt Ubiquitination",
+     "modality": "PR",
+     "value": true
+    },
+    {
+     "label": "Database Ubiquitination",
+     "modality": "PR",
+     "value": true
+    },
+    {
+     "label": "Half-life Data",
+     "modality": "PR",
+     "value": false
+    },
+    {
+     "label": "Small Molecule Binder",
+     "modality": "PR",
+     "value": true
+    },
+    {
+     "label": "Approved Drug",
+     "modality": "OC",
+     "value": false
+    },
+    {
+     "label": "Advanced Clinical",
+     "modality": "OC",
+     "value": false
+    },
+    {
+     "label": "Phase 1 Clinical",
+     "modality": "OC",
+     "value": false
+    }
+   ],
+   "drugAndClinicalCandidates": {
+    "count": 13,
+    "rows": [
+     {
+      "maxClinicalStage": "PHASE_2",
+      "drug": {
+       "id": "CHEMBL4101487",
+       "name": "GALICAFTOR",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "PHASE_2",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "mechanismOfAction": "Cystic fibrosis transmembrane conductance regulator positive modulator",
+          "actionType": "POSITIVE MODULATOR",
+          "targets": [
+           {
+            "id": "ENSG00000001626",
+            "approvedSymbol": "CFTR"
+           }
+          ],
+          "references": [
+           {
+            "source": "PubMed",
+            "ids": [
+             "32153386"
+            ],
+            "urls": [
+             "https://pubmed.ncbi.nlm.nih.gov/32153386/"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "clinicalReports": [
+       {
+        "id": "d01dgz/cystic fibrosis",
+        "source": "TTD",
+        "clinicalStage": "PHASE_2",
+        "trialOverallStatus": null,
+        "url": "https://ttd.idrblab.cn/data/drug/details/D01DGZ",
+        "origin": "CURATED_RESOURCE"
+       },
+       {
+        "id": "nct03045523",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_2",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03045523",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct03119649",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_2",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03119649",
+        "origin": "CLINICAL_TRIAL"
+       }
+      ],
+      "diseases": [
+       {
+        "diseaseFromSource": "cystic fibrosis",
+        "disease": {
+         "id": "MONDO_0009061",
+         "name": "cystic fibrosis"
+        }
+       }
+      ]
+     },
+     {
+      "maxClinicalStage": "APPROVAL",
+      "drug": {
+       "id": "CHEMBL4297603",
+       "name": "DEUTIVACAFTOR",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "mechanismOfAction": "Cystic fibrosis transmembrane conductance regulator activator",
+          "actionType": "ACTIVATOR",
+          "targets": [
+           {
+            "id": "ENSG00000001626",
+            "approvedSymbol": "CFTR"
+           }
+          ],
+          "references": [
+           {
+            "source": "FDA",
+            "ids": [
+             "label/2024/218730s000lbl.pdf"
+            ],
+            "urls": [
+             "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/218730s000lbl.pdf"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "clinicalReports": [
+       {
+        "id": "nct05033080",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT05033080",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct05076149",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT05076149",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct05422222",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_3",
+        "trialOverallStatus": "ACTIVE_NOT_RECRUITING",
+        "url": "https://clinicaltrials.gov/study/NCT05422222",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "emea/h/c/006382",
+        "source": "EMA Human Drugs",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/alyftrek",
+        "origin": "REGULATORY_AGENCY"
+       }
+      ],
+      "diseases": [
+       {
+        "diseaseFromSource": "cystic fibrosis",
+        "disease": {
+         "id": "MONDO_0009061",
+         "name": "cystic fibrosis"
+        }
+       }
+      ]
+     },
+     {
+      "maxClinicalStage": "PHASE_4",
+      "drug": {
+       "id": "CHEMBL2010601",
+       "name": "IVACAFTOR",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "mechanismOfAction": "Cystic fibrosis transmembrane conductance regulator positive modulator",
+          "actionType": "POSITIVE MODULATOR",
+          "targets": [
+           {
+            "id": "ENSG00000001626",
+            "approvedSymbol": "CFTR"
+           }
+          ],
+          "references": [
+           {
+            "source": "DailyMed",
+            "ids": [
+             "setid=0ab0c9f8-3eee-4e0f-9f3f-c1e16aaffe25#nlm34090-1"
+            ],
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=0ab0c9f8-3eee-4e0f-9f3f-c1e16aaffe25#nlm34090-1"
+            ]
+           }
+          ]
+         },
+         {
+          "mechanismOfAction": "Cystic fibrosis transmembrane conductance regulator activator",
+          "actionType": "ACTIVATOR",
+          "targets": [
+           {
+            "id": "ENSG00000001626",
+            "approvedSymbol": "CFTR"
+           }
+          ],
+          "references": [
+           {
+            "source": "FDA",
+            "ids": [
+             "label/2024/218730s000lbl.pdf"
+            ],
+            "urls": [
+             "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/218730s000lbl.pdf"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "clinicalReports": [
+       {
+        "id": "nct01937325",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "UNKNOWN",
+        "url": "https://clinicaltrials.gov/study/NCT01937325",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct02823470",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT02823470",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct02875366",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT02875366",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "emea/h/c/002494",
+        "source": "EMA Human Drugs",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/kalydeco",
+        "origin": "REGULATORY_AGENCY"
+       },
+       {
+        "id": "emea/h/c/003954",
+        "source": "EMA Human Drugs",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/orkambi",
+        "origin": "REGULATORY_AGENCY"
+       },
+       {
+        "id": "emea/h/c/004682",
+        "source": "EMA Human Drugs",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": null,
+        "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/symkevi",
+        "origin": "REGULATORY_AGENCY"
+       }
+      ],
+      "diseases": [
+       {
+        "diseaseFromSource": "cystic fibrosis transmembrane conductance regulator gene mutation",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "cystic fibrosis",
+        "disease": {
+         "id": "MONDO_0009061",
+         "name": "cystic fibrosis"
+        }
+       },
+       {
+        "diseaseFromSource": "non-cystic fibrosis bronchiectasis",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "acute lung injury",
+        "disease": {
+         "id": "MONDO_0015796",
+         "name": "acute lung injury"
+        }
+       },
+       {
+        "diseaseFromSource": "respiratory system disease",
+        "disease": {
+         "id": "MONDO_0005087",
+         "name": "respiratory system disorder"
+        }
+       },
+       {
+        "diseaseFromSource": "pulmonary exacerbations",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "cystic fibrosis transmembrane conductance regulator protein mutation",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "cystic fibrosis transmembrane conductance regulator dysfunction",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "F508del mutation",
+        "disease": null
+       }
+      ]
+     },
+     {
+      "maxClinicalStage": "PHASE_4",
+      "drug": {
+       "id": "CHEMBL2108184",
+       "name": "CROFELEMER",
+       "drugType": "Small molecule",
+       "maximumClinicalStage": "APPROVAL",
+       "mechanismsOfAction": {
+        "rows": [
+         {
+          "mechanismOfAction": "Cystic fibrosis transmembrane conductance regulator inhibitor",
+          "actionType": "INHIBITOR",
+          "targets": [
+           {
+            "id": "ENSG00000001626",
+            "approvedSymbol": "CFTR"
+           }
+          ],
+          "references": [
+           {
+            "source": "DailyMed",
+            "ids": [
+             "setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1",
+             "setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1"
+            ],
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1",
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1"
+            ]
+           },
+           {
+            "source": "PubMed",
+            "ids": [
+             "19808995"
+            ],
+            "urls": [
+             "http://europepmc.org/abstract/MED/19808995"
+            ]
+           }
+          ]
+         },
+         {
+          "mechanismOfAction": "Anoctamin-1 blocker",
+          "actionType": "BLOCKER",
+          "targets": [
+           {
+            "id": "ENSG00000131620",
+            "approvedSymbol": "ANO1"
+           }
+          ],
+          "references": [
+           {
+            "source": "DailyMed",
+            "ids": [
+             "setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1",
+             "setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1"
+            ],
+            "urls": [
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1",
+             "http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=684ca8ce-2583-4c2d-a283-8a16fc63f8f8#nlm34090-1"
+            ]
+           },
+           {
+            "source": "PubMed",
+            "ids": [
+             "19808995"
+            ],
+            "urls": [
+             "http://europepmc.org/abstract/MED/19808995"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "clinicalReports": [
+       {
+        "id": "nct03898856",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT03898856",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct04192487",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "COMPLETED",
+        "url": "https://clinicaltrials.gov/study/NCT04192487",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "nct04486326",
+        "source": "ClinicalTrials.gov",
+        "clinicalStage": "PHASE_4",
+        "trialOverallStatus": "TERMINATED",
+        "url": "https://clinicaltrials.gov/study/NCT04486326",
+        "origin": "CLINICAL_TRIAL"
+       },
+       {
+        "id": "label/2012/202292s000lbl.pdf",
+        "source": "FDA",
+        "clinicalStage": "APPROVAL",
+        "trialOverallStatus": null,
+        "url": "http://www.accessdata.fda.gov/drugsatfda_docs/label/2012/202292s000lbl.pdf",
+        "origin": "REGULATORY_AGENCY"
+       }
+      ],
+      "diseases": [
+       {
+        "diseaseFromSource": "chronic idiopathic diarrhea",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "non-infectious diarrhea",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "diarrhea",
+        "disease": {
+         "id": "MONDO_0001673",
+         "name": "diarrheal disease"
+        }
+       },
+       {
+        "diseaseFromSource": "hiv-associated diarrhoea",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "microvillus inclusion disease",
+        "disease": {
+         "id": "MONDO_0009635",
+         "name": "microvillus inclusion disease"
+        }
+       },
+       {
+        "diseaseFromSource": "irritable bowel syndrome",
+        "disease": {
+         "id": "MONDO_0005052",
+         "name": "irritable bowel syndrome"
+        }
+       },
+       {
+        "diseaseFromSource": "breast cancer",
+        "disease": {
+         "id": "MONDO_0007254",
+         "name": "breast cancer"
+        }
+       },
+       {
+        "diseaseFromSource": "intestinal failure",
+        "disease": null
+       },
+       {
+        "diseaseFromSource": "short bowel syndrome",
+        "disease": {
+         "id": "MONDO_0015183",
+         "name": "short bowel syndrome"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "associatedDiseases": {
+    "count": 1889,
+    "rows": [
+     {
+      "score": 0.9211437412666207,
+      "disease": {
+       "id": "MONDO_0009061",
+       "name": "cystic fibrosis"
+      }
+     },
+     {
+      "score": 0.8242369387799563,
+      "disease": {
+       "id": "MONDO_0010178",
+       "name": "congenital bilateral aplasia of vas deferens from CFTR mutation"
+      }
+     },
+     {
+      "score": 0.7176978195828634,
+      "disease": {
+       "id": "MONDO_0008185",
+       "name": "hereditary chronic pancreatitis"
+      }
+     },
+     {
+      "score": 0.6974181697318506,
+      "disease": {
+       "id": "MONDO_0008887",
+       "name": "bronchiectasis with or without elevated sweat chloride 1"
+      }
+     },
+     {
+      "score": 0.5958758005516537,
+      "disease": {
+       "id": "MONDO_0018801",
+       "name": "congenital bilateral absence of vas deferens"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

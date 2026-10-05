@@ -1,0 +1,250 @@
+{
+ "header": {
+  "type": "esummary",
+  "version": "0.3"
+ },
+ "result": {
+  "uids": [
+   "189886"
+  ],
+  "189886": {
+   "uid": "189886",
+   "obj_type": "single nucleotide variant",
+   "accession": "VCV000189886",
+   "accession_version": "VCV000189886.66",
+   "title": "NM_001165963.4(SCN1A):c.2134C>T (p.Arg712Ter)",
+   "variation_set": [
+    {
+     "measure_id": "187817",
+     "variation_xrefs": [
+      {
+       "db_source": "ClinGen",
+       "db_id": "CA274966"
+      },
+      {
+       "db_source": "dbSNP",
+       "db_id": "794726730"
+      }
+     ],
+     "variation_name": "NM_001165963.4(SCN1A):c.2134C>T (p.Arg712Ter)",
+     "cdna_change": "c.2134C>T",
+     "aliases": [
+      "p.R712*:CGA>TGA"
+     ],
+     "variation_loc": [
+      {
+       "status": "current",
+       "assembly_name": "GRCh38",
+       "chr": "2",
+       "band": "2q24.3",
+       "start": "166042334",
+       "stop": "166042334",
+       "inner_start": "",
+       "inner_stop": "",
+       "outer_start": "",
+       "outer_stop": "",
+       "display_start": "166042334",
+       "display_stop": "166042334",
+       "assembly_acc_ver": "GCF_000001405.38",
+       "annotation_release": "",
+       "alt": "",
+       "ref": ""
+      },
+      {
+       "status": "previous",
+       "assembly_name": "GRCh37",
+       "chr": "2",
+       "band": "2q24.3",
+       "start": "166898844",
+       "stop": "166898844",
+       "inner_start": "",
+       "inner_stop": "",
+       "outer_start": "",
+       "outer_stop": "",
+       "display_start": "166898844",
+       "display_stop": "166898844",
+       "assembly_acc_ver": "GCF_000001405.25",
+       "annotation_release": "",
+       "alt": "",
+       "ref": ""
+      }
+     ],
+     "allele_freq_set": [
+      {
+       "source": "Trans-Omics for Precision Medicine (TOPMed)",
+       "value": "0.00000",
+       "minor_allele": ""
+      }
+     ],
+     "variant_type": "single nucleotide variant",
+     "canonical_spdi": "NC_000002.12:166042333:G:A",
+     "common_name": ""
+    }
+   ],
+   "supporting_submissions": {
+    "scv": [
+     "SCV000255815",
+     "SCV000221803",
+     "SCV001164121",
+     "SCV000633820",
+     "SCV001248488",
+     "SCV001738757",
+     "SCV002074262",
+     "SCV004806000",
+     "SCV003552472",
+     "SCV004741721",
+     "SCV004027773",
+     "SCV003827371",
+     "SCV001739363",
+     "SCV004047975",
+     "SCV000225570",
+     "SCV000242516",
+     "SCV007610795",
+     "SCV007917294"
+    ],
+    "rcv": [
+     "RCV000174291",
+     "RCV000188886",
+     "RCV001004670",
+     "RCV001527645",
+     "RCV001824659",
+     "RCV002515207",
+     "RCV004535158",
+     "RCV006606278"
+    ]
+   },
+   "germline_classification": {
+    "description": "Pathogenic",
+    "last_evaluated": "2025/11/14 00:00",
+    "review_status": "criteria provided, multiple submitters, no conflicts",
+    "fda_recognized_database": "",
+    "trait_set": [
+     {
+      "trait_xrefs": [
+       {
+        "db_source": "Orphanet",
+        "db_id": "1934"
+       },
+       {
+        "db_source": "MedGen",
+        "db_id": "C0393706"
+       },
+       {
+        "db_source": "MONDO",
+        "db_id": "MONDO:0800491"
+       }
+      ],
+      "trait_name": "Early-infantile DEE"
+     },
+     {
+      "trait_xrefs": [],
+      "trait_name": "SCN1A-related disorder"
+     },
+     {
+      "trait_xrefs": [
+       {
+        "db_source": "MedGen",
+        "db_id": "C0950123"
+       },
+       {
+        "db_source": "MeSH",
+        "db_id": "D030342"
+       }
+      ],
+      "trait_name": "Inborn genetic diseases"
+     },
+     {
+      "trait_xrefs": [],
+      "trait_name": "Autosomal dominant epilepsy"
+     },
+     {
+      "trait_xrefs": [
+       {
+        "db_source": "MedGen",
+        "db_id": "C3661900"
+       }
+      ],
+      "trait_name": "not provided"
+     },
+     {
+      "trait_xrefs": [
+       {
+        "db_source": "Orphanet",
+        "db_id": "36387"
+       },
+       {
+        "db_source": "MedGen",
+        "db_id": "C1858673"
+       },
+       {
+        "db_source": "MONDO",
+        "db_id": "MONDO:0011461"
+       },
+       {
+        "db_source": "OMIM",
+        "db_id": "604403"
+       }
+      ],
+      "trait_name": "Generalized epilepsy with febrile seizures plus, type 2"
+     },
+     {
+      "trait_xrefs": [
+       {
+        "db_source": "Orphanet",
+        "db_id": "33069"
+       },
+       {
+        "db_source": "MedGen",
+        "db_id": "C0751122"
+       },
+       {
+        "db_source": "MONDO",
+        "db_id": "MONDO:0100135"
+       },
+       {
+        "db_source": "OMIM",
+        "db_id": "607208"
+       }
+      ],
+      "trait_name": "Severe myoclonic epilepsy in infancy"
+     }
+    ]
+   },
+   "clinical_impact_classification": {
+    "description": "",
+    "last_evaluated": "1/01/01 00:00",
+    "review_status": "",
+    "fda_recognized_database": "",
+    "trait_set": []
+   },
+   "oncogenicity_classification": {
+    "description": "",
+    "last_evaluated": "1/01/01 00:00",
+    "review_status": "",
+    "fda_recognized_database": "",
+    "trait_set": []
+   },
+   "record_status": "",
+   "gene_sort": "SCN1A",
+   "chr_sort": "02",
+   "location_sort": "00000000000166042334",
+   "variation_set_name": "",
+   "variation_set_id": "",
+   "genes": [
+    {
+     "symbol": "SCN1A",
+     "geneid": "6323",
+     "strand": "-",
+     "source": "submitted"
+    }
+   ],
+   "molecular_consequence_list": [
+    "nonsense",
+    "5 prime UTR variant",
+    "non-coding transcript variant"
+   ],
+   "protein_change": "R701*, R712*, R683*, R700*, R684*",
+   "fda_recognized_database": ""
+  }
+ }
+}

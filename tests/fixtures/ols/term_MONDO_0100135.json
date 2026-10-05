@@ -1,0 +1,164 @@
+{
+ "_embedded": {
+  "terms": [
+   {
+    "iri": "http://purl.obolibrary.org/obo/MONDO_0100135",
+    "lang": "en",
+    "description": [
+     "This is a distinct class from MONDO:0100079 epileptic encephalopathy, early infantile 6. See https://github.com/monarch-initiative/mondo/issues/745",
+     "Dravet syndrome is a channelopathy with epilepsy of with onset during the first year of life, typically 4-5 months, characterized by status epilepticus and a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment. Dravet differs from other channelopathies usually due to a mutation in SCN1A."
+    ],
+    "synonyms": [
+     "DS",
+     "Dravet syndrome",
+     "Dravet",
+     "SME",
+     "SMEB",
+     "myoclonic epilepsy, severe, of infancy",
+     "severe myoclonic epilepsy of infancy"
+    ],
+    "annotation": {
+     "Creator": [
+      "https://orcid.org/0000-0001-5208-3432"
+     ],
+     "curated content resource": [
+      "https://search.clinicalgenome.org/kb/conditions/MONDO:0100135"
+     ],
+     "database_cross_reference": [
+      "DOID:0060171",
+      "DOID:0080422",
+      "GARD:0010430",
+      "ICD10CM:G40.83",
+      "ICD9:345.10",
+      "MEDGEN:148243",
+      "NANDO:1200587",
+      "NANDO:2200877",
+      "NCIT:C116573",
+      "NORD:1061",
+      "SCTID:230437002",
+      "UMLS:C0751122",
+      "icd11.foundation:1255654700"
+     ],
+     "has exact match": [
+      "http://id.who.int/icd/entity/1255654700",
+      "http://identifiers.org/medgen/148243",
+      "http://identifiers.org/snomedct/230437002",
+      "http://linkedlifedata.com/resource/umls/id/C0751122",
+      "http://purl.bioontology.org/ontology/ICD10CM/G40.83",
+      "http://purl.obolibrary.org/obo/DOID_0080422",
+      "http://purl.obolibrary.org/obo/NCIT_C116573"
+     ],
+     "id": [
+      "MONDO:0100135"
+     ],
+     "seeAlso": [
+      "https://www.epilepsydiagnosis.org/syndrome/dravet-overview.html",
+      "https://rarediseases.info.nih.gov/diseases/10430/dravet-syndrome"
+     ],
+     "term tracker item": [
+      "https://github.com/monarch-initiative/mondo/issues/9097"
+     ]
+    },
+    "label": "Dravet syndrome",
+    "ontology_name": "mondo",
+    "ontology_prefix": "MONDO",
+    "ontology_iri": "http://purl.obolibrary.org/obo/mondo/mondo-international.owl",
+    "is_obsolete": false,
+    "term_replaced_by": null,
+    "is_defining_ontology": true,
+    "has_children": false,
+    "is_root": false,
+    "short_form": "MONDO_0100135",
+    "obo_id": "MONDO:0100135",
+    "in_subset": [
+     "clingen",
+     "doid_rare",
+     "gard_rare",
+     "nord_rare",
+     "rare"
+    ],
+    "obo_xref": [
+     {
+      "database": "DOID",
+      "id": "0060171",
+      "description": "MONDO:equivalentObsolete",
+      "url": "http://purl.obolibrary.org/obo/DOID_0060171"
+     },
+     {
+      "database": "DOID",
+      "id": "0080422",
+      "description": "MONDO:equivalentTo",
+      "url": "http://purl.obolibrary.org/obo/DOID_0080422"
+     },
+     {
+      "database": "GARD",
+      "id": "0010430",
+      "description": "MONDO:GARD",
+      "url": "https://rarediseases.info.nih.gov/?gard_id=0010430"
+     },
+     {
+      "database": "ICD10CM",
+      "id": "G40.83",
+      "description": "https://orcid.org/0009-0001-6494-4831",
+      "url": null
+     },
+     {
+      "database": "ICD9",
+      "id": "345.10",
+      "description": "MONDO:relatedTo",
+      "url": null
+     },
+     {
+      "database": "MEDGEN",
+      "id": "148243",
+      "description": "MONDO:equivalentTo",
+      "url": "https://www.ncbi.nlm.nih.gov/medgen/148243"
+     },
+     {
+      "database": "NANDO",
+      "id": "1200587",
+      "description": "https://orcid.org/0000-0003-0011-764X",
+      "url": "https://nanbyodata.jp/disease/NANDO:1200587"
+     },
+     {
+      "database": "NANDO",
+      "id": "2200877",
+      "description": "https://orcid.org/0000-0003-0011-764X",
+      "url": "https://nanbyodata.jp/disease/NANDO:2200877"
+     },
+     {
+      "database": "NCIT",
+      "id": "C116573",
+      "description": "MONDO:equivalentTo",
+      "url": "http://purl.obolibrary.org/obo/NCIT_C116573"
+     },
+     {
+      "database": "NORD",
+      "id": "1061",
+      "description": "MONDO:NORD",
+      "url": "https://rarediseases.org/?p=1061"
+     },
+     {
+      "database": "SCTID",
+      "id": "230437002",
+      "description": "MONDO:equivalentTo",
+      "url": "http://purl.bioontology.org/ontology/SNOMEDCT/230437002"
+     },
+     {
+      "database": "UMLS",
+      "id": "C0751122",
+      "description": "MONDO:equivalentTo",
+      "url": "https://uts.nlm.nih.gov/uts/umls/concept/C0751122"
+     },
+     {
+      "database": "icd11.foundation",
+      "id": "1255654700",
+      "description": "MONDO:equivalentTo",
+      "url": null
+     }
+    ],
+    "is_preferred_root": false
+   }
+  ]
+ }
+}

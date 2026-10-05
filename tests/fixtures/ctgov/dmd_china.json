@@ -1,0 +1,253 @@
+{
+ "totalCount": 20,
+ "studies": [
+  {
+   "protocolSection": {
+    "identificationModule": {
+     "nctId": "NCT06114056",
+     "briefTitle": "A Clinical Study Evaluating the Safety, Tolerability, and Initial Efficacy of Single Intravenous Infusion of JWK007 in Patients With Duchenne Muscular Dystrophy (DMD)"
+    },
+    "statusModule": {
+     "overallStatus": "ACTIVE_NOT_RECRUITING",
+     "startDateStruct": {
+      "date": "2024-01-31"
+     },
+     "primaryCompletionDateStruct": {
+      "date": "2029-11-13"
+     },
+     "lastUpdatePostDateStruct": {
+      "date": "2026-09-10"
+     }
+    },
+    "sponsorCollaboratorsModule": {
+     "leadSponsor": {
+      "name": "West China Hospital"
+     }
+    },
+    "conditionsModule": {
+     "conditions": [
+      "Duchenne Muscular Dystrophy"
+     ]
+    },
+    "designModule": {
+     "studyType": "INTERVENTIONAL",
+     "phases": [
+      "PHASE1"
+     ],
+     "enrollmentInfo": {
+      "count": 3,
+      "type": "ACTUAL"
+     }
+    },
+    "armsInterventionsModule": {
+     "interventions": [
+      {
+       "type": "BIOLOGICAL",
+       "name": "JWK007 Single intravenous infusion administration"
+      }
+     ]
+    },
+    "eligibilityModule": {
+     "minimumAge": "5 Years",
+     "maximumAge": "10 Years",
+     "stdAges": [
+      "CHILD"
+     ]
+    },
+    "contactsLocationsModule": {
+     "locations": [
+      {
+       "facility": "West China Hospital, Sichuan University",
+       "city": "Chengdu",
+       "country": "China"
+      }
+     ]
+    }
+   },
+   "hasResults": false
+  },
+  {
+   "protocolSection": {
+    "identificationModule": {
+     "nctId": "NCT04371666",
+     "briefTitle": "Phase 3 Trial of Pamrevlumab or Placebo With Systemic Corticosteroids in Participants With Non-ambulatory Duchenne Muscular Dystrophy (DMD)",
+     "acronym": "LELANTOS-1"
+    },
+    "statusModule": {
+     "overallStatus": "TERMINATED",
+     "startDateStruct": {
+      "date": "2020-08-10"
+     },
+     "primaryCompletionDateStruct": {
+      "date": "2023-02-13"
+     },
+     "lastUpdatePostDateStruct": {
+      "date": "2024-03-12"
+     }
+    },
+    "sponsorCollaboratorsModule": {
+     "leadSponsor": {
+      "name": "Kyntra Bio"
+     }
+    },
+    "conditionsModule": {
+     "conditions": [
+      "Duchenne Muscular Dystrophy"
+     ]
+    },
+    "designModule": {
+     "studyType": "INTERVENTIONAL",
+     "phases": [
+      "PHASE3"
+     ],
+     "enrollmentInfo": {
+      "count": 98,
+      "type": "ACTUAL"
+     }
+    },
+    "armsInterventionsModule": {
+     "interventions": [
+      {
+       "type": "DRUG",
+       "name": "Pamrevlumab"
+      },
+      {
+       "type": "DRUG",
+       "name": "Placebo"
+      },
+      {
+       "type": "DRUG",
+       "name": "Corticosteroids"
+      }
+     ]
+    },
+    "eligibilityModule": {
+     "minimumAge": "12 Years",
+     "stdAges": [
+      "CHILD",
+      "ADULT",
+      "OLDER_ADULT"
+     ]
+    },
+    "contactsLocationsModule": {
+     "locations": [
+      {
+       "facility": "Arkansas Children's",
+       "city": "Little Rock",
+       "country": "United States"
+      },
+      {
+       "facility": "University of California Los Angeles Medical Center",
+       "city": "Los Angeles",
+       "country": "United States"
+      },
+      {
+       "facility": "UC Davis Health",
+       "city": "Sacramento",
+       "country": "United States"
+      },
+      {
+       "facility": "Children's Hospital Colorado",
+       "city": "Aurora",
+       "country": "United States"
+      },
+      {
+       "facility": "Rare Disease Research, LLC",
+       "city": "Atlanta",
+       "country": "United States"
+      },
+      {
+       "facility": "Ann & Robert H. Lurie Children's Hospital of Chicago",
+       "city": "Chicago",
+       "country": "United States"
+      },
+      {
+       "facility": "Children's Hospital of Chongqing Medical University",
+       "city": "Chongqing",
+       "country": "China"
+      },
+      {
+       "facility": "West China Second University Hospital, Sichuan University",
+       "city": "Chengdu",
+       "country": "China"
+      },
+      {
+       "facility": "Peking Union Medical College Hospital, Chinese Academy of Medical Sciences",
+       "city": "Beijing",
+       "country": "China"
+      }
+     ]
+    }
+   },
+   "hasResults": true
+  },
+  {
+   "protocolSection": {
+    "identificationModule": {
+     "nctId": "NCT01610440",
+     "briefTitle": "Safety and Efficacy of Umbilical Cord Mesenchymal Stem Cell Therapy for Patients With Duchenne Muscular Dystrophy"
+    },
+    "statusModule": {
+     "overallStatus": "UNKNOWN",
+     "startDateStruct": {
+      "date": "2011-10"
+     },
+     "primaryCompletionDateStruct": {
+      "date": "2013-03"
+     },
+     "lastUpdatePostDateStruct": {
+      "date": "2012-11-30"
+     }
+    },
+    "sponsorCollaboratorsModule": {
+     "leadSponsor": {
+      "name": "Shenzhen Beike Bio-Technology Co., Ltd."
+     }
+    },
+    "conditionsModule": {
+     "conditions": [
+      "Duchenne Muscular Dystrophy"
+     ]
+    },
+    "designModule": {
+     "studyType": "INTERVENTIONAL",
+     "phases": [
+      "PHASE1",
+      "PHASE2"
+     ],
+     "enrollmentInfo": {
+      "count": 15,
+      "type": "ESTIMATED"
+     }
+    },
+    "armsInterventionsModule": {
+     "interventions": [
+      {
+       "type": "BIOLOGICAL",
+       "name": "human umbilical cord mesenchymal stem cells"
+      }
+     ]
+    },
+    "eligibilityModule": {
+     "minimumAge": "5 Years",
+     "maximumAge": "12 Years",
+     "stdAges": [
+      "CHILD"
+     ]
+    },
+    "contactsLocationsModule": {
+     "locations": [
+      {
+       "facility": "The Second Affiliated Hospital of Kunming Medical College",
+       "status": "RECRUITING",
+       "city": "Kunming",
+       "country": "China"
+      }
+     ]
+    }
+   },
+   "hasResults": false
+  }
+ ],
+ "nextPageToken": "ZVNj7o2Elu8o3lpwSom5srbumpOQJJxnZvmi3vAW"
+}

@@ -1,0 +1,24 @@
+{
+ "responseHeader": {
+  "status": 0,
+  "QTime": 1
+ },
+ "response": {
+  "numFound": 2,
+  "start": 0,
+  "maxScore": 2.9172292,
+  "numFoundExact": true,
+  "docs": [
+   {
+    "symbol": "NACC1",
+    "hgnc_id": "HGNC:20967",
+    "score": 2.9172292
+   },
+   {
+    "symbol": "SCN1A",
+    "hgnc_id": "HGNC:10585",
+    "score": 2.545341
+   }
+  ]
+ }
+}

@@ -1,0 +1,78 @@
+{
+ "limit": 3,
+ "offset": 0,
+ "total": 4,
+ "items": [
+  {
+   "id": "MONDO:0100135",
+   "category": "biolink:Disease",
+   "name": "Dravet syndrome",
+   "description": "Dravet syndrome is a channelopathy with epilepsy of with onset during the first year of life, typically 4-5 months, characterized by status epilepticus and a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment. Dravet differs from other channelopathies usually due to a mutation in SCN1A.",
+   "xref": [
+    "DOID:0060171",
+    "DOID:0080422",
+    "GARD:0010430",
+    "ICD10CM:G40.83",
+    "ICD9:345.10",
+    "MEDGEN:148243",
+    "NANDO:1200587",
+    "NANDO:2200877",
+    "NCIT:C116573",
+    "NORD:1061",
+    "SCTID:230437002",
+    "UMLS:C0751122",
+    "icd11.foundation:1255654700"
+   ],
+   "synonym": [
+    "DS",
+    "Dravet",
+    "Dravet syndrome",
+    "SME",
+    "SMEB",
+    "myoclonic epilepsy, severe, of infancy",
+    "severe myoclonic epilepsy of infancy"
+   ],
+   "exact_synonym": [
+    "DS",
+    "Dravet",
+    "Dravet syndrome",
+    "SME",
+    "SMEB",
+    "myoclonic epilepsy, severe, of infancy",
+    "severe myoclonic epilepsy of infancy"
+   ],
+   "deprecated": null,
+   "symbol": null,
+   "in_taxon_label": null
+  },
+  {
+   "id": "MONDO:0100573",
+   "category": "biolink:Disease",
+   "name": "combined generalized and focal epilepsy",
+   "description": "Any epilepsy where patients have both generalized and focal seizure types, with interictal and/or ictal EEG findings that accompany both seizure types. Patients with Dravet syndrome and Lennox-Gastaut syndrome may have combined focal and generalized epilepsy.",
+   "xref": [
+    "MEDGEN:1836943",
+    "UMLS:C5816884"
+   ],
+   "synonym": null,
+   "exact_synonym": null,
+   "deprecated": null,
+   "symbol": null,
+   "in_taxon_label": null
+  },
+  {
+   "id": "MONDO:0011794",
+   "category": "biolink:Disease",
+   "name": "obsolete Dravet syndrome",
+   "description": "OBSOLETE. Dravet syndrome (DS) is a genetic epilepsy of childhood characterized by a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment.",
+   "xref": [
+    "Orphanet:33069"
+   ],
+   "synonym": null,
+   "exact_synonym": null,
+   "deprecated": true,
+   "symbol": null,
+   "in_taxon_label": null
+  }
+ ]
+}

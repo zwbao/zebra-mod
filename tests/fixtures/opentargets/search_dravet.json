@@ -1,0 +1,69 @@
+{
+ "data": {
+  "search": {
+   "total": 16,
+   "hits": [
+    {
+     "id": "MONDO_0100135",
+     "name": "Dravet syndrome",
+     "entity": "disease",
+     "description": "Dravet syndrome is a channelopathy with epilepsy of with onset during the first year of life, typically 4-5 months, characterized by status epilepticus and a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment. Dravet differs from other channelopathies usually due to a mutation in SCN1A."
+    },
+    {
+     "id": "MONDO_0014960",
+     "name": "encephalopathy, progressive, early-onset, with brain edema and/or leukoencephalopathy",
+     "entity": "disease",
+     "description": null
+    },
+    {
+     "id": "ENSG00000143376",
+     "name": "SNX27",
+     "entity": "target",
+     "description": "sorting nexin 27"
+    },
+    {
+     "id": "ENSG00000036530",
+     "name": "CYP46A1",
+     "entity": "target",
+     "description": "cytochrome P450 family 46 subfamily A member 1"
+    },
+    {
+     "id": "MONDO_0018214",
+     "name": "generalized epilepsy with febrile seizures plus",
+     "entity": "disease",
+     "description": "A familial epilepsy syndrome in which family members display a seizure disorder from the generalized epilepsy with febrile seizures plus spectrum which ranges from simple febrile seizures (FS) to the more severe phenotype of myoclonic-astatic epilepsy (MAE) or Dravet syndrome (DS)."
+    },
+    {
+     "id": "ENSG00000213995",
+     "name": "NAXD",
+     "entity": "target",
+     "description": "NAD(P)HX dehydratase"
+    },
+    {
+     "id": "ENSG00000163382",
+     "name": "NAXE",
+     "entity": "target",
+     "description": "NAD(P)HX epimerase"
+    },
+    {
+     "id": "ENSG00000236107",
+     "name": "SCN1A-AS1",
+     "entity": "target",
+     "description": "SCN1A and SCN9A antisense RNA 1"
+    },
+    {
+     "id": "ENSG00000144285",
+     "name": "SCN1A",
+     "entity": "target",
+     "description": "sodium voltage-gated channel alpha subunit 1"
+    },
+    {
+     "id": "ENSG00000179546",
+     "name": "HTR1D",
+     "entity": "target",
+     "description": "5-hydroxytryptamine receptor 1D"
+    }
+   ]
+  }
+ }
+}

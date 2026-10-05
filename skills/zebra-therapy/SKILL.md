@@ -31,7 +31,7 @@ From the case and `gene_card` / `disease_card` (and `zebra-variant` / `zebra-s2f
 ## 3. N-of-1 feasibility screens (research)
 
 - **Antisense**: variant class (splice / pseudoexon / GoF allele / haploinsufficiency with a targetable poison exon), tissue reachable (CNS by intrathecal dosing, eye, liver; muscle is harder), gene expressed in it, onset vs disease stage. The N=1 Collaborative and n-Lorem publish eligibility criteria — cite them via literature, do not paraphrase from memory.
-- **Base editing**: `mcp__zebra-mod__edit_check` (SNV revertible by ABE/CBE? protospacer with the base in the window? bystanders?). Delivery to the relevant tissue is the hard part — say so.
+- **Base editing**: `mcp__zebra-mod__edit_check` (SNV revertible by ABE/CBE? protospacer with the base in the window? bystanders?). No NGG protospacer → rerun with `pam: "NG"` (relaxed-PAM Cas9 variants); `annotate_bystanders: true` checks whether bystander edits change the protein. Delivery to the relevant tissue is the hard part — say so.
 - **Gene replacement**: coding sequence vs AAV capacity (~4.7 kb including regulatory elements); dosage sensitivity (overexpression toxicity, e.g. MECP2).
 
 ## 4. Tier and check every lead

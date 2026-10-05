@@ -1,0 +1,117 @@
+{
+ "limit": 100,
+ "offset": 0,
+ "total": 9,
+ "items": [
+  {
+   "id": "uuid:9634d722-90ad-4a4b-8ede-a84a7d5b2637",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:omim",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0011461",
+   "object_label": "generalized epilepsy with febrile seizures plus, type 2",
+   "original_object": "OMIM:604403",
+   "original_predicate": null
+  },
+  {
+   "id": "uuid:b8b33cff-44b2-48e9-b6e3-0249e79588dd",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:omim",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0012320",
+   "object_label": "migraine, familial hemiplegic, 3",
+   "original_object": "OMIM:609634",
+   "original_predicate": null
+  },
+  {
+   "id": "uuid:03950682-402b-405f-ae80-bb2ebce0a0ed",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:omim",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0100079",
+   "object_label": "developmental and epileptic encephalopathy, 6A",
+   "original_object": "OMIM:607208",
+   "original_predicate": null
+  },
+  {
+   "id": "uuid:a2104e4a-74f2-4e04-b262-6ee0170f0789",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:omim",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0011461",
+   "object_label": "generalized epilepsy with febrile seizures plus, type 2",
+   "original_object": "OMIM:604403",
+   "original_predicate": null
+  },
+  {
+   "id": "uuid:45c0b1d6-16f5-4fc3-b840-3645d6cbfdde",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:omim",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0030268",
+   "object_label": "developmental and epileptic encephalopathy 6B",
+   "original_object": "OMIM:619317",
+   "original_predicate": null
+  },
+  {
+   "id": "e34ce213-b9ef-4d6d-b078-f7012378cadb",
+   "predicate": "biolink:associated_with_increased_likelihood_of",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:clingen",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0018214",
+   "object_label": "generalized epilepsy with febrile seizures plus",
+   "original_object": null,
+   "original_predicate": "Likely Pathogenic"
+  },
+  {
+   "id": "501f1495-5a66-41a0-ab94-7f8c9104f5fd",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:clingen",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0000700",
+   "object_label": "familial hemiplegic migraine",
+   "original_object": null,
+   "original_predicate": "Pathogenic"
+  },
+  {
+   "id": "ef50b591-746e-4c71-a738-8705a883397d",
+   "predicate": "biolink:causes",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:clingen",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0100135",
+   "object_label": "Dravet syndrome",
+   "original_object": null,
+   "original_predicate": "Pathogenic"
+  },
+  {
+   "id": "3098b7de-18e6-4963-a059-be9297a864e4",
+   "predicate": "biolink:associated_with_increased_likelihood_of",
+   "category": "biolink:CausalGeneToDiseaseAssociation",
+   "primary_knowledge_source": "infores:clingen",
+   "subject": "HGNC:10585",
+   "subject_label": "SCN1A",
+   "object": "MONDO:0100062",
+   "object_label": "genetic developmental and epileptic encephalopathy",
+   "original_object": null,
+   "original_predicate": "Likely Pathogenic"
+  }
+ ],
+ "facet_fields": [],
+ "facet_queries": []
+}

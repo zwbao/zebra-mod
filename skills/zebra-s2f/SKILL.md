@@ -25,7 +25,7 @@ No prediction reaches "causes the disease". The highest a model speaks to is a c
 
 ## Steps
 
-1. **Anchor**: `mcp__zebra-mod__variant_card` → consequence on the MANE transcript, distance to the nearest exon boundary, gene, assembly.
+1. **Anchor**: `mcp__zebra-mod__variant_card` → consequence on the MANE transcript, exon/intron number, the intronic offset in the c. notation (c.3718-2477 lies 2,477 nt upstream of the exon that begins at c.3718), gene, assembly.
 2. **Choose axes** by variant class: splice region / deep intronic / synonymous → splicing first; promoter / UTR / enhancer → regulation (pick the disease tissue's ontology: brain `UBERON:0000955`, liver `UBERON:0002107`, skeletal muscle `UBERON:0001134`, heart `UBERON:0000948`; ask if unclear); missense → missense function + splicing (exonic variants can break splicing too).
 3. **Run**: `mcp__zebra-mod__s2f_predict` (`models` as chosen). Heavy models report `not_run` with the reason when keys or the `s2f` CLI are missing — say so; offer setup (below) instead of guessing.
 4. **Read each output** before combining:
@@ -38,7 +38,13 @@ No prediction reaches "causes the disease". The highest a model speaks to is a c
 
 ## Setting up the heavy models
 
-- `s2f` CLI from s2f-penguin: `uv tool install "git+https://github.com/zwbao/s2f-penguin"` then `s2f doctor`; GPN-MSA also needs `tabix` (htslib).
+What each needs (a missing piece gives `not_run` with the reason, never a guess):
+- AlphaGenome: `ontology` is required — the tissue the disease acts in; without it zebra does not run it (the upstream script would silently use transverse colon). ~5 s.
+- GPN-MSA: GRCh38 SNVs only; needs `tabix` (htslib). ~1 min.
+- Evo 2: hosted, 3–10 minutes per variant; ask before running it, or run it in the background via Bash (`zebra s2f predict ... --models evo2 --timeout 900`).
+- GRCh37 inputs: SpliceAI/Pangolin only.
+
+- `s2f` CLI from s2f-penguin: `uv tool install "git+https://github.com/zwbao/s2f-penguin"`, set `S2F_DEPLOY_ROOT` (where its model environments live; and `S2F_S2F_CORE_PYTHON` for a standalone install), then `s2f doctor`. zebra finds it on `PATH` or via `S2F_BIN`.
 - AlphaGenome: `ALPHAGENOME_API_KEY` (Google DeepMind; non-commercial use only, not for clinical decision-making). Evo 2: `NVCF_RUN_KEY` (NVIDIA). Keys go in the environment, never in a file in the case.
 - SpliceAI/Pangolin come from the Broad SpliceAI-lookup service (research use; the SpliceAI weights are CC BY-NC).
 

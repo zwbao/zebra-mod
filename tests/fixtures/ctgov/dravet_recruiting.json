@@ -1,0 +1,318 @@
+{
+ "totalCount": 15,
+ "studies": [
+  {
+   "protocolSection": {
+    "identificationModule": {
+     "nctId": "NCT06585605",
+     "briefTitle": "A Retrospective Survey-based Multicenter Study to Delineate the Molecular and Phenotypic Spectrum of Epilepsy-dyskinesia Syndromes"
+    },
+    "statusModule": {
+     "overallStatus": "RECRUITING",
+     "startDateStruct": {
+      "date": "2024-07-01"
+     },
+     "primaryCompletionDateStruct": {
+      "date": "2029-12-31"
+     },
+     "lastUpdatePostDateStruct": {
+      "date": "2026-03-18"
+     }
+    },
+    "sponsorCollaboratorsModule": {
+     "leadSponsor": {
+      "name": "Boston Children's Hospital"
+     }
+    },
+    "conditionsModule": {
+     "conditions": [
+      "Epilepsy in Children",
+      "Dyskinesias",
+      "Movement Disorders in Children",
+      "Neurologic Disorder",
+      "Chorea",
+      "Myoclonus",
+      "Ataxia",
+      "Epilepsy",
+      "Dystonia Disorder",
+      "Movement Disorders"
+     ]
+    },
+    "designModule": {
+     "studyType": "OBSERVATIONAL",
+     "enrollmentInfo": {
+      "count": 500,
+      "type": "ESTIMATED"
+     }
+    },
+    "eligibilityModule": {
+     "minimumAge": "0 Years",
+     "maximumAge": "18 Years",
+     "stdAges": [
+      "CHILD",
+      "ADULT"
+     ]
+    },
+    "contactsLocationsModule": {
+     "locations": [
+      {
+       "facility": "Boston Children&#39;s Hospital",
+       "status": "RECRUITING",
+       "city": "Boston",
+       "country": "United States"
+      }
+     ]
+    }
+   },
+   "hasResults": false
+  },
+  {
+   "protocolSection": {
+    "identificationModule": {
+     "nctId": "NCT06598449",
+     "briefTitle": "Assessment of Safety of the Use of Fenfluramine in Children With Dravet Syndrome Under 24 Months of Age"
+    },
+    "statusModule": {
+     "overallStatus": "RECRUITING",
+     "startDateStruct": {
+      "date": "2024-10-22"
+     },
+     "primaryCompletionDateStruct": {
+      "date": "2026-12"
+     },
+     "lastUpdatePostDateStruct": {
+      "date": "2026-05-15"
+     }
+    },
+    "sponsorCollaboratorsModule": {
+     "leadSponsor": {
+      "name": "University of Colorado, Denver"
+     }
+    },
+    "conditionsModule": {
+     "conditions": [
+      "Dravet Syndrome (DS)",
+      "Children Under 2 Years"
+     ]
+    },
+    "designModule": {
+     "studyType": "INTERVENTIONAL",
+     "phases": [
+      "PHASE4"
+     ],
+     "enrollmentInfo": {
+      "count": 5,
+      "type": "ESTIMATED"
+     }
+    },
+    "armsInterventionsModule": {
+     "interventions": [
+      {
+       "type": "DRUG",
+       "name": "fenfluramine"
+      }
+     ]
+    },
+    "eligibilityModule": {
+     "minimumAge": "12 Months",
+     "maximumAge": "24 Months",
+     "stdAges": [
+      "CHILD"
+     ]
+    },
+    "contactsLocationsModule": {
+     "locations": [
+      {
+       "facility": "Children's Hospital Colorado",
+       "status": "RECRUITING",
+       "city": "Aurora",
+       "country": "United States"
+      }
+     ]
+    }
+   },
+   "hasResults": false
+  },
+  {
+   "protocolSection": {
+    "identificationModule": {
+     "nctId": "NCT05126914",
+     "briefTitle": "Multicentre Real-life Follow-up Study of Rare Epileptic Syndromes in Children and Adolescents",
+     "acronym": "EPIRARE"
+    },
+    "statusModule": {
+     "overallStatus": "RECRUITING",
+     "startDateStruct": {
+      "date": "2025-12-11"
+     },
+     "primaryCompletionDateStruct": {
+      "date": "2028-12"
+     },
+     "lastUpdatePostDateStruct": {
+      "date": "2026-02-24"
+     }
+    },
+    "sponsorCollaboratorsModule": {
+     "leadSponsor": {
+      "name": "Assistance Publique - Hôpitaux de Paris"
+     }
+    },
+    "conditionsModule": {
+     "conditions": [
+      "Epilepsy",
+      "West Syndrome",
+      "Dravet Syndrome"
+     ]
+    },
+    "designModule": {
+     "studyType": "OBSERVATIONAL",
+     "enrollmentInfo": {
+      "count": 1000,
+      "type": "ESTIMATED"
+     }
+    },
+    "eligibilityModule": {
+     "maximumAge": "15 Years",
+     "stdAges": [
+      "CHILD"
+     ]
+    },
+    "contactsLocationsModule": {
+     "locations": [
+      {
+       "facility": "CHU Angers",
+       "status": "RECRUITING",
+       "city": "Angers",
+       "country": "France"
+      },
+      {
+       "facility": "CHU de Bordeaux",
+       "status": "RECRUITING",
+       "city": "Bordeaux",
+       "country": "France"
+      },
+      {
+       "facility": "CHU de Brest - Hôpital de la Cavale Blanche",
+       "status": "RECRUITING",
+       "city": "Brest",
+       "country": "France"
+      },
+      {
+       "facility": "CHRU Lille",
+       "status": "RECRUITING",
+       "city": "Lille",
+       "country": "France"
+      },
+      {
+       "facility": "HFME - HospiceS Civils De Lyon",
+       "status": "RECRUITING",
+       "city": "Lyon",
+       "country": "France"
+      },
+      {
+       "facility": "Hôpital La Timone - APHM",
+       "status": "RECRUITING",
+       "city": "Marseille",
+       "country": "France"
+      },
+      {
+       "facility": "Hôpital Necker - APHP",
+       "status": "RECRUITING",
+       "city": "Paris",
+       "country": "France"
+      },
+      {
+       "facility": "Hopital Robert Debré - Neurologie",
+       "status": "RECRUITING",
+       "city": "Paris",
+       "country": "France"
+      },
+      {
+       "facility": "CHU Strasbourg- Hôpital de Hautepierre",
+       "status": "RECRUITING",
+       "city": "Strasbourg",
+       "country": "France"
+      },
+      {
+       "facility": "Hôpital Purpan - CHU de Toulouse",
+       "status": "RECRUITING",
+       "city": "Toulouse",
+       "country": "France"
+      },
+      {
+       "facility": "CHU de Tours - hôpital Clocheville",
+       "status": "RECRUITING",
+       "city": "Tours",
+       "country": "France"
+      }
+     ]
+    }
+   },
+   "hasResults": false
+  },
+  {
+   "protocolSection": {
+    "identificationModule": {
+     "nctId": "NCT05651204",
+     "briefTitle": "GABA Biomarkers in Dravet Syndrome"
+    },
+    "statusModule": {
+     "overallStatus": "RECRUITING",
+     "startDateStruct": {
+      "date": "2022-09-08"
+     },
+     "primaryCompletionDateStruct": {
+      "date": "2024-09-08"
+     },
+     "lastUpdatePostDateStruct": {
+      "date": "2022-12-14"
+     }
+    },
+    "sponsorCollaboratorsModule": {
+     "leadSponsor": {
+      "name": "Cook Children's Health Care System"
+     }
+    },
+    "conditionsModule": {
+     "conditions": [
+      "Dravet Syndrome"
+     ]
+    },
+    "designModule": {
+     "studyType": "OBSERVATIONAL",
+     "enrollmentInfo": {
+      "count": 36,
+      "type": "ESTIMATED"
+     }
+    },
+    "armsInterventionsModule": {
+     "interventions": [
+      {
+       "type": "DIAGNOSTIC_TEST",
+       "name": "GABA Blood Level"
+      }
+     ]
+    },
+    "eligibilityModule": {
+     "maximumAge": "18 Years",
+     "stdAges": [
+      "CHILD",
+      "ADULT"
+     ]
+    },
+    "contactsLocationsModule": {
+     "locations": [
+      {
+       "facility": "Cook Children's Medical Center",
+       "status": "RECRUITING",
+       "city": "Fort Worth",
+       "country": "United States"
+      }
+     ]
+    }
+   },
+   "hasResults": false
+  }
+ ],
+ "nextPageToken": "ZVNj7o2Elu8o3lpwSom5srbumpOQJJxuZPmk2vMfkA"
+}

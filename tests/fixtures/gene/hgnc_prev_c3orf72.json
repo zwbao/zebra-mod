@@ -1,0 +1,19 @@
+{
+ "responseHeader": {
+  "status": 0,
+  "QTime": 1
+ },
+ "response": {
+  "numFound": 1,
+  "start": 0,
+  "maxScore": 4.4822855,
+  "numFoundExact": true,
+  "docs": [
+   {
+    "hgnc_id": "HGNC:34428",
+    "symbol": "FOXL2NB",
+    "score": 4.4822855
+   }
+  ]
+ }
+}

@@ -1,0 +1,21 @@
+ncbi_gene_id	gene_symbol	hpo_id	hpo_name	frequency	disease_id
+501	ALDH7A1	HP:0000007	Autosomal recessive inheritance	-	OMIM:266100
+1080	CFTR	HP:0000007	Autosomal recessive inheritance	-	OMIM:219700
+1080	CFTR	HP:0000007	Autosomal recessive inheritance	-	OMIM:277180
+1080	CFTR	HP:0000006	Autosomal dominant inheritance	-	OMIM:167800
+1080	CFTR	HP:0000006	Autosomal dominant inheritance	-	OMIM:211400
+1756	DMD	HP:0001419	X-linked recessive inheritance	-	OMIM:310200
+1756	DMD	HP:0001419	X-linked recessive inheritance	-	OMIM:300376
+1756	DMD	HP:0001417	X-linked inheritance	-	OMIM:302045
+6323	SCN1A	HP:0000006	Autosomal dominant inheritance	-	OMIM:604403
+6323	SCN1A	HP:0000006	Autosomal dominant inheritance	-	OMIM:619317
+6323	SCN1A	HP:0000006	Autosomal dominant inheritance	-	OMIM:607208
+6323	SCN1A	HP:0000006	Autosomal dominant inheritance	-	OMIM:609634
+7273	TTN	HP:0000007	Autosomal recessive inheritance	-	OMIM:611705
+7273	TTN	HP:0000007	Autosomal recessive inheritance	-	OMIM:608807
+7273	TTN	HP:0000006	Autosomal dominant inheritance	-	OMIM:603689
+7273	TTN	HP:0000006	Autosomal dominant inheritance	-	OMIM:604145
+7273	TTN	HP:0000006	Autosomal dominant inheritance	-	OMIM:613765
+7273	TTN	HP:0000006	Autosomal dominant inheritance	-	OMIM:600334
+55768	NGLY1	HP:0000007	Autosomal recessive inheritance	-	OMIM:615273
+57526	PCDH19	HP:0001417	X-linked inheritance	-	OMIM:300088

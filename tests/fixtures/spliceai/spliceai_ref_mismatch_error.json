@@ -1,0 +1,11 @@
+{
+ "variant": "chr7-117559590-G-A",
+ "hg": "38",
+ "bc": "basic",
+ "distance": "500",
+ "mask": "0",
+ "source": "spliceai",
+ "error": "7-117559590-G has an unexpected reference allele. The hg38 reference allele at 7:117559590 is A, not G.",
+ "inputError": true,
+ "scores": []
+}

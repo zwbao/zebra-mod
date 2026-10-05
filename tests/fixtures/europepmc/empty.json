@@ -1,0 +1,16 @@
+{
+ "version": "6.9",
+ "hitCount": 0,
+ "request": {
+  "queryString": "EXT_ID:1 AND SRC:XYZ",
+  "internalQuery": "EXT_ID:1 AND SRC:XYZ",
+  "resultType": "CORE",
+  "cursorMark": "*",
+  "pageSize": 1,
+  "sort": "",
+  "synonym": false
+ },
+ "resultList": {
+  "result": []
+ }
+}

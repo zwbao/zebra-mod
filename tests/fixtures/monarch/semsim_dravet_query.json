@@ -1,0 +1,279 @@
+[
+ {
+  "subject": {
+   "id": "MONDO:0014517",
+   "category": "biolink:Disease",
+   "name": "generalized epilepsy with febrile seizures plus, type 9",
+   "description": "Any generalized epilepsy with febrile seizures plus in which the cause of the disease is a mutation in the STX1B gene.",
+   "xref": [
+    "DOID:0111301",
+    "GARD:0018668",
+    "MEDGEN:863832",
+    "OMIM:616172",
+    "UMLS:C4015395"
+   ],
+   "symbol": null,
+   "in_taxon_label": null
+  },
+  "score": 13.963145634552642,
+  "similarity": {
+   "object_best_matches": {
+    "HP:0002373": {
+     "match_source": "HP:0002373",
+     "match_source_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 16.678747982459026,
+     "match_subsumer": "HP:0002373",
+     "match_subsumer_label": "Febrile seizure (within the age range of 3 months to 6 years)"
+    },
+    "HP:0007359": {
+     "match_source": "HP:0007359",
+     "match_source_label": "Focal-onset seizure",
+     "match_target": "HP:0002384",
+     "match_target_label": "Focal impaired awareness seizure",
+     "score": 10.83954419436208,
+     "match_subsumer": "HP:0007359",
+     "match_subsumer_label": "Focal-onset seizure"
+    },
+    "HP:0002133": {
+     "match_source": "HP:0002133",
+     "match_source_label": "Status epilepticus",
+     "match_target": "HP:0002069",
+     "match_target_label": "Bilateral tonic-clonic seizure",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    },
+    "HP:0001263": {
+     "match_source": "HP:0001263",
+     "match_source_label": "Global developmental delay",
+     "match_target": "HP:0001263",
+     "match_target_label": "Global developmental delay",
+     "score": 16.356819887571664,
+     "match_subsumer": "HP:0001263",
+     "match_subsumer_label": "Global developmental delay"
+    },
+    "HP:0007207": {
+     "match_source": "HP:0007207",
+     "match_source_label": "Photosensitive tonic-clonic seizure",
+     "match_target": "HP:0002069",
+     "match_target_label": "Bilateral tonic-clonic seizure",
+     "score": 15.678747982459026,
+     "match_subsumer": "HP:0002069",
+     "match_subsumer_label": "Bilateral tonic-clonic seizure"
+    }
+   },
+   "metric": "ancestor_information_content"
+  }
+ },
+ {
+  "subject": {
+   "id": "MONDO:0000032",
+   "category": "biolink:Disease",
+   "name": "febrile seizures, familial",
+   "description": null,
+   "xref": [
+    "DOID:0111297",
+    "OMIMPS:121210"
+   ],
+   "symbol": null,
+   "in_taxon_label": null
+  },
+  "score": 13.884357038238267,
+  "similarity": {
+   "object_best_matches": {
+    "HP:0002373": {
+     "match_source": "HP:0002373",
+     "match_source_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 16.678747982459026,
+     "match_subsumer": "HP:0002373",
+     "match_subsumer_label": "Febrile seizure (within the age range of 3 months to 6 years)"
+    },
+    "HP:0007359": {
+     "match_source": "HP:0007359",
+     "match_source_label": "Focal-onset seizure",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    },
+    "HP:0002133": {
+     "match_source": "HP:0002133",
+     "match_source_label": "Status epilepticus",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    },
+    "HP:0001263": {
+     "match_source": "HP:0001263",
+     "match_source_label": "Global developmental delay",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 8.051214097986234,
+     "match_subsumer": "HP:0012638",
+     "match_subsumer_label": "Abnormal nervous system physiology"
+    },
+    "HP:0007207": {
+     "match_source": "HP:0007207",
+     "match_source_label": "Photosensitive tonic-clonic seizure",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    }
+   },
+   "metric": "ancestor_information_content"
+  }
+ },
+ {
+  "subject": {
+   "id": "MONDO:0100135",
+   "category": "biolink:Disease",
+   "name": "Dravet syndrome",
+   "description": "Dravet syndrome is a channelopathy with epilepsy of with onset during the first year of life, typically 4-5 months, characterized by status epilepticus and a variety of drug-resistant seizures often induced by fever, presenting in previously healthy children, and which frequently leads to cognitive and motor impairment. Dravet differs from other channelopathies usually due to a mutation in SCN1A.",
+   "xref": [
+    "DOID:0060171",
+    "DOID:0080422",
+    "GARD:0010430",
+    "ICD10CM:G40.83",
+    "ICD9:345.10",
+    "MEDGEN:148243",
+    "NANDO:1200587",
+    "NANDO:2200877",
+    "NCIT:C116573",
+    "NORD:1061",
+    "SCTID:230437002",
+    "UMLS:C0751122",
+    "icd11.foundation:1255654700"
+   ],
+   "symbol": null,
+   "in_taxon_label": null
+  },
+  "score": 13.884357038238267,
+  "similarity": {
+   "object_best_matches": {
+    "HP:0002373": {
+     "match_source": "HP:0002373",
+     "match_source_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 16.678747982459026,
+     "match_subsumer": "HP:0002373",
+     "match_subsumer_label": "Febrile seizure (within the age range of 3 months to 6 years)"
+    },
+    "HP:0007359": {
+     "match_source": "HP:0007359",
+     "match_source_label": "Focal-onset seizure",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    },
+    "HP:0002133": {
+     "match_source": "HP:0002133",
+     "match_source_label": "Status epilepticus",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    },
+    "HP:0001263": {
+     "match_source": "HP:0001263",
+     "match_source_label": "Global developmental delay",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 8.051214097986234,
+     "match_subsumer": "HP:0012638",
+     "match_subsumer_label": "Abnormal nervous system physiology"
+    },
+    "HP:0007207": {
+     "match_source": "HP:0007207",
+     "match_source_label": "Photosensitive tonic-clonic seizure",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    }
+   },
+   "metric": "ancestor_information_content"
+  }
+ },
+ {
+  "subject": {
+   "id": "MONDO:0007365",
+   "category": "biolink:Disease",
+   "name": "seizures, benign familial neonatal, 1",
+   "description": "Any benign neonatal seizures in which the cause of the disease is a mutation in the KCNQ2 gene.",
+   "xref": [
+    "GARD:0009765",
+    "MEDGEN:460425",
+    "MESH:C567743",
+    "OMIM:121200",
+    "UMLS:C3149074"
+   ],
+   "symbol": null,
+   "in_taxon_label": null
+  },
+  "score": 13.862833740645776,
+  "similarity": {
+   "object_best_matches": {
+    "HP:0002373": {
+     "match_source": "HP:0002373",
+     "match_source_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "match_target": "HP:0002373",
+     "match_target_label": "Febrile seizure (within the age range of 3 months to 6 years)",
+     "score": 16.678747982459026,
+     "match_subsumer": "HP:0002373",
+     "match_subsumer_label": "Febrile seizure (within the age range of 3 months to 6 years)"
+    },
+    "HP:0007359": {
+     "match_source": "HP:0007359",
+     "match_source_label": "Focal-onset seizure",
+     "match_target": "HP:0002266",
+     "match_target_label": "Focal clonic seizure",
+     "score": 10.83954419436208,
+     "match_subsumer": "HP:0007359",
+     "match_subsumer_label": "Focal-onset seizure"
+    },
+    "HP:0002133": {
+     "match_source": "HP:0002133",
+     "match_source_label": "Status epilepticus",
+     "match_target": "HP:0002069",
+     "match_target_label": "Bilateral tonic-clonic seizure",
+     "score": 10.239956129880765,
+     "match_subsumer": "HP:0001250",
+     "match_subsumer_label": "Seizure"
+    },
+    "HP:0001263": {
+     "match_source": "HP:0001263",
+     "match_source_label": "Global developmental delay",
+     "match_target": "HP:0001263",
+     "match_target_label": "Global developmental delay",
+     "score": 16.356819887571664,
+     "match_subsumer": "HP:0001263",
+     "match_subsumer_label": "Global developmental delay"
+    },
+    "HP:0007207": {
+     "match_source": "HP:0007207",
+     "match_source_label": "Photosensitive tonic-clonic seizure",
+     "match_target": "HP:0002069",
+     "match_target_label": "Bilateral tonic-clonic seizure",
+     "score": 15.678747982459026,
+     "match_subsumer": "HP:0002069",
+     "match_subsumer_label": "Bilateral tonic-clonic seizure"
+    }
+   },
+   "metric": "ancestor_information_content"
+  }
+ }
+]

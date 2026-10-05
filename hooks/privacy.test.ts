@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 
-import { guardInput, uploadsGenome } from './privacy'
+import { guardInput, isOutboundShell, uploadsGenome } from './privacy'
 
 describe('privacy gate', () => {
   test('passes ordinary research queries', () => {
@@ -26,5 +26,14 @@ describe('privacy gate', () => {
     expect(uploadsGenome('aws s3 cp sample.cram s3://bucket/')).toBe(true)
     expect(uploadsGenome('bcftools view proband.vcf.gz | head')).toBe(false)
     expect(uploadsGenome('curl -O https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz')).toBe(false)
+  })
+
+  test('knows which shell commands reach the network', () => {
+    expect(isOutboundShell('curl -s https://example.org')).toBe(true)
+    expect(isOutboundShell('zebra lit "Dravet syndrome"')).toBe(true)
+    expect(isOutboundShell('~/zebra-mod/bin/zebra --json variant 2-166042334-G-A')).toBe(true)
+    expect(isOutboundShell('zebra --case ~/c case identifiers --add "张三"')).toBe(false)
+    expect(isOutboundShell('ls records/ && cat records/a.txt')).toBe(false)
+    expect(isOutboundShell('ls ~/zebra-mod/skills')).toBe(false)
   })
 })
