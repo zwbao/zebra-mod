@@ -1,0 +1,51 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##FILTER=<ID=LowQual,Description="Low quality">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency in this call set (not a population frequency)">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr2,length=242193529>
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr4,length=190214555>
+##contig=<ID=chr5,length=181538259>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##contig=<ID=chr8,length=145138636>
+##contig=<ID=chr9,length=138394717>
+##contig=<ID=chr10,length=133797422>
+##contig=<ID=chr11,length=135086622>
+##contig=<ID=chr12,length=133275309>
+##contig=<ID=chr13,length=114364328>
+##contig=<ID=chr14,length=107043718>
+##contig=<ID=chr15,length=101991189>
+##contig=<ID=chr16,length=90338345>
+##contig=<ID=chr17,length=83257441>
+##contig=<ID=chr18,length=80373285>
+##contig=<ID=chr19,length=58617616>
+##contig=<ID=chr20,length=64444167>
+##contig=<ID=chr21,length=46709983>
+##contig=<ID=chr22,length=50818468>
+##contig=<ID=chrX,length=156040895>
+##contig=<ID=chrY,length=57227415>
+##contig=<ID=chrM,length=16569>
+##reference=file:///references/GRCh38_full_analysis_set_plus_decoy_hla.fa
+##source=zebra-mod synthetic fixture: real GRCh38 alleles, invented genotypes
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	M	F	P	S
+chr2	166036097	rs2105793395	A	C	500	PASS	AC=1;AN=8;AF=0.125	GT:AD:DP:GQ	0/0:30,0:30:90	0/0:28,0:28:84	0/1:3,3:6:40	0/0:25,0:25:75
+chr2	166036116	rs796052993	C	A	12	LowQual	AC=1;AN=8;AF=0.125	GT:AD:DP:GQ	0/0:30,0:30:90	0/0:26,0:26:78	0/1:10,4:14:5	0/0:22,0:22:66
+chr2	166042334	rs794726730	G	A	500	PASS	AC=1;AN=8;AF=0.125	GT:AD:DP:GQ	0/0:31,0:31:90	0/0:29,0:29:87	0/1:18,17:35:99	0/0:25,0:25:75
+chr2	166053034	rs3812718	C	T,A	500	PASS	AC=4,0;AN=8;AF=0.500,0.000	GT:AD:DP:GQ	0/1:15,16,0:31:99	0/0:30,0,0:30:90	0/1:20,18,0:38:99	1/1:0,22,0:22:66
+chr2	166122240	rs7587026	C	A	500	PASS	AC=2;AN=8;AF=0.250	GT:AD:DP:GQ	0/0:27,0:27:81	0/1:13,14:27:99	0|1:14,15:29:99	0/0:24,0:24:72
+chr2	178560007	rs562860372	C	T	500	PASS	AC=2;AN=8;AF=0.250	GT:AD:DP:GQ	0/0:30,0:30:90	0/1:15,15:30:99	0/1:16,16:32:99	0/0:25,0:25:75
+chr2	178560163	rs72648224	T	A	500	PASS	AC=3;AN=8;AF=0.375	GT:AD:DP:GQ	0/1:14,15:29:99	0/0:28,0:28:84	0/1:17,16:33:99	0/1:12,13:25:99
+chr3	25751134	rs200561967	G	A	500	PASS	AC=1;AN=8;AF=0.125	GT:AD:DP:GQ	0/0:4,0:4:12	0/0:33,0:33:99	0/1:20,20:40:99	0/0:21,0:21:63
+chr5	126554292	.	C	G	500	PASS	AC=5;AN=8;AF=0.625	GT:AD:DP:GQ	0/1:14,14:28:99	0/1:15,13:28:99	1/1:0,30:30:90	0/1:12,12:24:99
+chr7	117559479	rs213950	G	A	500	PASS	AC=5;AN=8;AF=0.625	GT:AD:DP:GQ	0/1:15,15:30:99	0/1:14,16:30:99	1/1:0,31:31:93	0/1:13,13:26:99
+chr7	117587806	rs75527207	G	A	500	PASS	AC=2;AN=8;AF=0.250	GT:AD:DP:GQ	0/1:16,15:31:99	0/0:30,0:30:90	0/1:15,17:32:99	0/0:27,0:27:81
+chr7	117652877	rs80034486	C	G	500	PASS	AC=3;AN=8;AF=0.375	GT:AD:DP:GQ	0/0:29,0:29:87	0/1:14,14:28:99	0|1:16,14:30:99	0/1:11,12:23:99
+chrX	31178721	rs398123832	G	A	500	PASS	AC=3;AN=6;AF=0.500	GT:AD:DP:GQ	0/1:15,14:29:99	0:20,0:20:60	0/1:13,14:27:99	1:0,24:24:72
