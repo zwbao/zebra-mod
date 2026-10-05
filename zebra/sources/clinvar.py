@@ -4,16 +4,31 @@ No key needed (3 requests/s); NCBI_API_KEY in the environment raises it to 10/s.
 Records are found by VariationID (VCV), rsID, HGVS name, canonical SPDI or
 genomic position; HGVS text search is fuzzy, so callers that know the exact
 allele should match the returned records on SPDI (see zebra.sources.variant).
+
+The key never goes in the URL (E8). `zebra.http.request` bakes query parameters
+into `Response.url`, and `source_record` copies that URL into the evidence
+ledger, the JSON the model reads and any report that cites sources, so a key
+placed in `params` was written to disk in every patient's ledger. E-utilities
+read `api_key` from a POST body as well as from the query string (verified live
+on 2026-10-06: a POST to esearch.fcgi with `term` in the query string and
+`api_key=BOGUSKEY123` in the form body answered `{"error":"API key invalid",
+"api-key":"BOGUSKEY123"}`, so the body was read), so every request is a POST
+with the key in the body and everything else in the URL. The key is still part
+of the on-disk cache key, because `zebra.http` keys the cache on method, URL
+and body; setting or changing a key therefore misses the cache once.
 """
 
 from __future__ import annotations
 
 import os
 import re
+import urllib.parse
 from typing import Any, Dict, Iterable, List, Optional
 
 from zebra.core import Outcome
-from zebra.http import get_json, source_record
+from zebra.http import Response, SourceError, get_json, post_json
+from zebra.sources import record as source_record
+from zebra.sources import public_url, validated_json
 
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 CACHE_TTL = 7 * 86400  # ClinVar releases weekly
@@ -39,12 +54,48 @@ VCV_RE = re.compile(r"^(?:VCV)?0*(\d+)(?:\.\d+)?$", re.I)
 
 
 def _params(extra: Dict[str, Any]) -> Dict[str, Any]:
+    """The URL parameters of an E-utilities call. The API key is NOT one of them (E8)."""
     p = {"db": "clinvar", "retmode": "json", "tool": "zebra-mod"}
-    key = os.environ.get("NCBI_API_KEY")
-    if key:
-        p["api_key"] = key
     p.update(extra)
     return p
+
+
+def _key_body() -> Optional[str]:
+    """`api_key=…` as a form body, or None when no key is set."""
+    key = (os.environ.get("NCBI_API_KEY") or "").strip()
+    if not key:
+        return None
+    return urllib.parse.urlencode({"api_key": key})
+
+
+def redact(text: Optional[str]) -> Optional[str]:
+    """`text` with the configured NCBI key replaced by a placeholder.
+
+    E-utilities echoes a rejected key back in its error body
+    (`{"error":"API key invalid","api-key":"…"}`), and a `SourceError` message
+    becomes a warning, which the evidence ledger stores. The key must not get
+    out that way either.
+    """
+    key = (os.environ.get("NCBI_API_KEY") or "").strip()
+    if not key or not text:
+        return text
+    return text.replace(key, "<NCBI_API_KEY redacted>")
+
+
+def _eutils(endpoint: str, extra: Dict[str, Any], *, timeout: float = 30.0, refresh: bool = False) -> Response:
+    """Call an E-utilities endpoint; with a key set it is a POST carrying the key in the body."""
+    url = f"{EUTILS}/{endpoint}"
+    params = _params(extra)
+    ttl = 0 if refresh else CACHE_TTL
+    body = _key_body()
+    try:
+        if body is None:
+            return get_json(url, source="ClinVar", params=params, cache_ttl=ttl, timeout=timeout)
+        return post_json(url, body, source="ClinVar", params=params,
+                         headers={"Content-Type": "application/x-www-form-urlencoded"},
+                         cache_ttl=ttl, timeout=timeout)
+    except SourceError as err:
+        raise SourceError(err.source, public_url(err.url) or "", err.status, redact(err.message) or "") from None
 
 
 def stars(review_status: Optional[str]) -> Optional[int]:
@@ -62,12 +113,14 @@ def vcv_uid(vcv: str) -> str:
 
 def search(term: str, retmax: int = 40) -> Outcome:
     """esearch: ClinVar VariationIDs (uids) for an Entrez query."""
-    params = _params({"term": term, "retmax": retmax})
-    resp = get_json(f"{EUTILS}/esearch.fcgi", source="ClinVar", params=params, cache_ttl=CACHE_TTL)
-    res = resp.json().get("esearchresult") or {}
+    extra = {"term": term, "retmax": retmax}
+    resp = _eutils("esearch.fcgi", extra)
+    data = validated_json(resp, "ClinVar esearch", require="esearchresult",
+                          refetch=lambda: _eutils("esearch.fcgi", extra, refresh=True))
+    res = data.get("esearchresult") or {}
     if "ERROR" in res and resp.cached:  # do not keep serving a cached server-side error
-        resp = get_json(f"{EUTILS}/esearch.fcgi", source="ClinVar", params=params, cache_ttl=0)
-        res = resp.json().get("esearchresult") or {}
+        resp = _eutils("esearch.fcgi", extra, refresh=True)
+        res = (validated_json(resp, "ClinVar esearch", require="esearchresult").get("esearchresult") or {})
     if "ERROR" in res:
         raise ValueError(f"ClinVar esearch error: {res['ERROR']}")
     ids = list(res.get("idlist") or [])
@@ -101,9 +154,11 @@ def summaries(uids: List[str]) -> Outcome:
     uids = [u for u in dict.fromkeys(str(u) for u in uids)][:40]
     if not uids:
         return Outcome([])
-    resp = get_json(f"{EUTILS}/esummary.fcgi", source="ClinVar", params=_params({"id": ",".join(uids)}),
-                    cache_ttl=CACHE_TTL, timeout=60)
-    res = resp.json().get("result") or {}
+    extra = {"id": ",".join(uids)}
+    resp = _eutils("esummary.fcgi", extra, timeout=60)
+    data = validated_json(resp, "ClinVar esummary", require="result",
+                          refetch=lambda: _eutils("esummary.fcgi", extra, timeout=60, refresh=True))
+    res = data.get("result") or {}
     out = [parse_summary(res[u]) for u in res.get("uids", []) if u in res and not res[u].get("error")]
     return Outcome(out, sources=[source_record("ClinVar", ",".join(f"VCV{int(u):09d}" for u in uids), resp)])
 

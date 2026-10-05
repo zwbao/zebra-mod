@@ -15,7 +15,8 @@ import io
 from typing import Any, Dict, List, Optional
 
 from zebra.core import Outcome
-from zebra.http import request, source_record
+from zebra.http import request
+from zebra.sources import record as source_record
 
 VALIDITY_CSV = "https://search.clinicalgenome.org/kb/gene-validity/download"
 DOSAGE_TSV = {

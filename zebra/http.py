@@ -57,6 +57,27 @@ _HOST_INTERVAL = {
 _last_call: Dict[str, float] = {}
 _pace_lock = threading.Lock()
 
+# Wall-clock budget for the whole process. The mod's tools run the CLI under a
+# timeout; they pass that timeout minus a margin as ZEBRA_DEADLINE_MS, so a
+# hung source becomes a named SourceError (which `core.attempt` turns into a
+# warning) instead of the host killing the process and losing every answer.
+_PROCESS_START = time.monotonic()
+_MIN_ATTEMPT_TIMEOUT = 2.0  # never clamp an attempt below this; below it, give up instead
+
+
+def deadline_seconds() -> Optional[float]:
+    """Seconds left of ZEBRA_DEADLINE_MS, or None when no deadline is set."""
+    raw = os.environ.get("ZEBRA_DEADLINE_MS")
+    if not raw:
+        return None
+    try:
+        budget = float(raw) / 1000.0
+    except ValueError:
+        return None
+    if budget <= 0:
+        return None
+    return budget - (time.monotonic() - _PROCESS_START)
+
 
 class SourceError(Exception):
     """A request to an upstream source failed after retries."""
@@ -109,6 +130,18 @@ def _pace(host: str) -> None:
         _last_call[host] = slot
     if slot > now:
         time.sleep(slot - now)
+
+
+def _wait_for_retry(delay: float) -> bool:
+    """Sleep before the next attempt. False means the deadline leaves no room for one."""
+    left = deadline_seconds()
+    if left is None:
+        time.sleep(delay)
+        return True
+    if left - delay < _MIN_ATTEMPT_TIMEOUT:
+        return False
+    time.sleep(delay)
+    return True
 
 
 def _opener() -> urllib.request.OpenerDirector:
@@ -175,10 +208,19 @@ def request(
     last_error: Optional[BaseException] = None
     status: Optional[int] = None
     for attempt in range(retries + 1):
+        left = deadline_seconds()
+        if left is not None and left < _MIN_ATTEMPT_TIMEOUT:
+            raise SourceError(
+                source, url, status,
+                f"deadline reached ({'no time left' if left <= 0 else f'{left:.1f} s left'}): "
+                f"gave up after {attempt} attempt(s) without an answer"
+                + (f"; last error: {_short(str(last_error), 120)}" if last_error else ""),
+            ) from None
+        attempt_timeout = timeout if left is None else min(timeout, left)
         _pace(host)
         req = urllib.request.Request(url, data=data, headers=hdrs, method=method)
         try:
-            with opener.open(req, timeout=timeout) as resp:
+            with opener.open(req, timeout=attempt_timeout) as resp:
                 raw = _gunzip(resp.read())
                 status = resp.status
                 text = raw.decode("utf-8", "replace")
@@ -194,15 +236,16 @@ def request(
             elif status in (429, 500, 502, 503, 504) and attempt < retries:
                 retry_after = err.headers.get("Retry-After") if err.headers else None
                 delay = float(retry_after) if retry_after and retry_after.isdigit() else 1.5 * (2**attempt)
-                time.sleep(min(delay, 20))
                 last_error = err
-                continue
+                if _wait_for_retry(min(delay, 20)):
+                    continue
+                raise SourceError(source, url, status,
+                                  f"HTTP {status} and no time left to retry before the deadline: {_short(text) or str(err)}") from None
             else:
                 raise SourceError(source, url, status, _short(text) or str(err)) from None
         except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, http.client.HTTPException) as err:
             last_error = err
-            if attempt < retries:
-                time.sleep(1.5 * (2**attempt))
+            if attempt < retries and _wait_for_retry(1.5 * (2**attempt)):
                 continue
             raise SourceError(source, url, None, f"network error: {err}") from None
 
@@ -211,8 +254,7 @@ def request(
         if accept == "application/json" and text.lstrip()[:1] == "<":
             # some services answer an HTML error page with 200; never cache it
             last_error = SourceError(source, url, status, "HTML page where JSON was expected")
-            if attempt < retries:
-                time.sleep(1.5 * (2**attempt))
+            if attempt < retries and _wait_for_retry(1.5 * (2**attempt)):
                 continue
             raise last_error
         retrieved = now_iso()

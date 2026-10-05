@@ -18,6 +18,10 @@ def _f(x: Any, nd: int = 3) -> str:
     return str(x)
 
 
+def _pct(x: Any) -> str:
+    return f"{x:.0%}" if isinstance(x, (int, float)) else "?"
+
+
 def render(r: Dict[str, Any]) -> str:
     lines: List[str] = []
     tx = r.get("transcript") or {}
@@ -58,7 +62,11 @@ def render(r: Dict[str, Any]) -> str:
     pop = r.get("population")
     if pop and "dataset" in pop:
         cov = pop.get("coverage") or {}
-        cov_txt = ", ".join(f"{k} mean {_f(v.get('mean'))}" for k, v in cov.items())
+        # F33: the covered fraction decides whether absence means anything; mean
+        # depth is shown after it, never instead of it.
+        cov_txt = ", ".join(
+            f"{k} {_pct(v.get('over_20'))} of samples >=20x (median {_f(v.get('median'))}, mean {_f(v.get('mean'))})"
+            for k, v in cov.items())
         if pop.get("found"):
             t = pop.get("total") or {}
             g = pop.get("grpmax") or {}
@@ -67,8 +75,14 @@ def render(r: Dict[str, Any]) -> str:
                          + (f", hemi {t.get('hemi')}" if t.get("hemi") else "")
                          + f"; grpmax {_f(g.get('af'))} ({g.get('group') or '-'}, AN {g.get('an') or '-'}); faf95 {_f(faf.get('value'))} ({faf.get('group') or '-'})"
                          + (f"; filters {','.join(pop['filters'])}" if pop.get("filters") else ""))
+            if g.get("basis"):
+                lines.append(f"  grpmax basis: {g['basis']}")
+            if faf.get("basis"):
+                lines.append(f"  faf95 basis: {faf['basis']}")
         else:
             lines.append(f"gnomAD ({pop['dataset']}): absent; {'site covered' if pop.get('covered') else 'coverage low/unknown'} ({cov_txt or 'no coverage data'})")
+            if pop.get("coverage_rule"):
+                lines.append(f"  coverage rule: {pop['coverage_rule']}")
     elif pop and pop.get("fallback"):
         fb = pop["fallback"]
         lines.append(f"gnomAD (via VEP, fallback): exome AF {_f(fb.get('exome_af'))}, genome AF {_f(fb.get('genome_af'))}, grpmax {_f(fb.get('grpmax_af'))} ({fb.get('grpmax_group')})")

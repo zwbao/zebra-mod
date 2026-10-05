@@ -11,7 +11,8 @@ import urllib.parse
 from typing import Any, Dict, List, Optional
 
 from zebra.core import Outcome
-from zebra.http import get_json, source_record
+from zebra.http import get_json
+from zebra.sources import record as source_record
 
 UNIPROT = "https://rest.uniprot.org/uniprotkb"
 ALPHAFOLD = "https://alphafold.ebi.ac.uk"

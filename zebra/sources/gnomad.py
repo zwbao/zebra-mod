@@ -14,22 +14,49 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
 from zebra.core import Outcome
-from zebra.http import SourceError, post_json, source_record
+from zebra.http import SourceError, post_json
+from zebra.sources import record as source_record
 
 API = "https://gnomad.broadinstitute.org/api"
 BROWSER = "https://gnomad.broadinstitute.org"
 DATASETS = {"GRCh38": "gnomad_r4", "GRCh37": "gnomad_r2_1"}
 CACHE_TTL = 30 * 86400
-# grpmax / popmax is taken over non-bottlenecked continental groups only, as
-# gnomAD does: v4 excludes ami, asj, fin, mid and "remaining"; v2 excludes asj,
-# fin and oth.
-GRPMAX_GROUPS = ("afr", "amr", "eas", "nfe", "sas")
+# grpmax is gnomAD's own annotation, defined by *excluding* bottlenecked groups,
+# so it is computed here by exclusion too: a group gnomAD adds in a later
+# release is then included, where a hard-coded include-list would silently drop
+# it. gnomAD browser help topic "grpmax", fetched 2026-10-06, verbatim:
+#   "For gnomAD v4 exomes and genomes, this calculation excludes Amish (ami),
+#    Ashkenazi Jewish (asj), European Finnish (fin), and 'Remaining Individuals'
+#    (rmi) groups. Due to small group size, we also did not include the Middle
+#    Eastern (mid) group in genome grpmax calculations. For gnomAD v2, this
+#    calculation excludes Ashkenazi Jewish (asj), European Finnish (fin), and
+#    'Remaining Individuals' (rmi) groups."
+# Help topic "faf" confirms the scope of `mid` for the joint dataset:
+#   "the exome FAF and joint (combined exome and genome) FAF calculations
+#    included the Middle Eastern (mid) group. However, due to small group size,
+#    the genome FAF calculations did not include mid."
+# So `mid` belongs in exome and joint grpmax and is excluded from genome-only
+# grpmax. Dropping it everywhere under-reported founder alleles: MEFV
+# p.Met694Val (familial Mediterranean fever) reported grpmax amr AF 2.3e-04
+# while its true grpmax is mid AF 4.6e-03, 20x higher and 6.6x above the 7e-04
+# recessive PM2 threshold, so PM2 fired on a common founder allele.
+BOTTLENECKED_GROUPS = frozenset(("ami", "asj", "fin", "rmi", "remaining", "oth"))
+GENOME_ONLY_EXCLUDED = frozenset(("mid",))
+# the sex splits and sub-group / project labels that are not genetic-ancestry groups
+NON_GROUP_IDS = frozenset(("xx", "xy"))
 GROUP_NAMES = {
     "afr": "African/African American", "amr": "Admixed American", "asj": "Ashkenazi Jewish",
     "eas": "East Asian", "fin": "Finnish", "nfe": "Non-Finnish European", "sas": "South Asian",
-    "mid": "Middle Eastern", "ami": "Amish", "remaining": "Remaining", "oth": "Other",
+    "mid": "Middle Eastern", "ami": "Amish", "remaining": "Remaining", "rmi": "Remaining",
+    "oth": "Other",
 }
-COVERED_MEAN = 20.0  # a site counts as covered when exome or genome mean depth >= 20
+# A site counts as covered when at least this fraction of samples reached 20x.
+# Mean depth is not used: it is inflated by a minority of deeply covered samples
+# and says nothing about how many individuals were callable. Measured example
+# (chrX:31,121,491 in DMD, GRCh38): exome mean 2.2 but over_20 0.01, genome mean
+# 24.1 but over_20 0.61 — mean >= 20 while 39% of genome samples could not be
+# called, yet the site was declared covered and AC 0 flowed into PM2.
+COVERED_OVER_20 = 0.8
 
 _SEQ_FIELDS = """ac an af homozygote_count hemizygote_count filters flags
       faf95 { popmax popmax_population }
@@ -158,15 +185,38 @@ def _sum_groups(a: Dict[str, Dict[str, Any]], b: Dict[str, Dict[str, Any]]) -> D
     return out
 
 
-def grpmax(groups: Dict[str, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def grpmax_excluded(kind: str) -> frozenset:
+    """The groups gnomAD leaves out of grpmax for this population set.
+
+    `kind` is "joint", "exome", "genome" or "exome+genome". Only the
+    genome-only calculation excludes the Middle Eastern group.
+    """
+    if kind == "genome":
+        return BOTTLENECKED_GROUPS | GENOME_ONLY_EXCLUDED
+    return BOTTLENECKED_GROUPS
+
+
+def grpmax(groups: Dict[str, Dict[str, Any]], kind: str = "joint") -> Optional[Dict[str, Any]]:
+    """The non-bottlenecked genetic-ancestry group with the highest AF, as gnomAD defines grpmax.
+
+    Computed by excluding the groups named in `grpmax_excluded(kind)`, so every
+    other group gnomAD reports is considered.
+    """
+    excluded = grpmax_excluded(kind)
     best: Optional[Dict[str, Any]] = None
-    for gid in GRPMAX_GROUPS:
-        g = groups.get(gid)
+    considered: List[str] = []
+    for gid, g in groups.items():
+        if gid.lower() in excluded or gid.lower() in NON_GROUP_IDS:
+            continue
         if not g or not g.get("an"):
             continue
+        considered.append(gid)
         af = g["ac"] / g["an"]
         if best is None or af > best["af"]:
             best = {"group": gid, "name": GROUP_NAMES.get(gid), "af": af, "ac": g["ac"], "an": g["an"]}
+    if best is not None:
+        best["groups_considered"] = sorted(considered)
+        best["groups_excluded"] = sorted(g for g in groups if g.lower() in excluded)
     return best
 
 
@@ -192,12 +242,38 @@ def _r(x: Any, n: int = 3) -> Any:
     return round(x, n) if isinstance(x, float) else x
 
 
+COVERAGE_RULE = (f"covered = at least {COVERED_OVER_20:.0%} of samples reached 20x at this site "
+                 "(gnomAD `over_20`) in the exome or the genome callset; mean depth is not used, because a "
+                 "minority of deeply covered samples inflates it while most individuals stay uncallable")
+
+
 def covered(coverage: Dict[str, Any]) -> Optional[bool]:
-    means = [(coverage.get(k) or {}).get("mean") for k in ("exome", "genome")]
-    means = [m for m in means if isinstance(m, (int, float))]
-    if not means:
-        return None
-    return any(m >= COVERED_MEAN for m in means)
+    """Whether absence from gnomAD here is informative, judged on the covered fraction (F33)."""
+    fracs = [(coverage.get(k) or {}).get("over_20") for k in ("exome", "genome")]
+    fracs = [f for f in fracs if isinstance(f, (int, float))]
+    if fracs:
+        return any(f >= COVERED_OVER_20 for f in fracs)
+    medians = [(coverage.get(k) or {}).get("median") for k in ("exome", "genome")]
+    medians = [m for m in medians if isinstance(m, (int, float))]
+    if medians:  # older coverage rows carry no over_20; median depth is the next best thing
+        return any(m >= 20 for m in medians)
+    return None
+
+
+def covered_detail(coverage: Dict[str, Any]) -> Dict[str, Any]:
+    """The numbers behind `covered`, so a reader can disagree with the threshold."""
+    out: Dict[str, Any] = {"threshold_over_20": COVERED_OVER_20, "rule": COVERAGE_RULE, "fraction_over_20": {}}
+    passing = []
+    for k in ("exome", "genome"):
+        f = (coverage.get(k) or {}).get("over_20")
+        if isinstance(f, (int, float)):
+            out["fraction_over_20"][k] = f
+            if f >= COVERED_OVER_20:
+                passing.append(k)
+    out["covered_by"] = passing or None
+    if not out["fraction_over_20"]:
+        out["note"] = "gnomAD returned no over_20 fraction for this site; median depth was used instead"
+    return out
 
 
 def parse_variant(data: Dict[str, Any], dataset: str, vid: str) -> Dict[str, Any]:
@@ -215,14 +291,20 @@ def parse_variant(data: Dict[str, Any], dataset: str, vid: str) -> Dict[str, Any
     if not v:
         cov = _site_coverage(data.get("region"), pos)
         is_cov = covered(cov)
+        detail = covered_detail(cov)
+        fr = ", ".join(f"{k} {f:.0%} of samples at >=20x" for k, f in (detail["fraction_over_20"] or {}).items())
         return {
             "dataset": dataset, "variant_id": vid, "url": url, "found": False, "absent": True,
-            "coverage": cov, "covered": is_cov,
-            "coverage_rule": f"covered = exome or genome mean depth >= {COVERED_MEAN:g} at the site",
-            "total": {"ac": 0 if is_cov else None, "an": None, "af": 0.0 if is_cov else None},
+            "coverage": cov, "covered": is_cov, "coverage_detail": detail,
+            "coverage_rule": COVERAGE_RULE,
+            "total": {"ac": 0 if is_cov else None, "an": None, "af": 0.0 if is_cov else None,
+                      "an_note": "gnomAD's coverage endpoint reports no allele number for a site with no variant, "
+                                 "so the number of alleles surveyed here is unknown; judge absence on the covered "
+                                 "fraction below, not on an allele count"},
             "grpmax": None, "faf95": None, "liftover": other,
-            "note": ("absent from gnomAD at a covered site" if is_cov else
-                     "absent from gnomAD, but coverage at the site is low or unknown: absence is weak evidence"),
+            "note": (f"absent from gnomAD at a covered site ({fr or 'coverage reported'})" if is_cov else
+                     f"absent from gnomAD, but coverage at the site is low or unknown ({fr or 'no over_20 fraction'}): "
+                     "absence is weak evidence"),
         }
     exome, genome = _seq(v.get("exome")), _seq(v.get("genome"))
     joint_raw = v.get("joint")
@@ -231,9 +313,11 @@ def parse_variant(data: Dict[str, Any], dataset: str, vid: str) -> Dict[str, Any
     ge_groups = _top_groups((v.get("genome") or {}).get("populations") or [])
     if joint_raw:
         groups = _top_groups(joint_raw.get("populations") or [])
+        group_kind = "joint"
         basis = "joint exome+genome (gnomAD v4)"
     else:
         groups = _sum_groups(ex_groups, ge_groups)
+        group_kind = "exome+genome"
         basis = "exome+genome summed per group"
     if joint:
         total = {"ac": joint["ac"], "an": joint["an"], "af": joint["af"], "hom": joint["hom"], "hemi": joint["hemi"]}
@@ -243,18 +327,37 @@ def parse_variant(data: Dict[str, Any], dataset: str, vid: str) -> Dict[str, Any
         total = {"ac": ac, "an": an, "af": (ac / an) if an else None,
                  "hom": sum((x or {}).get("hom") or 0 for x in (exome, genome)),
                  "hemi": sum((x or {}).get("hemi") or 0 for x in (exome, genome))}
-    gmax = grpmax(groups)
+    gmax = grpmax(groups, group_kind)
     if gmax:
-        gmax["basis"] = f"{basis}; groups {'/'.join(GRPMAX_GROUPS)} (bottlenecked groups excluded)"
+        excl = ", ".join(gmax["groups_excluded"]) or "none present"
+        gmax["basis"] = (f"{basis}; highest AF over the non-bottlenecked groups "
+                         f"{', '.join(gmax['groups_considered'])}; excluded here: {excl} "
+                         "(gnomAD help topic 'grpmax'; the Middle Eastern group is excluded from the "
+                         "genome-only calculation, not from exome or joint)")
     if joint and joint.get("faf95") is not None:
-        faf = {"value": joint["faf95"], "group": joint["faf95_group"], "basis": "joint faf95 (grpmax filtering AF)"}
+        faf = {"value": joint["faf95"], "group": joint["faf95_group"], "datasets": ["joint"],
+               "basis": ("GroupMax FAF: gnomAD's joint (exome+genome) faf95 popmax — the filtering AF of the "
+                         f"group with the highest FAF ({joint['faf95_group'] or '?'}), which is not necessarily "
+                         "the group with the highest AF, so it can name a different group than grpmax "
+                         "(gnomAD help topic 'faf')")}
+        if gmax and joint.get("faf95_group") and joint["faf95_group"] != gmax["group"]:
+            faf["differs_from_grpmax_group"] = f"grpmax group is {gmax['group']}, FAF group is {joint['faf95_group']}"
     else:
-        cands = [(x["faf95"], x["faf95_group"], k) for k, x in (("exome", exome), ("genome", genome))
-                 if x and x.get("faf95") is not None]
+        per = {k: {"value": x["faf95"], "group": x["faf95_group"]}
+               for k, x in (("exome", exome), ("genome", genome)) if x and x.get("faf95") is not None}
         faf = None
-        if cands:
-            val, grp, kind = max(cands)
-            faf = {"value": val, "group": grp, "basis": f"higher of exome/genome faf95 popmax ({kind})"}
+        if per:
+            best = max(per.items(), key=lambda kv: kv[1]["value"])
+            faf = {"value": best[1]["value"], "group": best[1]["group"], "from": best[0],
+                   "per_dataset": per, "datasets": sorted(per),
+                   "basis": ("the higher of the exome and genome GroupMax FAFs, reported separately below — "
+                             f"used here: {best[0]} FAF {best[1]['value']:.3g} in group {best[1]['group'] or '?'}. "
+                             "This dataset (gnomAD v2) publishes no joint FAF, so this is NOT a filtering AF "
+                             "computed on the pooled sample as Whiffin 2017 intends; it is the larger of two "
+                             "separate estimates and is therefore an upper bound that biases towards BS1")}
+            if len(per) > 1:
+                faf["basis"] += (": " + ", ".join(f"{k} {v['value']:.3g} ({v['group'] or '?'})"
+                                                  for k, v in sorted(per.items())))
     populations = []
     for gid, g in sorted(groups.items(), key=lambda kv: -(kv[1]["ac"] / kv[1]["an"] if kv[1]["an"] else 0)):
         populations.append({"id": gid, "name": GROUP_NAMES.get(gid), "ac": g["ac"], "an": g["an"],
@@ -273,7 +376,9 @@ def parse_variant(data: Dict[str, Any], dataset: str, vid: str) -> Dict[str, Any
         "rsids": v.get("rsids") or [], "caid": v.get("caid"), "flags": v.get("flags") or [], "filters": filters,
         "exome": exome, "genome": genome, "joint": joint, "total": total,
         "grpmax": gmax, "faf95": faf, "populations": populations[:12],
-        "coverage": cov, "covered": covered(cov), "in_silico": predictors or None, "liftover": other,
+        "coverage": cov, "covered": covered(cov), "coverage_detail": covered_detail(cov),
+        "coverage_rule": COVERAGE_RULE,
+        "in_silico": predictors or None, "liftover": other,
     }
 
 

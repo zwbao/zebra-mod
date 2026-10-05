@@ -1,7 +1,13 @@
-"""Build the synthetic family VCF used by tests/test_vcf.py (and optionally re-capture Ensembl responses).
+"""Build the synthetic family VCFs used by tests/test_vcf.py (and optionally re-capture Ensembl responses).
 
-    python tests/fixtures/vcf/make_fixtures.py            # write trio.vcf, trio.vcf.gz, genes.txt
-    python tests/fixtures/vcf/make_fixtures.py --capture  # also refresh vep_trio.json, lookup_genes.json (network)
+    python tests/fixtures/vcf/make_fixtures.py            # write trio.vcf(.gz), family2.vcf(.gz), bad.vcf, genes.txt
+    python tests/fixtures/vcf/make_fixtures.py --capture  # also refresh vep_trio.json, vep_family2.json,
+                                                          # lookup_genes.json (network)
+
+Two families, each written once and never rewritten in place: `trio.vcf` is the
+original acceptance family, `family2.vcf` the second one added for the triage
+defects found in review (common pathogenic recessive allele, de novo plus
+inherited pair, diploid male X). `bad.vcf` holds data lines that cannot be read.
 
 Coordinates are real GRCh38 positions; every REF base was checked against Ensembl
 /sequence/region (2026-10-05). The variants are real dbSNP/ClinVar alleles
@@ -74,8 +80,49 @@ RECORDS = [
 
 GENES = ["SCN1A", "ALDH7A1", "CFTR", "DMD", "NGLY1", "PCDH19"]
 
+# ---------------------------------------------------------------- family 2
+# A second family, so the first one's expectations never move. Samples: M2
+# (mother), F2 (father), P2 (proband, male). Every REF base was checked against
+# Ensembl /sequence/region on 2026-10-06; the Y SNVs are real dbSNP alleles
+# found with Ensembl /overlap/region/human/Y?feature=variation. The caller
+# emitted diploid X and Y for every sample, which is the GATK default when the
+# ploidy is not set — that is what makes the male X call read as a homozygote.
+SAMPLES2 = ("M2", "F2", "P2")
+RECORDS2 = [
+    ("7", 117559590, "rs113993960", "ATCT", "A", "PASS",
+     {"M2": ("0/1", "17,16", 33, 99), "F2": ("0/0", "31,0", 31, 93), "P2": ("0/1", "18,17", 35, 99)},
+     "CFTR c.1521_1523del p.Phe508del, maternal: gnomAD grpmax 0.0149 is above the 1 % default, and ClinVar "
+     "reports it pathogenic — the AF filter must not delete it, and the significance must attach to an indel"),
+    ("7", 117587806, "rs75527207", "G", "A", "PASS",
+     {"M2": ("0/0", "30,0", 30, 90), "F2": ("0/0", "29,0", 29, 87), "P2": ("0/1", "16,15", 31, 99)},
+     "CFTR c.1652G>A p.Gly551Asp de novo: the comp-het partner of F508del, so it must not be held to the "
+     "dominant AF cut-off"),
+    ("X", 31178721, "rs398123832", "G", "A", "PASS",
+     {"M2": ("0/1", "15,14", 29, 99), "F2": ("0/0", "26,0", 26, 78), "P2": ("1/1", "0,27", 27, 81)},
+     "DMD c.10171C>T p.Arg3391* called 1/1 on male X outside the PARs: hemizygous, not a homozygote"),
+    ("Y", 2786042, "rs2051121937", "T", "G", "PASS",
+     {"M2": ("./.", "0,0", 0, 0), "F2": ("1/1", "0,22", 22, 66), "P2": ("1/1", "0,24", 24, 72)},
+     "real Y non-PAR SNV: evidence that the proband is male"),
+    ("Y", 2786191, "rs936999469", "C", "T", "PASS",
+     {"M2": ("./.", "0,0", 0, 0), "F2": ("1/1", "0,20", 20, 60), "P2": ("1/1", "0,21", 21, 63)},
+     "second real Y non-PAR SNV: two Y ALT calls settle the sex inference"),
+]
 
-def vcf_text(chr_prefix: bool) -> str:
+# Data lines that cannot be read, to prove they are counted and reported.
+BAD_LINES = [
+    "chr1 1000 . A G 500 PASS . GT:DP:GQ 0/1:30:90",          # space-separated
+    "chr1\t3e2\t.\tA\tG\t500\tPASS\t.\tGT:DP:GQ\t0/1:30:90",  # POS not an integer
+    "chr1\t4000\t.\tA\tG\t500\tPASS\t.",                      # 8 columns, no genotypes (readable)
+    "chr1\t5000\t.\tA\tG\t500\tPASS",                         # 7 columns
+    "chr1\t0\t.\tA\tG\t500\tPASS\t.\tGT:DP:GQ\t0/1:30:90",    # POS 0 is not a position
+    "chr1\t6000\t.\tA\t\t500\tPASS\t.\tGT:DP:GQ\t0/1:30:90",  # empty ALT
+    "chr1\t7000\t.\tA\tG\t500\tPASS\t.\tGT:DP:GQ\t0/1:30:90", # readable
+]
+
+
+def vcf_text(chr_prefix: bool, records=None, samples=None) -> str:
+    records = RECORDS if records is None else records
+    samples = SAMPLES if samples is None else samples
     pre = "chr" if chr_prefix else ""
     lines = [
         "##fileformat=VCFv4.2",
@@ -94,20 +141,20 @@ def vcf_text(chr_prefix: bool) -> str:
         lines.append(f"##contig=<ID={cid},length={length}>")
     lines.append("##reference=file:///references/GRCh38_full_analysis_set_plus_decoy_hla.fa")
     lines.append("##source=zebra-mod synthetic fixture: real GRCh38 alleles, invented genotypes")
-    lines.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + "\t".join(SAMPLES))
-    for chrom, pos, vid, ref, alts, filt, gts, _ in RECORDS:
+    lines.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + "\t".join(samples))
+    for chrom, pos, vid, ref, alts, filt, gts, _ in records:
         n_alt = len(alts.split(","))
         ac = [0] * n_alt
         an = 0
-        for s in SAMPLES:
+        for s in samples:
             for a in gts[s][0].replace("|", "/").split("/"):
                 if a not in (".",):
                     an += 1
                     if a != "0":
                         ac[int(a) - 1] += 1
-        info = f"AC={','.join(map(str, ac))};AN={an};AF={','.join(f'{x / an:.3f}' for x in ac)}"
+        info = f"AC={','.join(map(str, ac))};AN={an};AF={','.join(f'{x / an:.3f}' if an else '0.000' for x in ac)}"
         cols = [pre + chrom, str(pos), vid, ref, alts, "500" if filt == "PASS" else "12", filt, info, "GT:AD:DP:GQ"]
-        cols += [f"{g}:{ad}:{dp}:{gq}" for g, ad, dp, gq in (gts[s] for s in SAMPLES)]
+        cols += [f"{g}:{ad}:{dp}:{gq}" for g, ad, dp, gq in (gts[s] for s in samples)]
         lines.append("\t".join(cols))
     return "\n".join(lines) + "\n"
 
@@ -125,9 +172,9 @@ def bgzf(data: bytes) -> bytes:
     return out + bytes.fromhex("1f8b08040000000000ff0600424302001b0003000000000000000000")
 
 
-def alleles():
+def alleles(records=None):
     out = []
-    for chrom, pos, _, ref, alts, _, _, _ in RECORDS:
+    for chrom, pos, _, ref, alts, _, _, _ in (RECORDS if records is None else records):
         for alt in alts.split(","):
             out.append((chrom, pos, ref, alt))
     return out
@@ -168,12 +215,24 @@ def capture() -> None:
         json.dump({"_source": {"url": resp.url, "retrieved_at": resp.retrieved_at}, "response": data}, fh, indent=1)
     print(f"captured VEP for {len(got.result)} alleles and lookup for {len(data)} genes")
 
+    got2 = ensembl.vep_batch(alleles(RECORDS2), "GRCh38")
+    with open(os.path.join(HERE, "vep_family2.json"), "w") as fh:
+        json.dump({"_source": got2.sources, "records": [_trim_vep(r) for r in got2.result]}, fh, indent=1)
+    print(f"captured VEP for {len(got2.result)} family-2 alleles")
+
 
 def main() -> None:
     with open(os.path.join(HERE, "trio.vcf"), "w") as fh:
         fh.write(vcf_text(chr_prefix=True))
     with open(os.path.join(HERE, "trio.vcf.gz"), "wb") as fh:
         fh.write(bgzf(vcf_text(chr_prefix=False).encode("utf-8")))
+    with open(os.path.join(HERE, "family2.vcf"), "w") as fh:
+        fh.write(vcf_text(chr_prefix=True, records=RECORDS2, samples=SAMPLES2))
+    with open(os.path.join(HERE, "family2.vcf.gz"), "wb") as fh:
+        fh.write(bgzf(vcf_text(chr_prefix=False, records=RECORDS2, samples=SAMPLES2).encode("utf-8")))
+    with open(os.path.join(HERE, "bad.vcf"), "w") as fh:
+        head = vcf_text(chr_prefix=True, records=[], samples=("P",)).rstrip("\n")
+        fh.write(head + "\n" + "\n".join(BAD_LINES) + "\n")
     with open(os.path.join(HERE, "genes.txt"), "w") as fh:
         fh.write("# genes for the triage acceptance run\n" + "\n".join(GENES) + "\n")
     if "--capture" in sys.argv:

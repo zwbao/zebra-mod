@@ -208,7 +208,9 @@ def test_minus_strand_guides_are_read_off_the_reverse_complement(monkeypatch):
     # puts the target at window position 5) that is forward indices 23 and 22.
     bases = {40: "C", 22: "C", 23: "C"}
     monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant(bases)))
-    res = editing.screen("1-1041-C-T").result
+    # window given explicitly: this test checks the reverse-strand arithmetic at position 8,
+    # which is outside the ABE7.10 default window (4-7) since F30 split the two chemistries
+    res = editing.screen("1-1041-C-T", window=(4, 8)).result
     assert res["editors"] == ["ABE"]
     rows = {r["strand"]: r for r in res["strands"]}
     assert rows["-"]["guide_count"] == 1 and rows["+"]["guide_count"] == 0
@@ -269,7 +271,7 @@ def test_bystander_annotation_expresses_the_edit_on_the_forward_strand(monkeypat
                        sources=[{"db": "Ensembl VEP", "record": "batch", "url": "https://rest.ensembl.org/vep"}])
 
     monkeypatch.setattr(ensembl, "vep_batch", fake_vep_batch)
-    out = editing.screen("1-1041-C-T", annotate_bystanders=True)
+    out = editing.screen("1-1041-C-T", window=(4, 8), annotate_bystanders=True)
     res = out.result
     assert {(r, a) for _c, _p, r, a in seen["variants"]} == {("T", "C")}
     assert sorted(p for _c, p, _r, _a in seen["variants"]) == [1038, 1039, 1040, 1042]
@@ -307,7 +309,7 @@ CPS1_WINDOW = "TGTTTTGAATATCACAAACAAACAGGCTTTCATTACTGCTCAGAATCATGGCTATGCCTTGGACA
 def test_scn1a_arg712ter_is_abe_correctable_on_the_forward_strand(monkeypatch):
     """SCN1A NM_001165963.4:c.2134C>T p.Arg712* = 2-166042334-G-A (captured GRCh38 sequence)."""
     monkeypatch.setattr(ensembl, "sequence", sequence_stub(SCN1A_WINDOW, expect_chrom="2", expect_pos=166042334))
-    res = editing.screen("2-166042334-G-A").result
+    res = editing.screen("2-166042334-G-A", window=(4, 8)).result
     assert res["base_editable"] is True and res["editors"] == ["ABE"]
     assert res["correction"] == {"from": "A", "to": "G", "on": "forward strand",
                                  "description": "restore 2:166042334 A (patient) to G (reference)"}
@@ -322,7 +324,7 @@ def test_scn1a_arg712ter_is_abe_correctable_on_the_forward_strand(monkeypatch):
 
 def test_scn1a_with_ng_pam_adds_the_position_7_guide(monkeypatch):
     monkeypatch.setattr(ensembl, "sequence", sequence_stub(SCN1A_WINDOW))
-    res = editing.screen("2-166042334-G-A", pam="NG").result
+    res = editing.screen("2-166042334-G-A", pam="NG", window=(4, 8)).result
     assert sorted(g["target_protospacer_position"] for g in res["guides"]) == [7, 8]
     assert all(g["bystander_count"] == 0 for g in res["guides"])
 
@@ -330,13 +332,13 @@ def test_scn1a_with_ng_pam_adds_the_position_7_guide(monkeypatch):
 def test_cps1_gln335ter_needs_a_relaxed_pam(monkeypatch):
     """CPS1 c.1003C>T = 2-210591886-C-T: ABE on the reverse strand, but no NGG in window 4-8."""
     monkeypatch.setattr(ensembl, "sequence", sequence_stub(CPS1_WINDOW, expect_chrom="2", expect_pos=210591886))
-    ngg = editing.screen("2-210591886-C-T").result
+    ngg = editing.screen("2-210591886-C-T", window=(4, 8)).result
     assert ngg["base_editable"] is True and ngg["editors"] == ["ABE"]
     rows = {r["strand"]: r for r in ngg["strands"]}
     assert rows["-"]["editor"] == "ABE" and rows["+"]["editor"] is None
     assert ngg["guide_count"] == 0 and "no NGG protospacer" in ngg["reason"]
 
-    ng = editing.screen("2-210591886-C-T", pam="NG").result
+    ng = editing.screen("2-210591886-C-T", pam="NG", window=(4, 8)).result
     assert sorted(g["target_protospacer_position"] for g in ng["guides"]) == [4, 8]
     best = ng["guides"][0]
     assert best["target_protospacer_position"] == 8 and best["bystander_count"] == 0
@@ -350,7 +352,9 @@ def test_cps1_gln335ter_needs_a_relaxed_pam(monkeypatch):
 
 @pytest.mark.live
 def test_live_scn1a_matches_the_captured_window():
-    out = editing.screen("2-166042334-G-A")
+    # window given explicitly: the hand-checked guide sits at protospacer position 8,
+    # outside the ABE7.10 default (4-7) that F30 introduced
+    out = editing.screen("2-166042334-G-A", window=(4, 8))
     res = out.result
     assert res["reference_window"]["reference_plus"] == SCN1A_WINDOW
     assert res["guide_count"] == 1
@@ -360,14 +364,14 @@ def test_live_scn1a_matches_the_captured_window():
 
 @pytest.mark.live
 def test_live_cps1_control_is_abe_correctable():
-    res = editing.screen("2-210591886-C-T", pam="NG").result
+    res = editing.screen("2-210591886-C-T", pam="NG", window=(4, 8)).result
     assert res["editors"] == ["ABE"] and res["guide_count"] == 2
     assert res["reference_window"]["reference_plus"] == CPS1_WINDOW
 
 
 @pytest.mark.live
 def test_live_hgvs_input_resolves_and_screens():
-    res = editing.screen("NM_001165963.4:c.2134C>T").result
+    res = editing.screen("NM_001165963.4:c.2134C>T", window=(4, 8)).result
     v = res["variant"]
     assert (v["chrom"], v["pos"], v["ref"], v["alt"]) == ("2", 166042334, "G", "A")
     assert res["editors"] == ["ABE"] and res["guides"][0]["strand"] == "+"
@@ -375,7 +379,7 @@ def test_live_hgvs_input_resolves_and_screens():
 
 @pytest.mark.live
 def test_live_bystander_annotation_on_cps1():
-    out = editing.screen("2-210591886-C-T", pam="NG", annotate_bystanders=True)
+    out = editing.screen("2-210591886-C-T", pam="NG", window=(4, 8), annotate_bystanders=True)
     guide = next(g for g in out.result["guides"] if g["bystander_count"])
     effects = {b["coding_effect"] for b in guide["bystanders_in_window"]}
     assert effects and effects != {"check bystanders on the transcript"}
@@ -394,3 +398,132 @@ def test_a_short_window_at_a_contig_edge_is_warned_about(monkeypatch):
     out = editing.screen("1-1041-G-A")
     assert any("contig edge" in w for w in out.warnings)
     assert out.result["base_editable"] is True
+
+
+# --------------------------------------------------------------------- regressions
+# One test per backlog id in docs/ROADMAP.md.
+
+
+# ---- F30: one editing window for both chemistries, and no chemistry caveats
+
+def test_f30_abe_and_cbe_have_different_default_windows():
+    assert editing.EDITOR_WINDOWS["CBE"]["window"] == (4, 8)
+    assert editing.EDITOR_WINDOWS["ABE"]["window"] == (4, 7)
+    assert editing.EDITOR_WINDOWS["ABE"]["window"] != editing.EDITOR_WINDOWS["CBE"]["window"]
+
+
+def test_f30_each_window_carries_its_citation():
+    cbe = editing.EDITOR_WINDOWS["CBE"]
+    abe = editing.EDITOR_WINDOWS["ABE"]
+    assert "Komor et al. 2016" in cbe["citation"] and "Nature 533:420" in cbe["citation"]
+    assert cbe["generation"] == "BE3 / BE4"
+    assert "Gaudelli et al. 2017" in abe["citation"] and "Nature 551:464" in abe["citation"]
+    assert abe["generation"] == "ABE7.10"
+    abe8e = editing.EDITOR_WINDOW_ALTERNATIVES["ABE"][0]
+    assert abe8e["generation"] == "ABE8e" and abe8e["window"] == (3, 9)
+    assert "Richter et al. 2020" in abe8e["citation"] and "Nat Biotechnol 38:883" in abe8e["citation"]
+
+
+def test_f30_an_abe_run_uses_the_abe_window(monkeypatch):
+    """SCN1A G>A is an ABE correction: position 8 is outside ABE7.10's window."""
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(SCN1A_WINDOW, expect_chrom="2", expect_pos=166042334))
+    res = editing.screen("2-166042334-G-A").result
+    assert res["editors"] == ["ABE"]
+    assert res["editing_window"] == [4, 7]
+    assert "ABE7.10" in res["editing_window_basis"] and "Gaudelli" in res["editing_window_basis"]
+    assert res["guide_count"] == 0, "the only NGG guide puts the target at position 8"
+    assert "window 4-7" in res["reason"]
+
+
+def test_f30_a_cbe_run_uses_the_cbe_window(monkeypatch):
+    # patient C restored to T on the forward strand: CBE
+    bases = {40: "C", 46: "C", 56: "T", 57: "G", 58: "G"}
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(ref_window(bases, "T")))
+    res = editing.screen("1-1041-T-C").result
+    assert res["editors"] == ["CBE"]
+    assert res["editing_window"] == [4, 8]
+    assert "BE3 / BE4" in res["editing_window_basis"] and "Komor" in res["editing_window_basis"]
+
+
+def test_f30_an_explicit_window_overrides_the_per_editor_default(monkeypatch):
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(SCN1A_WINDOW))
+    res = editing.screen("2-166042334-G-A", window=(4, 8)).result
+    assert res["editing_window"] == [4, 8]
+    assert "overrides the per-editor defaults" in res["editing_window_basis"]
+    assert res["guide_count"] == 1
+
+
+def test_f30_cbe_byproduct_caveat_is_in_the_output(monkeypatch):
+    bases = {40: "C", 56: "T", 57: "G", 58: "G"}
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(ref_window(bases, "T")))
+    out = editing.screen("1-1041-T-C")
+    joined = " ".join(out.result["labels"])
+    assert "C->G and C->A" in joined
+    assert "Komor et al. 2017" in joined and "Sci Adv 3:eaao4774" in joined
+    assert "does not mean one clean product" in joined
+    assert "C->G and C->A" in out.text
+
+
+def test_f30_guide_independent_deamination_caveat_is_in_the_output(monkeypatch):
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant({40: "G", 57: "G", 58: "G"})))
+    out = editing.screen("1-1041-G-A")
+    joined = " ".join(out.result["labels"])
+    assert "Guide-independent deamination" in joined
+    for cite in ("Zuo et al. 2019", "Jin et al. 2019", "Grunewald et al. 2019"):
+        assert cite in joined
+    assert "not visible to any protospacer-based off-target search" in joined
+
+
+def test_f30_abe_run_names_the_abe8e_window_as_an_alternative(monkeypatch):
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant({40: "G", 57: "G", 58: "G"})))
+    res = editing.screen("1-1041-G-A").result
+    gens = [a["generation"] for a in res["other_editor_generations"]]
+    assert "ABE8e" in gens
+    assert "ABE8e 3-9" in res["window_note"]
+    assert "not bystander-free for all of them" in res["window_note"]
+
+
+def test_f30_a_cbe_run_does_not_carry_the_abe_byproduct_note_only(monkeypatch):
+    """The CBE by-product caveat is CBE-specific; an ABE run must not claim it."""
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant({40: "G", 57: "G", 58: "G"})))
+    joined = " ".join(editing.screen("1-1041-G-A").result["labels"])
+    assert "C->G and C->A" not in joined
+    assert "Guide-independent deamination" in joined
+
+
+def test_f30_a_transversion_carries_no_chemistry_caveat(monkeypatch):
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant({40: "G"})))
+    res = editing.screen("1-1041-G-T").result
+    assert res["base_editable"] is False
+    joined = " ".join(res["labels"])
+    assert "Guide-independent deamination" not in joined and "C->G and C->A" not in joined
+
+
+def test_f30_window_label_lists_both_chemistries(monkeypatch):
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant({40: "G", 57: "G", 58: "G"})))
+    joined = " ".join(editing.screen("1-1041-G-A").result["labels"])
+    assert "CBE 4-8" in joined and "ABE 4-7" in joined and "ABE8e about 3-9" in joined
+
+
+def test_f30_editor_windows_are_echoed_in_every_result(monkeypatch):
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant({40: "G", 57: "G", 58: "G"})))
+    res = editing.screen("1-1041-G-A").result
+    assert res["editor_windows"]["ABE"]["window"] == [4, 7]
+    assert res["editor_windows"]["CBE"]["window"] == [4, 8]
+
+
+def test_f30_cli_window_flag_is_optional():
+    from zebra.commands.edit import _window
+
+    assert _window(None) is None
+    assert _window("") is None
+    assert _window("3-9") == (3, 9)
+    with pytest.raises(UsageError):
+        _window("nonsense")
+
+
+def test_f30_an_out_of_range_explicit_window_names_both_defaults(monkeypatch):
+    monkeypatch.setattr(ensembl, "sequence", sequence_stub(plant({40: "G"})))
+    with pytest.raises(UsageError) as err:
+        editing.screen("1-1041-G-A", window=(0, 8))
+    assert "CBE 4-8" in str(err.value) and "ABE 4-7" in str(err.value)

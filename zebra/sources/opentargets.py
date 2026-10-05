@@ -15,7 +15,8 @@ import re
 from typing import Any, Dict, List, Optional, Sequence
 
 from zebra.core import Outcome
-from zebra.http import SourceError, post_json, source_record
+from zebra.http import SourceError, post_json
+from zebra.sources import record as source_record
 
 API = "https://api.platform.opentargets.org/api/v4/graphql"
 WEB = "https://platform.opentargets.org"

@@ -122,7 +122,23 @@ def search(query: str, limit: int = 15, sort: Optional[str] = None, result_type:
 
 
 def by_pmids(pmids: Sequence[Any], result_type: str = "core") -> Outcome:
-    """Metadata for PMIDs, returned in the order given; PMIDs Europe PMC does not know are reported."""
+    """Metadata plus title and abstract for PMIDs, in the order given; PMIDs Europe PMC does not know are reported.
+
+    Each hit carries `"abstract"`: the abstract with markup stripped, or None
+    when Europe PMC holds none (comments, editorials and letters usually have
+    none). `resultType` must be `core` for the abstract to come back, which is
+    what this function already asked for, so abstracts cost no extra request:
+    checked live on 2026-10-06 against `EXT_ID:(34055682 OR 38785537 OR
+    27397505) AND SRC:MED`, `resultType=lite` returned 30 fields per record
+    and no `abstractText` at all (3.3 kB for the three), `resultType=core`
+    returned 47 fields and an abstract for every one (35 kB). Still one search
+    call per 25 PMIDs either way.
+
+    A full abstract runs to a couple of kB, so a caller that puts these hits
+    into its own output is expected to trim it — `zebra lit` keeps a short
+    `abstract_excerpt` and drops the rest once it has read it. The whole text
+    is returned here because a mention check needs all of it.
+    """
     ids = []
     for p in pmids:
         s = str(p).strip()
@@ -136,7 +152,9 @@ def by_pmids(pmids: Sequence[Any], result_type: str = "core") -> Outcome:
         resp = _search_raw(query, len(chunk), None, result_type)
         for rec in (resp.json().get("resultList") or {}).get("result") or []:
             if rec.get("pmid"):
-                found[str(rec["pmid"])] = parse_hit(rec)
+                hit = parse_hit(rec)
+                hit["abstract"] = _clean(rec.get("abstractText"))
+                found[str(rec["pmid"])] = hit
         sources.append(source_record("Europe PMC", f"PMIDs {chunk[0]}..{chunk[-1]} ({len(chunk)})", resp))
     missing = [p for p in ids if p not in found]
     warnings = [f"Europe PMC has no record for PMID {', '.join(missing)}"] if missing else []

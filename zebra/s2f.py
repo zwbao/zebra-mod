@@ -242,14 +242,43 @@ SPLICEAI_DEFS = {
     "DS_DL": "donor loss: decrease in the probability of an existing donor",
 }
 SPLICEAI_READING = (
-    "delta >= 0.2 supports a splice effect (PP3 at ClinGen/Walker 2023 calibration), >= 0.5 is high confidence, "
-    "<= 0.1 supports no effect (BP4/BP7). Read which score moved and its position, then predict the transcript: "
-    "exon skipping, intron retention, cryptic exon, shifted site; in-frame or frameshift -> NMD?"
+    "Thresholds (Walker et al. 2023, AJHG 110:1046, ClinGen SVI Splicing Subgroup): delta >= 0.2 supports a "
+    "splice effect, and PP3 from SpliceAI is applied at SUPPORTING weight only -- the subgroup recommends that "
+    "cap despite likelihood ratios that would suggest moderate, so do not upgrade on a high score. "
+    "delta <= 0.1 supports no splice effect (BP4). "
+    "0.1 < delta < 0.2 is UNINFORMATIVE: it supports neither PP3 nor BP4, and a score in that band is not a lean "
+    "towards 'no effect' (CFTR 3849+10kbC>T, a CF-causing variant, scores 0.162 here). "
+    "Scope: BP4 from a splicing predictor covers intronic and synonymous variants, and missense variants only "
+    "once protein functional impact has been excluded by a missense predictor. BP7 is NOT established by this "
+    "number: it needs a synonymous or deep-intronic variant AND the nucleotide not to be highly conserved "
+    "(Richards et al. 2015), which is not checked here. At canonical +/-1 and +/-2 sites the thresholds do not "
+    "apply at all -- PVS1 covers that mechanism and PP3 is not stacked on it. "
+    "Run settings vs calibration: zebra calls the lookup at distance +/-500 on raw (mask=0) scores, while the "
+    "ClinGen thresholds were derived with SpliceAI v1.3.1 at a maximum distance of 10,000 nt (+/-4,999) on raw "
+    "scores. A gain or loss further than 500 nt from the variant is not reported, so a deep-intronic variant can "
+    "look falsely reassuring; mask=1 changes the scale the thresholds were fitted on and voids them. "
+    "Then read which score moved and its position and predict the transcript: exon skipping, intron retention, "
+    "cryptic exon, shifted site; in-frame or frameshift -> NMD?"
 )
 PANGOLIN_DEFS = {
-    "DS_SG": "splice gain: increase in P(splice) at the reported position (the lookup service's score, not usage)",
-    "DS_SL": "splice loss: change in P(splice) at an existing site; negative = the site weakens",
+    "DS_SG": "splice gain: the LARGEST increase in P(splice) across the four tissues the model scores (heart, "
+             "liver, brain, testis) at the reported position -- a maximum over tissues, not a single number, and "
+             "the panel may not include the tissue that drives the disease (the lookup service's score, not usage)",
+    "DS_SL": "splice loss: the LARGEST decrease in P(splice) at an existing site across the four tissues the "
+             "model scores (heart, liver, brain, testis) — a minimum over the signed per-tissue changes, so it "
+             "is one tissue's value; negative = the site weakens",
 }
+PANGOLIN_READING = (
+    "Pangolin is a second splicing model, not a replica of SpliceAI, but the two are NOT independent: Zeng & Li "
+    "2022 (Genome Biol 23:103) state that \"Pangolin's architecture resembles that used in SpliceAI\", and both "
+    "are trained on overlapping human splice-site data. Concordance between them is therefore largely expected "
+    "and is weak corroboration, not a second axis of evidence -- Pejaver et al. 2022 warns specifically against "
+    "scanning correlated tools for the strongest result. A numeric difference between them is not evidence "
+    "either. The headline is a maximum (gain) or minimum (loss) over heart, liver, brain and testis, so it is "
+    "the most extreme tissue, not an agreement across them; ask whether the disease tissue is in that panel. These are "
+    "changes in P(splice), not in usage. Pangolin has no ClinGen-calibrated PP3/BP4 thresholds: the Walker 2023 "
+    "numbers are SpliceAI's and must not be read off this score."
+)
 
 
 def _spliceai_transcript(row: Dict[str, Any], pos: int) -> Dict[str, Any]:
@@ -411,10 +440,11 @@ def run_pangolin(v: Dict[str, Any], assembly: str, distance: int, mask: int = 0)
         headline={"name": "largest_abs_delta", "score": top.get("score"), "value": top.get("delta"),
                   "position": top.get("position"), "transcript": chosen.get("transcript"),
                   "refseq": chosen.get("refseq"), "priority": chosen.get("priority_label")},
-        units="change in P(splice) at the reported position, -1..1 (sign kept: negative DS_SL = site weakened)",
+        units="change in P(splice) at the reported position, -1..1, taken as the most extreme of the four "
+              "tissues the model scores (heart, liver, brain, testis) — one tissue's value, not an average or "
+              "agreement across them (sign kept: negative DS_SL = site weakened)",
         definitions=dict(PANGOLIN_DEFS, DP_x="distance in bases from the variant to the position that score refers to"),
-        reading="Pangolin is a second splicing model, not a replica of SpliceAI: agreement between the two is "
-                "evidence, a numeric difference between them is not. These are changes in P(splice), not in usage.",
+        reading=PANGOLIN_READING,
     )
     return out
 

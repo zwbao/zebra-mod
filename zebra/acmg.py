@@ -275,8 +275,17 @@ def classify(raw_codes: List[str]) -> Dict[str, Any]:
         if excess > 0:
             cap_applied = True
             warnings.append("PM1 + PP3 exceed Strong together; Pejaver et al. 2022 cap their sum at 4 points (Strong). Capped in both readings.")
+            # Weaken PP3 first; if PM1 alone is still above Strong (PM1_VeryStrong), weaken
+            # PM1 too, because the cap is on the pair's sum and dropping PP3 cannot satisfy
+            # it on its own.
             weaker = _weaken(pp3, excess)
-            capped = [c for c in codes if c.code != "PP3"] + ([weaker] if weaker else [])
+            rest = [c for c in codes if c.code != "PP3"]
+            kept = ([weaker] if weaker else [])
+            remaining = POINTS["Strong"] - sum(abs(c.points) for c in kept)
+            if pm1.points > remaining:
+                pm1_capped = _weaken(pm1, pm1.points - remaining)
+                rest = [c for c in rest if c.code != "PM1"] + ([pm1_capped] if pm1_capped else [])
+            capped = rest + kept
 
     total = sum(c.points for c in capped if c.code != "BA1")
     computational_only = bool(codes) and all(c.code in COMPUTATIONAL_CODES for c in codes)
@@ -512,11 +521,21 @@ def suggest(data: Dict[str, Any], inheritance: Optional[str] = None,
         max_credible_af = data.get("max_credible_af")
 
     ba1_basis: Optional[str] = None
-    if faf95 is not None and float(faf95) > BA1_AF:
+    if faf95 is not None:
         # Whiffin et al. 2017 (Genet Med 19:1151) exists because the point estimate is the
         # wrong statistic: the filtering AF is the 95% lower bound, and the stand-alone
-        # benign code is the one that most needs the statistical caution.
-        ba1_basis = f"filtering AF (faf95) {float(faf95):.4g} > {BA1_AF}"
+        # benign code is the one that most needs the statistical caution. So when a
+        # filtering AF is available it DECIDES -- the point estimate is not a fallback that
+        # can overrule it (a faf95 sixty-fold below the grpmax estimate used to be ignored).
+        if float(faf95) > BA1_AF:
+            ba1_basis = f"filtering AF (faf95) {float(faf95):.4g} > {BA1_AF}"
+        elif af is not None and float(af) > BA1_AF:
+            caveats.append(
+                f"grpmax point estimate {float(af):.4g} is above {BA1_AF} but the filtering AF (faf95) is "
+                f"{float(faf95):.4g}: BA1 is not offered. The filtering AF is the statistic ClinGen and Whiffin "
+                f"et al. 2017 intend for benign frequency criteria; a high point estimate with a low faf95 means "
+                f"the frequency rests on few alleles in a small group."
+            )
     elif af is not None and float(af) > BA1_AF:
         if an is not None and an >= BA1_MIN_AN:
             ba1_basis = (f"grpmax AF {float(af):.4g} > {BA1_AF} at AN {an} (point estimate; no filtering AF "

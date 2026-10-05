@@ -10,8 +10,12 @@ or a descendant); a query term's match to a disease is the IC of their most
 informative common ancestor (Resnik); a disease's score is the mean over the
 query terms of their best match (query -> disease best-match average, as the
 Phenomizer does). Each excluded term the disease is annotated with (directly or
-below) costs its IC times the annotation frequency. Scores are reported raw and
-as a share of the query's own maximum (mean IC of the query terms).
+below) costs its IC times the annotation frequency, and those costs are SUMMED
+over distinct excluded terms. Diseases whose
+curated annotation carries HPOA's `NOT` qualifier, or the "Excluded" (0%)
+frequency class, for a term the patient is said to HAVE are penalised the same
+way. Scores are reported raw and as a share of the query's own maximum (mean IC
+of the query terms); `ties` says how many diseases share the top score.
 
 This is a transparent baseline, not LIRICAL or Exomiser: no likelihood ratios,
 no genotype term. It runs offline, reproducibly, from public files.
@@ -39,8 +43,80 @@ ZH_FILE = "hp-zh.babelon.tsv"
 ZH_URL = "https://raw.githubusercontent.com/obophenotype/hpo-translations/main/babelon/hp-zh.babelon.tsv"
 _CJK = re.compile(r"[\u3400-\u9fff]")
 ROOT_PHENO = "HP:0000118"  # Phenotypic abnormality
+
+# Lay phrases families actually use, each mapped to the official HPO term(s) a clinician
+# would record, best match first. This is a translation table, not a guess: every id below
+# was checked against the HPO release's own labels, and
+# tests/test_hpo_local.py::test_f36_lay_terms_point_at_real_ids re-checks them against the
+# live release files so a mapping cannot silently rot across HPO versions.
+# Needed because the ontology's labels are clinical: "走路晚" (walked late) matches nothing
+# literally, and "智力低下" is closer by character bigrams to 面部肌张力低下 (facial
+# hypotonia) than to its own official label 智力障碍.
+LAY_TERMS: Dict[str, List[str]] = {
+    # --- Chinese: motor milestones
+    "走路晚": ["HP:0031936", "HP:0001270"],      # Delayed ability to walk; Motor delay
+    "学步晚": ["HP:0031936", "HP:0001270"],
+    "不会走路": ["HP:0031936", "HP:0001270"],
+    "不会走": ["HP:0031936", "HP:0001270"],
+    "翻身晚": ["HP:0032989", "HP:0001270"],      # Delayed ability to roll over
+    "不会翻身": ["HP:0032989", "HP:0001270"],
+    "抬头晚": ["HP:0002421", "HP:0032988"],      # Poor head control; Persistent head lag
+    "软趴趴": ["HP:0008947", "HP:0001252"],      # Floppy infant; Hypotonia
+    "没力气": ["HP:0001324", "HP:0001252"],      # Muscle weakness; Hypotonia
+    "肌无力": ["HP:0001324"],
+    # --- Chinese: seizures
+    "抽风": ["HP:0001250"],                       # Seizure
+    "抽搐": ["HP:0001250"],
+    "惊厥": ["HP:0001250"],
+    "发热惊厥": ["HP:0002373"],                   # Febrile seizure
+    "高热惊厥": ["HP:0002373"],
+    "发烧抽筋": ["HP:0002373"],
+    "发烧抽搐": ["HP:0002373"],
+    # --- Chinese: speech and cognition
+    "不会说话": ["HP:0001344", "HP:0000750"],     # Absent speech; Delayed speech and language development
+    "不说话": ["HP:0001344"],
+    "说话晚": ["HP:0000750"],
+    "智力低下": ["HP:0001249"],                   # Intellectual disability
+    "智力落后": ["HP:0001249"],
+    "智力障碍": ["HP:0001249"],
+    "发育迟缓": ["HP:0001263"],                   # Global developmental delay
+    "发育落后": ["HP:0001263"],
+    # --- Chinese: growth, head, senses, feeding
+    "不长个": ["HP:0004322"],                     # Short stature
+    "长不高": ["HP:0004322"],
+    "个子矮": ["HP:0004322"],
+    "头小": ["HP:0000252"],                       # Microcephaly
+    "听不见": ["HP:0000365"],                     # Hearing impairment
+    "耳朵听不见": ["HP:0000365"],
+    "喂奶困难": ["HP:0008872"],                   # Feeding difficulties in infancy
+    "吃奶费劲": ["HP:0008872"],
+    "吞咽困难": ["HP:0002015"],                   # Dysphagia
+    # --- English lay phrasing
+    "floppy baby": ["HP:0008947", "HP:0001252"],
+    "floppy infant": ["HP:0008947"],
+    "late walker": ["HP:0031936", "HP:0001270"],
+    "walking late": ["HP:0031936", "HP:0001270"],
+    "walked late": ["HP:0031936", "HP:0001270"],
+    "not walking": ["HP:0031936", "HP:0001270"],
+    "not talking": ["HP:0001344", "HP:0000750"],
+    "no speech": ["HP:0001344"],
+    "cannot talk": ["HP:0001344"],
+    "speech delay": ["HP:0000750"],
+    "fits": ["HP:0001250"],
+    "convulsion": ["HP:0001250"],
+    "convulsions": ["HP:0001250"],
+    "febrile convulsion": ["HP:0002373"],
+    "febrile convulsions": ["HP:0002373"],
+    "small head": ["HP:0000252"],
+    "mental retardation": ["HP:0001249"],
+    "slow learner": ["HP:0001249"],
+    "developmental delay": ["HP:0001263"],
+    "weak muscles": ["HP:0001324", "HP:0001252"],
+    "poor feeding": ["HP:0008872"],
+    "hard of hearing": ["HP:0000365"],
+}
 _PURL = re.compile(r"^http://purl\.obolibrary\.org/obo/HP_(\d{7})$")
-INDEX_VERSION = 4
+INDEX_VERSION = 5  # bumped: the index now carries disease_excluded (F29)
 
 
 class HpoDataMissing(Exception):
@@ -93,6 +169,11 @@ class Index:
     disease_list: List[str] = field(default_factory=list)
     version: str = ""
     zh: Dict[str, str] = field(default_factory=dict)
+    # Curated negative evidence, kept rather than discarded: disease -> term -> why.
+    # Two channels in phenotype.hpoa say "this disease does NOT have this feature" --
+    # the `NOT` qualifier, and the "Excluded" (HP:0040285, 0%) frequency class. Both
+    # are the strongest available evidence against a candidate and used to be dropped.
+    disease_excluded: Dict[str, Dict[str, str]] = field(default_factory=dict)
 
     def ancestors(self, term: str) -> Set[str]:
         seen: Set[str] = set()
@@ -162,20 +243,28 @@ def _parse_ontology(path: Path):
 def _parse_hpoa(path: Path):
     disease_names: Dict[str, str] = {}
     disease_terms: Dict[str, Dict[str, float]] = defaultdict(dict)
+    disease_excluded: Dict[str, Dict[str, str]] = defaultdict(dict)
     with open(path, encoding="utf-8") as fh:
         rows = (line for line in fh if not line.startswith("#"))
         reader = csv.DictReader(rows, delimiter="\t")
         for row in reader:
-            if row.get("aspect") != "P" or (row.get("qualifier") or "").upper() == "NOT":
+            if row.get("aspect") != "P":
                 continue
             did = row["database_id"]
             disease_names[did] = row.get("disease_name", did)
+            term = row["hpo_id"]
+            # Both channels of curated negative evidence are kept in their own map:
+            # the `NOT` qualifier states the disease does not have the feature, and
+            # frequency class HP:0040285 ("Excluded", 0%) says the same numerically.
+            if (row.get("qualifier") or "").upper() == "NOT":
+                disease_excluded[did][term] = "HPOA NOT qualifier"
+                continue
             w = _freq_weight(row.get("frequency", ""))
             if w <= 0:
+                disease_excluded[did][term] = f"HPOA frequency class {row.get('frequency', '')!r} (0%, Excluded)"
                 continue
-            term = row["hpo_id"]
             disease_terms[did][term] = max(w, disease_terms[did].get(term, 0.0))
-    return disease_names, dict(disease_terms)
+    return disease_names, dict(disease_terms), {d: dict(t) for d, t in disease_excluded.items()}
 
 
 def _parse_g2p(path: Path) -> Dict[str, List[str]]:
@@ -216,9 +305,10 @@ def load(rebuild: bool = False) -> Index:
         except Exception:  # noqa: BLE001 - rebuild on any problem
             pass
     names, synonyms, parents, obsolete, alt, version = _parse_ontology(d / "hp.json")
-    disease_names, disease_terms = _parse_hpoa(d / "phenotype.hpoa")
+    disease_names, disease_terms, disease_excluded = _parse_hpoa(d / "phenotype.hpoa")
     disease_genes = _parse_g2p(d / "genes_to_phenotype.txt")
-    idx = Index(names, synonyms, parents, obsolete, alt, disease_names, disease_terms, disease_genes, version=version)
+    idx = Index(names, synonyms, parents, obsolete, alt, disease_names, disease_terms, disease_genes,
+                version=version, disease_excluded=disease_excluded)
     if (d / ZH_FILE).exists():
         idx.zh = _parse_zh(d / ZH_FILE)
     _build_ic(idx)
@@ -259,19 +349,47 @@ def _norm(text: str) -> str:
     return " ".join(out)
 
 
+def _lay_hits(idx: Index, text: str) -> List[Dict[str, str]]:
+    """Curated lay-phrase matches for `text`, best first, dropping ids not in this release."""
+    key = _norm(text) if not _CJK.search(text) else re.sub(r"[\s，。、；：,.;:()（）]+", "", text)
+    ids = LAY_TERMS.get(key)
+    if ids is None and not _CJK.search(text):
+        ids = LAY_TERMS.get(text.strip().lower())
+    out: List[Dict[str, str]] = []
+    for tid in ids or []:
+        pid, _note = idx.primary(tid)
+        if not pid or pid in {h["id"] for h in out}:
+            continue
+        out.append({"id": pid, "label": idx.names[pid], "matched": text.strip(), "matched_on": "lay phrase",
+                    **({"label_zh": idx.zh[pid]} if pid in idx.zh else {})})
+    return out
+
+
 def search(idx: Index, text: str, limit: int = 10) -> List[Dict[str, str]]:
-    """Offline label/synonym search: exact > prefix > whole words > substring, after normalising
-    case, punctuation and simple plurals; ties go to the shorter (more general) wording."""
+    """Offline label/synonym search.
+
+    Ranking: a curated lay phrase (LAY_TERMS) first, then exact > prefix > whole words >
+    all query words present > substring, after normalising case, punctuation and simple
+    plurals. Within a rank the shortest matching wording wins, because a query matched
+    inside a much longer label is usually the wrong term ("small head" inside
+    "Microcephalic sperm head"), and a match on the term's own label beats the same match
+    on a synonym. Non-phenotype terms (onset, inheritance, modifiers) are ranked last.
+    `matched_on` says which channel matched: "lay phrase", "label" or "synonym".
+    """
     if _CJK.search(text):
         return _search_zh(idx, text, limit)
+    out = _lay_hits(idx, text)
+    seen = {h["id"] for h in out}
     q = _norm(text)
     if not q:
-        return []
+        return out[:limit]
     q_words = set(q.split())
     scored = []
     for tid, label in idx.names.items():
+        if tid in seen:
+            continue
         best = None
-        for cand in [label] + idx.synonyms.get(tid, []):
+        for i, cand in enumerate([label] + idx.synonyms.get(tid, [])):
             c = _norm(cand)
             if c == q:
                 rank = 0
@@ -285,15 +403,21 @@ def search(idx: Index, text: str, limit: int = 10) -> List[Dict[str, str]]:
                 rank = 4
             else:
                 continue
-            key = (rank, len(c))
+            # excess length first: how much longer the matching wording is than the query.
+            # Then label (0) before synonym (1) at equal length.
+            key = (rank, max(0, len(c) - len(q)), 0 if i == 0 else 1, len(c))
             if best is None or key < best[0]:
-                best = (key, cand)
+                best = (key, cand, i)
         if best:
             under_pheno = ROOT_PHENO in idx.ancestors(tid)
-            scored.append((best[0][0], 0 if under_pheno else 1, best[0][1], len(label), tid, label, best[1]))
+            rank, excess, is_syn, _clen = best[0]
+            scored.append((rank, 0 if under_pheno else 1, excess, is_syn, len(label), tid, label, best[1], best[2]))
     scored.sort()
-    return [{"id": s[4], "label": s[5], "matched": s[6], **({"label_zh": idx.zh[s[4]]} if s[4] in idx.zh else {})}
-            for s in scored[:limit]]
+    for s in scored[:max(0, limit - len(out))]:
+        out.append({"id": s[5], "label": s[6], "matched": s[7],
+                    "matched_on": "label" if s[8] == 0 else "synonym",
+                    **({"label_zh": idx.zh[s[5]]} if s[5] in idx.zh else {})})
+    return out[:limit]
 
 
 def _bigrams(text: str) -> Set[str]:
@@ -301,31 +425,46 @@ def _bigrams(text: str) -> Set[str]:
 
 
 def _search_zh(idx: Index, text: str, limit: int) -> List[Dict[str, str]]:
-    """Chinese search over the official Chinese labels: exact > prefix > contains > character-bigram overlap."""
+    """Chinese search over the official Chinese labels.
+
+    Ranking: a curated lay phrase (LAY_TERMS) first, then an exact label, then any label
+    containing the query, then character-bigram overlap. Containment is ordered by how
+    much LONGER the label is than the query -- not by prefix-before-substring, which
+    used to put 抽搐样不自主自我拥抱 (self hugging, 10 characters) above 手足抽搐
+    (tetany, 4) for the query 抽搐. Within the bigram tier, overlap decides and the
+    closest length breaks ties.
+    """
+    out = _lay_hits(idx, text)
+    seen = {h["id"] for h in out}
     if not idx.zh:
-        return []
+        return out[:limit]
     q = re.sub(r"[\s，。、；：,.;:()（）]+", "", text)
+    if not q:
+        return out[:limit]
     qb = _bigrams(q)
     scored = []
     for tid, zh in idx.zh.items():
-        if tid not in idx.names:
+        if tid not in idx.names or tid in seen:
             continue
         z = re.sub(r"[\s，。、；：,.;:()（）]+", "", zh)
         if z == q:
-            key = (0, 0.0)
-        elif z.startswith(q):
-            key = (1, 0.0)
+            key = (0, 0, 0.0)
         elif q in z:
-            key = (2, 0.0)
+            # one containment tier ordered by excess length; a prefix match only breaks
+            # ties between labels of the same length
+            key = (1, len(z) - len(q), 0.0 if z.startswith(q) else 0.5)
         else:
             overlap = len(qb & _bigrams(z)) / len(qb | _bigrams(z))
             if overlap < 0.2:
                 continue
-            key = (3, -overlap)
+            key = (2, 0, -overlap)
         under_pheno = ROOT_PHENO in idx.ancestors(tid)
-        scored.append((key[0], key[1], 0 if under_pheno else 1, len(z), tid, zh))
+        scored.append((key[0], 0 if under_pheno else 1, key[1], key[2], abs(len(z) - len(q)), len(z), tid, zh))
     scored.sort()
-    return [{"id": s[4], "label": idx.names[s[4]], "label_zh": s[5], "matched": s[5]} for s in scored[:limit]]
+    for s in scored[:max(0, limit - len(out))]:
+        out.append({"id": s[6], "label": idx.names[s[6]], "label_zh": s[7], "matched": s[7],
+                    "matched_on": "label_zh"})
+    return out[:limit]
 
 
 def rank(idx: Index, present: Sequence[str], excluded: Sequence[str] = (), top: int = 20,
@@ -376,21 +515,55 @@ def rank(idx: Index, present: Sequence[str], excluded: Sequence[str] = (), top: 
     for di in keep:
         did = idx.disease_list[di]
         score = sum(best[di]) / len(query)
-        penalty = 0.0
-        hits = []
+        # The docstring has always described the penalty as a sum over excluded terms
+        # ("Each excluded term ... costs its IC times the annotation frequency"), and the
+        # sum is the right reading: each excluded finding the disease is annotated with is
+        # an independent contradiction, so five of them must cost more than one. The code
+        # took the maximum, discarding most of the force of the one lever a clinician has
+        # for pushing a wrong candidate down. Fixed here rather than in the docstring.
+        # No artificial ceiling is put on the sum: it is already bounded by
+        # sum(IC(e) for e in excluded) / len(query), since each term contributes at most
+        # its own IC at full annotation weight and is counted once. A candidate
+        # contradicted by five explicitly-absent features should fall below everything,
+        # and a negative adjusted score says exactly that.
+        per_term: Dict[str, float] = {}
         if excl:
             for term, w in idx.disease_terms[did].items():
                 anc = idx.ancestors(idx.alt.get(term, term))
                 for e in excl:
                     if e in anc:  # disease has the excluded term or something below it
                         p = idx.ic.get(e, 0.0) * w / len(query)
-                        penalty = max(penalty, p) if hits else p
-                        hits.append(e)
-        results.append((score - penalty, score, penalty, di, sorted(set(hits))))
-    results.sort(key=lambda r: r[0], reverse=True)
+                        per_term[e] = max(per_term.get(e, 0.0), p)
+        # Curated negative evidence the other way round: the disease is annotated NOT to
+        # have a term the patient is said to HAVE. The weight is the term's own IC on the
+        # same scale, at full annotation weight, because a curator asserted it.
+        contradicted: Dict[str, str] = {}
+        for term, why in (idx.disease_excluded.get(did) or {}).items():
+            pterm = idx.alt.get(term, term)
+            for q in query:
+                if pterm == q or pterm in idx.ancestors(q):
+                    per_term[f"not:{pterm}"] = max(per_term.get(f"not:{pterm}", 0.0),
+                                                   idx.ic.get(pterm, 0.0) / len(query))
+                    contradicted[pterm] = why
+        penalty = sum(per_term.values()) if per_term else 0.0
+        hits = sorted(e for e in per_term if not e.startswith("not:"))
+        # F35: a principled tie-break, so equal scores are not resolved by disease id.
+        # (1) how many query terms matched the disease's own term exactly rather than
+        # through a common ancestor; (2) the disease's annotation specificity, the mean IC
+        # of the terms it is annotated with -- a tightly specified disorder is a more
+        # informative explanation than one annotated only with generic features.
+        exact_hits = sum(1 for qi in range(len(query)) if best_term[di][qi] == query[qi])
+        ann = [idx.ic.get(idx.alt.get(t, t), 0.0) for t in idx.disease_terms[did]]
+        specificity = (sum(ann) / len(ann)) if ann else 0.0
+        results.append((score - penalty, score, penalty, di, hits, exact_hits, specificity, contradicted))
+    results.sort(key=lambda r: (round(r[0], 9), r[5], round(r[6], 9), idx.disease_list[r[3]]), reverse=True)
+    # how many diseases share the top adjusted score (1 = no tie); the caller needs to
+    # know when the order it is reading was decided by a tie-break rather than the score
+    top_score = round(results[0][0], 9) if results else None
+    ties = sum(1 for r in results if round(r[0], 9) == top_score) if results else 0
 
     out = []
-    for adj, raw, penalty, di, hits in results[:top]:
+    for adj, raw, penalty, di, hits, exact_hits, specificity, contradicted in results[:top]:
         did = idx.disease_list[di]
         matched = []
         for qi, q in enumerate(query):
@@ -404,12 +577,16 @@ def rank(idx: Index, present: Sequence[str], excluded: Sequence[str] = (), top: 
             "disease": did, "name": idx.disease_names.get(did, did), "score": round(adj, 4),
             "relative": round(adj / max_possible, 3) if max_possible else None,
             "excluded_hits": hits, "penalty": round(penalty, 4),
+            "contradicted_by_curation": [{"term": t, "label": idx.names.get(t), "source": why}
+                                         for t, why in sorted(contradicted.items())],
+            "exact_matches": exact_hits, "annotation_specificity": round(specificity, 3),
+            "tied_at_this_score": sum(1 for r in results if round(r[0], 9) == round(adj, 9)),
             "genes": idx.disease_genes.get(did, []), "matches": matched,
         })
     # a gene scores as its best disease; ties are broken by its support across the next-best diseases
     gene_scores: Dict[str, Tuple[float, str]] = {}
     gene_support: Dict[str, float] = defaultdict(float)
-    for rank_i, (adj, raw, penalty, di, hits) in enumerate(results):
+    for rank_i, (adj, raw, penalty, di, hits, _ex, _spec, _contra) in enumerate(results):
         if adj <= 0 or rank_i >= 200:
             break
         did = idx.disease_list[di]
@@ -419,7 +596,15 @@ def rank(idx: Index, present: Sequence[str], excluded: Sequence[str] = (), top: 
                 gene_scores[g] = (adj, did)
     genes = sorted(gene_scores.items(), key=lambda kv: (kv[1][0], gene_support[kv[0]]), reverse=True)[:top]
     return {
-        "method": "Resnik best-match average (query→disease), IC from HPO disease annotations; excluded terms penalised",
+        "method": ("Resnik best-match average (query→disease), IC from HPO disease annotations. Excluded terms are "
+                   "penalised by the SUM of their IC x annotation frequency over distinct terms (bounded by "
+                   "sum(IC of the excluded terms) / number of query terms); HPOA `NOT` and \"Excluded\" (0%) "
+                   "annotations that contradict a present query term are penalised the same way. A negative "
+                   "score means the curated phenotype contradicts the query. Equal scores are broken by the number of exactly "
+                   "matched query terms, then by the disease's annotation specificity (mean IC of its annotated "
+                   "terms), then by disease id for determinism — see `ties`."),
+        "ties": ties,
+        "tie_break": "exact query-term matches, then annotation specificity, then disease id",
         "hpo_version": idx.version,
         "query": [{"id": q, "label": idx.names.get(q), **({"label_zh": idx.zh[q]} if q in idx.zh else {})} for q in query],
         "excluded": [{"id": e, "label": idx.names.get(e)} for e in excl],

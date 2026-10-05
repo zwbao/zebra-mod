@@ -16,7 +16,8 @@ import re
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from zebra.core import Outcome, attempt
-from zebra.http import get_json, request, source_record
+from zebra.http import get_json, request
+from zebra.sources import record as source_record
 
 FTP = "https://ftp.ncbi.nlm.nih.gov/pub/GeneReviews"
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"

@@ -15,7 +15,8 @@ from __future__ import annotations
 from typing import Any, Dict, List, Sequence
 
 from zebra.core import Outcome
-from zebra.http import request, source_record
+from zebra.http import request
+from zebra.sources import record as source_record
 
 BASE = "https://pubcasefinder.dbcls.jp/api"
 TARGETS = ("omim", "orphanet", "gene")

@@ -1,0 +1,23 @@
+{
+ "allele_string": "A/G",
+ "assembly_name": "GRCh38",
+ "end": 36000000,
+ "id": ".",
+ "input": "2 36000000 . A G . . .",
+ "intergenic_consequences": [
+  {
+   "cadd_phred": 10.49,
+   "cadd_raw": 1.014229,
+   "consequence_terms": [
+    "intergenic_variant"
+   ],
+   "impact": "MODIFIER",
+   "variant_allele": "G"
+  }
+ ],
+ "most_severe_consequence": "intergenic_variant",
+ "seq_region_name": "2",
+ "start": 36000000,
+ "strand": 1,
+ "variant_class": "SNV"
+}

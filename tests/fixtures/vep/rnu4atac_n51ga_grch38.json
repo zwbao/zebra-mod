@@ -1,0 +1,1466 @@
+{
+ "allele_string": "G/A",
+ "assembly_name": "GRCh38",
+ "colocated_variants": [
+  {
+   "allele_string": "HGMD_MUTATION",
+   "end": 121530930,
+   "id": "CR112395",
+   "phenotype_or_disease": 1,
+   "seq_region_name": "2",
+   "start": 121530930,
+   "strand": 1
+  },
+  {
+   "allele_string": "G/A",
+   "clin_sig": [
+    "likely_pathogenic",
+    "pathogenic"
+   ],
+   "clin_sig_allele": "A:pathogenic;A:pathogenic/likely_pathogenic",
+   "clin_sig_ref_allele": "G",
+   "end": 121530930,
+   "frequencies": {
+    "A": {
+     "af": 0.0002,
+     "afr": 0,
+     "amr": 0,
+     "eas": 0,
+     "eur": 0.001,
+     "gnomade": 0.0004945,
+     "gnomade_afr": 0.0001907,
+     "gnomade_amr": 0.0005186,
+     "gnomade_asj": 0,
+     "gnomade_eas": 0.0005918,
+     "gnomade_fin": 0.0002109,
+     "gnomade_mid": 0,
+     "gnomade_nfe": 0.0005335,
+     "gnomade_remaining": 0.0003946,
+     "gnomade_sas": 0.000686,
+     "gnomadg": 0.0004531,
+     "gnomadg_afr": 0.0002888,
+     "gnomadg_ami": 0.001096,
+     "gnomadg_amr": 0.0002615,
+     "gnomadg_asj": 0,
+     "gnomadg_eas": 0.0007719,
+     "gnomadg_fin": 0,
+     "gnomadg_mid": 0,
+     "gnomadg_nfe": 0.0006468,
+     "gnomadg_remaining": 0.0009461,
+     "gnomadg_sas": 0.0004148,
+     "sas": 0
+    }
+   },
+   "id": "rs188343279",
+   "phenotype_or_disease": 1,
+   "pubmed": [
+    21474761,
+    21474760,
+    21977988,
+    26522830,
+    29370840,
+    32628740,
+    29265708,
+    30368667,
+    36660028
+   ],
+   "seq_region_name": "2",
+   "start": 121530930,
+   "strand": 1,
+   "var_synonyms": {
+    "ClinVar": [
+     "RCV000023096",
+     "VCV000030178",
+     "RCV000202312",
+     "RCV003415730",
+     "RCV001255662",
+     "RCV001596939",
+     "RCV002482901",
+     "RCV005394171"
+    ],
+    "OMIM": [
+     601428.0001
+    ]
+   }
+  }
+ ],
+ "end": 121530930,
+ "id": ".",
+ "input": "2 121530930 . G A . . .",
+ "most_severe_consequence": "non_coding_transcript_exon_variant",
+ "regulatory_feature_consequences": [
+  {
+   "biotype": "enhancer",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "regulatory_region_variant"
+   ],
+   "impact": "MODIFIER",
+   "regulatory_feature_id": "ENSR2_CG3LC",
+   "variant_allele": "A"
+  }
+ ],
+ "seq_region_name": "2",
+ "start": 121530930,
+ "strand": 1,
+ "transcript_consequences": [
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000263710.9:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/39",
+   "protein_id": "ENSP00000263710",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000263710",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000409078.9:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000386442",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000409078",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000455322.8:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000389372",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000455322",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "retained_intron",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 4963,
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "impact": "MODIFIER",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000474065",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "retained_intron",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 185,
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "impact": "MODIFIER",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000485112",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000541377.6:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000441625",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000541377",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "lncRNA",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant",
+    "non_coding_transcript_variant"
+   ],
+   "gene_id": "ENSG00000265451",
+   "gene_symbol": "CLASP1-AS1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:55328",
+   "hgvsc": "ENST00000577914.2:n.354+155G>A",
+   "impact": "MODIFIER",
+   "intron": "1/1",
+   "strand": 1,
+   "transcript_id": "ENST00000577914",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "snRNA",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "canonical": 1,
+   "cdna_end": 51,
+   "cdna_start": 51,
+   "consequence_terms": [
+    "non_coding_transcript_exon_variant"
+   ],
+   "exon": "1/1",
+   "gene_id": "ENSG00000264229",
+   "gene_symbol": "RNU4ATAC",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:34016",
+   "hgvsc": "ENST00000580972.2:n.51G>A",
+   "impact": "MODIFIER",
+   "mane": [
+    "MANE_Select"
+   ],
+   "mane_select": "NR_023343.3",
+   "strand": 1,
+   "transcript_id": "ENST00000580972",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "canonical": 1,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000696935.1:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/40",
+   "mane": [
+    "MANE_Select"
+   ],
+   "mane_select": "NM_001395891.1",
+   "protein_id": "ENSP00000512981",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000696935",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000700754.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000515166",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000700754",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000700755.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000515167",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000700755",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "lncRNA",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "canonical": 1,
+   "consequence_terms": [
+    "intron_variant",
+    "non_coding_transcript_variant"
+   ],
+   "gene_id": "ENSG00000265451",
+   "gene_symbol": "CLASP1-AS1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:55328",
+   "hgvsc": "ENST00000797379.1:n.101+155G>A",
+   "impact": "MODIFIER",
+   "intron": "1/2",
+   "strand": 1,
+   "transcript_id": "ENST00000797379",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000877407.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000547466",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000877407",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000877408.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000547467",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000877408",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961907.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631966",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961907",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961908.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/35",
+   "protein_id": "ENSP00000631967",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961908",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961909.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631968",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961909",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961910.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631969",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961910",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961911.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/39",
+   "protein_id": "ENSP00000631970",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961911",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961912.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000631971",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961912",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961913.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000631972",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961913",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961914.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631973",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961914",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961915.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631974",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961915",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961916.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000631975",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961916",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961917.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631976",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961917",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961918.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/35",
+   "protein_id": "ENSP00000631977",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961918",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961919.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631978",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961919",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961920.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631979",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961920",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961921.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631980",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961921",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961922.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631981",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961922",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961923.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631982",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961923",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961924.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631983",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961924",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961925.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631984",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961925",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961926.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631985",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961926",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961927.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631986",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961927",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961928.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000631987",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961928",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961929.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000631988",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961929",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961930.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631989",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961930",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961931.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/37",
+   "protein_id": "ENSP00000631990",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961931",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961932.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/39",
+   "protein_id": "ENSP00000631991",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961932",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961933.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/23",
+   "protein_id": "ENSP00000631992",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961933",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961934.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/36",
+   "protein_id": "ENSP00000631993",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961934",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961935.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "3/38",
+   "protein_id": "ENSP00000631994",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961935",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000961936.2:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/38",
+   "protein_id": "ENSP00000631995",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000961936",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "nonsense_mediated_decay",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant",
+    "NMD_transcript_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00000988971.1:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/16",
+   "protein_id": "ENSP00000658788",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00000988971",
+   "variant_allele": "A"
+  },
+  {
+   "biotype": "protein_coding",
+   "cadd_phred": 17.59,
+   "cadd_raw": 2.182185,
+   "consequence_terms": [
+    "intron_variant"
+   ],
+   "gene_id": "ENSG00000074054",
+   "gene_symbol": "CLASP1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:17088",
+   "hgvsc": "ENST00001145473.1:c.196-605C>T",
+   "impact": "MODIFIER",
+   "intron": "2/40",
+   "protein_id": "ENSP00000815684",
+   "spliceai": {
+    "DP_AG": -24,
+    "DP_AL": 16,
+    "DP_DG": 30,
+    "DP_DL": -47,
+    "DS_AG": 0,
+    "DS_AL": 0,
+    "DS_DG": 0,
+    "DS_DL": 0,
+    "SYMBOL": "CLASP1"
+   },
+   "strand": -1,
+   "transcript_id": "ENST00001145473",
+   "variant_allele": "A"
+  }
+ ],
+ "variant_class": "SNV"
+}

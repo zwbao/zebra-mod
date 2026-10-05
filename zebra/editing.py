@@ -10,8 +10,11 @@ A screen, not a design. It answers three questions from the reference sequence a
    allele being G or T on that same strand. Everything else (transversions, indels) is
    out of reach for ABE/CBE.
 2. Is there a protospacer that puts that base inside the editing window? Positions are
-   counted 1-20 from the PAM-distal end of the 20 nt protospacer; the canonical window
-   is 4-8.
+   counted 1-20 from the PAM-distal end of the 20 nt protospacer. The window is not the
+   same for the two chemistries, so each has its own default: CBE 4-8 (BE3/BE4; Komor
+   et al. 2016, Nature 533:420) and ABE 4-7 (ABE7.10; Gaudelli et al. 2017, Nature
+   551:464). ABE8e is wider and shifted, about 3-9 (Richter et al. 2020, Nat Biotechnol
+   38:883), and is reported alongside as an alternative. `--window` overrides both.
 3. What else would be edited? Every base of the same kind inside the window is a
    bystander and will be edited too.
 
@@ -48,7 +51,33 @@ EDITORS = {
         "chemistry": "C->T on the protospacer (non-target) strand, by cytosine deamination to uracil; the duplex ends as C*G -> T*A",
     },
 }
-DEFAULT_WINDOW = (4, 8)
+# Editing windows are chemistry- and generation-specific; one window for both editors
+# overstates feasibility for ABE at positions 8 and understates the bystander count for
+# ABE8e at positions 3 and 9. Each entry carries the editor generation it belongs to.
+EDITOR_WINDOWS = {
+    "CBE": {
+        "window": (4, 8),
+        "generation": "BE3 / BE4",
+        "citation": "Komor et al. 2016, Nature 533:420 (BE3): cytosine deamination window at protospacer positions 4-8",
+    },
+    "ABE": {
+        "window": (4, 7),
+        "generation": "ABE7.10",
+        "citation": "Gaudelli et al. 2017, Nature 551:464 (ABE7.10): adenine deamination window at protospacer positions 4-7",
+    },
+}
+# Alternative generations worth naming, because a guide that is bystander-free in the
+# default window may not be in the editor that actually gets used.
+EDITOR_WINDOW_ALTERNATIVES = {
+    "ABE": [{"generation": "ABE8e", "window": (3, 9),
+             "citation": "Richter et al. 2020, Nat Biotechnol 38:883 (ABE8e): wider and shifted window, about "
+                         "protospacer positions 3-9 — rerun with --window 3-9 to see the bystanders it adds"}],
+    "CBE": [{"generation": "BE4max / evoAPOBEC1", "window": (4, 8),
+             "citation": "Koblan et al. 2018, Nat Biotechnol 36:843: BE4max keeps the BE3 position 4-8 window; "
+                         "narrowed-window variants (YE1, eA3A) exist and edit fewer bystanders"}],
+}
+# Used only where no editor applies, so the output still carries a window for display.
+DEFAULT_WINDOW = EDITOR_WINDOWS["CBE"]["window"]
 FLANK = 40
 
 LABELS = [
@@ -59,7 +88,25 @@ LABELS = [
     "Check every bystander on the transcript.",
     "Sequence here is the reference plus the patient's allele, not the patient's own read data: a second variant "
     "in cis inside the protospacer or PAM would change the answer.",
+    "The editing window is chemistry- and generation-specific: CBE 4-8 (BE3/BE4; Komor et al. 2016, Nature "
+    "533:420), ABE 4-7 (ABE7.10; Gaudelli et al. 2017, Nature 551:464), ABE8e about 3-9 (Richter et al. 2020, "
+    "Nat Biotechnol 38:883). A guide with no bystander in one window may have one in another.",
 ]
+# The two failure modes most likely to invalidate a "correctable" verdict, neither of
+# which a protospacer-based bystander or off-target search can see.
+CBE_BYPRODUCT_LABEL = (
+    "CBE products are not only C->T. Cytosine base editors also make C->G and C->A at the target and at "
+    "bystander positions at appreciable rates, and uracil excision can leave indels at the edited site "
+    "(Komor et al. 2017, Sci Adv 3:eaao4774). \"CBE can revert this\" does not mean one clean product: the "
+    "edited allele has to be sequenced, not assumed."
+)
+GUIDE_INDEPENDENT_LABEL = (
+    "Guide-independent deamination is not visible to any protospacer-based off-target search. CBEs cause "
+    "genome-wide Cas9-independent C->T mutations (Zuo et al. 2019, Science 364:289; Jin et al. 2019, Science "
+    "364:292) and cytosine deaminase editors cause transcriptome-wide RNA edits (Grunewald et al. 2019, Nature "
+    "569:433); ABEs do the same at lower rates. These need orthogonal assays (whole-genome or RNA sequencing of "
+    "edited cells), not a guide search."
+)
 PRIME_EDITING_NOTE = (
     "Prime editing (a Cas9 nickase fused to a reverse transcriptase, with a pegRNA template) is not restricted to "
     "the four transitions and can write insertions and deletions; it is the route to look at when ABE/CBE cannot "
@@ -185,19 +232,36 @@ def _annotate_bystanders(rows: Sequence[Dict[str, Any]], chrom: str, assembly: s
     return annotated, out.sources, out.warnings
 
 
+def _editor_for(ref: str, alt: str) -> Optional[str]:
+    """Which editor could put `alt` back to `ref`, on either strand (exactly one can)."""
+    for spec in (EDITORS.get((alt, ref)), EDITORS.get((complement(alt), complement(ref)))):
+        if spec:
+            return spec["editor"]
+    return None
+
+
 def screen(variant: str, assembly: str = "GRCh38", pam: str = "NGG",
-           window: Tuple[int, int] = DEFAULT_WINDOW, flank: int = FLANK,
+           window: Optional[Tuple[int, int]] = None, flank: int = FLANK,
            annotate_bystanders: bool = False) -> Outcome:
-    """Can a base editor revert this variant, and with which protospacers?"""
+    """Can a base editor revert this variant, and with which protospacers?
+
+    `window` defaults to the editing window of the chemistry the correction needs --
+    CBE 4-8, ABE 4-7 (see EDITOR_WINDOWS for the citations) -- rather than one window
+    for both. An explicit window overrides it.
+    """
     if assembly not in ("GRCh38", "GRCh37"):
         raise UsageError("assembly must be GRCh38 or GRCh37")
     pam = (pam or "NGG").upper()
     if pam not in PAMS:
         raise UsageError(f"--pam must be one of {', '.join(PAMS)}")
-    lo, hi = int(window[0]), int(window[1])
-    if not 1 <= lo <= hi <= PROTOSPACER_LEN:
-        raise UsageError(f"--window must be LO-HI with 1 <= LO <= HI <= {PROTOSPACER_LEN} (default 4-8)")
-    flank = max(flank, hi + PROTOSPACER_LEN + PAMS[pam]["length"] + 2)
+    explicit_window = window is not None
+    if explicit_window:
+        lo, hi = int(window[0]), int(window[1])
+        if not 1 <= lo <= hi <= PROTOSPACER_LEN:
+            raise UsageError(f"--window must be LO-HI with 1 <= LO <= HI <= {PROTOSPACER_LEN} "
+                             f"(defaults: CBE 4-8, ABE 4-7)")
+    else:
+        lo, hi = DEFAULT_WINDOW
 
     norm = normalise_variant(variant, assembly=assembly)
     v = norm.result
@@ -205,11 +269,25 @@ def screen(variant: str, assembly: str = "GRCh38", pam: str = "NGG",
     warnings = list(norm.warnings)
     chrom, pos, ref, alt = v["chrom"], v["pos"], v["ref"], v["alt"]
 
+    # Pick the window from the chemistry the correction needs, before anything is fetched,
+    # so the sequence flank and the bystander search both use the right one.
+    window_basis = "given with --window; it overrides the per-editor defaults"
+    if not explicit_window and len(ref) == 1 and len(alt) == 1:
+        editor_guess = _editor_for(ref.upper(), alt.upper())
+        if editor_guess:
+            spec = EDITOR_WINDOWS[editor_guess]
+            lo, hi = spec["window"]
+            window_basis = f"{editor_guess} default ({spec['generation']}): {spec['citation']}"
+    flank = max(flank, hi + PROTOSPACER_LEN + PAMS[pam]["length"] + 2)
+
     base: Dict[str, Any] = {
         "variant": v,
         "assembly": assembly,
         "pam": pam,
         "editing_window": [lo, hi],
+        "editing_window_basis": window_basis,
+        "editor_windows": {k: {"window": list(spec["window"]), "generation": spec["generation"],
+                               "citation": spec["citation"]} for k, spec in EDITOR_WINDOWS.items()},
         "window_convention": "protospacer positions 1-20 counted from the PAM-distal end",
         "labels": LABELS,
     }
@@ -308,6 +386,17 @@ def screen(variant: str, assembly: str = "GRCh38", pam: str = "NGG",
                     by["coding_effect"] = hit["most_severe_consequence"]
                     by["vep"] = hit
 
+    # Chemistry-specific caveats: a CBE verdict implies products other than C->T, and
+    # both chemistries deaminate without a guide, which no protospacer search can see.
+    labels = list(LABELS)
+    alternatives_note: List[Dict[str, Any]] = []
+    if "CBE" in editors:
+        labels.append(CBE_BYPRODUCT_LABEL)
+    if editors:
+        labels.append(GUIDE_INDEPENDENT_LABEL)
+        for ed in editors:
+            for alt_spec in EDITOR_WINDOW_ALTERNATIVES.get(ed, []):
+                alternatives_note.append({"editor": ed, **alt_spec, "window": list(alt_spec["window"])})
     base.update(
         base_editable=bool(editors),
         editors=editors,
@@ -317,7 +406,15 @@ def screen(variant: str, assembly: str = "GRCh38", pam: str = "NGG",
         guide_count=len(guides),
         bystander_free_guides=sum(1 for g in guides if g["bystander_count"] == 0),
         bystanders_annotated=bool(annotate_bystanders),
+        labels=labels,
+        other_editor_generations=alternatives_note,
     )
+    if alternatives_note and not explicit_window:
+        base["window_note"] = (
+            "bystander counts are for the window above. Other generations of the same chemistry have different "
+            "windows: " + "; ".join(f"{a['generation']} {a['window'][0]}-{a['window'][1]}" for a in alternatives_note)
+            + ". A guide listed with 0 bystanders here is not bystander-free for all of them."
+        )
     if not editors:
         base["reason"] = (f"{alt}>{ref} is a transversion: it is A*T<->C*G or C*G<->G*C, and canonical ABE/CBE only "
                           f"make the transitions A*T<->G*C and C*G<->T*A")
@@ -347,6 +444,8 @@ def render(result: Dict[str, Any]) -> str:
     lo, hi = result["editing_window"]
     lines.append(f"correct {corr['from']} -> {corr['to']}: {', '.join(result['editors'])}; "
                  f"PAM {result['pam']}; window {lo}-{hi} ({result['window_convention']})")
+    if result.get("editing_window_basis"):
+        lines.append(f"  window: {result['editing_window_basis']}")
     for row in result["strands"]:
         if row["editor"]:
             lines.append(f"  {row['strand']} strand: {row['editor']} ({row['base_on_protospacer_strand']} on the "
@@ -364,5 +463,7 @@ def render(result: Dict[str, Any]) -> str:
                      f"  target {g['target_position']}  bystanders: {by}")
     if result.get("bystander_note"):
         lines.append(f"note: {result['bystander_note']}")
+    if result.get("window_note"):
+        lines.append(f"note: {result['window_note']}")
     lines += ["", *(f"! {label}" for label in result["labels"])]
     return "\n".join(lines)

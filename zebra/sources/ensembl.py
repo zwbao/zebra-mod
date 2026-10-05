@@ -11,7 +11,8 @@ import urllib.parse
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from zebra.core import Outcome
-from zebra.http import get_json, post_json, request, source_record
+from zebra.http import SourceError, get_json, post_json, request
+from zebra.sources import record as source_record
 
 HOSTS = {"GRCh38": "https://rest.ensembl.org", "GRCh37": "https://grch37.rest.ensembl.org"}
 # plugin flags as the REST service names them; GRCh37 serves fewer plugins
@@ -22,7 +23,15 @@ VEP_FLAGS_38 = {
 VEP_FLAGS_37 = {"canonical": 1, "hgvs": 1, "numbers": 1, "protein": 1, "variant_class": 1, "CADD": 1, "REVEL": 1}
 VCF_RE = re.compile(r"^(?:chr)?([0-9]{1,2}|X|Y|MT|M)[-:_\s](\d+)[-:_\s]([ACGTNacgtn]+)[-:_>\s]([ACGTNacgtn]+)$")
 RSID_RE = re.compile(r"^rs\d+$", re.I)
-HGVS_RE = re.compile(r"^(N[MRCGP]_\d+(?:\.\d+)?|ENS[TGP]\d+(?:\.\d+)?|LRG_\d+(?:t\d+)?)(?:\([A-Za-z0-9-]+\))?:[cgnmrp]\.", re.I)
+# Anchored at both ends (B-P2-7): an unanchored pattern accepted
+# "NM_000492.4:c.1521_1523del --assembly GRCh37" as one argv string and silently
+# ignored the trailing text, annotating on the default build.
+ACCESSION = r"(N[MRCGP]_\d+(?:\.\d+)?|ENS[TGP]\d+(?:\.\d+)?|LRG_\d+(?:t\d+)?)"
+HGVS_RE = re.compile(rf"^{ACCESSION}(?:\([A-Za-z0-9-]+\))?:[cgnmrp]\.\S+$", re.I)
+GENE_HGVS_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.@-]*:[cp]\.\S+$")
+# Ensembl's message when a RefSeq accession carries a version the current
+# release does not hold (verified live: NM_001165963.1 fails, NM_001165963 works).
+NO_TRANSCRIPT_RE = re.compile(r"Could not get a Transcript object|Could not fetch a Transcript", re.I)
 
 
 def host(assembly: str) -> str:
@@ -48,20 +57,39 @@ def classify_input(text: str) -> str:
         return "rsid"
     if HGVS_RE.match(t):
         return "hgvs"
-    if re.match(r"^[A-Za-z0-9-]+:[cp]\.", t):
+    if GENE_HGVS_RE.match(t):
         return "gene_hgvs"  # e.g. SCN1A:c.2134C>T — VEP resolves via the gene's canonical transcript
     return "unknown"
+
+
+def strip_version(accession: str) -> str:
+    """`NM_001165963.1` -> `NM_001165963`; an accession with no version is returned unchanged."""
+    return accession.split(".")[0]
 
 
 def _vep_params(assembly: str) -> Dict[str, Any]:
     return dict(VEP_FLAGS_38 if assembly == "GRCh38" else VEP_FLAGS_37)
 
 
+def _vep_hgvs(base: str, text: str, params: Dict[str, Any]):
+    return get_json(f"{base}/vep/human/hgvs/{urllib.parse.quote(text, safe=':>()')}",
+                    source="Ensembl VEP", params=params, cache_ttl=14 * 86400, timeout=60)
+
+
 def vep(variant: str, assembly: str = "GRCh38") -> Outcome:
-    """VEP for one variant given as HGVS, rsID, or chrom-pos-ref-alt."""
+    """VEP for one variant given as HGVS, rsID, or chrom-pos-ref-alt.
+
+    A legacy transcript version is resolved, not refused (F37). Ensembl answers
+    an accession whose version the current release does not hold with
+    "Could not get a Transcript object" (verified live for NM_001165963.1,
+    while NM_001165963 without the version is accepted); the call is retried
+    without the version and the answer carries a warning naming the version VEP
+    actually used, because c. numbering can differ between versions.
+    """
     kind = classify_input(variant)
     base = host(assembly)
     params = _vep_params(assembly)
+    warnings: List[str] = []
     if kind == "vcf":
         chrom, pos, ref, alt = parse_vcf_like(variant)  # type: ignore[misc]
         resp = post_json(f"{base}/vep/human/region", {"variants": [vcf_line(chrom, pos, ref, alt)], **params},
@@ -70,14 +98,25 @@ def vep(variant: str, assembly: str = "GRCh38") -> Outcome:
         resp = get_json(f"{base}/vep/human/id/{urllib.parse.quote(variant.strip())}", source="Ensembl VEP",
                         params=params, cache_ttl=14 * 86400, timeout=60)
     elif kind in ("hgvs", "gene_hgvs"):
-        resp = get_json(f"{base}/vep/human/hgvs/{urllib.parse.quote(variant.strip(), safe=':>()')}",
-                        source="Ensembl VEP", params=params, cache_ttl=14 * 86400, timeout=60)
+        text = variant.strip()
+        try:
+            resp = _vep_hgvs(base, text, params)
+        except SourceError as err:
+            acc, sep, change = text.partition(":")
+            bare = strip_version(acc)
+            if not (sep and bare != acc and NO_TRANSCRIPT_RE.search(err.message or "")):
+                raise
+            resp = _vep_hgvs(base, f"{bare}{sep}{change}", params)
+            warnings.append(f"{acc} is not in this Ensembl release; resolved {bare}{sep}{change} instead. "
+                            "c. numbering can differ between transcript versions — check the reference base and "
+                            "the position against the version your report used "
+                            "(VariantValidator or Mutalyzer map between versions)")
     else:
-        raise ValueError(f"cannot read {variant!r}: use transcript HGVS (NM_...:c.), an rsID, or chrom-pos-ref-alt")
+        raise ValueError(f"cannot read {variant!r}: use transcript HGVS (NM_...:c.), an rsID, or chrom-pos-ref-alt "
+                         "(one value only — flags such as --assembly must be separate arguments)")
     data = resp.json()
     if not isinstance(data, list) or not data:
         raise ValueError(f"VEP returned nothing for {variant!r}")
-    warnings = []
     if len(data) > 1:
         alleles = [d.get("allele_string") for d in data]
         warnings.append(f"{variant} maps to {len(data)} alleles ({', '.join(map(str, alleles))}); using {alleles[0]} — give HGVS or chrom-pos-ref-alt to pick one")
@@ -106,14 +145,17 @@ def vep_batch(variants: Sequence[Tuple[str, int, str, str]], assembly: str = "GR
 
 
 def pick_transcript(rec: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """MANE Select, else canonical, else the first protein-coding consequence."""
-    tcs = rec.get("transcript_consequences") or []
-    for pred in (lambda t: t.get("mane_select"), lambda t: t.get("canonical"),
-                 lambda t: t.get("biotype") == "protein_coding", lambda t: True):
-        for t in tcs:
-            if pred(t):
-                return t
-    return None
+    """The transcript to annotate on: one the variant overlaps, MANE Select preferred.
+
+    Delegates to `zebra.sources.variant.pick_transcript`, so the editing and
+    triage paths choose the same transcript as the variant card. Before this,
+    ordering MANE -> canonical -> protein_coding over the whole consequence list
+    could return a transcript the variant lies *outside* (VEP reports one for
+    every nearby gene), which is how m.3243A>G was annotated on MT-ND1.
+    """
+    from zebra.sources.variant import pick_transcript as _pick
+
+    return _pick(rec.get("transcript_consequences") or [], None, rec.get("most_severe_consequence"))
 
 
 def spliceai_max(tc: Optional[Dict[str, Any]]) -> Optional[float]:

@@ -1,15 +1,35 @@
 """Variant card: one variant, normalised and annotated from primary sources.
 
-Ensembl VEP (consequence on the MANE Select transcript; REVEL, AlphaMissense,
-CADD, SpliceAI on GRCh38) -> VCF-style left-normalised form checked against the
-Ensembl reference -> gnomAD (frequencies, coverage), ClinVar (exact-allele
-match) and LitVar (mention count) -> `acmg_inputs` for `zebra acmg suggest`.
+Ensembl VEP (consequence on an overlapping transcript, MANE Select preferred;
+REVEL, AlphaMissense, CADD, SpliceAI on GRCh38) -> VCF-style left-normalised
+form checked against the Ensembl reference -> gnomAD (frequencies, coverage),
+ClinVar (exact-allele match) and LitVar (mention count) -> `acmg_inputs` for
+`zebra acmg suggest`.
 
 Coordinates: VEP reports start/end on the forward strand but, for HGVS input
 on a minus-strand transcript, the alleles on the transcript strand
 (strand = -1). Alleles are reverse-complemented before the VCF form is built,
 then anchored and left-aligned against the reference sequence, which is also
 used to check REF.
+
+REF is checked, not assumed (E7). For `chrom-pos-ref-alt` input the given REF
+is compared with the Ensembl reference of the stated build *before* VEP is
+called, and a mismatch is refused with both bases named; the other build is
+checked too and named when it matches. A REF that VEP's own coordinates
+contradict is refused in the same way. Without this, a variant given in the
+wrong build was annotated on a fabricated allele and then reported as "absent
+from gnomAD at a covered site", which is exactly the input `acmg suggest`
+turns into PM2.
+
+Transcript choice goes by overlap first (P1e). VEP reports a consequence for
+every transcript near the variant and marks the ones the variant does *not*
+touch with a `distance`; preferring MANE Select over the whole list therefore
+annotated m.3243A>G (MELAS) on MT-ND1 64 bp away instead of the MT-TL1 tRNA it
+sits in. `overlapping_transcripts` keeps only transcripts the variant is
+inside, and `pick_transcript` prefers, among those, the one carrying VEP's own
+`most_severe_consequence`, then MANE Select, then Ensembl canonical
+protein-coding. When several genes overlap, the others are listed in
+`transcript.also_overlapping` and a warning names them.
 """
 
 from __future__ import annotations
@@ -18,13 +38,23 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from zebra.core import Outcome, attempt
-from zebra.sources import clinvar, ensembl, gnomad
+from zebra.core import Outcome
+from zebra.http import SourceError
+from zebra.sources import attempt, clinvar, ensembl, gnomad
 
 _COMP = str.maketrans("ACGTNacgtn", "TGCANtgcan")
 LEFT_PAD = 100
 RIGHT_PAD = 20
-CONTINENTAL = ("afr", "amr", "eas", "nfe", "sas")
+# gnomAD v4 grpmax group sets, as gnomAD defines them per dataset; VEP's
+# colocated frequencies are keyed `gnomade_*` (v4 exomes) and `gnomadg_*`
+# (v4 genomes), and gnomAD excludes the Middle Eastern group from the *genome*
+# grpmax only (see zebra.sources.gnomad for the quoted definition).
+CONTINENTAL_EXOME = ("afr", "amr", "eas", "mid", "nfe", "sas")
+CONTINENTAL_GENOME = ("afr", "amr", "eas", "nfe", "sas")
+CONTINENTAL = CONTINENTAL_EXOME  # kept for callers that do not distinguish the two
+# VEP marks a transcript the variant lies outside of with `distance`; these are
+# the consequence terms that go with it.
+NON_OVERLAP_TERMS = frozenset(("upstream_gene_variant", "downstream_gene_variant", "intergenic_variant"))
 
 
 class OutOfWindow(Exception):
@@ -132,18 +162,78 @@ def _num(x: Any) -> Optional[float]:
     return None
 
 
-def pick_transcript(tcs: List[Dict[str, Any]], gene: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    pool = tcs
+def overlaps(tc: Dict[str, Any]) -> bool:
+    """True when the variant lies inside this transcript.
+
+    VEP sets `distance` only for a transcript the variant is outside of, and
+    gives it an `upstream_gene_variant`/`downstream_gene_variant` term. Both
+    signals are checked: the field, because it is what VEP documents, and the
+    terms, because a record without `distance` must still not be read as
+    overlapping if its only consequence is being near the gene.
+    """
+    if tc.get("distance") is not None:
+        return False
+    terms = set(tc.get("consequence_terms") or [])
+    return bool(terms) and not terms.issubset(NON_OVERLAP_TERMS)
+
+
+def overlapping_transcripts(tcs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [t for t in tcs or [] if overlaps(t)]
+
+
+def pick_transcript(tcs: List[Dict[str, Any]], gene: Optional[str] = None,
+                    most_severe: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """The transcript to annotate on: overlapping first, then MANE Select.
+
+    Order, applied to the transcripts the variant actually overlaps (all of
+    them only when none overlaps):
+      1. MANE Select carrying VEP's `most_severe_consequence`
+      2. Ensembl canonical carrying `most_severe_consequence`
+      3. MANE Select
+      4. Ensembl canonical and protein-coding
+      5. Ensembl canonical
+      6. protein-coding
+      7. the first one
+    Steps 1-2 are what separates MT-TL1 (`non_coding_transcript_exon_variant`,
+    the most severe term for m.3243A>G) from the MANE-less MT-ND1 64 bp away,
+    and RNU4ATAC from CLASP1's MANE transcript, whose intron the same base sits
+    in. `most_severe` is optional so a caller with a hand-built transcript list
+    keeps the old behaviour.
+    """
+    pool = tcs or []
     if gene:
-        same = [t for t in tcs if str(t.get("gene_symbol", "")).upper() == gene.upper()]
+        same = [t for t in pool if str(t.get("gene_symbol", "")).upper() == gene.upper()]
         if same:
             pool = same
-    for pred in (lambda t: t.get("mane_select"), lambda t: t.get("canonical") and t.get("biotype") == "protein_coding",
-                 lambda t: t.get("canonical"), lambda t: t.get("biotype") == "protein_coding", lambda t: True):
+    over = overlapping_transcripts(pool)
+    if over:
+        pool = over
+
+    def carries(t: Dict[str, Any]) -> bool:
+        return bool(most_severe) and most_severe in (t.get("consequence_terms") or [])
+
+    preds = [
+        lambda t: t.get("mane_select") and carries(t),
+        lambda t: t.get("canonical") and carries(t),
+        lambda t: t.get("mane_select"),
+        lambda t: t.get("canonical") and t.get("biotype") == "protein_coding",
+        lambda t: t.get("canonical"),
+        lambda t: t.get("biotype") == "protein_coding",
+        lambda t: True,
+    ]
+    for pred in preds:
         for t in pool:
             if pred(t):
                 return t
     return None
+
+
+def nearest_transcript(tcs: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """The closest non-overlapping transcript, for a variant inside no transcript."""
+    cands = [t for t in tcs or [] if isinstance(t.get("distance"), (int, float))]
+    if not cands:
+        return None
+    return min(cands, key=lambda t: t["distance"])
 
 
 def predictors(tc: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -178,11 +268,17 @@ def vep_frequencies(rec: Dict[str, Any], alt_raw: str) -> Optional[Dict[str, Any
         cont = {}
         for k, v in groups.items():
             m = re.match(r"^gnomad([eg])_(\w+)$", k)
-            if m and m.group(2) in CONTINENTAL and isinstance(v, (int, float)):
+            if not m or not isinstance(v, (int, float)):
+                continue
+            allowed = CONTINENTAL_EXOME if m.group(1) == "e" else CONTINENTAL_GENOME
+            if m.group(2) in allowed:
                 cont[f"{m.group(1)}:{m.group(2)}"] = v
         best = max(cont.items(), key=lambda kv: kv[1]) if cont else None
         return {"rsid": cv.get("id"), "exome_af": groups.get("gnomade"), "genome_af": groups.get("gnomadg"),
                 "grpmax_af": best[1] if best else None, "grpmax_group": best[0] if best else None,
+                "grpmax_basis": "highest group AF over gnomAD v4 exome groups "
+                                f"{'/'.join(CONTINENTAL_EXOME)} ('e:') and genome groups "
+                                f"{'/'.join(CONTINENTAL_GENOME)} ('g:'); exome and genome are not pooled",
                 "note": "from VEP colocated_variants (gnomAD exome 'e:'/genome 'g:' groups; no allele numbers)"}
     return None
 
@@ -252,6 +348,62 @@ def _litvar_compact(res: Any, rsids: List[str]) -> Optional[Dict[str, Any]]:
             "note": "LitVar keeps unlinked spellings as separate records; counts overlap, do not add them"}
 
 
+OTHER_ASSEMBLY = {"GRCh38": "GRCh37", "GRCh37": "GRCh38"}
+
+
+class RefMismatch(ValueError):
+    """The REF implied by the input does not match the reference at that position."""
+
+
+def reference_bases(chrom: str, pos: int, length: int, assembly: str) -> Optional[str]:
+    """The `length` reference bases at chrom:pos in `assembly`, or None if Ensembl did not answer."""
+    if length < 1:
+        return None
+    try:
+        return ensembl.sequence(chrom, pos, pos + length - 1, assembly).result
+    except (SourceError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def ref_mismatch_message(chrom: str, pos: int, given: str, found: str, assembly: str,
+                         other: Optional[str]) -> str:
+    """The refusal text for a REF that does not match, naming both bases and the other build."""
+    other_name = OTHER_ASSEMBLY[assembly]
+    msg = (f"REF {given} does not match the {assembly} reference at {chrom}:{pos}, "
+           f"which has {found}.")
+    if other is None:
+        msg += f" {other_name} could not be checked (Ensembl sequence unavailable)."
+    elif other.upper() == given.upper():
+        msg += f" {other_name} has {other} there, which matches: rerun with --assembly {other_name}."
+    else:
+        msg += (f" {other_name} has {other} there, which does not match either: check the position, "
+                "the reference allele and the build.")
+    return msg + (" Refusing to annotate: a REF that is not the reference describes an allele that does "
+                  "not exist, and its absence from gnomAD or ClinVar is not evidence.")
+
+
+def verify_input_ref(chrom: str, pos: int, ref: str, assembly: str,
+                     sources: List[Dict[str, Any]], warnings: List[str]) -> None:
+    """Refuse `chrom-pos-ref-alt` input whose REF is not the reference at that position (E7).
+
+    Runs before VEP, because VEP's `/vep/human/region` endpoint accepts any REF
+    and echoes the coordinates back, so by the time the card is built the
+    fabricated allele is indistinguishable from a real one.
+    """
+    got = attempt("Ensembl reference sequence (REF check)",
+                  lambda: ensembl.sequence(chrom, pos, pos + len(ref) - 1, assembly), warnings)
+    if got is None:
+        warnings.append(f"REF {ref} not checked against the {assembly} reference "
+                        "(Ensembl sequence unavailable): the build is unverified")
+        return
+    sources += got.sources
+    found = got.result
+    if found.upper() == ref.upper():
+        return
+    other = reference_bases(chrom, pos, len(ref), OTHER_ASSEMBLY[assembly])
+    raise RefMismatch(ref_mismatch_message(chrom, pos, ref.upper(), found.upper(), assembly, other))
+
+
 def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> Outcome:
     text = variant.strip()
     if assembly not in ("GRCh38", "GRCh37"):
@@ -259,6 +411,12 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
     kind = ensembl.classify_input(text)
     warnings: List[str] = []
     sources: List[Dict[str, Any]] = []
+
+    if kind == "vcf":
+        parsed = ensembl.parse_vcf_like(text)
+        if parsed:
+            c_in, p_in, r_in, _a_in = parsed
+            verify_input_ref(c_in, p_in, r_in, assembly, sources, warnings)
 
     v = ensembl.vep(text, assembly)  # the anchor of the card: failure propagates
     rec = v.result
@@ -286,7 +444,16 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         try:
             pos0, ref0, alt0, mismatch = raw_vcf(rec, alt_raw, window.base)
             if mismatch:
-                warnings.append(f"reference mismatch on chr{chrom} ({assembly}): {mismatch} — check the assembly and the HGVS")
+                # E7: never continue on a fabricated allele. `mismatch` means the
+                # forward-strand REF that VEP's coordinates imply is not the
+                # reference there, which is what a wrong genome build looks like.
+                m = re.search(r"REF ([ACGTN]+) at (\d+)-\d+, reference has ([ACGTN]+)", mismatch)
+                if m:
+                    raise RefMismatch(ref_mismatch_message(
+                        chrom, int(m.group(2)), m.group(1), m.group(3), assembly,
+                        reference_bases(chrom, int(m.group(2)), len(m.group(1)), OTHER_ASSEMBLY[assembly])))
+                raise RefMismatch(f"reference mismatch on chr{chrom} ({assembly}): {mismatch} — "
+                                  "refusing to annotate; check the assembly and the HGVS")
             npos, nref, nalt = left_normalize(pos0, ref0, alt0, window.base)
             vcf = (chrom, npos, nref, nalt)
             break
@@ -302,11 +469,33 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
             warnings.append("could not build the VCF form of this indel (reference sequence unavailable): "
                             "gnomAD lookup skipped; ClinVar allele match unverified")
 
-    # transcript
+    # transcript: overlap first, then MANE Select (P1e)
+    most_severe = rec.get("most_severe_consequence")
     tcs_all = rec.get("transcript_consequences") or []
     tcs = [t for t in tcs_all if t.get("variant_allele") in (alt_raw, None)] or tcs_all
-    tc = pick_transcript(tcs, gene)
+    overlapping = overlapping_transcripts(tcs)
+    tc = pick_transcript(tcs, gene, most_severe)
     gene_symbol = (tc or {}).get("gene_symbol")
+    overlap_genes = sorted({str(t.get("gene_symbol")) for t in overlapping if t.get("gene_symbol")})
+    if not tcs:
+        where = "intergenic" if most_severe == "intergenic_variant" else f"reported only as {most_severe or 'no consequence'}"
+        warnings.append(f"this position lies in no transcript ({where}): there is no gene, transcript or protein "
+                        "consequence to report, and no gene-level evidence applies")
+    elif not overlapping:
+        near = nearest_transcript(tcs) or {}
+        warnings.append(f"no transcript overlaps this variant: the nearest is {near.get('gene_symbol') or '?'} "
+                        f"{near.get('transcript_id') or '?'} at {near.get('distance')} bp "
+                        f"({', '.join(near.get('consequence_terms') or []) or '-'}); annotated on it, but the "
+                        "variant is outside every transcript — treat the gene as a neighbour, not the gene hit")
+    elif len(overlap_genes) > 1:
+        other_genes = [g for g in overlap_genes if g != str(gene_symbol)]
+        detail = "; ".join(
+            f"{g}: " + ", ".join(sorted({c for t in overlapping if str(t.get('gene_symbol')) == g
+                                         for c in (t.get('consequence_terms') or [])}))
+            for g in other_genes[:4])
+        warnings.append(f"{len(overlap_genes)} genes overlap this position; annotated on {gene_symbol} "
+                        f"({', '.join(tc.get('consequence_terms') or []) if tc else '-'}). Also overlapping — "
+                        f"{detail} — use --gene to annotate on another")
     if gene and gene_symbol and gene.upper() != str(gene_symbol).upper():
         genes_hit = sorted({t.get("gene_symbol") for t in tcs if t.get("gene_symbol")})
         warnings.append(f"gene mismatch: you gave {gene}; VEP places this variant in {', '.join(genes_hit) or '-'} "
@@ -322,15 +511,34 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         hgvsc = tc.get("hgvsc")
         cpart = hgvsc.split(":", 1)[1] if hgvsc and ":" in hgvsc else None
         ppart = tc["hgvsp"].split(":", 1)[1] if tc.get("hgvsp") and ":" in tc["hgvsp"] else None
+        picked_overlaps = overlaps(tc)
+        basis = "MANE Select" if mane else ("Ensembl canonical" if tc.get("canonical") else "first protein-coding")
+        if not picked_overlaps:
+            basis += ", OUTSIDE the variant"
         transcript = {"ensembl": hgvsc.split(":")[0] if hgvsc else tc.get("transcript_id"), "refseq": mane,
                       "mane_select": bool(mane or "MANE_Select" in (tc.get("mane") or [])),
                       "canonical": bool(tc.get("canonical")), "gene": gene_symbol, "hgnc_id": tc.get("hgnc_id"),
-                      "basis": "MANE Select" if mane else ("Ensembl canonical" if tc.get("canonical") else "first protein-coding")}
+                      "biotype": tc.get("biotype"), "overlaps_variant": picked_overlaps,
+                      "distance_bp": tc.get("distance"),
+                      "also_overlapping": [{"gene": g, "consequences": sorted(
+                          {c for t in overlapping if str(t.get("gene_symbol")) == g
+                           for c in (t.get("consequence_terms") or [])})}
+                          for g in overlap_genes if g != str(gene_symbol)][:6],
+                      "basis": basis}
         if transcript["hgnc_id"] is not None and not str(transcript["hgnc_id"]).startswith("HGNC:"):
             transcript["hgnc_id"] = f"HGNC:{transcript['hgnc_id']}"
         hgvs = {"c": f"{mane}:{cpart}" if mane and cpart else hgvsc, "c_ensembl": hgvsc,
                 "p": ppart, "p_ensembl": tc.get("hgvsp")}
-        if kind == "hgvs" and cpart:
+        if kind == "gene_hgvs":
+            # F37: `GENE:c.…` carries no transcript. VEP resolves it on the gene's
+            # canonical transcript, and c. numbering is transcript-specific, so the
+            # same c. position on the transcript a report used can be a different base.
+            warnings.append(f"you gave only a gene name ({text}): annotated on "
+                            f"{(transcript or {}).get('refseq') or (transcript or {}).get('ensembl') or '?'} "
+                            f"({(transcript or {}).get('basis')}), VEP's normalised form is {hgvs.get('c')}. "
+                            "c. numbering is transcript-specific — if the report used another transcript, the same "
+                            "c. position is a different base. Give the transcript (NM_…:c.…) to be sure")
+        if kind in ("hgvs", "gene_hgvs") and cpart:
             acc_in, _, change_in = text.partition(":")
             if mane and acc_in.split(".")[0].upper() == mane.split(".")[0].upper():
                 notes = []

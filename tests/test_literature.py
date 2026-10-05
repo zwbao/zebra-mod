@@ -7,11 +7,13 @@ tests/fixtures/{europepmc,litvar,pubtator}; live tests call the services.
 from __future__ import annotations
 
 import json
+import math
 import os
 
 import pytest
 
 from zebra import cli
+from zebra.commands import lit as lit_cmd
 from zebra.http import Response, SourceError
 from zebra.sources import europepmc, litvar, pubtator
 
@@ -234,11 +236,14 @@ def test_search_pages_until_limit(monkeypatch):
 def _all_routes(monkeypatch):
     def epmc(url, source, params=None, **kw):
         q = params["query"]
-        return resp("europepmc/by_pmids_core.json" if q.startswith("EXT_ID:(") else "europepmc/search_dravet_core.json", url)
+        # the 15 PMIDs LitVar links to rs794726730, with the abstracts resultType=core returns
+        return resp("europepmc/by_pmids_scn1a_r712_core.json" if q.startswith("EXT_ID:(")
+                    else "europepmc/search_dravet_core.json", url)
 
     def lv(url, source, params=None, **kw):
         if url.endswith("/publications"):
-            return resp("litvar/pubs_rs794726730.json", url)
+            # each LitVar record lists its own papers: the p.R712* record one, the rsID record 21
+            return resp("litvar/pubs_6323_p_r712star.json" if "6323" in url else "litvar/pubs_rs794726730.json", url)
         return _litvar_router(SCN1A_MAP)(url, source, params)
 
     def pt(url, source, params=None, **kw):
@@ -303,6 +308,158 @@ def test_cli_lit_source_failure_is_a_warning(monkeypatch, capsys):
     assert any(w.startswith("Europe PMC unavailable") for w in env["warnings"])
 
 
+# --------------------------------------------------------------------------- F40: is the paper about the thing asked for?
+# `zebra lit --gene SCN1A --variant "p.Arg712*"` lists PMID 27397505 (Iorio 2016, Cell, cancer cell-line
+# pharmacogenomics) because LitVar normalises p.R712* onto rs794726730, whose PubTator counterpart is
+# numbered p.R701X on another transcript. Every hit must now carry the handle that produced it and what
+# the paper's own title and abstract say, so a reader can judge without the tool's word for it.
+
+SCN1A_FORMS = ["Arg712*", "Arg712Ter", "Arg712X", "R712*", "R712Ter", "R712X", "rs794726730"]
+
+
+def _lit_json(capsys, monkeypatch, *argv):
+    _all_routes(monkeypatch)
+    assert cli.main(["lit", *argv, "--json"]) == 0
+    return json.loads(capsys.readouterr().out)
+
+
+def test_F40_variant_forms_cover_both_letter_codes_and_the_rsid():
+    assert lit_cmd._variant_forms("p.Arg712*", ["rs794726730"]) == SCN1A_FORMS
+    assert lit_cmd._variant_forms("R712X") == ["R712*", "R712Ter", "R712X", "Arg712*", "Arg712Ter", "Arg712X"]
+    assert lit_cmd._variant_forms("p.Arg712Cys") == ["Arg712Cys", "R712C"]
+    assert lit_cmd._variant_forms("NM_001165963.4:c.2134C>T") == ["NM_001165963.4:c.2134C>T"]  # no protein codes to twin
+    assert lit_cmd._variant_forms(None, ["rs794726730"]) == ["rs794726730"]
+
+
+def test_F40_matched_entity_attached(capsys, monkeypatch):
+    env = _lit_json(capsys, monkeypatch, "--gene", "SCN1A", "--variant", "p.Arg712*")
+    papers = env["result"]["litvar"]["papers"]
+    assert papers and len(papers) == 15
+    for p in papers:
+        e = p["matched_entity"]
+        assert e["source"] == "LitVar2"
+        assert e["id"] in [m["litvar_id"] for m in env["result"]["litvar"]["matches"]]
+        assert e["id"] == p["litvar_ids"][0]
+        assert e["via"] in env["result"]["litvar"]["queries"]
+    iorio = next(p for p in papers if p["pmid"] == "27397505")
+    assert iorio["matched_entity"] == {"source": "LitVar2", "id": "litvar@rs794726730##", "name": "c.2134C>T",
+                                       "rsid": "rs794726730", "via": "SCN1A p.Arg712Ter"}
+    hits = env["result"]["pubtator"]["hits"]
+    assert hits and all(h["matched_entity"]["source"] == "PubTator3" for h in hits)
+    e = hits[0]["matched_entity"]
+    # the id says p.R712X, the entity's own name says p.R701X: the transcript renumbering, on the record
+    assert e == {"source": "PubTator3", "id": "@VARIANT_p.R712X_SCN1A_human", "name": "p.R701X",
+                 "rsid": "rs794726730", "via": "rs794726730"}
+
+
+def test_F40_mentions_detects_absent_gene(capsys, monkeypatch):
+    env = _lit_json(capsys, monkeypatch, "--gene", "SCN1A", "--variant", "p.Arg712*")
+    lit = env["result"]["litvar"]
+    assert lit["variant_forms_checked"] == SCN1A_FORMS
+    by_pmid = {p["pmid"]: p for p in lit["papers"]}
+    iorio = by_pmid["27397505"]
+    assert iorio["mentions"] == {"gene": False, "variant": False, "variant_forms_found": []}
+    assert iorio["abstract_excerpt"].startswith("Systematic studies of cancer genomes")
+    assert "SCN1A" not in iorio["title"]
+    # a paper that does name the gene is told apart from one that does not
+    assert by_pmid["38785537"]["mentions"]["gene"] is True
+    assert by_pmid["31253177"]["mentions"]["gene"] is False  # colorectal neoantigen paper
+    assert lit["mention_counts"] == {"papers_checked": 15, "no_abstract": 0, "gene_mentioned": 6,
+                                     "gene_not_mentioned": 9, "gene_unknown": 0, "variant_mentioned": 0,
+                                     "variant_not_mentioned": 15, "variant_unknown": 0}
+    # no paper's abstract names the variant under any spelling — a fact, not a classification
+    assert all(p["mentions"]["variant_forms_found"] == [] for p in lit["papers"])
+    assert "title and abstract only" in lit["note"] and "supplementary tables" in lit["note"]
+
+
+def test_F40_rendering_shows_tag_and_entity(capsys, monkeypatch):
+    _all_routes(monkeypatch)
+    assert cli.main(["lit", "--gene", "SCN1A", "--variant", "p.Arg712*"]) == 0
+    text = capsys.readouterr().out
+    assert "PMID 27397505" in text
+    iorio_line = next(ln for ln in text.splitlines() if "PMID 27397505" in ln)
+    assert "[gene✗, variant✗]" in iorio_line and "via litvar@rs794726730##" in iorio_line
+    assert "[gene✓, variant✗] via litvar@" in text  # a paper that does name SCN1A
+    assert "6 mention SCN1A, 9 do not" in text and "title and abstract only" in text
+    assert lit_cmd._mention_tag({}) == "" and lit_cmd._mention_tag({"title": "x"}) == ""  # EPMC search hits untagged
+
+
+def test_F40_no_abstract_is_null_not_false(monkeypatch):
+    monkeypatch.setattr(europepmc, "get_json",
+                        lambda url, source, params=None, **kw: resp("europepmc/by_pmids_no_abstract_core.json", url))
+    papers = europepmc.by_pmids(["38327537", "27397505"]).result
+    assert [p["pmid"] for p in papers] == ["38327537", "27397505"]
+    assert papers[0]["abstract"] is None  # a Comment; Europe PMC holds no abstract for it
+    assert papers[1]["abstract"] and "SCN1A" not in papers[1]["abstract"]
+    lit_cmd._attach_mentions(papers, "SCN1A", SCN1A_FORMS)
+    assert papers[0]["mentions"] == {"gene": None, "variant": None, "variant_forms_found": []}
+    assert papers[0]["abstract_excerpt"] is None
+    assert lit_cmd._mention_tag(papers[0]) == "[no abstract]"
+    # the same answer for the same gene, when there was an abstract to look in, is false — not null
+    assert papers[1]["mentions"]["gene"] is False and papers[1]["mentions"]["variant"] is False
+    assert lit_cmd._mention_tag(papers[1]) == "[gene✗, variant✗]"
+    assert lit_cmd._mention_counts(papers) == {"papers_checked": 2, "no_abstract": 1, "gene_mentioned": 0,
+                                               "gene_not_mentioned": 1, "gene_unknown": 1, "variant_mentioned": 0,
+                                               "variant_not_mentioned": 1, "variant_unknown": 1}
+    # a no-abstract paper whose title names the gene is a `true`, so gene_unknown alone would understate it
+    titled_no_abstract = [{"title": "SCN1A review", "abstract": None}]
+    lit_cmd._attach_mentions(titled_no_abstract, "SCN1A", SCN1A_FORMS)
+    counted = lit_cmd._mention_counts(titled_no_abstract)
+    assert counted["no_abstract"] == 1 and counted["gene_unknown"] == 0 and counted["gene_mentioned"] == 1
+    # a title Europe PMC does supply still counts: no abstract does not blind the title
+    titled = [{"title": "SCN1A-related epilepsy with a p.Arg712Ter allele", "abstract": None}]
+    lit_cmd._attach_mentions(titled, "SCN1A", SCN1A_FORMS)
+    assert titled[0]["mentions"] == {"gene": True, "variant": True, "variant_forms_found": ["Arg712Ter"]}
+    assert lit_cmd._mention_tag(titled[0]) == "[gene✓, variant✓, no abstract]"
+    # whole-word matching: SCN1AB is a different gene, SCN1A-related is the same one
+    assert lit_cmd._mentions("SCN1A", [], "SCN1AB variants", "a b")["gene"] is False
+    assert lit_cmd._mentions("SCN1A", [], "SCN1A-related epilepsy", "a b")["gene"] is True
+    # nothing asked about is null too, and distinguishable by the absence of forms
+    assert lit_cmd._mentions(None, [], "t", "a") == {"gene": None, "variant": None, "variant_forms_found": []}
+
+
+def test_F40_warning_when_most_hits_unmatched(capsys, monkeypatch):
+    env = _lit_json(capsys, monkeypatch, "--gene", "SCN1A", "--variant", "p.Arg712*")
+    warning = next(w for w in env["warnings"] if w.startswith("LitVar2: 9 of 15"))
+    assert "do not mention SCN1A in their title or abstract" in warning
+    assert "normalised variant records that can merge different transcript numbering" in warning
+    assert "check each PMID before citing it" in warning
+    # the threshold is a third of the papers that could be checked, with a floor of two
+    assert lit_cmd.UNMATCHED_WARN_FRACTION == 1.0 / 3 and lit_cmd.UNMATCHED_WARN_FLOOR == 2
+    assert env["result"]["litvar"]["mention_counts"]["gene_not_mentioned"] >= math.ceil(15 / 3)
+
+
+def test_F40_warning_silent_when_the_list_is_clean(monkeypatch, capsys):
+    """One stray paper out of fifteen is shown per line, not shouted about."""
+    _all_routes(monkeypatch)
+    clean = [{"title": "SCN1A paper", "abstract": "about SCN1A"} for _ in range(14)]
+    clean.append({"title": "something else", "abstract": "no gene here"})
+    lit_cmd._attach_mentions(clean, "SCN1A", SCN1A_FORMS)
+    counts = lit_cmd._mention_counts(clean)
+    assert counts["gene_not_mentioned"] == 1
+    assert counts["gene_not_mentioned"] < max(lit_cmd.UNMATCHED_WARN_FLOOR,
+                                              math.ceil(counts["papers_checked"] * lit_cmd.UNMATCHED_WARN_FRACTION))
+
+
+def test_F40_gene_only_query_has_no_variant_half(capsys, monkeypatch):
+    env = _lit_json(capsys, monkeypatch, "--gene", "SCN1A")
+    hits = env["result"]["pubtator"]["hits"]
+    assert env["result"]["pubtator"]["variant_forms_checked"] == []
+    assert all(h["mentions"]["variant"] is None for h in hits)
+    assert all(h["mentions"]["variant_forms_found"] == [] for h in hits)
+    assert any(h["mentions"]["gene"] is True for h in hits)
+    assert lit_cmd._mention_tag(hits[0]).startswith("[gene")
+    assert "variant" not in lit_cmd._mention_tag(hits[0])
+
+
+def test_F40_abstracts_are_trimmed_out_of_the_output(capsys, monkeypatch):
+    env = _lit_json(capsys, monkeypatch, "--gene", "SCN1A", "--variant", "p.Arg712*")
+    for p in env["result"]["litvar"]["papers"] + env["result"]["pubtator"]["hits"]:
+        assert "abstract" not in p  # the full text is read, then dropped
+        excerpt = p["abstract_excerpt"]
+        assert excerpt is None or len(excerpt) <= lit_cmd.ABSTRACT_EXCERPT + 3
+
+
 # --------------------------------------------------------------------------- live
 
 @pytest.mark.live
@@ -335,6 +492,54 @@ def test_live_pubtator_gene_entity_and_search():
     assert ent["id"] == "@GENE_NGLY1"
     res = pubtator.search(ent["id"], limit=3).result
     assert res["count"] > 50 and len(res["hits"]) == 3
+
+
+@pytest.mark.live
+def test_live_F40_by_pmids_returns_abstracts_only_with_result_type_core():
+    """The claim in europepmc.by_pmids' docstring, checked against the service."""
+    core = europepmc.by_pmids(["27397505", "38785537"]).result
+    assert [p["pmid"] for p in core] == ["27397505", "38785537"]
+    assert all(p["abstract"] and len(p["abstract"]) > 500 for p in core)
+    lite = europepmc.by_pmids(["27397505"], result_type="lite").result
+    assert lite[0]["title"] and lite[0]["abstract"] is None
+
+
+@pytest.mark.live
+def test_live_F40_scn1a_stop_gain_labels_the_irrelevant_pmid(capsys, monkeypatch):
+    """The original F40 reproduction: the Iorio 2016 cancer paper is now labelled, not just listed."""
+    monkeypatch.delenv("ZEBRA_CASE", raising=False)
+    assert cli.main(["lit", "--gene", "SCN1A", "--variant", "p.Arg712*", "--json"]) == 0
+    env = json.loads(capsys.readouterr().out)
+    lit = env["result"]["litvar"]
+    iorio = next(p for p in lit["papers"] if p["pmid"] == "27397505")
+    assert "Pharmacogenomic" in iorio["title"]
+    assert iorio["mentions"]["gene"] is False  # not falsy: false, because there was an abstract to look in
+    assert iorio["mentions"]["variant"] is False
+    assert iorio["mentions"]["variant_forms_found"] == []
+    assert iorio["matched_entity"]["source"] == "LitVar2"
+    assert iorio["matched_entity"]["id"] == "litvar@rs794726730##"
+    assert iorio["matched_entity"]["rsid"] == "rs794726730"
+    assert "712" in iorio["matched_entity"]["via"]
+    counts = lit["mention_counts"]
+    assert counts["gene_not_mentioned"] >= max(lit_cmd.UNMATCHED_WARN_FLOOR,
+                                               math.ceil(counts["papers_checked"] * lit_cmd.UNMATCHED_WARN_FRACTION))
+    warning = next(w for w in env["warnings"] if w.startswith("LitVar2:") and "do not mention" in w)
+    assert "SCN1A" in warning and "transcript numbering" in warning
+    # at least one genuinely SCN1A paper is in the same list and is labelled differently
+    assert any(p["mentions"]["gene"] is True for p in lit["papers"])
+
+
+@pytest.mark.live
+def test_live_F40_pubtator_entity_name_shows_the_renumbering(capsys, monkeypatch):
+    monkeypatch.delenv("ZEBRA_CASE", raising=False)
+    assert cli.main(["lit", "--gene", "SCN1A", "--variant", "p.Arg712*", "--json"]) == 0
+    hits = json.loads(capsys.readouterr().out)["result"]["pubtator"]["hits"]
+    assert hits
+    e = hits[0]["matched_entity"]
+    assert e["source"] == "PubTator3" and e["id"] == "@VARIANT_p.R712X_SCN1A_human"
+    assert e["name"] == "p.R701X"  # the same change numbered on another transcript
+    assert all(isinstance(h["mentions"]["variant_forms_found"], list) for h in hits)
+    assert any(h["mentions"]["gene"] is True for h in hits)
 
 
 @pytest.mark.live

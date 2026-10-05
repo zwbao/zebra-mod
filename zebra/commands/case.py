@@ -95,24 +95,35 @@ def _add_variant(args: argparse.Namespace) -> Outcome:
         _dir(args), gene=args.gene, hgvs_c=args.hgvs_c, hgvs_g=args.hgvs_g, hgvs_p=args.hgvs_p, vcf=args.vcf,
         assembly=args.assembly, zygosity=args.zygosity, inheritance=args.inheritance,
         classification_lab=args.lab_class, source=args.source, description=args.description,
+        kind=args.kind, region=args.region, iscn=args.iscn, cnv_type=args.cnv_type, copy_number=args.copy_number,
+        exons=args.exons, genes=args.genes, motif=args.motif, repeat_count=args.repeats, method=args.method,
     )
     return Outcome(entry, text=f"added {entry['id']}: {entry}")
 
 
 def _add_hypothesis(args: argparse.Namespace) -> Outcome:
+    target = _dir(args)
+    known = case_mod.ledger_ids(target)
     ids = {}
     for pair in args.ids or []:
-        if ":" not in pair:
-            raise UsageError(f"--id takes PREFIX:VALUE (ORPHA:33069, OMIM:607208, MONDO:0100135), got {pair!r}")
-        prefix, value = pair.split(":", 1)
-        ids[prefix.upper()] = value
-    entry = case_mod.add_hypothesis(_dir(args), args.disease, status=args.status, ids=ids, support=args.support,
-                                    against=args.against, note=args.note)
+        prefix, value = case_mod.check_id(pair).split(":", 1)
+        ids[prefix] = value
+    support = case_mod.check_evidence_ids(args.support, "--support", known)
+    against = case_mod.check_evidence_ids(args.against, "--against", known)
+    entry = case_mod.add_hypothesis(target, args.disease, status=args.status, ids=ids, support=support,
+                                    against=against, note=args.note)
     return Outcome(entry, text=f"{entry['id']} [{entry['status']}] {entry['disease']}")
 
 
 def _add_lead(args: argparse.Namespace) -> Outcome:
-    entry = case_mod.add_lead(_dir(args), args.name, args.kind, status=args.status, evidence=args.evidence, note=args.note)
+    target = _dir(args)
+    evidence = case_mod.check_evidence_ids(args.evidence, "--evidence", case_mod.ledger_ids(target))
+    ids = {}
+    for pair in args.ids or []:
+        prefix, value = case_mod.check_id(pair).split(":", 1)
+        ids[prefix] = value
+    entry = case_mod.add_lead(target, args.name, args.kind, status=args.status, evidence=evidence,
+                              note=args.note, ids=ids)
     return Outcome(entry, text=f"{entry['id']} [{entry['kind']}] {entry['name']}")
 
 
@@ -143,38 +154,134 @@ def _ledger(args: argparse.Namespace) -> Outcome:
     return Outcome(rows, text=text or "(empty ledger)")
 
 
+OPS_KEYS = ("profile", "phenotypes", "variants", "hypotheses", "leads", "acmg", "questions", "remove")
+# keys people and models reach for, and what they meant
+OPS_ALIASES = {"phenotype": "phenotypes", "variant": "variants", "hypothesis": "hypotheses",
+               "hypothese": "hypotheses", "lead": "leads", "therapy_leads": "leads", "therapy": "leads",
+               "question": "questions", "removals": "remove", "delete": "remove", "acmg_codes": "acmg"}
+_LIST_OPS = ("phenotypes", "variants", "hypotheses", "leads", "acmg", "remove")
+
+
+def _ids_map(raw: Any, field: str) -> Dict[str, str]:
+    """`["ORPHA:33069", "OMIM:607208"]` → {"ORPHA": "33069", ...}, each shape-checked."""
+    out: Dict[str, str] = {}
+    for pair in case_mod.str_list(raw, field):
+        prefix, value = case_mod.check_id(pair).split(":", 1)
+        out[prefix] = value
+    return out
+
+
+def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
+    """Validate every op before anything is written. Raises UsageError; nothing is partially applied."""
+    if not isinstance(ops, dict):
+        raise UsageError("--ops must be a JSON object")
+    unknown = [k for k in ops if k not in OPS_KEYS]
+    if unknown:
+        hints = [f"{k!r} (did you mean {OPS_ALIASES[k]!r}?)" if k in OPS_ALIASES else repr(k) for k in unknown]
+        raise UsageError("unknown key(s) in --ops: " + ", ".join(hints)
+                         + "; accepted keys are " + ", ".join(OPS_KEYS))
+    clean: Dict[str, Any] = {}
+    try:
+        if ops.get("profile") is not None:
+            if not isinstance(ops["profile"], dict):
+                raise case_mod.CaseError(f"profile must be an object, not {type(ops['profile']).__name__}")
+            bad = [k for k in ops["profile"] if k not in case_mod.PROFILE_FIELDS]
+            if bad:
+                raise case_mod.CaseError("unknown profile field(s) " + ", ".join(sorted(bad))
+                                         + "; accepted: " + ", ".join(case_mod.PROFILE_FIELDS))
+            clean["profile"] = dict(ops["profile"])
+        for key in _LIST_OPS:
+            if ops.get(key) is None:
+                continue
+            if isinstance(ops[key], dict):
+                raise case_mod.CaseError(f"{key} must be a list of objects; wrap the single object in a list")
+            if not isinstance(ops[key], list):
+                raise case_mod.CaseError(f"{key} must be a list of objects, not {type(ops[key]).__name__}")
+            for item in ops[key]:
+                if not isinstance(item, dict):
+                    raise case_mod.CaseError(f"{key}: every item must be an object, got {item!r}")
+            clean[key] = list(ops[key])
+        if ops.get("questions") is not None:
+            clean["questions"] = case_mod.str_list(ops["questions"], "questions")
+
+        for p in clean.get("phenotypes", []):
+            hid = str(p.get("id", "")).strip()
+            if not case_mod.HPO_RE.match(hid):
+                raise case_mod.CaseError(f"phenotypes: {hid!r} is not an HPO id (HP:0001250); find it with hpo_search")
+            if p.get("status") not in (None, *case_mod.PHENO_STATUS):
+                raise case_mod.CaseError(f"phenotypes: status must be one of {', '.join(case_mod.PHENO_STATUS)}")
+        for v in clean.get("variants", []):
+            bad = [k for k in v if k not in case_mod.VARIANT_FIELDS]
+            if bad:
+                raise case_mod.CaseError("unknown variant field(s) " + ", ".join(sorted(bad))
+                                         + "; accepted: " + ", ".join(case_mod.VARIANT_FIELDS))
+            v.update(case_mod.check_variant(**{k: v.get(k) for k in case_mod.VARIANT_FIELDS}))
+        for h in clean.get("hypotheses", []):
+            if not isinstance(h.get("disease"), str) or not h["disease"].strip():
+                raise case_mod.CaseError(f"hypotheses: disease must be a non-empty string, got {h.get('disease')!r}")
+            if h.get("status") not in (None, *case_mod.HYP_STATUS):
+                raise case_mod.CaseError(f"hypotheses: status must be one of {', '.join(case_mod.HYP_STATUS)}")
+            h["_ids"] = _ids_map(h.get("ids"), f"hypotheses[{h['disease']}].ids")
+            for field in ("support", "against"):
+                h[f"_{field}"] = case_mod.check_evidence_ids(h.get(field), f"hypotheses[{h['disease']}].{field}",
+                                                             known_evidence)
+        for t in clean.get("leads", []):
+            if not isinstance(t.get("name"), str) or not t["name"].strip():
+                raise case_mod.CaseError(f"leads: name must be a non-empty string, got {t.get('name')!r}")
+            if t.get("kind") not in case_mod.LEAD_KINDS:
+                raise case_mod.CaseError(f"leads[{t['name']}]: kind must be one of {', '.join(case_mod.LEAD_KINDS)}")
+            t["_evidence"] = case_mod.check_evidence_ids(t.get("evidence"), f"leads[{t['name']}].evidence",
+                                                         known_evidence)
+            t["_ids"] = _ids_map(t.get("ids"), f"leads[{t['name']}].ids")
+        for a in clean.get("acmg", []):
+            if not str(a.get("variant_id") or "").strip():
+                raise case_mod.CaseError("acmg: variant_id is required (v1, v2 … as case_status lists them)")
+            a["_codes"] = case_mod.str_list(a.get("codes"), f"acmg[{a.get('variant_id')}].codes")
+            if not a["_codes"]:
+                raise case_mod.CaseError(f"acmg[{a.get('variant_id')}]: codes must list the ACMG codes you justified")
+        for r in clean.get("remove", []):
+            if r.get("kind") not in case_mod.REMOVE_KINDS:
+                raise case_mod.CaseError("remove: kind must be one of " + ", ".join(case_mod.REMOVE_KINDS))
+            if not str(r.get("id") or "").strip():
+                raise case_mod.CaseError("remove: id is required (v1, h2, t1, or an HPO id)")
+    except case_mod.CaseError as err:
+        raise UsageError(f"{err} — nothing was written") from None
+    return clean
+
+
 def _apply(args: argparse.Namespace) -> Outcome:
-    """Several updates at once (what the mod's case_update tool sends)."""
+    """Several updates at once (what the mod's case_update tool sends).
+
+    Every op is validated first, the HPO labels are verified before the lock is
+    taken, and then all of them are applied to one loaded case and written once.
+    A bad op therefore never leaves the case half-updated.
+    """
     import json as _json
 
     try:
-        ops = _json.loads(args.ops)
+        ops_raw = _json.loads(args.ops)
     except ValueError as err:
         raise UsageError(f"--ops is not JSON: {err}") from None
-    if not isinstance(ops, dict):
-        raise UsageError("--ops must be a JSON object")
     target = _dir(args)
-    done: Dict[str, Any] = {}
+    case_mod.load(target)  # fail here, before any work, if there is no readable case
+    ops = _check_ops(ops_raw, case_mod.ledger_ids(target))
+
     sources: List[Dict[str, Any]] = []
     warnings: List[str] = []
     errors: List[str] = []
 
-    if ops.get("profile"):
-        try:
-            done["profile"] = case_mod.set_profile(target, **{k: v for k, v in ops["profile"].items() if k in (
-                "title", "role", "language", "sex", "age", "ancestry", "consanguinity")})
-        except case_mod.CaseError as err:
-            errors.append(f"profile: {err}")
-    phenos = ops.get("phenotypes") or []
-    if phenos:
+    # HPO verification is a network call: do it before taking the lock
+    labels: Dict[str, str] = {}
+    if ops.get("phenotypes"):
         from zebra.sources import hpo as hpo_src
 
-        added = []
-        for p in phenos:
-            hid = str(p.get("id", "")).strip()
+        for p in ops["phenotypes"]:
+            hid = str(p["id"]).strip()
+            if hid in labels:
+                continue
             try:
                 term = hpo_src.term(hid)
-            except Exception as err:  # noqa: BLE001
+            except Exception as err:  # noqa: BLE001 - any lookup failure means "not verified"
                 errors.append(f"{hid}: not verified against HPO ({err}); not recorded")
                 continue
             if not term.result.get("name"):
@@ -183,61 +290,58 @@ def _apply(args: argparse.Namespace) -> Outcome:
             if term.result.get("obsolete"):
                 warnings.append(f"{hid} is obsolete (replaced by {term.result.get('replaced_by')}); recorded as given")
             sources.extend(term.sources)
-            try:
-                added.append(case_mod.add_phenotype(target, hid, term.result["name"], status=p.get("status", "present"),
-                                                    onset=p.get("onset"), source=p.get("source"), note=p.get("note")))
-            except case_mod.CaseError as err:
-                errors.append(f"{hid}: {err}")
-        done["phenotypes"] = added
-    for v in ops.get("variants") or []:
-        try:
-            done.setdefault("variants", []).append(case_mod.add_variant(target, **{k: v.get(k) for k in (
-                "gene", "hgvs_c", "hgvs_g", "hgvs_p", "vcf", "assembly", "zygosity", "inheritance",
-                "classification_lab", "source", "description")}))
-        except case_mod.CaseError as err:
-            errors.append(f"variant {v}: {err}")
-    for h in ops.get("hypotheses") or []:
-        ids = {}
-        for pair in h.get("ids") or []:
-            if ":" in str(pair):
-                prefix, value = str(pair).split(":", 1)
-                ids[prefix.upper()] = value
-        try:
-            done.setdefault("hypotheses", []).append(case_mod.add_hypothesis(
-                target, h["disease"], status=h.get("status", "considered"), ids=ids,
-                support=h.get("support"), against=h.get("against"), note=h.get("note")))
-        except (case_mod.CaseError, KeyError) as err:
-            errors.append(f"hypothesis {h}: {err}")
-    for t in ops.get("leads") or []:
-        try:
-            done.setdefault("leads", []).append(case_mod.add_lead(target, t["name"], t["kind"], status=t.get("status"),
-                                                                  evidence=t.get("evidence"), note=t.get("note")))
-        except (case_mod.CaseError, KeyError) as err:
-            errors.append(f"lead {t}: {err}")
-    for a in ops.get("acmg") or []:
-        try:
+            labels[hid] = term.result["name"]
+
+    done: Dict[str, Any] = {}
+    with case_mod.editing(target) as data:
+        if "profile" in ops:
+            done["profile"] = case_mod.apply_profile(data, **ops["profile"])
+        if ops.get("phenotypes") is not None:
+            added = []
+            for p in ops["phenotypes"]:
+                hid = str(p["id"]).strip()
+                if hid not in labels:
+                    continue
+                added.append(case_mod.apply_phenotype(data, hid, labels[hid], status=p.get("status") or "present",
+                                                      onset=p.get("onset"), source=p.get("source"), note=p.get("note")))
+            done["phenotypes"] = added
+        for v in ops.get("variants", []):
+            done.setdefault("variants", []).append(
+                case_mod.apply_variant(data, **{k: v.get(k) for k in case_mod.VARIANT_FIELDS}))
+        for h in ops.get("hypotheses", []):
+            done.setdefault("hypotheses", []).append(case_mod.apply_hypothesis(
+                data, h["disease"], status=h.get("status"), ids=h["_ids"],
+                support=h["_support"], against=h["_against"], note=h.get("note")))
+        for t in ops.get("leads", []):
+            done.setdefault("leads", []).append(case_mod.apply_lead(
+                data, t["name"], t["kind"], status=t.get("status"), evidence=t["_evidence"],
+                note=t.get("note"), ids=t["_ids"]))
+        for a in ops.get("acmg", []):
             from zebra import acmg as acmg_mod
 
-            res = acmg_mod.classify(list(a.get("codes") or []))
-            done.setdefault("acmg", []).append(case_mod.set_acmg(
-                target, str(a["variant_id"]), res["classification"], res["points"],
-                [c["label"] for c in res["codes"]], note=a.get("note")))
-        except (case_mod.CaseError, KeyError, ValueError) as err:
-            errors.append(f"acmg {a}: {err}")
-    for q in ops.get("questions") or []:
-        done["questions"] = case_mod.add_question(target, str(q))
-    for r in ops.get("remove") or []:
-        try:
-            done.setdefault("removed", []).append({**r, "ok": case_mod.remove(target, r["kind"], r["id"])})
-        except (case_mod.CaseError, KeyError) as err:
-            errors.append(f"remove {r}: {err}")
+            try:
+                res = acmg_mod.classify(list(a["_codes"]))
+            except (ValueError, KeyError) as err:
+                errors.append(f"acmg {a.get('variant_id')}: {err}")
+                continue
+            try:
+                done.setdefault("acmg", []).append(case_mod.apply_acmg(
+                    data, str(a["variant_id"]), res["classification"], res["points"],
+                    [c["label"] for c in res["codes"]], note=a.get("note")))
+            except case_mod.CaseError as err:
+                errors.append(f"acmg {a.get('variant_id')}: {err}")
+        for q in ops.get("questions", []):
+            done["questions"] = case_mod.apply_question(data, q)
+        for r in ops.get("remove", []):
+            done.setdefault("removed", []).append({"kind": r["kind"], "id": r["id"],
+                                                   "ok": case_mod.apply_remove(data, r["kind"], r["id"])})
     if errors:
         warnings.extend(errors)
     summary = case_mod.summary(target)
     result = {"applied": done, "errors": errors, "case": {k: summary[k] for k in ("title", "evidence_count")},
               "counts": {"phenotypes": len(summary["phenotypes"]), "variants": len(summary["variants"]),
                          "hypotheses": len(summary["hypotheses"]), "leads": len(summary["therapy_leads"])}}
-    return Outcome(result, sources=sources, warnings=warnings, query={"ops": list(ops)})
+    return Outcome(result, sources=sources, warnings=warnings, query={"ops": sorted(ops)})
 
 
 def register(sub: argparse._SubParsersAction) -> None:
@@ -279,10 +383,23 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--lab-class", dest="lab_class", help="classification on the lab report (P/LP/VUS/LB/B)")
     q.add_argument("--source")
     q.add_argument("--description", help="free text when there is no HGVS (e.g. 'exon 45-50 deletion')")
+    q.add_argument("--kind", choices=case_mod.VARIANT_KINDS, default="small",
+                   help="small (SNV/indel, default), cnv (CMA/CNV-seq), exon_cnv (MLPA exon del/dup), "
+                        "copy_number (SMN1/SMN2), repeat_expansion")
+    q.add_argument("--region", help="cnv: 15:23000000-28500000 (with --assembly)")
+    q.add_argument("--iscn", help="cnv: the ISCN string as the report writes it")
+    q.add_argument("--cnv-type", dest="cnv_type", choices=case_mod.CNV_TYPES, help="gain/loss as reported")
+    q.add_argument("--copy-number", dest="copy_number", type=int, help="copy number as reported (CNV, SMN1/SMN2)")
+    q.add_argument("--exons", help="exon_cnv: 45-50, or 7 (numbering is the report's transcript)")
+    q.add_argument("--genes", nargs="*", help="genes the finding spans, as the report names them")
+    q.add_argument("--motif", help="repeat_expansion: CGG, CAG …")
+    q.add_argument("--repeats", help="repeat_expansion: the count or range as reported")
+    q.add_argument("--method", help="how it was measured (CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR, …)")
 
     q = add("add-hypothesis", _add_hypothesis, "add or update a diagnostic hypothesis", positional_dir=False)
     q.add_argument("disease")
-    q.add_argument("--status", choices=case_mod.HYP_STATUS, default="considered")
+    q.add_argument("--status", choices=case_mod.HYP_STATUS, default=None,
+                   help="leading/considered/excluded/confirmed; omitted keeps the status it already has")
     q.add_argument("--id", dest="ids", action="append", help="ORPHA:33069 / OMIM:607208 / MONDO:0100135 (repeatable)")
     q.add_argument("--support", nargs="*", help="evidence ids from the ledger (E3 E7)")
     q.add_argument("--against", nargs="*")
@@ -292,7 +409,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("name")
     q.add_argument("--kind", choices=case_mod.LEAD_KINDS, required=True)
     q.add_argument("--status")
-    q.add_argument("--evidence", nargs="*")
+    q.add_argument("--evidence", nargs="*", help="evidence ids from the ledger (E3 E7)")
+    q.add_argument("--id", dest="ids", action="append", help="NCT04006210 / PMID:28919360 (repeatable)")
     q.add_argument("--note")
 
     q = add("add-question", _add_question, "add an open question for the care team", positional_dir=False)

@@ -35,7 +35,7 @@ def attempt(label: str, fn: Callable[[], T], warnings: List[str]) -> Optional[T]
         return fn()
     except SourceError as err:
         warnings.append(f"{label} unavailable: {err.message} (HTTP {err.status or '-'})")
-    except (KeyError, ValueError, TypeError, IndexError) as err:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError) as err:
         warnings.append(f"{label}: unexpected response shape ({type(err).__name__}: {err})")
     return None
 

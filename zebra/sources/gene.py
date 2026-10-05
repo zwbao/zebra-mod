@@ -9,12 +9,16 @@ Each part runs through zebra.core.attempt: a failing source becomes a warning.
 
 from __future__ import annotations
 
+import re
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from zebra.core import Outcome, UsageError, attempt
-from zebra.http import get_json, source_record
+from zebra.core import Outcome, UsageError
+from zebra.http import get_json
+from zebra.sources import attempt
+from zebra.sources import record as source_record
+from zebra.sources import validated_json
 from zebra.sources import clingen, ensembl, gnomad, panelapp, uniprot
 
 HGNC = "https://rest.genenames.org"
@@ -37,31 +41,65 @@ def parse_hgnc(doc: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+# A gene symbol as HGNC spells them: letters, digits, and `-`, `.`, `_`, `@`
+# inside. No spaces and no `/`, so a multi-word phrase or a path fragment is
+# refused before any request (F15): `gene "../search/symbol/SCN1A"` used to
+# build a whole card for the symbol `../SEARCH/SYMBOL/SCN1A`, and the `/`
+# reached other HGNC and PanelApp endpoints.
+SYMBOL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._@-]{0,30}$")
+
+
+def check_symbol(symbol: str) -> str:
+    """The symbol, stripped, or a UsageError saying why it cannot be one."""
+    sym = (symbol or "").strip()
+    if not sym:
+        raise UsageError("give a gene symbol, e.g. SCN1A")
+    if not SYMBOL_RE.match(sym):
+        why = ("it contains a space, so it is not one symbol" if " " in sym or "\t" in sym else
+               "it contains a character HGNC symbols do not use" if re.search(r"[^A-Za-z0-9._@-]", sym) else
+               "it is longer than any HGNC symbol")
+        raise UsageError(f"{sym!r} is not a gene symbol: {why}. Give one HGNC symbol "
+                         "(letters and digits, optionally with - . _ @), e.g. SCN1A. "
+                         "For a disease name use `zebra disease`, for a variant `zebra variant`")
+    return sym
+
+
 def _hgnc_get(path: str, label: str):
-    resp = get_json(f"{HGNC}/{path}", source="HGNC", cache_ttl=30 * 86400)
-    return resp, (resp.json().get("response") or {})
+    resp = get_json(f"{HGNC}/{path}", source="HGNC", cache_ttl=30 * 86400, ok_statuses=(200, 404))
+    if resp.status == 404:
+        raise UsageError(f"HGNC has no record for {label!r} (rest.genenames.org answered 404): "
+                         "check the symbol")
+    return resp, (validated_json(resp, "HGNC", require="response").get("response") or {})
 
 
 def hgnc(symbol: str) -> Outcome:
-    """Approved symbol record; a previous symbol or a unique alias is followed with a warning."""
-    sym = symbol.strip()
-    q = urllib.parse.quote(sym)
+    """Approved symbol record; a previous symbol or a unique alias is followed with a warning.
+
+    Previous symbols and aliases are resolved with HGNC's `fetch/<field>/<value>`
+    endpoint, which matches the field exactly. The `search/<field>/<value>`
+    endpoint is a Solr text search: `search/prev_symbol/"SCN1A extra"` scores
+    ESPL1, GSDMC and SH3GL1 (verified live 2026-10-06), and reading that as an
+    answer produced the untrue claim that "SCN1A extra is a previous symbol of
+    several genes" (F15). `fetch` returns 0 docs for the same query.
+    """
+    sym = check_symbol(symbol)
+    q = urllib.parse.quote(sym, safe="")
     resp, body = _hgnc_get(f"fetch/symbol/{q}", sym)
     sources = [source_record("HGNC", sym, resp)]
     if body.get("numFound"):
         rec = parse_hgnc(body["docs"][0])
         return Outcome(rec, sources=sources)
     for field, what in (("prev_symbol", "a previous symbol"), ("alias_symbol", "an alias")):
-        resp2, body2 = _hgnc_get(f"search/{field}/{q}", sym)
-        sources.append(source_record("HGNC search", f"{field}:{sym}", resp2))
+        resp2, body2 = _hgnc_get(f"fetch/{field}/{q}", sym)
+        sources.append(source_record("HGNC exact-field fetch", f"{field}={sym}", resp2))
         docs = body2.get("docs") or []
         if len(docs) == 1:
             new = docs[0]["symbol"]
-            resp3, body3 = _hgnc_get(f"fetch/symbol/{urllib.parse.quote(new)}", new)
+            resp3, body3 = _hgnc_get(f"fetch/symbol/{urllib.parse.quote(new, safe='')}", new)
             sources.append(source_record("HGNC", new, resp3))
             if body3.get("numFound"):
                 return Outcome(parse_hgnc(body3["docs"][0]), sources=sources,
-                               warnings=[f"{sym} is {what} of {new} (HGNC); showing {new}"])
+                               warnings=[f"{sym} is {what} of {new} (HGNC exact {field} match); showing {new}"])
         elif len(docs) > 1:
             cands = ", ".join(f"{d['symbol']} ({d['hgnc_id']})" for d in docs[:10])
             raise UsageError(f"{sym} is {what} of several genes: {cands} — give the approved symbol")
@@ -152,9 +190,12 @@ def _protein(acc: Optional[str], symbol: str) -> Outcome:
 
 
 def card(symbol: str) -> Outcome:
-    sym = symbol.strip()
-    if not sym:
-        raise UsageError("give a gene symbol, e.g. SCN1A")
+    # F15: the shape of the symbol is checked before any request, and a
+    # UsageError from HGNC (bad symbol) is NOT swallowed into "HGNC
+    # unavailable" — a card built for a symbol no database knows is worse than
+    # no card, because every later section then reports "nothing found" for a
+    # gene that does not exist.
+    sym = check_symbol(symbol)
     warnings: List[str] = []
     sources: List[Dict[str, Any]] = []
     ident = attempt("HGNC", lambda: hgnc(sym), warnings)
@@ -164,6 +205,9 @@ def card(symbol: str) -> Outcome:
         info = ident.result
     else:
         info = {"symbol": sym.upper(), "hgnc_id": None, "note": "HGNC unavailable: symbol not verified"}
+        warnings.append(f"HGNC could not be reached, so {sym} is an unverified symbol: every section below was "
+                        "queried with it as given, and an empty section may mean the symbol is wrong rather than "
+                        "that there is nothing to report")
     s = info["symbol"]
     hid = info.get("hgnc_id")
     acc = (info.get("uniprot_ids") or [None])[0]

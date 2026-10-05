@@ -10,7 +10,8 @@ import urllib.parse
 from typing import Any, Dict, List
 
 from zebra.core import Outcome
-from zebra.http import get_json, source_record
+from zebra.http import get_json
+from zebra.sources import record as source_record
 
 HOSTS = {
     "GE": ("PanelApp (Genomics England)", "https://panelapp.genomicsengland.co.uk"),

@@ -7,12 +7,12 @@ Status: `[ ]` open · `[x]` fixed in this tree · `[>]` deliberately deferred wi
 ## P0 — wrong result, unsafe statement, data leak, or a blocked core user
 
 ### Scientific correctness
-- [ ] **S1** `acmg.py` BA1 fires on the gnomAD point estimate with no filtering AF and no exception list → HFE p.Cys282Tyr (ClinVar Pathogenic) was called stand-alone Benign. Require faf95 (or AN ≥ 2000 and the grpmax estimate), and never offer BA1 for a variant with a ClinVar P/LP assertion without saying so.
-- [ ] **S2** `acmg.py` BP4 offered for missense from SpliceAI alone; Walker 2023 allows that only once protein impact is excluded.
+- [x] **S1** `acmg.py` BA1 fires on the gnomAD point estimate with no filtering AF and no exception list → HFE p.Cys282Tyr (ClinVar Pathogenic) was called stand-alone Benign. Require faf95 (or AN ≥ 2000 and the grpmax estimate), and never offer BA1 for a variant with a ClinVar P/LP assertion without saying so.
+- [x] **S2** `acmg.py` BP4 offered for missense from SpliceAI alone; Walker 2023 allows that only once protein impact is excluded.
 - [ ] **S3** `vcf.py` gnomAD allele **counts** parsed as frequencies (`"af" in "afr"`), so every annotated variant was dropped and triage answered "no candidate".
-- [ ] **S4** `sources/variant.py` + `commands/acmg.py`: the BS1 branch was unreachable — `max_credible_af` was never passed, so a variant too common to be fully penetrant never got BS1.
-- [ ] **S5** `acmg.py` `BP4_VeryStrong` alone classified a variant Benign from one computational score (Pejaver 2022: predictors alone cannot classify).
-- [ ] **S6** `s2f.py` emitted "≤ 0.1 supports no effect (BP4/BP7)" for every variant class, handing BP7 to missense variants.
+- [x] **S4** `sources/variant.py` + `commands/acmg.py`: the BS1 branch was unreachable — `max_credible_af` was never passed, so a variant too common to be fully penetrant never got BS1.
+- [x] **S5** `acmg.py` `BP4_VeryStrong` alone classified a variant Benign from one computational score (Pejaver 2022: predictors alone cannot classify).
+- [x] **S6** `s2f.py` emitted "≤ 0.1 supports no effect (BP4/BP7)" for every variant class, handing BP7 to missense variants.
 - [ ] **S7** `sources/gnomad.py` grpmax dropped the Middle Eastern group outside its proper scope, under-reporting founder alleles (MEFV p.Met694Val).
 
 ### Engineering
@@ -25,7 +25,7 @@ Status: `[ ]` open · `[x]` fixed in this tree · `[>]` deliberately deferred wi
 - [ ] **E7** `sources/variant.py`: a variant given in the wrong genome build got a fabricated allele, then read as "absent from gnomAD at a covered site" (feeding PM2) and "no ClinVar record".
 - [ ] **E8** `NCBI_API_KEY` was placed in URLs that flow into sources, ledger rows and reports.
 - [ ] **E9** Without local HPO files, `hpo_search "seizure"` never returned HP:0001250.
-- [ ] **E10** `stats km` hung forever on a NaN time or non-0/1 event codes, and miscounted tied events.
+- [x] **E10** `stats km` hung forever on a NaN time or non-0/1 event codes, and miscounted tied events.
 - [ ] **E11** `vcf triage` filtered out common pathogenic recessive alleles (an F508del homozygote got "no candidate").
 
 ### Product and safety
@@ -57,25 +57,25 @@ Status: `[ ]` open · `[x]` fixed in this tree · `[>]` deliberately deferred wi
 - [ ] **F15** `gene` built a card for a junk symbol, and multi-word input produced a false "previous symbol" claim.
 - [ ] **F16** Triage never attached ClinVar significance to indels.
 - [ ] **F17** NaN/Infinity were emitted as invalid JSON, and `faf95 nan` produced a wrong verdict.
-- [ ] **F18** `stats` accepted out-of-range inputs (negative frequencies, penetrance 1.5) and showed raw tracebacks.
-- [ ] **F19** `stats denovo` p-values lost precision or underflowed to 1.0.
+- [x] **F18** `stats` accepted out-of-range inputs (negative frequencies, penetrance 1.5) and showed raw tracebacks.
+- [x] **F19** `stats denovo` p-values lost precision or underflowed to 1.0.
 - [ ] **F20** `s2f_predict` ran models sequentially at 540 s each under a 600 s cap, losing every result and orphaning the child process.
 - [ ] **F21** A truncated `.vcf.gz` produced a traceback with no envelope.
 - [ ] **F22** Malformed VCF data lines were dropped silently.
-- [ ] **F23** `acmg suggest` could offer BP4 alongside PP3, BP4 with no splice prediction, or two PP3s.
-- [ ] **F24** `acmg suggest` dropped BA1/BS1 silently when the allele number or the maximum credible AF was missing.
-- [ ] **F25** PM2 came from AC = 0 with no coverage check; no PM2 for dominant disorders unless AC was exactly 0.
-- [ ] **F26** Any code could be modified to any strength (`PP1_VeryStrong` → 8 points), contradicting zebra's own segregation ceiling.
-- [ ] **F27** The PM1 + PP3 cap was not applied to the 2015 combining-rule reading.
-- [ ] **F28** Segregation → PP1 under-counted against ClinGen's current guidance, and the cited threshold table was not the one implemented; no BS4 at all, though two skills instruct it.
-- [ ] **F29** The HPO excluded-term penalty was documented as a sum and implemented as a maximum; HPOA `NOT` annotations were discarded.
-- [ ] **F30** One editing window was used for both ABE and CBE, with no CBE by-product or guide-independent deamination caveat.
+- [x] **F23** `acmg suggest` could offer BP4 alongside PP3, BP4 with no splice prediction, or two PP3s.
+- [x] **F24** `acmg suggest` dropped BA1/BS1 silently when the allele number or the maximum credible AF was missing.
+- [x] **F25** PM2 came from AC = 0 with no coverage check; no PM2 for dominant disorders unless AC was exactly 0.
+- [x] **F26** Any code could be modified to any strength (`PP1_VeryStrong` → 8 points), contradicting zebra's own segregation ceiling.
+- [x] **F27** The PM1 + PP3 cap was not applied to the 2015 combining-rule reading.
+- [x] **F28** Segregation → PP1 under-counted against ClinGen's current guidance, and the cited threshold table was not the one implemented; no BS4 at all, though two skills instruct it.
+- [x] **F29** The HPO excluded-term penalty was documented as a sum and implemented as a maximum; HPOA `NOT` annotations were discarded.
+- [x] **F30** One editing window was used for both ABE and CBE, with no CBE by-product or guide-independent deamination caveat.
 - [ ] **F31** Triage: a de novo candidate's compound-heterozygous partner was held to the dominant AF cut-off; missing parental genotypes read as "not carried"; a diploid male X was misread without `--sex`; phase was parsed but unused.
-- [ ] **F32** S2F: the 0.1–0.2 uninformative band was unnamed; the PP3 supporting cap unstated; the ±500 window differs from the calibration's ±4,999; `--mask` help contradicted the thresholds; Pangolin's headline was an undisclosed maximum over tissues; SpliceAI and Pangolin were treated as independent.
+- [x] **F32** S2F: the 0.1–0.2 uninformative band was unnamed; the PP3 supporting cap unstated; the ±500 window differs from the calibration's ±4,999; `--mask` help contradicted the thresholds; Pangolin's headline was an undisclosed maximum over tissues; SpliceAI and Pangolin were treated as independent.
 - [ ] **F33** "Covered site" was judged on mean depth while the fraction over 20× was fetched and ignored.
 - [ ] **F34** The doctrine was unenforced beyond HPO ids and ACMG arithmetic: a non-existent OMIM id, an evidence id with an empty ledger and a "confirmed" status were all accepted without warning.
-- [ ] **F35** Offline phenotype ranking produced large ties broken by id order, and triage used its top 200 genes as a hard filter.
-- [ ] **F36** HPO search was literal: common Chinese lay phrases found nothing or the wrong term; a fresh install returned a raw error for Chinese input.
+- [x] **F35** Offline phenotype ranking produced large ties broken by id order, and triage used its top 200 genes as a hard filter.
+- [x] **F36** HPO search was literal: common Chinese lay phrases found nothing or the wrong term; a fresh install returned a raw error for Chinese input.
 - [ ] **F37** Transcript and build handling: legacy transcript versions errored; a bare `GENE:c.` switched transcript silently; a wrong build produced another gene's card behind one warning.
 - [ ] **F38** Trials: no eligibility criteria or contacts, no ChiCTR, and stale "recruiting" statuses unflagged.
 - [ ] **F39** The family skill asked for patient organisations and expert centres that no source returned; no GeneReviews text, no plain-language source.

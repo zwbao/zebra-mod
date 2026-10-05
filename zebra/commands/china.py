@@ -21,7 +21,7 @@ import unicodedata
 from typing import Any, Dict, List, Optional, Sequence
 
 from zebra.core import Outcome, UsageError
-from zebra.http import source_record
+from zebra.sources import record as source_record
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "china_rare_diseases.json")
 LIST_NAMES = {1: "第一批罕见病目录 (2018)", 2: "第二批罕见病目录 (2023)"}

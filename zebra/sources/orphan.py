@@ -14,7 +14,8 @@ import re
 from typing import Any, Dict, Iterable, List
 
 from zebra.core import Outcome
-from zebra.http import get_json, source_record
+from zebra.http import get_json
+from zebra.sources import record as source_record
 
 EMA_URL = "https://www.ema.europa.eu/en/documents/report/medicines-output-orphan_designations-json-report_en.json"
 _STATUS_ORDER = {"positive": 0}

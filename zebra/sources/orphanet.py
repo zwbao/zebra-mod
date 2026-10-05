@@ -17,10 +17,12 @@ from __future__ import annotations
 import re
 import unicodedata
 import urllib.parse
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from zebra.core import Outcome
-from zebra.http import get_json, source_record
+from zebra.http import get_json
+from zebra.sources import record as source_record
+from zebra.sources import validated_json
 
 BASE = "https://api.orphadata.com"
 CODE_RE = re.compile(r"^(?:ORPHA|ORPHANET)?[:_ ]?(\d+)$", re.I)
@@ -45,9 +47,23 @@ def _results(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def _get(path: str, record: str, label: str, lang: Optional[str] = None):
+    """One Orphadata GET. A miss is a 404 and is returned as data=None, not retried.
+
+    `accept` is deliberately not the bare "application/json" (F12): a name
+    containing `/` makes Orphadata answer an HTML 404, and `zebra.http.request`
+    treats "HTML where JSON was expected" as transient and retries it with
+    backoff even though the status is a 404 it was told to accept — four
+    attempts plus 10.5 s of sleep for a deterministic miss, twice per name,
+    which made `disease "Hyperphenylalaninemia/PKU"` take 62 s and then report
+    the source as unavailable rather than as a miss.
+    """
     params = {"lang": lang} if lang else None
-    resp = get_json(f"{BASE}/{path}", source="Orphadata", params=params, cache_ttl=30 * 86400, ok_statuses=(200, 404))
-    return resp, (resp.json() if resp.status == 200 else None), source_record(label, record, resp)
+    resp = get_json(f"{BASE}/{path}", source="Orphadata", params=params, cache_ttl=30 * 86400,
+                    accept="application/json, */*", ok_statuses=(200, 404))
+    data = None
+    if resp.status == 200:
+        data = validated_json(resp, label)
+    return resp, data, source_record(label, record, resp)
 
 
 # ---------------------------------------------------------------- cross-referencing
@@ -132,14 +148,36 @@ def by_omim(omim: Any, lang: str = "en") -> Outcome:
     return Outcome(rows, sources=[src])
 
 
+_BY_NAME_CACHE: Dict[Tuple[str, str], Outcome] = {}
+
+
 def by_name(name: str, lang: str = "en") -> Outcome:
-    """Orphadata's single closest-name match. Check `name_matches(result, name)` before trusting it."""
-    resp, data, src = _get(f"rd-cross-referencing/orphacodes/names/{urllib.parse.quote(name.strip(), safe='')}",
-                           name, "Orphanet name search", lang)
-    if data is None:
-        return Outcome(None, sources=[src])
-    rows = _results(data)
-    return Outcome(parse_disorder(rows[0]) if rows else None, sources=[src])
+    """Orphadata's single closest-name match. Check `name_matches(result, name)` before trusting it.
+
+    Memoized for the life of the process (F12): `zebra disease <name>` asks for
+    the same name twice (once to resolve, once to offer a closest candidate),
+    and a failure is not cached on disk, so the second call repeated the whole
+    retry budget.
+
+    `/` is replaced by a space before quoting: Orphadata answers a name
+    containing `%2F` with an HTML 404, and no Orphanet preferred term or
+    synonym contains a slash, so a query like "Hyperphenylalaninemia/PKU" can
+    only be a miss as written.
+    """
+    key = (name.strip(), lang)
+    if key in _BY_NAME_CACHE:
+        return _BY_NAME_CACHE[key]
+    asked = name.strip()
+    query = re.sub(r"\s+", " ", asked.replace("/", " ")).strip()
+    resp, data, src = _get(f"rd-cross-referencing/orphacodes/names/{urllib.parse.quote(query, safe='')}",
+                           asked, "Orphanet name search", lang)
+    warnings: List[str] = []
+    if query != asked:
+        warnings.append(f"Orphanet's name endpoint rejects '/' in a name: searched '{query}' instead of '{asked}'")
+    rows = _results(data) if data is not None else []
+    out = Outcome(parse_disorder(rows[0]) if rows else None, sources=[src], warnings=warnings)
+    _BY_NAME_CACHE[key] = out
+    return out
 
 
 def norm_name(text: str) -> str:

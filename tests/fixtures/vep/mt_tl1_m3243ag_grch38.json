@@ -1,0 +1,425 @@
+{
+ "allele_string": "A/G",
+ "assembly_name": "GRCh38",
+ "colocated_variants": [
+  {
+   "allele_string": "A/G/T",
+   "clin_sig": [
+    "not_provided",
+    "likely_pathogenic",
+    "pathogenic"
+   ],
+   "clin_sig_allele": "G:likely_pathogenic;G:pathogenic;T:pathogenic;T:likely_pathogenic;G:pathogenic/likely_pathogenic;G:not_provided",
+   "clin_sig_ref_allele": "A",
+   "end": 3243,
+   "id": "rs199474657",
+   "phenotype_or_disease": 1,
+   "pubmed": [
+    25741868,
+    33785019,
+    16326995,
+    26076356,
+    10699170,
+    20610441,
+    2102678,
+    9243242,
+    20550934,
+    10356136,
+    16950816,
+    1323207,
+    32948182,
+    34135026,
+    32970680,
+    10407850,
+    8723072,
+    1715668,
+    8541865,
+    7714102,
+    7473662,
+    2268345,
+    9619647,
+    9382149,
+    8818955,
+    1360090,
+    8442706,
+    8151636,
+    8603770,
+    9109727,
+    1586140,
+    1315123,
+    7554321,
+    8094200,
+    1284550,
+    9798744,
+    8825603,
+    1684568,
+    8723071,
+    9222976,
+    9874606,
+    37377599,
+    36580209,
+    37998725,
+    10482110,
+    27296531,
+    11320187,
+    19139304
+   ],
+   "seq_region_name": "MT",
+   "start": 3243,
+   "strand": 1,
+   "var_synonyms": {
+    "ClinVar": [
+     "RCV003325938",
+     "RCV002287327",
+     "RCV002285005",
+     "RCV002250458",
+     "RCV001794441",
+     "RCV000626561",
+     "RCV000763623",
+     "RCV004766997",
+     "RCV003984803",
+     "RCV000143997",
+     "RCV000032997",
+     "RCV000022902",
+     "RCV000022901",
+     "RCV000010211",
+     "RCV000010210",
+     "RCV000010209",
+     "RCV000010208",
+     "RCV000010206",
+     "VCV000009589",
+     "RCV000495738",
+     "RCV000224855",
+     "RCV003153872",
+     "RCV000850688",
+     "VCV000689856",
+     "RCV004554593"
+    ],
+    "OMIM": [
+     590050.0001
+    ]
+   }
+  }
+ ],
+ "end": 3243,
+ "id": "NC_012920.1:m.3243A>G",
+ "input": "NC_012920.1:m.3243A>G",
+ "most_severe_consequence": "non_coding_transcript_exon_variant",
+ "seq_region_name": "MT",
+ "start": 3243,
+ "strand": 1,
+ "transcript_consequences": [
+  {
+   "biotype": "protein_coding",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 64,
+   "gene_id": "ENSG00000198888",
+   "gene_symbol": "MT-ND1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7455",
+   "impact": "MODIFIER",
+   "protein_id": "ENSP00000354687",
+   "strand": 1,
+   "transcript_id": "ENST00000361390",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "protein_coding",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 1227,
+   "gene_id": "ENSG00000198763",
+   "gene_symbol": "MT-ND2",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7456",
+   "impact": "MODIFIER",
+   "protein_id": "ENSP00000355046",
+   "strand": 1,
+   "transcript_id": "ENST00000361453",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "protein_coding",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 2661,
+   "gene_id": "ENSG00000198804",
+   "gene_symbol": "MT-CO1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7419",
+   "impact": "MODIFIER",
+   "protein_id": "ENSP00000354499",
+   "strand": 1,
+   "transcript_id": "ENST00000361624",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "protein_coding",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 4343,
+   "gene_id": "ENSG00000198712",
+   "gene_symbol": "MT-CO2",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7421",
+   "impact": "MODIFIER",
+   "protein_id": "ENSP00000354876",
+   "strand": 1,
+   "transcript_id": "ENST00000361739",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "cdna_end": 14,
+   "cdna_start": 14,
+   "consequence_terms": [
+    "non_coding_transcript_exon_variant"
+   ],
+   "exon": "1/1",
+   "gene_id": "ENSG00000209082",
+   "gene_symbol": "MT-TL1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7490",
+   "hgvsc": "ENST00000386347.1:n.14A>G",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000386347",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 2596,
+   "gene_id": "ENSG00000210049",
+   "gene_symbol": "MT-TF",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7481",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000387314",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 1573,
+   "gene_id": "ENSG00000210077",
+   "gene_symbol": "MT-TV",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7500",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000387342",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_rRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 14,
+   "gene_id": "ENSG00000210082",
+   "gene_symbol": "MT-RNR2",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7471",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000387347",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 1020,
+   "gene_id": "ENSG00000210100",
+   "gene_symbol": "MT-TI",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7488",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000387365",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 1086,
+   "gene_id": "ENSG00000210107",
+   "gene_symbol": "MT-TQ",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7495",
+   "impact": "MODIFIER",
+   "strand": -1,
+   "transcript_id": "ENST00000387372",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 1159,
+   "gene_id": "ENSG00000210112",
+   "gene_symbol": "MT-TM",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7492",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000387377",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 2269,
+   "gene_id": "ENSG00000210117",
+   "gene_symbol": "MT-TW",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7501",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000387382",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 2344,
+   "gene_id": "ENSG00000210127",
+   "gene_symbol": "MT-TA",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7475",
+   "impact": "MODIFIER",
+   "strand": -1,
+   "transcript_id": "ENST00000387392",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 2414,
+   "gene_id": "ENSG00000210135",
+   "gene_symbol": "MT-TN",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7493",
+   "impact": "MODIFIER",
+   "strand": -1,
+   "transcript_id": "ENST00000387400",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 2518,
+   "gene_id": "ENSG00000210140",
+   "gene_symbol": "MT-TC",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7477",
+   "impact": "MODIFIER",
+   "strand": -1,
+   "transcript_id": "ENST00000387405",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 2583,
+   "gene_id": "ENSG00000210144",
+   "gene_symbol": "MT-TY",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7502",
+   "impact": "MODIFIER",
+   "strand": -1,
+   "transcript_id": "ENST00000387409",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 4203,
+   "gene_id": "ENSG00000210151",
+   "gene_symbol": "MT-TS1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7497",
+   "impact": "MODIFIER",
+   "strand": -1,
+   "transcript_id": "ENST00000387416",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_tRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "upstream_gene_variant"
+   ],
+   "distance": 4275,
+   "gene_id": "ENSG00000210154",
+   "gene_symbol": "MT-TD",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7478",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000387419",
+   "variant_allele": "G"
+  },
+  {
+   "biotype": "Mt_rRNA",
+   "canonical": 1,
+   "consequence_terms": [
+    "downstream_gene_variant"
+   ],
+   "distance": 1642,
+   "gene_id": "ENSG00000211459",
+   "gene_symbol": "MT-RNR1",
+   "gene_symbol_source": "HGNC",
+   "hgnc_id": "HGNC:7470",
+   "impact": "MODIFIER",
+   "strand": 1,
+   "transcript_id": "ENST00000389680",
+   "variant_allele": "G"
+  }
+ ],
+ "variant_class": "SNV"
+}

@@ -16,7 +16,8 @@ import urllib.parse
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 from zebra.core import Outcome
-from zebra.http import get_json, post_json, source_record
+from zebra.http import get_json, post_json
+from zebra.sources import record as source_record
 
 BASE = "https://api-v3.monarchinitiative.org/v3/api"
 WEB = "https://monarchinitiative.org"

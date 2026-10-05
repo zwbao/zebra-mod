@@ -10,7 +10,8 @@ from typing import Any, Dict, List
 
 from zebra import hpo_local
 from zebra.core import Outcome, UsageError, attempt
-from zebra.http import USER_AGENT, _opener, source_record
+from zebra.http import USER_AGENT, _opener
+from zebra.sources import record as source_record
 
 
 def _fetch(args: argparse.Namespace) -> Outcome:
@@ -72,9 +73,14 @@ def _search(args: argparse.Namespace) -> Outcome:
 
     out = hpo_src.search(text, limit=args.limit)
     if idx is None:
-        warnings.append("local HPO files not present (zebra hpo fetch): searched the HPO web API")
+        warnings.append("local HPO files not present: searched the web (EBI OLS4 over HPO) and re-ranked the hits "
+                        "exact-label-first. Run `zebra hpo fetch` once (~80 MB) for the full release, which also "
+                        "searches Chinese labels and curated lay phrases")
     out.warnings.extend(warnings)
-    out.text = "\n".join(f"{h['id']}\t{h['label']}" for h in out.result["hits"]) or "no match"
+    out.text = "\n".join(
+        f"{h['id']}\t{h['label']}"
+        + (f"\t(matched: {h['matched']} [{h['matched_on']}])" if h.get("matched") and h["matched"] != h["label"] else "")
+        for h in out.result["hits"]) or "no match"
     out.query = {"text": text}
     return out
 

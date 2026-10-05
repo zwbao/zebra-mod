@@ -83,7 +83,7 @@ def parse_sources(text: Optional[str]) -> List[str]:
 
 
 def run_local(idx: Any, present: Sequence[str], excluded: Sequence[str], top: int) -> Outcome:
-    from zebra.http import source_record
+    from zebra.sources import record as source_record
 
     res = hpo_local.rank(idx, present, excluded, top=top, db=("OMIM", "ORPHA"))
     diseases = []

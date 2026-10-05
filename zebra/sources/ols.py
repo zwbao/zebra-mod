@@ -14,7 +14,8 @@ import urllib.parse
 from typing import Any, Dict, List, Optional, Sequence
 
 from zebra.core import Outcome
-from zebra.http import get_json, source_record
+from zebra.http import get_json
+from zebra.sources import record as source_record
 
 OLS = "https://www.ebi.ac.uk/ols4/api"
 OXO = "https://www.ebi.ac.uk/spot/oxo/api"

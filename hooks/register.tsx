@@ -516,8 +516,9 @@ function helpText(r: Ready | null, active: string | null): string {
     '   /zebra doctor              check Python, data files, API reachability and keys',
     '   /zebra close               no active case',
     '',
-    '   Skills: /zebra-mod:zebra-start (start here), zebra-intake, zebra-diagnose, zebra-variant,',
-    '   zebra-reanalysis, zebra-s2f, zebra-therapy, zebra-stats, zebra-literature, zebra-family, zebra-report',
+    '   Skills: /zebra-mod:zebra-start (start here), zebra-safety (urgent red flags, drug and',
+    '   anaesthesia hazards), zebra-intake, zebra-diagnose, zebra-variant, zebra-reanalysis,',
+    '   zebra-s2f, zebra-therapy, zebra-stats, zebra-literature, zebra-family, zebra-report',
   ].join('\n')
 }
 

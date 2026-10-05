@@ -26,16 +26,15 @@ POINTS_TO_STRENGTH = ((8, "VeryStrong"), (4, "Strong"), (2, "Moderate"), (1, "Su
 
 def _prob(name: str, value: Any, lo: float = 0.0, hi: float = 1.0,
           lo_open: bool = False, hi_open: bool = False) -> float:
+    bounds = f"{'(' if lo_open else '['}{lo:g}, {hi:g}{')' if hi_open else ']'}"
     try:
         v = float(value)
     except (TypeError, ValueError):
-        raise ValueError(f"{name} must be a number in {'(' if lo_open else '['}{lo}, {hi}{')' if hi_open else ']'}") from None
+        raise ValueError(f"{name} must be a number in {bounds}") from None
     if not math.isfinite(v):
         raise ValueError(f"{name} must be a finite number, not {value!r}")
     if v < lo or (lo_open and v == lo) or v > hi or (hi_open and v == hi):
-        raise ValueError(
-            f"{name} must be in {'(' if lo_open else '['}{lo}, {hi}{')' if hi_open else ']'}, got {v!r}"
-        )
+        raise ValueError(f"{name} must be in {bounds}, got {v:g}")
     return v
 
 
@@ -331,33 +330,157 @@ def recessive_from_alleles(allele_freqs: Sequence[float]) -> Dict[str, Any]:
 
 # ---------------------------------------------------------------- segregation
 
-def segregation(ad_meioses: int = 0, ar_affected_sibs: int = 0, ar_unaffected_sibs: int = 0) -> Dict[str, Any]:
-    """Cosegregation likelihood ratio by counting meioses (Jarvik & Browning 2016, AJHG 98:1077), full penetrance.
+# ClinGen's current guidance for PP1/BS4: Biesecker, Byrne, Harrison, Pesaran, Schaffer,
+# Shirts, Tavtigian & Rehm, "ClinGen guidance for use of the PP1/BS4 co-segregation and
+# PP4 phenotype specificity criteria", AJHG 111:24-38 (2024), PMID 38103548, Table 3 --
+# Bayesian points per co-segregating individual. This supersedes the older route of
+# flooring a Jarvik & Browning 2016 likelihood ratio onto the Tavtigian 2018 odds, which
+# is 1-2 points short at every count because its supporting odds path is 2.08 rather than
+# the 2.0 Biesecker 2024 adopts ("we suggest that the Bayesian system be shifted to a
+# basis where the Odds path of a supporting piece of evidence be 2.0:1").
+SEGREGATION_POINTS = {
+    "ar_affected_sibs": 2.0,      # Table 3, "Autosomal-recessive affected"
+    "ar_unaffected_sibs": 0.4,    # Table 3, "Autosomal-recessive unaffected"
+    "ad_meioses": 1.0,            # Table 3, "Autosomal-dominant affected and unaffected"
+    "xlr_male_meioses": 1.0,      # Table 3, "X-linked-recessive male affected and unaffected"
+}
+# Table 2 footnote / Table 3 footnote c: all locus evidence (PP1 and PP4 combined) for one
+# allele is capped at 5.0 points.
+SEGREGATION_POINT_CAP = 5.0
+SEGREGATION_SOURCE = (
+    "Biesecker et al. 2024, AJHG 111:24-38 (PMID 38103548), Table 3: 1.0 point per "
+    "autosomal-dominant or X-linked-recessive-male co-segregating individual, 2.0 per "
+    "autosomal-recessive affected relative, 0.4 per autosomal-recessive unaffected relative; "
+    "all locus evidence (PP1 + PP4) capped at 5.0 points per allele (Table 2 footnote, "
+    "Table 3 footnote c). Read back as an ACMG strength on the Tavtigian et al. 2020 point "
+    "scale (1 Supporting, 2 Moderate, 4 Strong); PP1 and BS4 are not applied above Strong."
+)
 
-    Dominant: each informative meiosis that transmits variant with disease
-    (affected relative beyond the proband who carries it, or an obligate
-    carrier link) halves the chance of chance cosegregation: LR = 2^m.
-    Recessive: each additional affected sibling with the same two alleles adds
-    LR 4; each unaffected sibling without that genotype adds 4/3.
-    Mapped to ACMG PP1 strength with Tavtigian 2018 odds (Supporting >= 2.08,
-    Moderate >= 4.33, Strong >= 18.7). Reduced penetrance or phenocopies lower
-    the LR: run a full likelihood model before leaning on Strong.
+
+def _points_to_strength(points: float, ceiling: str = "Strong") -> Optional[str]:
+    """The strongest ACMG tier `points` reaches on the Tavtigian 2020 scale, up to `ceiling`.
+
+    PP1 and BS4 are not applied above Strong (Biesecker et al. 2024 Table 3 stops at 4
+    points), which is why `ceiling` defaults to Strong rather than VeryStrong.
     """
-    lr = (2.0 ** ad_meioses) * (4.0 ** ar_affected_sibs) * ((4.0 / 3.0) ** ar_unaffected_sibs)
-    strength = None
-    for name in ("VeryStrong", "Strong", "Moderate", "Supporting"):
-        if lr >= ODDS_PATH[name]:
-            strength = name
-            break
-    if strength == "VeryStrong":
-        strength = "Strong"  # PP1 is not applied above Strong
+    cap = {name: pts for pts, name in POINTS_TO_STRENGTH}[ceiling]
+    for pts, name in POINTS_TO_STRENGTH:  # 8, 4, 2, 1
+        if pts > cap:
+            continue
+        if points + 1e-9 >= pts:
+            return name
+    return None
+
+
+def segregation(ad_meioses: int = 0, ar_affected_sibs: int = 0, ar_unaffected_sibs: int = 0,
+                xlr_male_meioses: int = 0, nonsegregations: int = 0,
+                unaffected_carriers: int = 0, full_penetrance: bool = False) -> Dict[str, Any]:
+    """Co-segregation evidence for PP1, and non-segregation evidence for BS4.
+
+    Pathogenic direction (PP1), counted as Bayesian points from Biesecker et al. 2024
+    Table 3 (see SEGREGATION_SOURCE):
+      `ad_meioses`          informative meioses in a dominant pedigree, 1.0 point each
+      `xlr_male_meioses`    informative male meioses, X-linked recessive, 1.0 point each
+      `ar_affected_sibs`    additional affected relatives with the same biallelic
+                            genotype, 2.0 points each
+      `ar_unaffected_sibs`  unaffected relatives without that genotype, 0.4 points each
+                            (only counted when `full_penetrance` is asserted, because
+                            Biesecker 2024 is explicit: "Only count unaffected
+                            individuals if disease is fully penetrant")
+
+    Benign direction (BS4):
+      `nonsegregations`     affected relatives who do NOT carry the variant
+      `unaffected_carriers` unaffected carriers in a fully penetrant dominant family
+
+    The Jarvik & Browning 2016 (AJHG 98:1077) likelihood ratio -- 2 per dominant meiosis,
+    4 per affected sib, 4/3 per unaffected sib -- is still reported, in log space so large
+    pedigrees cannot overflow, but the PP1 strength now comes from the ClinGen points.
+
+    Two rules from the same guidance that this function cannot enforce for you, because
+    it never sees the pedigree: unaffected PARENTS must not be counted (they establish
+    phase), and PP1 and PP4 are related, so their points are capped together at 5.0.
+    """
+    ad_meioses = _count("ad_meioses", ad_meioses)
+    ar_affected_sibs = _count("ar_affected_sibs", ar_affected_sibs)
+    ar_unaffected_sibs = _count("ar_unaffected_sibs", ar_unaffected_sibs)
+    xlr_male_meioses = _count("xlr_male_meioses", xlr_male_meioses)
+    nonsegregations = _count("nonsegregations", nonsegregations)
+    unaffected_carriers = _count("unaffected_carriers", unaffected_carriers)
+    notes: List[str] = []
+
+    if ar_unaffected_sibs and not full_penetrance:
+        raise ValueError(
+            "ar_unaffected_sibs counts unaffected relatives, which Biesecker et al. 2024 permits only under full "
+            "penetrance (\"Only count unaffected individuals if disease is fully penetrant\"); pass "
+            "full_penetrance=True (CLI: --full-penetrance) to assert it, or set ar_unaffected_sibs to 0"
+        )
+    if unaffected_carriers and not full_penetrance:
+        raise ValueError(
+            "unaffected_carriers is BS4 evidence only in a fully penetrant dominant family; pass "
+            "full_penetrance=True (CLI: --full-penetrance) to assert it, or set unaffected_carriers to 0"
+        )
+
+    raw_points = (
+        SEGREGATION_POINTS["ad_meioses"] * ad_meioses
+        + SEGREGATION_POINTS["xlr_male_meioses"] * xlr_male_meioses
+        + SEGREGATION_POINTS["ar_affected_sibs"] * ar_affected_sibs
+        + SEGREGATION_POINTS["ar_unaffected_sibs"] * ar_unaffected_sibs
+    )
+    points = min(raw_points, SEGREGATION_POINT_CAP)
+    if raw_points > SEGREGATION_POINT_CAP:
+        notes.append(
+            f"co-segregation points {raw_points:.1f} capped at {SEGREGATION_POINT_CAP} — all locus evidence "
+            f"(PP1 and PP4 together) is capped per allele (Biesecker et al. 2024, Table 2/3 footnotes). If PP4 "
+            f"is also being applied, the two share this budget."
+        )
+    # Same per-individual weight read in the benign direction. Biesecker 2024 publishes the
+    # point table for the pathogenic direction only and treats BS4 as the mirror criterion;
+    # zebra applies the dominant weight (1.0 point) per non-segregating observation and says
+    # so rather than inventing a benign table.
+    benign_raw = 1.0 * (nonsegregations + unaffected_carriers)
+    benign_points = min(benign_raw, SEGREGATION_POINT_CAP)
+
+    pp1 = _points_to_strength(points) if points > 0 else None
+    bs4 = _points_to_strength(benign_points) if benign_points > 0 else None
+    if pp1 and bs4:
+        notes.append(
+            "both co-segregation and non-segregation were counted in the same family: PP1 and BS4 are opposite "
+            "readings of one pedigree and cannot both be applied. Build a full likelihood model instead."
+        )
+    if not full_penetrance:
+        notes.append("reduced penetrance or phenocopies lower the evidence in both directions; this count assumes neither.")
+
+    # log space: 2^m * 4^a * (4/3)^u overflows for m ~ 1024 if evaluated directly.
+    lod = (ad_meioses * math.log10(2.0) + xlr_male_meioses * math.log10(2.0)
+           + ar_affected_sibs * math.log10(4.0) + ar_unaffected_sibs * math.log10(4.0 / 3.0))
+    lr: Optional[float] = None
+    if lod < 300:
+        lr = 10.0 ** lod
+    else:
+        notes.append(f"the Jarvik & Browning likelihood ratio is 10^{lod:.1f}, beyond double precision; only the LOD is reported")
+
     return {
-        "model": "counting meioses, full penetrance, no phenocopies (Jarvik & Browning 2016)",
+        "model": "ClinGen co-segregation points. " + SEGREGATION_SOURCE,
+        "points": round(points, 2),
+        "points_uncapped": round(raw_points, 2),
+        "points_cap": SEGREGATION_POINT_CAP,
+        "pp1_strength": pp1,
+        "pp1_code": None if pp1 is None else ("PP1" if pp1 == "Supporting" else f"PP1_{pp1}"),
+        "bs4_points": round(benign_points, 2),
+        "bs4_strength": bs4,
+        "bs4_code": None if bs4 is None else ("BS4" if bs4 == "Supporting" else f"BS4_{bs4}"),
+        "bs4_basis": ("Biesecker et al. 2024 Table 3 publishes points for co-segregation only; the same "
+                      "per-individual weight (1.0 point) is applied here in the benign direction for BS4, which "
+                      "is zebra's reading, not a published table"),
         "likelihood_ratio": lr,
-        "lod": math.log10(lr) if lr > 0 else None,
-        "pp1_strength": strength,
-        "pp1_code": None if strength is None else ("PP1" if strength == "Supporting" else f"PP1_{strength}"),
-        "thresholds": {k: v for k, v in ODDS_PATH.items() if k != "VeryStrong"},
+        "lod": lod,
+        "likelihood_ratio_model": ("Jarvik & Browning 2016, AJHG 98:1077: 2 per dominant meiosis, 4 per affected "
+                                   "sib, 4/3 per unaffected sib — reported for continuity; the PP1 strength above "
+                                   "comes from the ClinGen points, which run 1-2 points higher at every count"),
+        "point_scale": {name: pts for pts, name in POINTS_TO_STRENGTH},
+        "per_individual_points": dict(SEGREGATION_POINTS),
+        "full_penetrance_asserted": bool(full_penetrance),
+        "notes": notes,
     }
 
 
@@ -369,6 +492,12 @@ def xlinked_carrier_posterior(prior: float, unaffected_sons: int, affected_sons:
     Each unaffected son multiplies the carrier likelihood by 1/2 (vs 1 if not a
     carrier); an affected son makes her an obligate carrier (germline mosaicism aside).
     """
+    # prior must be strictly inside (0, 1): at 1 she is an obligate carrier and the
+    # denominator (prior*like + (1-prior)) collapses to a division by zero at prior=1,
+    # unaffected_sons=0.
+    prior = _prob("prior", prior, 0.0, 1.0, lo_open=True, hi_open=True)
+    unaffected_sons = _count("unaffected_sons", unaffected_sons)
+    affected_sons = _count("affected_sons", affected_sons)
     if affected_sons > 0:
         return {"model": "Bayes, X-linked recessive", "posterior_carrier": 1.0, "note": "affected son: obligate carrier unless germline mosaic or de novo"}
     like_carrier = 0.5 ** unaffected_sons
@@ -382,10 +511,10 @@ def recurrence(mode: str, **kw: Any) -> Dict[str, Any]:
     if mode == "AR":
         return {"mode": mode, "risk": 0.25, "note": "both parents confirmed heterozygous carriers"}
     if mode == "AD-inherited":
-        pen = float(kw.get("penetrance", 1.0))
+        pen = _prob("penetrance", kw.get("penetrance", 1.0))
         return {"mode": mode, "risk": 0.5 * pen, "note": "affected/carrier parent; risk = 0.5 x penetrance"}
     if mode == "AD-de-novo":
-        mosaic = float(kw.get("germline_mosaic_risk", 0.01))
+        mosaic = _prob("germline_mosaic_risk", kw.get("germline_mosaic_risk", 0.01))
         return {"mode": mode, "risk": mosaic, "note": "variant absent in both parents' blood; residual risk is germline mosaicism (commonly quoted ~1%, gene-dependent)"}
     if mode == "XLR-carrier-mother":
         return {"mode": mode, "risk_son_affected": 0.5, "risk_daughter_carrier": 0.5, "risk_any_child_affected": 0.25}
@@ -394,27 +523,93 @@ def recurrence(mode: str, **kw: Any) -> Dict[str, Any]:
 
 # ---------------------------------------------------------------- natural history
 
-def kaplan_meier(times: Sequence[float], events: Sequence[int]) -> List[Dict[str, float]]:
-    """Kaplan-Meier survival estimate with Greenwood variance; event=1, censored=0."""
-    data = sorted(zip(times, events), key=lambda x: (x[0], -x[1]))
+EVENT_CODINGS = {
+    # name: (censored code, event code, where the convention comes from)
+    "0/1": (0, 1, "0 = censored, 1 = event (the convention this module documents)"),
+    "1/2": (1, 2, "1 = censored, 2 = event (the R `survival` package's status coding, "
+                  "e.g. survival::lung) — pass --event-coding 1/2 for a CSV in that layout"),
+}
+
+
+def check_survival_input(times: Sequence[float], events: Sequence[int],
+                         event_coding: str = "0/1") -> List[Tuple[float, int]]:
+    """Validated (time, event) pairs with the event recoded to 0 = censored, 1 = event.
+
+    Rejects non-finite times and any event value the chosen coding does not define.
+    Both were silent infinite loops before: `nan == nan` is False and an event code of
+    2 matched neither the event nor the censored branch, so the row never consumed the
+    loop's cursor.
+    """
+    if event_coding not in EVENT_CODINGS:
+        raise ValueError(f"event_coding must be one of {', '.join(sorted(EVENT_CODINGS))}, got {event_coding!r}")
+    censored_code, event_code, _ = EVENT_CODINGS[event_coding]
+    if len(times) != len(events):
+        raise ValueError(f"times and events must be the same length ({len(times)} vs {len(events)})")
+    if not times:
+        raise ValueError("no observations")
+    out: List[Tuple[float, int]] = []
+    for i, (t, e) in enumerate(zip(times, events)):
+        try:
+            tv = float(t)
+        except (TypeError, ValueError):
+            raise ValueError(f"row {i}: time must be a number, got {t!r}") from None
+        if not math.isfinite(tv):
+            raise ValueError(f"row {i}: time must be finite, got {t!r} (NaN and infinity are not follow-up times)")
+        if tv < 0:
+            raise ValueError(f"row {i}: time must be >= 0, got {tv!r}")
+        try:
+            ev = int(e)
+        except (TypeError, ValueError):
+            raise ValueError(f"row {i}: event must be a whole number, got {e!r}") from None
+        if ev == event_code:
+            out.append((tv, 1))
+        elif ev == censored_code:
+            out.append((tv, 0))
+        else:
+            others = ", ".join(f"{name} ({spec[2].split(' —')[0]})" for name, spec in sorted(EVENT_CODINGS.items()))
+            raise ValueError(
+                f"row {i}: event code {ev!r} is not valid under coding {event_coding!r} "
+                f"({censored_code} = censored, {event_code} = event). Available codings: {others}."
+            )
+    return out
+
+
+def kaplan_meier(times: Sequence[float], events: Sequence[int],
+                 event_coding: str = "0/1") -> List[Dict[str, float]]:
+    """Kaplan-Meier survival estimate with Greenwood variance.
+
+    `event_coding` is "0/1" (0 censored, 1 event) by default, or "1/2" for the R
+    `survival` status layout. Non-finite times and undefined event codes are refused
+    rather than skipped.
+    """
+    data = sorted(check_survival_input(times, events, event_coding), key=lambda x: (x[0], -x[1]))
     at_risk = len(data)
     s = 1.0
     var_sum = 0.0
-    out = []
+    out: List[Dict[str, float]] = []
     i = 0
     while i < len(data):
+        # One pass per distinct time, taking every row at that time with it, so the
+        # cursor always advances and tied rows are counted exactly once.
         t = data[i][0]
-        d = sum(1 for tt, e in data if tt == t and e == 1)
-        c = sum(1 for tt, e in data if tt == t and e == 0)
+        j = i
+        d = c = 0
+        while j < len(data) and data[j][0] == t:
+            if data[j][1] == 1:
+                d += 1
+            else:
+                c += 1
+            j += 1
         if d > 0:
             s *= 1 - d / at_risk
             if at_risk - d > 0:
                 var_sum += d / (at_risk * (at_risk - d))
             se = s * math.sqrt(var_sum)
-            out.append({"time": t, "at_risk": at_risk, "events": d, "survival": s,
-                        "ci95_low": max(0.0, s - 1.96 * se), "ci95_high": min(1.0, s + 1.96 * se)})
+            out.append({"time": t, "at_risk": at_risk, "events": d, "censored": c, "survival": s,
+                        "ci95_low": max(0.0, s - 1.96 * se), "ci95_high": min(1.0, s + 1.96 * se),
+                        "ci_method": "linear (Greenwood SE); at small n the bounds clip at 0 and 1"})
         at_risk -= d + c
-        i += d + c
+        i = j
     return out
 
 
@@ -425,8 +620,13 @@ def median_survival(curve: List[Dict[str, float]]) -> Optional[float]:
     return None
 
 
-def logrank(times_a: Sequence[float], events_a: Sequence[int], times_b: Sequence[float], events_b: Sequence[int]) -> Dict[str, float]:
-    """Two-group log-rank test (chi-square, 1 df)."""
+def logrank(times_a: Sequence[float], events_a: Sequence[int], times_b: Sequence[float],
+            events_b: Sequence[int], event_coding: str = "0/1") -> Dict[str, float]:
+    """Two-group log-rank test (chi-square, 1 df). Same event-coding rules as `kaplan_meier`."""
+    rows_a = check_survival_input(times_a, events_a, event_coding)
+    rows_b = check_survival_input(times_b, events_b, event_coding)
+    times_a, events_a = [r[0] for r in rows_a], [r[1] for r in rows_a]
+    times_b, events_b = [r[0] for r in rows_b], [r[1] for r in rows_b]
     pooled = sorted(set(t for t, e in zip(times_a, events_a) if e) | set(t for t, e in zip(times_b, events_b) if e))
     o_minus_e = 0.0
     var = 0.0
@@ -453,8 +653,11 @@ def nof1_pairs_needed(effect: float, sd_diff: float, alpha: float = 0.05, power:
     differences (period-to-period noise). Add washout periods; carryover and
     a progressive disease break the exchangeability this assumes.
     """
-    if effect <= 0 or sd_diff <= 0:
-        raise ValueError("effect and sd_diff must be positive")
+    for name, v in (("effect", effect), ("sd_diff", sd_diff)):
+        if not math.isfinite(float(v)) or float(v) <= 0:
+            raise ValueError(f"{name} must be a finite number > 0, got {v!r}")
+    alpha = _prob("alpha", alpha, 0.0, 1.0, lo_open=True, hi_open=True)
+    power = _prob("power", power, 0.0, 1.0, lo_open=True, hi_open=True)
     z = _N.inv_cdf(1 - alpha / 2) + _N.inv_cdf(power)
     n = math.ceil((z * sd_diff / effect) ** 2)
     return {"model": "paired normal approximation", "pairs": max(n, 2), "standardized_effect": effect / sd_diff}
@@ -464,6 +667,10 @@ def nof1_analyze(treatment: Sequence[float], control: Sequence[float]) -> Dict[s
     """Paired t-test on matched treatment/control periods of one patient."""
     if len(treatment) != len(control) or len(treatment) < 2:
         raise ValueError("need >= 2 matched treatment/control pairs")
+    for label, seq in (("treatment", treatment), ("control", control)):
+        for i, v in enumerate(seq):
+            if not math.isfinite(float(v)):
+                raise ValueError(f"{label}[{i}] must be a finite number, not {v!r}")
     diffs = [a - b for a, b in zip(treatment, control)]
     n = len(diffs)
     mean = sum(diffs) / n

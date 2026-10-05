@@ -47,7 +47,10 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--models", help=f"comma-separated subset of {', '.join(s2f.MODELS)} (default: the splice models plus every s2f model ready here)")
     q.add_argument("--distance", type=int, default=500, help="SpliceAI/Pangolin window around the variant, 1-10000 (default 500)")
     q.add_argument("--mask", type=int, choices=(0, 1), default=0,
-                   help="0 = raw delta scores (default), 1 = masked (SpliceAI's recommendation for interpretation)")
+                   help="0 (default) = raw delta scores, the scale the ClinGen thresholds (Walker et al. 2023) were "
+                        "fitted on, so keep it for variant interpretation. 1 = masked: gains at an existing site and "
+                        "losses at a non-site are zeroed, which reads more cleanly but voids those thresholds. "
+                        "Pangolin is sent the same setting, where 1 means its own --mask.")
     q.add_argument("--ontology", help="UBERON/CL CURIE for AlphaGenome's tissue or cell type, e.g. UBERON:0000955 (brain)")
     q.add_argument("--timeout", type=float, default=s2f.DEFAULT_TIMEOUT, help=f"per-model wall-clock limit in seconds (default {s2f.DEFAULT_TIMEOUT:g})")
     q.add_argument("--evo2-window", type=int, default=2048, help="Evo 2 variant window in bases (default 2048)")
