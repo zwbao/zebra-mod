@@ -118,6 +118,6 @@ zebra-mod produces research-grade analyses to help people ask better questions. 
 
 ## Lineage
 
-Built on lessons from two earlier projects of mine: g2t-harness (private — a concentric harness: the model never writes a rank; clarify, never invent; each skill states what would falsify it) and [s2f-penguin](https://github.com/zwbao/s2f-penguin) (sequence-to-function models with receipts, claim ceilings, and triangulation by logic rather than arithmetic). zebra-mod calls the `s2f` CLI from s2f-penguin for its heavy models.
+zebra-mod's sequence-to-function (S2F) layer builds on [s2f-penguin](https://github.com/zwbao/s2f-penguin): sequence-to-function models with run receipts, claim ceilings, and triangulation by logic rather than arithmetic. zebra-mod calls its `s2f` CLI for the heavy models.
 
-MIT licence © 2026 Zhiwei Bao.
+MIT licence © 2026 zwbao.

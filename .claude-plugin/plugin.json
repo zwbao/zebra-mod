@@ -2,7 +2,7 @@
   "name": "zebra-mod",
   "version": "0.1.0",
   "description": "Turns Claude Code into a rare-disease research workstation: phenotype-driven diagnosis, variant interpretation (ACMG), sequence-to-function models, genotype-to-therapy, classical statistics — every answer anchored to live public databases.",
-  "author": { "name": "Zhiwei Bao", "url": "https://github.com/zwbao" },
+  "author": { "name": "zwbao", "url": "https://github.com/zwbao" },
   "homepage": "https://github.com/zwbao/zebra-mod",
   "repository": "https://github.com/zwbao/zebra-mod",
   "license": "MIT",

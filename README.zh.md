@@ -88,6 +88,6 @@ zebra-mod 提供研究级分析，帮助使用者提出更好的问题。它不�
 
 ## 渊源
 
-本项目吸收了此前两个项目的经验：g2t-harness（私有仓库——同心式 harness：模型不写排名、先澄清不编造、每个技能写明证伪条件）与 [s2f-penguin](https://github.com/zwbao/s2f-penguin)（带运行凭证的序列到功能模型、结论上限、以逻辑而非算术综合多轴证据）。重型序列模型由 zebra-mod 调用 s2f-penguin 的 `s2f` 命令行完成。
+本项目的序列到功能（S2F）能力建立在 [s2f-penguin](https://github.com/zwbao/s2f-penguin) 之上：带运行凭证的序列到功能模型、结论上限、以逻辑而非算术综合多轴证据。重型序列模型由 zebra-mod 调用 s2f-penguin 的 `s2f` 命令行完成。
 
-MIT 许可 © 2026 鲍志炜
+MIT 许可 © 2026 zwbao

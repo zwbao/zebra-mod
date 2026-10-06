@@ -1,6 +1,6 @@
 {
   "name": "zebra-mod",
-  "owner": { "name": "Zhiwei Bao", "url": "https://github.com/zwbao" },
+  "owner": { "name": "zwbao", "url": "https://github.com/zwbao" },
   "metadata": { "description": "zebra-mod: a rare-disease research workstation for Claude Code" },
   "plugins": [
     {
