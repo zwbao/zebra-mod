@@ -304,7 +304,9 @@ def _agency_rows(drugs: List[str], terms: List[str], out: Outcome) -> List[Dict[
             rows.append({"drug": d, "status": "unavailable"})
             continue
         c = out.add(g)
-        rows.append({"drug": d, **{k: {f: (c.get(k) or {}).get(f) for f in ("status", "reading", "approved_on", "date", "url")
+        # the label's own indication words are kept: they say which patients a drug is for
+        # ("amenable to exon 51 skipping"), which a one-line reading cannot
+        rows.append({"drug": d, **{k: {f: (c.get(k) or {}).get(f) for f in ("status", "reading", "indication", "approved_on", "date", "url")
                                        if (c.get(k) or {}).get(f) is not None} for k in ("FDA", "EMA")}})
     seen, kept = set(), []
     for src in out.sources:

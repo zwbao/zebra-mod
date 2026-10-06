@@ -24,7 +24,8 @@ anything: zebra-mod needs neither.
    source; otherwise use `zwbao/zebra-mod`.
    ```bash
    claude plugin marketplace add zwbao/zebra-mod        # or: claude plugin marketplace add /path/to/clone
-   claude plugin install zebra-mod@zebra-mod --scope user
+   claude plugin install zebra-mod@zebra-mod --scope user \
+     --config python=python3 --config doctrine=auto --config privacyGate=true
    ```
    If the Python from step 2 is not `python3` on PATH, add `--config python=/full/path/to/python`
    to the install command. If the marketplace is already registered, run

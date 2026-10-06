@@ -61,7 +61,12 @@ say "$("$PY" -c 'import sys; print("Python %d.%d.%d" % sys.version_info[:3])') a
 
 # ---------------------------------------------------------------- plugin
 step "Register and install the plugin"
-HERE=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd || true)
+# $0 is this script only when it was run from a file; piped (curl … | sh) it is the shell, and the
+# current directory says nothing about where zebra-mod is
+HERE=""
+if [ -f "$0" ] && [ "$(basename -- "$0")" = "install.sh" ]; then
+  HERE=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd || true)
+fi
 if [ -n "${ZEBRA_SOURCE:-}" ]; then
   SOURCE="$ZEBRA_SOURCE"
 elif [ -n "$HERE" ] && [ -f "$HERE/.claude-plugin/marketplace.json" ]; then
@@ -71,6 +76,9 @@ else
 fi
 say "source: $SOURCE"
 
+if [ -n "${ZEBRA_SOURCE:-}" ] && claude plugin marketplace list 2>/dev/null | grep -q "zebra-mod"; then
+  claude plugin marketplace remove zebra-mod >/dev/null 2>&1 || true  # an explicit source replaces the old one
+fi
 if claude plugin marketplace list 2>/dev/null | grep -q "zebra-mod"; then
   claude plugin marketplace update zebra-mod || die "could not update the zebra-mod marketplace"
 else

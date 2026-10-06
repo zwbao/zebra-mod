@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.1 — 2026-10-06
+
+Fixes from an independent adversarial review of 0.2.0 (3 P0, 10 P1 and the cheap P2s), each with a regression test that fails on 0.2.0, and from the first full runs of the eval suite.
+
+**Privacy gate**
+- A shell command that reaches the network is scanned whole: query strings after `&`, heredocs, `echo … | curl`, variables set before the call and a script's source no longer slip past (P0). Quotes are respected when splitting commands.
+- Every Artifact action is scanned (database writes, comment replies, string replacements), not only a page title (P0).
+- Identifiers registered before a case exists are refused in outgoing calls, as with a case open; a command naming another case with `--case` is checked against that case's identifiers.
+- Record numbers written with a hyphen (12-0042317), birth dates as 02-Mar-2019 / Mar-02-2019 / 19-03-02, names in HTML entities, split by tags or with tone marks, query-string paths (FHIR `/Patient?name=…`), case folders archived or opened by a script, `gh release upload`, argparse abbreviations of `--prefilter`, and `zebra case $(…)` are all caught; genomic coordinates are no longer read as ID numbers or birth dates; pages are scanned paragraph by paragraph; the email check is linear (a 200 kB sequence took 15 s).
+- Report export checks what a reader sees (soft line breaks joined, a name next to Chinese characters, underscores), the title and the file name; links with parentheses and wider table rows render whole.
+
+**Recheck**
+- A source that failed keeps its last known answer, so a later change is still reported (P0); a ClinVar or gnomAD outage is "not checked", never "record gone"; paper windows follow each question's last successful check and never overlap; a recruiting list longer than one page is not diffed (its count is).
+
+**Behaviour seen in the eval runs**
+- `access` keeps each FDA label's indication text, so "amenable to exon 51 skipping" is quoted, not recalled; the doctrine forbids writing a patient's identifiers back in replies; the skills add heteroplasmy tissue guidance for m.3243A>G, trial eligibility "decided by the trial team", verification of an unlabeled HPO id, and rescue medication in first aid.
+- Eval graders judge the final reply (the trace given to a judge is cut at 100,000 characters), leak checks ignore the local identifier registration, the clinic note is in the prompt, and the tools that now answer a question (`access`) count.
+
+**Other**
+- Case defaults are copied deeply (one case's relatives never appear in another loaded in the same process); `install.sh` piped through curl no longer treats the current directory as the checkout, and an explicit `ZEBRA_SOURCE` replaces a registered marketplace; INSTALL.md passes every option.
+
 ## 0.2.0 — 2026-10-06
 
 Making the claim literally true — a rare-disease workstation for families on a diagnostic odyssey, clinicians and researchers. Three independent reviews of 0.1.0 set the list; every change below carries a regression test that fails on 0.1.0.

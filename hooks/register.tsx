@@ -189,7 +189,9 @@ export const register: Register = (on, options) => {
 
     if (privacyOn && outbound) {
       const active = await read($, casePath)
-      const held = await identifiersNow($, active)
+      const now = await identifiersNow($, active)
+      // a copy: the session list comes from engine state, which must not be mutated in place
+      const held = { isClosed: now.isClosed, ids: [...now.ids, ...(e.tool === 'Bash' ? await namedCaseIdentifiers($, command, active) : [])] }
       if (held.isClosed) {
         return {
           decision: 'deny' as const,
@@ -203,7 +205,7 @@ export const register: Register = (on, options) => {
         : own !== undefined ? schemaArgs(own, (e.input ?? {}) as Record<string, unknown>)
         : e.input
       const hit = guardInput(scanned, held.ids)
-      if (hit && !active && own === undefined) {
+      if (hit && !hit.startsWith('protected identifier') && !active && own === undefined) {
         // No case is open, so this is not known to be patient work: an email or a phone number
         // in an ordinary call (a PR body, an API request) is asked about, never refused outright.
         return {
@@ -587,10 +589,42 @@ function artifactPaths(input: unknown): string[] {
 }
 
 /** The parts of an Artifact call that are published themselves (title, description), not paths. */
+const ARTIFACT_PATH_KEYS = new Set(['file_path', 'file_paths', 'files', 'root', 'out_dir', 'url', 'from_url', 'type_url',
+  'path', 'paths'])
+
 function artifactFields(input: unknown): Record<string, unknown> {
   const i = (input ?? {}) as Record<string, unknown>
   const out: Record<string, unknown> = {}
-  for (const k of ['title', 'description', 'label']) if (typeof i[k] === 'string') out[k] = i[k]
+  for (const [k, v] of Object.entries(i)) if (!ARTIFACT_PATH_KEYS.has(k)) out[k] = v
+  return out
+}
+
+/**
+ * The identifiers of every other case a shell command names with --case: a clinician with several
+ * cases open in turn may query for one while another is active. Unreadable case files add nothing
+ * here (the active case's own unreadable file still closes the gate).
+ */
+async function namedCaseIdentifiers($: EngineInterface, command: string, active: string | null): Promise<string[]> {
+  const words = shellWords(command)
+  const named = new Set<string>()
+  words.forEach((w, i) => {
+    if (w === '--case' && words[i + 1]) named.add(words[i + 1] as string)
+    else if (w.startsWith('--case=')) named.add(w.slice('--case='.length))
+  })
+  if (named.size === 0) return []
+  const home = (await $.env.get('HOME')) ?? ''
+  const out: string[] = []
+  for (const raw of named) {
+    const dir = raw.replace(/^\$HOME(?=\/|$)/, home).replace(/^~(?=\/|$)/, home).replace(/\/+$/, '')
+    if (!dir || dir === active?.replace(/\/+$/, '')) continue
+    try {
+      const data = JSON.parse(await $.fs.read(`${dir}/case.json`)) as { privacy?: { identifiers?: unknown } }
+      const listed = data.privacy?.identifiers
+      if (Array.isArray(listed)) out.push(...listed.filter((x): x is string => typeof x === 'string' && x.trim().length >= 2))
+    } catch {
+      // not a case, or not readable: nothing to add
+    }
+  }
   return out
 }
 
@@ -610,7 +644,11 @@ async function artifactLeak($: EngineInterface, input: unknown, ids: readonly st
       unread.push(p)
       continue
     }
-    const hit = guardInput(text, ids)
+    // paragraph by paragraph (tags, entities and soft line breaks folded first): numbers from all
+    // over a page must never join into a record number, but a name split by a line break still counts
+    const chunks = text.split(/\n\s*\n|<\/(?:p|div|li|tr|td|th|h[1-6]|section|table)>|<br\s*\/?>/i)
+      .map(c => c.replace(/\s*\n\s*/g, ' '))
+    const hit = guardInput(chunks, ids)
     if (hit) return { leak: `${hit} (in ${p})`, unread }
   }
   return { unread }

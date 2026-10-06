@@ -23,9 +23,17 @@ function fold(text: string): string {
     if (/\\u[0-9a-fA-F]{4}/.test(out)) {
       out = out.replace(/\\u([0-9a-fA-F]{4})/g, (_m, h) => String.fromCharCode(parseInt(h, 16)))
     }
+    // HTML: a page can spell a name as entities (&#24352;) or split it with tags (<b>张</b>小明)
+    if (/&#?\w+;/.test(out)) {
+      out = out.replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+        .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(Number(d)))
+        .replace(/&(amp|lt|gt|quot|apos|nbsp);/g, (_m, n) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' } as Record<string, string>)[n] ?? _m)
+    }
+    if (/<\/?[a-z][^<>]{0,200}>/i.test(out)) out = out.replace(/<\/?[a-z][^<>]{0,200}>/gi, '')
     if (out === before) break
   }
-  return out.normalize('NFKC').replace(ZERO_WIDTH, '').toLowerCase()
+  // tone marks (Zhāng Xiǎomíng) and other diacritics never hide a name
+  return out.normalize('NFKD').replace(/\p{M}+/gu, '').normalize('NFKC').replace(ZERO_WIDTH, '').toLowerCase()
 }
 
 // Identifiers of science, not of people: their digits must never be read as a record number
@@ -35,19 +43,22 @@ const SCIENTIFIC_IDS = new RegExp([
   String.raw`\brs\d+`,
   String.raw`\b(?:nm|nr|np|nc|ng|nt|xm|xp|enst|ensg|ensp|ccds|lrg)_?\d+(?:\.\d+)?`,
   String.raw`\bpmid\s*:?\s*\d+`, String.raw`\bpmc\d+`, String.raw`\bnct\d{8}\b`, String.raw`\bchictr-?\w+`,
-  String.raw`\b(?:chr)?(?:\d{1,2}|x|y|mt?)\s*[:-]\s*\d+(?:\s*[-_]\s*\d+)?`,
+  String.raw`\bchr(?:\d{1,2}|x|y|mt?)\s*[:-]\s*[\d,]+(?:\s*[-_]\s*[\d,]+)?`,
+  String.raw`(?<![\w-])(?:\d{1,2}|x|y|mt?)\s*:\s*[\d,]+(?:\s*[-_]\s*[\d,]+)?`,
   String.raw`\b[cgpnmr]\.\S+`,
   String.raw`\b10\.\d{4,9}/\S+`,
 ].join('|'), 'g')
 
 /** The folded text with separators kept (for word-boundary checks), removed, and digits only. */
-function forms(text: string): { spaced: string; tight: string; digits: string } {
+function forms(text: string): { spaced: string; tight: string; digits: string; scrubbed: string } {
   const folded = fold(text)
+  // scientific identifiers removed: what a record number, a date or an ID number could hide in
+  const scrubbed = folded.replace(SCIENTIFIC_IDS, ' ').replace(/[\s_]+/g, ' ')
   return {
     spaced: folded.replace(/[\s_]+/g, ' '),
     tight: folded.replace(SEPARATORS, ''),
-    // the digits a record number could hide in: scientific identifiers removed first
-    digits: folded.replace(SCIENTIFIC_IDS, ' ').replace(/\D+/g, ''),
+    digits: scrubbed.replace(/\D+/g, ''),
+    scrubbed,
   }
 }
 
@@ -81,10 +92,10 @@ function leaves(value: unknown, depth = 0, out: string[] = []): string[] {
 }
 
 const LONG_DIGITS = /\d{6,}/
-const CN_RESIDENT_ID = /(?<![\d])[1-9]\d{5}(?:18|19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dx](?![\d])/
+// written as one number, or in its 6-8-4 / 6-4-2-2-4 groups; never two separate numbers joined
+const CN_RESIDENT_ID = /(?<![\d])[1-9]\d{5}[ -]?(?:18|19|20)\d{2}[ -]?(?:0[1-9]|1[0-2])[ -]?(?:0[1-9]|[12]\d|3[01])[ -]?\d{3}[\dx](?![\d])/
 // Separators inside are allowed; a letter next to it is not, so rs13812345678 is a variant id
 const CN_MOBILE = /(?<![a-z0-9])(?:\+?0{0,2}86[\s-]?)?1[3-9]\d(?:[\s-]?\d){8}(?![\s-]?\d)(?![a-z0-9])/
-const EMAIL = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
   'november', 'december']
@@ -116,13 +127,16 @@ function dateMatchers(identifier: string): RegExp[] {
     const month = MONTHS[m - 1] as string
     const name = `(?:${month}|${month.slice(0, 3)}\\.?)`
     const ord = '(?:st|nd|rd|th)?'
+    const yy = y.slice(2)
+    const loose = String.raw`[\s\-/.,]*`
     out.push(
       new RegExp(String.raw`(?<!\d)${y}\s*[-/.年]\s*${mo}\s*[-/.月]\s*${da}(?!\d)`),
       new RegExp(String.raw`(?<!\d)${y}${String(m).padStart(2, '0')}${String(d).padStart(2, '0')}(?!\d)`),
       new RegExp(String.raw`(?<!\d)${da}${sep}${mo}${sep}${y}(?!\d)`),
       new RegExp(String.raw`(?<!\d)${mo}${sep}${da}${sep}${y}(?!\d)`),
-      new RegExp(String.raw`(?<![a-z])${name}\s*${da}${ord}\s*,?\s*${y}(?!\d)`),
-      new RegExp(String.raw`(?<!\d)${da}${ord}\s*(?:of\s*)?${name}\s*,?\s*${y}(?!\d)`),
+      new RegExp(String.raw`(?<!\d)${yy}[-/.]${mo}[-/.]${da}(?!\d)`), // 19-03-02
+      new RegExp(String.raw`(?<![a-z])${name}${loose}${da}${ord}${loose}${y}(?!\d)`), // March 2, 2019 / Mar-02-2019
+      new RegExp(String.raw`(?<!\d)${da}${ord}${loose}(?:of\s*)?${name}${loose}${y}(?!\d)`), // 2 March 2019 / 02-Mar-2019
     )
   }
   return out
@@ -158,7 +172,7 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
 
     for (const f of folded) {
       // a date of birth, however it is written
-      if (dates.some(re => re.test(f.spaced))) return label
+      if (dates.some(re => re.test(f.scrubbed))) return label
       // a record or ID number: digits only, so separators cannot hide it
       // (not for a date: its digits joined across a value's other numbers would match by accident)
       if (dates.length === 0 && LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return label
@@ -180,8 +194,8 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
 
   // Patterns that identify a person even when no case is open, checked per value.
   for (const f of folded) {
-    if (CN_RESIDENT_ID.test(f.tight) || CN_RESIDENT_ID.test(f.digits)) return 'what looks like a Chinese resident ID number'
-    if (CN_MOBILE.test(f.spaced)) return 'what looks like a mobile phone number'
+    if (CN_RESIDENT_ID.test(f.scrubbed)) return 'what looks like a Chinese resident ID number'
+    if (CN_MOBILE.test(f.scrubbed)) return 'what looks like a mobile phone number'
     if (emailIn(f.spaced)) return 'an email address'
   }
   return undefined
@@ -189,10 +203,15 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
 
 /** An email address in `text` that is not a host login (ssh user@host) or a git remote. */
 function emailIn(text: string): boolean {
-  for (const m of text.matchAll(new RegExp(EMAIL.source, 'g'))) {
-    const addr = m[0]
+  // anchored at each '@' and bounded on both sides: a 200 kB sequence without one costs nothing
+  for (let at = text.indexOf('@'); at >= 0; at = text.indexOf('@', at + 1)) {
+    const left = /[a-z0-9._%+-]{1,64}$/.exec(text.slice(Math.max(0, at - 64), at))
+    const right = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,24}/.exec(text.slice(at + 1, at + 256))
+    if (!left || !right) continue
+    const addr = `${left[0]}@${right[0]}`
+    const m = { index: at - left[0].length }
     if (/^git@/.test(addr) || /@(?:github|gitlab|bitbucket)\.(?:com|org)$/.test(addr)) continue
-    const before = text.slice(0, m.index)
+    const before = text.slice(Math.max(0, m.index - 400), m.index)
     if (/\b(?:ssh|scp|sftp|rsync|mosh|ssh-copy-id|autossh)\b[^;|&]*$/.test(before)) continue
     return true
   }
@@ -206,7 +225,7 @@ function wordIn(word: string, text: string): boolean {
 /** A bare local path (a case folder, a records file): its text never leaves the machine by itself. */
 export function isLocalPath(value: string): boolean {
   const v = value.trim()
-  if (!v || /\s/.test(v) || v.includes('://')) return false
+  if (!v || /\s/.test(v) || v.includes('://') || /[?=&#]/.test(v)) return false
   return /^(?:~|\$HOME|\.{1,2})?\//.test(v) || /^[A-Za-z]:\\/.test(v)
 }
 
@@ -233,8 +252,18 @@ function isZebraLocal(segment: string): boolean {
     else if (a.startsWith('--case=')) i++
     else break
   }
-  // `case recheck` asks public databases again: not local
-  return w[i] === 'case' && w[i + 1] !== 'recheck'
+  // `case <action>` reads and writes the case; `case recheck` asks public databases again.
+  // No readable action (`zebra case $(…)`) is not local. `report export` writes files here only.
+  const action = w[i + 1] ?? ''
+  if (w[i] === 'case') return /^[a-z][a-z-]*$/.test(action) && action !== 'recheck'
+  return w[i] === 'report' && action === 'export'
+}
+
+/** The words of a zebra invocation in this segment, from the subcommand on; null when it is not zebra. */
+function zebraWords(segment: string): string[] | null {
+  const w = shellWords(segment)
+  const i = w.findIndex(a => /(?:^|\/)zebra$/.test(a))
+  return i < 0 ? null : w.slice(i + 1)
 }
 // flags whose values stay on this machine in any zebra command (sample names, file paths)
 const ZEBRA_LOCAL_FLAGS = new Set(['--case', '--proband', '--mother', '--father', '--sibling', '--out', '--genes',
@@ -245,9 +274,25 @@ export function shellSegments(command: string): string[] {
   const out: string[] = []
   let depth = 0
   let current = ''
+  let quote: '"' | "'" | null = null
   for (let i = 0; i < command.length; i++) {
     const c = command[i] as string
     const two = command.slice(i, i + 2)
+    // inside quotes, ; & | and newlines are text (curl "…?a=1&b=2"), not separators
+    if (quote) {
+      if (c === '\\' && quote === '"' && i + 1 < command.length) {
+        current += c + command[++i]
+        continue
+      }
+      if (c === quote) quote = null
+      current += c
+      continue
+    }
+    if (c === '"' || c === "'") {
+      quote = c
+      current += c
+      continue
+    }
     if (c === '`') {
       // a backtick substitution runs on its own
       if (current.trim()) out.push(current)
@@ -311,22 +356,28 @@ export function isOutboundShell(command: string): boolean {
 }
 
 /**
- * The text of a shell command that may reach the network: only its outbound segments, with local
- * paths and the values of zebra's local-only flags removed — a sample name or a case path is not
- * sent anywhere, so it must not trip the gate.
+ * The text of a shell command that may reach the network. Once any part of it does, every part is
+ * scanned — a pipe (echo … | curl), a heredoc, a variable set before the call or a script's source
+ * all carry text to the outbound piece — except what demonstrably stays here: segments that only
+ * touch the local case, the values of zebra's local-only flags (sample names, case paths) inside
+ * zebra commands, local paths, and the folder given to `cd`.
  */
 export function outboundText(command: string): string {
+  const segments = shellSegments(command)
+  if (!segments.some(outboundSegment)) return ''
   const kept: string[] = []
-  for (const segment of shellSegments(command)) {
-    if (!outboundSegment(segment)) continue
+  for (const segment of segments) {
+    if (isZebraLocal(segment)) continue
     const words = shellWords(segment)
+    const zebra = zebraWords(segment) !== null
+    if (words[0] === 'cd') continue
     for (let i = 0; i < words.length; i++) {
       const w = words[i] as string
-      if (ZEBRA_LOCAL_FLAGS.has(w)) {
+      if (zebra && ZEBRA_LOCAL_FLAGS.has(w)) {
         i++
         continue
       }
-      if (/^--[\w-]+=/.test(w) && ZEBRA_LOCAL_FLAGS.has(w.split('=')[0] as string)) continue
+      if (zebra && /^--[\w-]+=/.test(w) && ZEBRA_LOCAL_FLAGS.has(w.split('=')[0] as string)) continue
       if (isLocalPath(w)) continue
       kept.push(w)
     }
@@ -344,13 +395,15 @@ const COPY_INTO = /\b(?:cp|mv|rsync|ditto|ln|install|tee)\b/
 
 /** True when a zebra command would send a whole VCF's variant list to a web service (triage's MyVariant prefilter). */
 export function sendsVariantList(command: string): boolean {
+  // argparse accepts any unique prefix of a long option: --pref myvariant, --pre=myvariant
+  const isFlag = (a: string) => a.length >= 5 && '--prefilter'.startsWith(a)
   return shellSegments(command).some(seg => {
-    const w = shellWords(seg)
-    const i = w.findIndex(a => /(?:^|\/)zebra$/.test(a))
-    if (i < 0) return false
-    const rest = w.slice(i + 1)
-    const at = rest.indexOf('--prefilter')
-    return rest.includes('--prefilter=myvariant') || (at >= 0 && rest[at + 1] === 'myvariant')
+    const rest = zebraWords(seg)
+    if (!rest) return false
+    return rest.some((a, i) => {
+      const [flag, value] = a.includes('=') ? [a.slice(0, a.indexOf('=')), a.slice(a.indexOf('=') + 1)] : [a, rest[i + 1]]
+      return isFlag(flag) && value === 'myvariant'
+    })
   })
 }
 
@@ -396,6 +449,8 @@ export function uploadedPaths(command: string): string[] {
   const join = (p: string) => (cwd && !/^(?:\/|~|\$HOME)/.test(p) ? `${cwd.replace(/\/$/, '')}/${p}` : p)
   // files read on the left of a pipe that ends in an uploader reading stdin
   const pipeReaders: string[] = []
+  const archived: string[] = []
+  const scripted = SCRIPT_RUN.test(command)
   for (const segment of segments) {
     const words = shellWords(segment)
     const head = words[0] ?? ''
@@ -419,6 +474,27 @@ export function uploadedPaths(command: string): string[] {
         }
       }
     }
+    if (/^(?:zip|7z|7za|tar)$/.test(head)) {
+      // what goes into an archive leaves with it: zip -r out.zip ~/cases/x, tar czf out.tgz -C ~/cases x
+      let base = ''
+      for (let k = 1; k < words.length; k++) {
+        const a = words[k] as string
+        if (a === '-C' && words[k + 1]) {
+          base = words[++k] as string
+          continue
+        }
+        if (a.startsWith('-') || /\.(?:zip|7z|tar|tgz|gz|bz2|xz|zst)$/.test(a)) continue
+        archived.push(base && !/^(?:\/|~|\$HOME)/.test(a) ? `${base.replace(/\/$/, '')}/${a}` : join(a))
+      }
+    }
+    if (scripted && zebraWords(segment) === null) {
+      // a script that opens a file from the case folder sends its contents: python -c "…open('…')…",
+      // or a heredoc body; only paths that start a word (not the tail of records/x or host:/tmp)
+      for (const m of segment.replace(/https?:\/\/\S+/g, ' ').matchAll(/(?<=^|[\s'"=(,])(?:~|\$HOME)?\/[^\s'"<>|;&(),]{2,}/g)) found.add(m[0])
+    }
+    if (head === 'gh' && words[1] === 'release' && words[2] === 'upload') {
+      for (const w of words.slice(4)) if (!w.startsWith('-')) found.add(join(w))
+    }
     if (COPY_TOOLS.test(head) || (head === 'aws' && words[1] === 's3') || (head === 'gh' && words[1] === 'gist')) {
       const args = words.slice(head === 'aws' || head === 'gh' ? 3 : 1)
       for (const w of args) {
@@ -427,6 +503,8 @@ export function uploadedPaths(command: string): string[] {
       }
     }
   }
+  // the archive's sources count once anything in the command sends something somewhere
+  if (archived.length && (UPLOADER.test(command) || segments.some(outboundSegment))) archived.forEach(a => found.add(a))
   return [...found]
 }
 

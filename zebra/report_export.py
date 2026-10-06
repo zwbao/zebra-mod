@@ -133,9 +133,11 @@ def parse(text: str) -> List[Block]:
             rows: List[List[str]] = []
             i += 2
             while i < len(lines) and "|" in lines[i] and lines[i].strip():
-                row = _cells(lines[i])
-                rows.append((row + [""] * len(header))[: max(len(header), 1)])
+                rows.append(_cells(lines[i]))
                 i += 1
+            width = max([len(header)] + [len(r) for r in rows])
+            header = header + [""] * (width - len(header))
+            rows = [r + [""] * (width - len(r)) for r in rows]
             blocks.append(("table", header, rows))
             continue
         if stripped.startswith(">"):
@@ -184,7 +186,7 @@ _INLINE = re.compile(
     r"(?P<code>`[^`]+`)"
     r"|(?P<bold>\*\*(?P<bt>.+?)\*\*|__(?P<bt2>.+?)__)"
     r"|(?P<ital>(?<![\w*])\*(?!\s)(?P<it>[^*]+?)(?<!\s)\*(?!\w)|(?<![\w_])_(?!\s)(?P<it2>[^_]+?)(?<!\s)_(?![\w]))"
-    r"|(?P<link>\[(?P<lt>[^\]]+)\]\((?P<lu>[^)\s]+)\))"
+    r"|(?P<link>\[(?P<lt>[^\]]+)\]\((?P<lu>(?:[^()\s]|\([^()\s]*\))+)\))"
     r"|(?P<auto><(?P<au>https?://[^>\s]+)>)"
     r"|(?P<ev>\[(?:E\d+(?:\s*[,，、;；]\s*E\d+)*|PMID[:：]?\s*\d+(?:\s*[,，、;；]\s*(?:PMID[:：]?\s*)?\d+)*)\])"
 )
@@ -228,65 +230,121 @@ def title_of(blocks: Sequence[Block], fallback: str) -> str:
 
 # ------------------------------------------------------------------ privacy
 
-_RESIDENT_ID = re.compile(r"(?<!\d)\d{6}(?:18|19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx](?!\d)")
+_RESIDENT_ID = re.compile(r"(?<!\d)[1-9]\d{5}[ -]?(?:18|19|20)\d{2}[ -]?(?:0[1-9]|1[0-2])[ -]?(?:0[1-9]|[12]\d|3[01])"
+                          r"[ -]?\d{3}[\dXx](?!\d)")
 _MOBILE = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
+# identifiers of science, not of people: removed before looking for numbers and dates in them.
+# A coordinate needs "chr" or a colon, so a record number like 12-0042317 is not taken for one.
 _SCIENTIFIC_IDS = re.compile("|".join([
     r"\b(?:hp|omim|mim|orpha|orphanet|mondo|doid|ncit|efo|uberon|go|hgnc|cl|chebi|mp)\s*[:_]\s*\d+",
     r"\brs\d+", r"\b(?:nm|nr|np|nc|ng|nt|xm|xp|enst|ensg|ensp|ccds|lrg)_?\d+(?:\.\d+)?",
     r"\bpmid\s*:?\s*\d+", r"\bpmc\d+", r"\bnct\d{8}\b", r"\bchictr-?\w+",
-    r"\b(?:chr)?(?:\d{1,2}|x|y|mt?)\s*[:-]\s*\d+(?:\s*[-_]\s*\d+)?", r"\b[cgpnmr]\.\S+", r"\b10\.\d{4,9}/\S+",
+    r"\bchr(?:\d{1,2}|x|y|mt?)\s*[:-]\s*[\d,]+(?:\s*[-_]\s*[\d,]+)?",
+    r"(?<![\w-])(?:\d{1,2}|x|y|mt?)\s*:\s*[\d,]+(?:\s*[-_]\s*[\d,]+)?",
+    r"\b[cgpnmr]\.\S+", r"\b10\.\d{4,9}/\S+",
 ]), re.I)
-_DATE = re.compile(r"^\s*(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?\s*$")
+_MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
+           "november", "december"]
 
 
 def _fold(s: str) -> str:
+    """NFKC, lower case, tone marks and other diacritics removed (Zhāng → zhang)."""
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
     return unicodedata.normalize("NFKC", s).casefold()
 
 
-def _date_forms(value: str) -> List[str]:
-    m = _DATE.match(value)
-    if not m:
-        return []
-    y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
-    return [f"{y}-{mo:02d}-{d:02d}", f"{y}-{mo}-{d}", f"{y}/{mo:02d}/{d:02d}", f"{y}/{mo}/{d}", f"{y}.{mo}.{d}",
-            f"{y}.{mo:02d}.{d:02d}", f"{y}年{mo}月{d}日", f"{y}年{mo:02d}月{d:02d}日", f"{y}{mo:02d}{d:02d}",
-            f"{d:02d}/{mo:02d}/{y}", f"{mo:02d}/{d:02d}/{y}"]
+def _date_parts(value: str) -> List[Tuple[int, int, int]]:
+    t = value.strip()
+    m = re.match(r"^(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?$", t)
+    if m:
+        return [(int(m.group(1)), int(m.group(2)), int(m.group(3)))]
+    m = re.match(r"^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$", t)
+    if m:
+        a, b, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        return [(y, b, a), (y, a, b)]  # day-month-year and month-day-year
+    return []
+
+
+def _date_matchers(value: str) -> List["re.Pattern[str]"]:
+    """A registered date in the ways people write one, with digit boundaries (2019-3-25 is not 2019-03-02)."""
+    out = []
+    for y, m, d in _date_parts(value):
+        if not (1 <= m <= 12 and 1 <= d <= 31):
+            continue
+        mo, da, yy = f"0?{m}", f"0?{d}", str(y)[2:]
+        sep = r"\s*[-/.]\s*"
+        loose = r"[\s\-/.,]*"
+        name = f"(?:{_MONTHS[m - 1]}|{_MONTHS[m - 1][:3]}\\.?)"
+        ord_ = r"(?:st|nd|rd|th)?"
+        out += [re.compile(p) for p in (
+            rf"(?<!\d){y}\s*[-/.年]\s*{mo}\s*[-/.月]\s*{da}(?!\d)",
+            rf"(?<!\d){y}{m:02d}{d:02d}(?!\d)",
+            rf"(?<!\d){da}{sep}{mo}{sep}{y}(?!\d)",
+            rf"(?<!\d){mo}{sep}{da}{sep}{y}(?!\d)",
+            rf"(?<!\d){yy}[-/.]{mo}[-/.]{da}(?!\d)",
+            rf"(?<![a-z]){name}{loose}{da}{ord_}{loose}{y}(?!\d)",
+            rf"(?<!\d){da}{ord_}{loose}(?:of\s*)?{name}{loose}{y}(?!\d)",
+        )]
+    return out
+
+
+def _paragraphs(text: str) -> List[str]:
+    """What a reader sees: lines joined within a paragraph (a soft line break is a space in HTML/Word)."""
+    out, cur = [], []
+    for line in text.split("\n"):
+        if line.strip():
+            cur.append(line.strip())
+        elif cur:
+            out.append(" ".join(cur))
+            cur = []
+    if cur:
+        out.append(" ".join(cur))
+    return out
 
 
 def identifier_hits(text: str, identifiers: Sequence[str]) -> Tuple[Optional[str], List[str]]:
-    """(why the text must not be exported, or None; warnings). Checked line by line."""
+    """(why the text must not be exported, or None; warnings).
+
+    Checked paragraph by paragraph as a reader sees them (soft line breaks joined), and for a
+    Chinese name across the whole text with all spacing removed. Latin names are matched as
+    words whose boundaries are ASCII letters and digits, so 患儿Zhang Xiaoming still matches.
+    """
     warnings: List[str] = []
-    lines = [_fold(line) for line in text.split("\n")]
-    tight_lines = [re.sub(r"\s+", "", line) for line in lines]
-    # a record number hides in digits, but never in a scientific identifier's (HP:0012345, rs…, PMID …)
-    digit_lines = [re.sub(r"\D", "", _SCIENTIFIC_IDS.sub(" ", line)) for line in lines]
+    paras = [_fold(p) for p in _paragraphs(text)]
+    scrubbed = [_SCIENTIFIC_IDS.sub(" ", p) for p in paras]  # NM_…, rs…, chr…: never a person's number
+    names = [p.replace("_", " ") for p in paras]  # Zhang_Xiaoming is a name; NM_000492 is not touched above
+    tight_all = re.sub(r"[\s_]+", "", "".join(paras))
+    digit_paras = [re.sub(r"\D", "", p) for p in scrubbed]
     for n, raw in enumerate(identifiers, 1):
         value = _fold(str(raw or "").strip())
         if len(value) < 2:
             continue
         label = f"protected identifier #{n} of the case"
-        forms = [re.sub(r"\s+", "", f) for f in _date_forms(value)]
-        if forms and any(f in t for t in tight_lines for f in forms):
-            return f"{label} (a date)", warnings
+        dates = _date_matchers(value)
+        if dates:
+            if any(d.search(p) for d in dates for p in scrubbed):
+                return f"{label} (a date)", warnings
+            continue
         digits = re.sub(r"\D", "", value)
         if len(digits) >= 6 and len(digits) >= len(re.sub(r"[\s\-_/]", "", value)) - 3:
-            if any(digits in d for d in digit_lines):
+            if any(digits in d for d in digit_paras):
                 return f"{label} (a number)", warnings
             continue
         if _CJK.search(value):
-            if any(re.sub(r"\s+", "", value) in t for t in tight_lines):
+            if re.sub(r"\s+", "", value) in tight_all:
                 return label, warnings
             continue
         tokens = [t for t in re.split(r"[\s,;]+", value) if len(t) >= 2]
         if not tokens or (len(tokens) == 1 and len(tokens[0]) < 3):
             continue
-        pats = [re.compile(r"(?<![\w])" + re.escape(t) + r"(?![\w])") for t in tokens]
-        if any(all(p.search(line) for p in pats) for line in lines):
+        pats = [re.compile(r"(?<![a-z0-9])" + re.escape(t) + r"(?![a-z0-9])") for t in tokens]
+        if any(all(p_.search(par) for p_ in pats) for par in names):
             return label, warnings
-    for line in lines:
-        if _RESIDENT_ID.search(line):
+    for par in scrubbed:
+        if _RESIDENT_ID.search(par):
             return "a Chinese resident ID number", warnings
-    if any(_MOBILE.search(line) for line in lines):
+    if any(_MOBILE.search(par) for par in scrubbed):
         warnings.append("the report contains what looks like a mobile phone number: keep it only if it is an "
                         "organisation's public number, never the family's")
     return None, warnings
@@ -711,7 +769,8 @@ def export(md_path: str, formats: Sequence[str], out_dir: Optional[str] = None, 
     if src.stat().st_size > MAX_BYTES:
         raise ValueError(f"{src.name} is over {MAX_BYTES // (1024 * 1024)} MB; a report is text")
     text = src.read_text("utf-8", errors="replace")
-    hit, warnings = identifier_hits(text, identifiers)
+    # the title and the file name are published too: in <title>, the Word metadata and the file names
+    hit, warnings = identifier_hits("\n\n".join([text, title or "", src.stem]), identifiers)
     if hit and not allow_identifiers:
         raise PermissionError(
             f"{src.name} contains {hit}. A handout leaves this machine once it is printed or sent and never needs "

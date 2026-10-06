@@ -11,7 +11,7 @@ This skill is read for its own sake and by every other zebra skill. It does not 
 
 If the person describes any of these as happening now or today, say so first, before any analysis, in plain words, and then continue only if they want to:
 
-- **A seizure lasting more than 5 minutes, or seizures that repeat without recovery** between them (status epilepticus) — emergency care.
+- **A seizure lasting more than 5 minutes, or seizures that repeat without recovery** between them (status epilepticus) — emergency care. First aid while help comes: on the side, nothing in the mouth except a rescue medicine the child's doctors prescribed for this (buccal or nasal midazolam goes into the cheek or nose — follow their written plan, never give a dose yourself), note the time.
 - **Vomiting, lethargy, refusing food, rapid breathing or confusion in a child with (or suspected to have) a metabolic disorder**, especially during an infection, fasting or after a high-protein meal — possible metabolic decompensation; many inborn errors of metabolism have an emergency protocol, and hours matter. Ask whether they have an emergency letter or protocol from their metabolic team, and tell them to bring it.
 - **Any sudden weakness, drooping face, trouble speaking, or a stroke-like episode** — emergency care (and in mitochondrial disease, MELAS-type episodes present this way).
 - **Breathlessness at rest, a new inability to lie flat, morning headaches with daytime sleepiness** in a neuromuscular disease — possible respiratory failure; urgent assessment.

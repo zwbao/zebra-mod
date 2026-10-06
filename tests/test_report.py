@@ -116,3 +116,31 @@ def test_cp1_13_a_record_number_never_matches_inside_a_scientific_id(tmp_path):
     text = "| HP:0012345 | Seizure |\nPMID 30012345, rs1060500100, NM_0012345.1, chr2:166012345\n"
     assert rx.identifier_hits(text, ["MZ0012345", "30012345"])[0] is None
     assert rx.identifier_hits(text + "病历号 MZ-001-2345\n", ["MZ0012345"])[0] is not None
+
+
+def test_review_export_catches_what_a_reader_would_see(tmp_path):
+    ids = ["张小明", "Zhang Xiaoming", "2019-03-02", "MRN0042317"]
+    for text in ("Dear family of Zhang\nXiaoming,", "你儿子\n张\n小明的结果", "患儿Zhang Xiaoming，男，3岁",
+                 "Zhang_Xiaoming letter", "Record number 12-0042317.", "born 02-Mar-2019", "March 2, 2019",
+                 "Zhāng Xiǎomíng"):
+        assert rx.identifier_hits(text, ids)[0] is not None, text
+    # boundaries: another date or coordinates are not the birth date
+    assert rx.identifier_hits("seen 2019-3-25; chr7:20190302-20190400", ids)[0] is None
+
+
+def test_review_export_checks_title_and_file_name(tmp_path):
+    d, md = _case_with_letter(tmp_path, identifiers=("张小明",))
+    with pytest.raises(PermissionError):
+        rx.export(str(md), ["html"], title="张小明 的家庭信", identifiers=["张小明"])
+    named = md.with_name("Zhang_Xiaoming_letter.md")
+    named.write_text(LETTER, "utf-8")
+    with pytest.raises(PermissionError):
+        rx.export(str(named), ["html"], identifiers=["Zhang Xiaoming"])
+
+
+def test_review_export_links_with_parentheses_and_wide_rows():
+    runs = rx.inline("[Dravet](https://en.wikipedia.org/wiki/Dravet_syndrome_(disease))")
+    assert runs[0][1]["href"] == "https://en.wikipedia.org/wiki/Dravet_syndrome_(disease)"
+    blocks = rx.parse("| a | b |\n|---|---|\n| 1 | 2 | 3 |\n")
+    table = next(b for b in blocks if b[0] == "table")
+    assert table[2][0] == ["1", "2", "3"] and len(table[1]) == 3

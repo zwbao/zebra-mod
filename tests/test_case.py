@@ -1070,3 +1070,21 @@ def test_cp1_13_phenopacket_round_trip_through_the_cli(tmp_path, capsys):
     status = {p["id"]: p["status"] for p in data["phenotypes"]}
     assert status == {"HP:0002373": "present", "HP:0001252": "excluded"}
     assert any(v.get("gene") == "SCN1A" and "c.2134C>T" in str(v.get("hgvs_c")) for v in data["variants"]), got
+
+
+def test_review_p2_12_defaults_are_never_shared_between_cases(tmp_path):
+    """An older case.json without `family`: editing one must not leak its relatives into another."""
+    import json as _json
+
+    from zebra import case as case_mod
+
+    for name in ("x", "y"):
+        d = tmp_path / name
+        case_mod.init(str(d), title=name)
+        data = _json.loads((d / "case.json").read_text("utf-8"))
+        data.pop("family", None)
+        (d / "case.json").write_text(_json.dumps(data), "utf-8")
+    with case_mod.editing(str(tmp_path / "x")) as data:
+        case_mod.apply_family(data, [{"relation": "mother"}])
+    assert case_mod.load(str(tmp_path / "y"))["family"]["members"] == []
+    assert case_mod._DICT_KEYS["family"]["members"] == []

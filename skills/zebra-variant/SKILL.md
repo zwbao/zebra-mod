@@ -32,7 +32,7 @@ You justify codes; `zebra` does the arithmetic. Every code cites a ledger id or 
    - **BS2** observed in healthy adults incompatible with penetrance.
    - **BP7** synonymous or deep intronic with SpliceAI ≤ 0.1.
    Splice region, deep intronic, UTR or promoter variants → `zebra-s2f` before deciding PP3/BP4/PVS1.
-   **mtDNA** (`m.3243A>G 35%`, or `heteroplasmy` in percent): gnomAD's mitochondrial counts (homoplasmic/heteroplasmic, maximum heteroplasmy) and MITOMAP's disease association come back; the nuclear PM2/BS1/BA1 rules are not applied — use the mitochondrial specifications (McCormick 2020) and say the heteroplasmy in the tested tissue matters.
+   **mtDNA** (`m.3243A>G 35%`, or `heteroplasmy` in percent): gnomAD's mitochondrial counts (homoplasmic/heteroplasmic, maximum heteroplasmy) and MITOMAP's disease association come back; the nuclear PM2/BS1/BA1 rules are not applied — use the mitochondrial specifications (McCormick 2020). Heteroplasmy is tissue-specific: for m.3243A>G the blood level falls with age and under-represents other tissues, so urine epithelial cells or muscle are usually tested and a blood percentage is not a severity score — say this to the person (retrieve the GeneReviews mtDNA chapter to cite it), and that maternal transmission level cannot be predicted, so genetic counselling is the next step.
    **Literature counts** (LitVar) exclude records spelled as a different substitution at the same position and say how many were excluded: a PMID count is for this allele.
 5. **Classify.** `mcp__zebra-mod__acmg` `mode: classify` with your codes. Report both readings (points; 2015 rules) when they differ.
 6. **Record.** `case_update` → `acmg: [{variant_id, codes, note}]`.

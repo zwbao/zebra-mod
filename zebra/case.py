@@ -11,6 +11,8 @@ date of birth, record numbers) that the mod refuses to send anywhere.
 
 from __future__ import annotations
 
+import copy
+
 import json
 import os
 import re
@@ -234,12 +236,12 @@ def _validate(data: Any, where: str) -> Dict[str, Any]:
     for key, default in _DICT_KEYS.items():
         value = data.get(key)
         if value is None:
-            data[key] = dict(default)
+            data[key] = copy.deepcopy(default)
         elif not isinstance(value, dict):
             raise CaseError(f"{where}: {key!r} must be an object, not {type(value).__name__}")
         else:
             for sub, sub_default in default.items():
-                value.setdefault(sub, sub_default)
+                value.setdefault(sub, copy.deepcopy(sub_default))
     if not isinstance(data["privacy"].get("identifiers"), list):
         raise CaseError(f"{where}: privacy.identifiers must be a list")
     for key, default in (("title", ""), ("role", "family"), ("id", ""), ("language", "zh"), ("updated_at", "")):

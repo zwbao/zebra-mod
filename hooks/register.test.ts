@@ -74,7 +74,7 @@ describe('identifiers before a case exists', () => {
     expect(JSON.stringify(body).includes('张丽丽')).toBe(false) // never echoed back
     expect(ran).toBe(false) // nothing written anywhere
     const leak = await $.tool.check({ tool: 'WebSearch', input: { query: '张丽丽 SCN1A' } })
-    expect(leak.decision).toBe('ask') // no case: asked, with the identifier named as protected
+    expect(leak.decision).toBe('deny') // a registered identifier is refused even before a case exists
     const own = await $.tool.call({ tool: 'mcp__zebra-mod__literature_search', query: 'Zhang Lili Dravet' } as never)
     expect('deny' in own).toBe(true)
   })
@@ -112,6 +112,26 @@ describe('A-P1-6 with a case open', () => {
     expect(leak.decision).toBe('deny')
     const remote = await $.tool.check({ tool: 'Agent', input: { prompt: 'patient id 330106201903021234', isolation: 'remote' } })
     expect(remote.decision).toBe('deny')
+  })
+
+  test('review P0-2 every Artifact action is scanned, not only a page title', async ($, on) => {
+    openCase(on)
+    on('tool.check', () => ({ decision: 'allow' as const }))
+    for (const input of [
+      { action: 'write_db', collection: 'notes', doc_id: 'a', data: { patient: 'Zhang Xiaoming' } },
+      { action: 'reply', url: 'https://claude.ai/artifact/x', thread_id: 't', text: '王小雨 的结果已更新' },
+      { action: 'write_db', db_op: 'str_replace', field: 'html', old_str: 'x', new_str: '<p>MZ0012345</p>' },
+    ]) {
+      expect((await $.tool.check({ tool: 'Artifact', input })).decision).toBe('deny')
+    }
+    expect((await $.tool.check({ tool: 'Artifact', input: { action: 'list' } })).decision).toBe('allow')
+  })
+
+  test('review P0-1 a name after & in a URL is refused through the real gate', async ($, on) => {
+    openCase(on)
+    on('tool.check', () => ({ decision: 'allow' as const }))
+    const r = await $.tool.check({ tool: 'Bash', input: { command: 'curl "https://www.google.com/search?hl=en&q=Zhang+Xiaoming"' } })
+    expect(r.decision).toBe('deny')
   })
 
   test('A-P1-3 a sample name or a case path that stays local does not trip the gate', async ($, on) => {

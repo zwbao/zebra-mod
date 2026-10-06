@@ -96,3 +96,78 @@ def test_cp1_12_cli_records_baseline_then_timeline(tmp_path, monkeypatch, capsys
     assert (tmp_path / "c" / "evidence" / "recheck.json").exists()
     assert case_mod.load(d)["timeline"][-1]["event"] == "recheck: baseline recorded"
     assert len(case_mod.read_ledger(d)) == 4  # the answers' sources went into the ledger
+
+
+def test_review_p0_3_a_failed_recheck_keeps_the_baseline(tmp_path, monkeypatch):
+    """VUS → a run where every source fails → LP: the third run must report the change."""
+    d = _case(tmp_path)
+    _stub(monkeypatch, clin="Uncertain significance", stars=1, trials=("NCT01",))
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    recheck.save_snapshot(d, cur, prev)
+
+    def down(*a, **k):
+        raise RuntimeError("all sources down")
+
+    for name in ("_ask_variant", "_ask_gene", "_ask_trials", "_ask_papers"):
+        monkeypatch.setattr(recheck, name, down)
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    assert set(out.result["not_checked"]) >= {"variant:v1", "gene:SCN1A", "trials:h1"}
+    recheck.save_snapshot(d, cur, prev)
+    _stub(monkeypatch, clin="Likely pathogenic", stars=2, trials=("NCT01", "NCT09"))
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    whats = {c["what"] for c in out.result["changes"]}
+    assert "ClinVar" in whats and "new recruiting trials" in whats
+
+
+def test_review_p1_1_a_clinvar_outage_is_not_a_lost_record(tmp_path, monkeypatch):
+    d = _case(tmp_path)
+    _stub(monkeypatch, clin="Uncertain significance", stars=1)
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    recheck.save_snapshot(d, cur, prev)
+    monkeypatch.setattr(recheck, "_ask_variant", lambda item: (
+        {"clinvar": None, "clinvar_checked": False, "grpmax_af": None, "gnomad_ac": 0, "freq_checked": True},
+        Outcome({}, warnings=["ClinVar unavailable: HTTP 503"])))
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    assert not any(c["what"] == "ClinVar" for c in out.result["changes"])
+    recheck.save_snapshot(d, cur, prev)
+    assert cur["items"]["variant:v1"]["clinvar"]["classification"] == "Uncertain significance"  # carried forward
+
+
+def test_review_p1_2_paper_windows_follow_each_question_and_never_overlap(tmp_path, monkeypatch):
+    from datetime import date
+
+    d = _case(tmp_path)
+    windows = []
+    _stub(monkeypatch)
+    monkeypatch.setattr(recheck, "_ask_papers", lambda item, since, until: (
+        windows.append((since, until)) or {"since": since.isoformat(), "checked_on": until.isoformat(), "count": 0,
+                                           "latest": []}, Outcome({})))
+    days = iter([date(2026, 1, 1), date(2026, 2, 1), date(2026, 3, 1)])
+    monkeypatch.setattr(recheck, "_today", lambda: next(days))
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    recheck.save_snapshot(d, cur, prev)
+    # the second run's papers question fails: its window must not be skipped next time
+    monkeypatch.setattr(recheck, "_ask_papers", lambda item, since, until: (_ for _ in ()).throw(RuntimeError("down")))
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    recheck.save_snapshot(d, cur, prev)
+    seen = []
+    monkeypatch.setattr(recheck, "_ask_papers", lambda item, since, until: (
+        seen.append(since) or {"since": since.isoformat(), "checked_on": until.isoformat(), "count": 0, "latest": []},
+        Outcome({})))
+    recheck.run(d, case_mod.load(d))
+    assert seen == [date(2026, 1, 1)]  # from the last successful check, not the failed one
+
+
+def test_review_p1_3_an_incomplete_trial_list_is_not_diffed(tmp_path, monkeypatch):
+    d = _case(tmp_path)
+    _stub(monkeypatch)
+    monkeypatch.setattr(recheck, "_ask_trials", lambda item: (
+        {"recruiting": ["NCT1", "NCT2"], "titles": {}, "total": 150, "complete": False}, Outcome({})))
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    recheck.save_snapshot(d, cur, prev)
+    monkeypatch.setattr(recheck, "_ask_trials", lambda item: (
+        {"recruiting": ["NCT2", "NCT3"], "titles": {}, "total": 151, "complete": False}, Outcome({})))
+    out, cur, prev = recheck.run(d, case_mod.load(d))
+    whats = [c["what"] for c in out.result["changes"]]
+    assert "new recruiting trials" not in whats and "no longer recruiting" not in whats
+    assert "recruiting trials (count)" in whats

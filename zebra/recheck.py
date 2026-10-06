@@ -116,10 +116,17 @@ def _ask_variant(item: Dict[str, Any]) -> Tuple[Dict[str, Any], Outcome]:
     r = out.result or {}
     clin = r.get("clinvar") or {}
     pop = r.get("acmg_inputs") or {}
+    # the card turns a failed source into a warning and an empty field: that is "not checked",
+    # never "no ClinVar record" or "absent from gnomAD" (a transient error must not read as a change)
+    clinvar_failed = any(w.startswith("ClinVar") for w in out.warnings)
+    gnomad_failed = any(w.startswith("gnomAD") or "gnomAD unavailable" in w for w in out.warnings)
     state = {
         "clinvar": {k: clin.get(k) for k in ("vcv", "classification", "stars", "last_evaluated", "url")} if clin else None,
+        "clinvar_checked": not clinvar_failed,
         "grpmax_af": pop.get("grpmax_af"),
         "gnomad_ac": pop.get("gnomad_ac"),
+        # a frequency from VEP's fallback is another dataset, not comparable with gnomAD's own answer
+        "freq_checked": not gnomad_failed and not str(pop.get("frequency_source") or "").startswith("VEP"),
     }
     return state, out
 
@@ -137,21 +144,32 @@ def _ask_gene(item: Dict[str, Any]) -> Tuple[Dict[str, Any], Outcome]:
 def _ask_trials(item: Dict[str, Any]) -> Tuple[Dict[str, Any], Outcome]:
     from zebra.sources import ctgov
 
-    out = ctgov.search(item["disease"], status="RECRUITING", limit=50)
-    studies = (out.result or {}).get("studies") or []
+    out = ctgov.search(item["disease"], status="RECRUITING", limit=100)
+    r = out.result or {}
+    studies = r.get("studies") or []
+    total = r.get("total")
+    seen = len(studies) + len(r.get("filtered") or [])
+    # a list ranked by relevance and cut at a page is a sliding window: only a complete list can say
+    # which trials are new or no longer recruiting
+    complete = isinstance(total, int) and total <= seen
     return {"recruiting": sorted({s.get("nct_id") for s in studies if s.get("nct_id")}),
-            "titles": {s.get("nct_id"): s.get("title") for s in studies if s.get("nct_id")}}, out
+            "titles": {s.get("nct_id"): s.get("title") for s in studies if s.get("nct_id")},
+            "total": total, "complete": complete}, out
 
 
 def _ask_papers(item: Dict[str, Any], since: date, until: date) -> Tuple[Dict[str, Any], Outcome]:
+    """Papers first published after `since` (exclusive) up to `until`: windows never overlap or leave a gap."""
     from zebra.sources import europepmc
 
-    q = f'"{item["disease"]}" AND FIRST_PDATE:[{since.isoformat()} TO {until.isoformat()}]'
+    start = since + timedelta(days=1)
+    if start > until:  # checked again the same day: an empty window, nothing to ask
+        return {"since": since.isoformat(), "checked_on": until.isoformat(), "count": 0, "latest": []}, Outcome({})
+    q = f'"{item["disease"]}" AND FIRST_PDATE:[{start.isoformat()} TO {until.isoformat()}]'
     out = europepmc.search(q, limit=8, sort="date")
     r = out.result or {}
     hits = [{"pmid": h.get("pmid"), "title": h.get("title"), "year": h.get("year"), "url": h.get("url")}
             for h in r.get("hits") or []]
-    return {"since": since.isoformat(), "count": r.get("hitCount"), "latest": hits}, out
+    return {"since": since.isoformat(), "checked_on": until.isoformat(), "count": r.get("hitCount"), "latest": hits}, out
 
 
 def _guarded(identifiers: List[str]) -> Callable[[str], Optional[str]]:
@@ -179,6 +197,16 @@ def run(case_dir: str, data: Dict[str, Any], workers: int = 4) -> Tuple[Outcome,
     todo = plan(data)
     unsafe = _guarded(list((data.get("privacy") or {}).get("identifiers") or []))
 
+    before = (previous or {}).get("items") or {}
+
+    def paper_since(key: str) -> date:
+        """The day this question was last answered, or the first-run lookback."""
+        old = before.get(key) or {}
+        try:
+            return date.fromisoformat(str(old.get("checked_on")))
+        except ValueError:
+            return since
+
     jobs: List[Tuple[str, str, Callable[[], Tuple[Dict[str, Any], Outcome]]]] = []
     refused: List[str] = []
     for v in todo["variants"]:
@@ -193,8 +221,9 @@ def run(case_dir: str, data: Dict[str, Any], workers: int = 4) -> Tuple[Outcome,
             refused.append(h["key"])
             continue
         jobs.append((f"trials:{h['id']}", f"recruiting trials for {h['disease']}", lambda h=h: _ask_trials(h)))
-        jobs.append((f"papers:{h['id']}", f"papers on {h['disease']} since {since.isoformat()}",
-                     lambda h=h: _ask_papers(h, since, today)))
+        ps = paper_since(f"papers:{h['id']}")
+        jobs.append((f"papers:{h['id']}", f"papers on {h['disease']} since {ps.isoformat()}",
+                     lambda h=h, ps=ps: _ask_papers(h, ps, today)))
 
     results: Dict[str, Dict[str, Any]] = {}
     sources: List[Dict[str, Any]] = []
@@ -220,10 +249,21 @@ def run(case_dir: str, data: Dict[str, Any], workers: int = 4) -> Tuple[Outcome,
     for key in refused:
         warnings.append(f"not rechecked: {key} — its query would carry a protected identifier of this case")
 
-    before = (previous or {}).get("items") or {}
     changes = compare(before, results, labels, first_run)
+    # The snapshot keeps the last known answer of every question: one failed source must not erase a
+    # baseline (or the next recheck would compare against nothing and report no change).
+    items: Dict[str, Any] = dict(before)
+    for key, state in results.items():
+        old = before.get(key) or {}
+        if key.startswith("variant:"):
+            if not state.get("clinvar_checked", True) and old:
+                state = {**state, "clinvar": old.get("clinvar"), "clinvar_checked": old.get("clinvar_checked", True)}
+            if not state.get("freq_checked", True) and old:
+                state = {**state, "grpmax_af": old.get("grpmax_af"), "gnomad_ac": old.get("gnomad_ac"),
+                         "freq_checked": old.get("freq_checked", True)}
+        items[key] = state
     current = {"checked_on": today.isoformat(), "checked_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-               "items": results}
+               "items": items}
     unchecked = sorted(set(labels) - set(results)) + refused
     result = {
         "since": None if first_run else since.isoformat(),
@@ -258,11 +298,14 @@ def compare(before: Dict[str, Any], now: Dict[str, Any], labels: Dict[str, str],
             if old is None:
                 continue
             a, b = old.get("clinvar"), state.get("clinvar")
-            if (a or {}).get("classification") != (b or {}).get("classification") or (a or {}).get("stars") != (b or {}).get("stars"):
+            clin_known = state.get("clinvar_checked", True) and old.get("clinvar_checked", True)
+            if clin_known and ((a or {}).get("classification") != (b or {}).get("classification")
+                               or (a or {}).get("stars") != (b or {}).get("stars")):
                 out.append({"key": key, "what": "ClinVar", "about": label, "before": _clin_text(a), "after": _clin_text(b),
                             "url": (b or a or {}).get("url"), "act": "re-run the ACMG reading for this variant"})
             fa, fb = old.get("grpmax_af"), state.get("grpmax_af")
-            if (fa is None) != (fb is None) or (fa and fb and abs(fb - fa) / max(fa, fb) > 0.2):
+            freq_known = state.get("freq_checked", True) and old.get("freq_checked", True)
+            if freq_known and ((fa is None) != (fb is None) or (fa and fb and abs(fb - fa) / max(fa, fb) > 0.2)):
                 out.append({"key": key, "what": "gnomAD maximum group frequency", "about": label,
                             "before": fa, "after": fb, "act": "recheck PM2 / BS1 / BA1"})
         elif key.startswith("gene:"):
@@ -281,6 +324,12 @@ def compare(before: Dict[str, Any], now: Dict[str, Any], labels: Dict[str, str],
         elif key.startswith("trials:"):
             if old is None:
                 continue
+            if not (state.get("complete", True) and old.get("complete", True)):
+                if state.get("total") != old.get("total"):
+                    out.append({"key": key, "what": "recruiting trials (count)", "about": label,
+                                "before": old.get("total"), "after": state.get("total"),
+                                "act": "the list is longer than one page, so which trials changed is not computed: search the trials"})
+                continue
             new = sorted(set(state.get("recruiting") or []) - set(old.get("recruiting") or []))
             gone = sorted(set(old.get("recruiting") or []) - set(state.get("recruiting") or []))
             if new:
@@ -292,7 +341,7 @@ def compare(before: Dict[str, Any], now: Dict[str, Any], labels: Dict[str, str],
                 out.append({"key": key, "what": "no longer recruiting", "about": label, "trials": gone,
                             "act": "update any lead that relied on them"})
         elif key.startswith("papers:"):
-            if not first_run and (state.get("count") or 0) > 0:
+            if old is not None and (state.get("count") or 0) > 0:
                 out.append({"key": key, "what": "new papers", "about": label, "count": state.get("count"),
                             "latest": state.get("latest"), "act": "screen the latest for this genotype and phenotype"})
     return out
