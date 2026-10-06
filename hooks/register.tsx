@@ -13,8 +13,10 @@ const MAX_RESULT_CHARS = 60_000
 const MAX_ARTIFACT_SCAN = 200_000
 
 // Tools that never reach the network: they read and write the local case only.
-const LOCAL_TOOLS = new Set(['case_status', 'case_update'])
+const LOCAL_TOOLS = new Set(['case_status', 'case_update', 'report_export'])
 // Tools whose answer is a lookup with no side effect, safe to run without asking.
+// tools that can carry text off the machine: what a crashed gate refuses instead of passing
+const OUTBOUND_HINT = /^(?:Bash|WebFetch|WebSearch|Artifact|SendMessage|Agent|mcp__)/
 const READ_ONLY_TOOLS = new Set([
   'case_status', 'hpo_search', 'phenotype_rank', 'gene_card', 'variant_card', 'disease_card', 'acmg',
   's2f_predict', 'therapy_landscape', 'trials_search', 'literature_search', 'rare_stats', 'edit_check', 'china_rare',
@@ -25,6 +27,8 @@ const board = atom({ plugin: 'zebra-mod', key: 'board' } as const, null as Board
 const casePath = atom({ plugin: 'zebra-mod', key: 'casePath' } as const, null as string | null)
 const guard = atom({ plugin: 'zebra-mod', key: 'guard' } as const, [] as string[])
 const ready = atom({ plugin: 'zebra-mod', key: 'ready' } as const, null as Ready | null)
+// zebra tools the person allowed for the rest of this session in zebra's own approval dialog
+const trusted = atom({ plugin: 'zebra-mod', key: 'trusted' } as const, [] as string[])
 
 type Envelope = {
   ok: boolean
@@ -138,7 +142,7 @@ export const register: Register = (on, options) => {
     // tools exactly as they do to any other tool.
     const verdict = await $.tool.check({ tool: e.tool, input: schemaArgs(def, input) })
     if (verdict.decision === 'deny') return { deny: verdict.reason ?? `${def.name} was refused` }
-    if (verdict.decision === 'ask' && !(await approved($, def, verdict.reason))) {
+    if (verdict.decision === 'ask' && !(await approved($, def, verdict))) {
       return { deny: `${def.name} was not approved` }
     }
     let argv: string[]
@@ -236,10 +240,16 @@ export const register: Register = (on, options) => {
     // The engine's own decision stands; this only spares the person a prompt for a
     // read-only lookup, and never overrides a deny, a rule or the mode's own answer.
     const below = await next(e)
-    if (own && below.decision === 'ask' && below.rule === undefined && READ_ONLY_TOOLS.has(own.name)) {
+    const writes = own?.name === 'cnv_interpret' && (e.input as { record?: unknown })?.record === true
+    if (own && !writes && below.decision === 'ask' && below.rule === undefined && READ_ONLY_TOOLS.has(own.name)) {
       return { decision: 'allow' as const, reason: 'zebra-mod: read-only lookup in public databases and local case files' }
     }
     return below
+  }).catch(async ($, e, next) => {
+    if (OUTBOUND_HINT.test(e.tool)) {
+      return { decision: 'deny' as const, reason: `zebra-mod privacy gate could not check this call (${next.error.kind}); it was refused rather than let through unchecked` }
+    }
+    return next(e)
   })
 
   // ------------------------------------------------------------ /zebra
@@ -297,11 +307,13 @@ export const register: Register = (on, options) => {
     if (verb === 'ledger') {
       const active = await read($, casePath)
       if (!active) return { text: 'No active case.' }
-      const got = await runZebra($, python, ['case', 'ledger', '--case', active])
+      // --tail: the CLI keeps the newest rows and reports the true total (an output trim would keep the oldest)
+      const got = await runZebra($, python, ['case', 'ledger', '--case', active, '--tail', '25'])
       if (!got.ok) return { text: `Could not read the ledger: ${got.error?.message ?? 'unknown error'}` }
-      const rows = (got.result as Array<Record<string, unknown>> | undefined) ?? []
-      const tail = rows.slice(-25).map(r => `${r.eid}  ${r.db}  ${r.record ?? ''}  ${r.url ?? ''}`)
-      return { text: rows.length ? `${rows.length} evidence rows (last 25):\n${tail.join('\n')}` : 'The evidence ledger is empty.' }
+      const r = (got.result ?? {}) as { total?: number; rows?: Array<Record<string, unknown>> }
+      const rows = r.rows ?? []
+      const tail = rows.map(row => `${row.eid}  ${row.db}  ${row.record ?? ''}  ${row.url ?? ''}`)
+      return { text: rows.length ? `${r.total ?? rows.length} evidence rows (newest ${rows.length}):\n${tail.join('\n')}` : 'The evidence ledger is empty.' }
     }
     return { text: `Unknown: /zebra ${verb}. Try /zebra help.` }
   })
@@ -371,11 +383,24 @@ async function checkCli($: EngineInterface, python: string): Promise<Ready> {
   return r
 }
 
-/** Ask the person, in the engine's own dialog, whether a zebra tool may run; no one to ask means no. */
-async function approved($: EngineInterface, def: ToolDef, reason: string | undefined): Promise<boolean> {
+/**
+ * Ask the person whether a zebra tool may run; no one to ask means no. The engine's permission
+ * dialog only opens for tools it runs itself, so this is an AskUserQuestion. An ask that comes
+ * from the session's mode may be answered once for the session; one a settings rule asks for
+ * (`rule` set) is asked every time, as the person configured.
+ */
+async function approved($: EngineInterface, def: ToolDef, verdict: { reason?: string; rule?: unknown }): Promise<boolean> {
+  const sessionable = verdict.rule === undefined
+  if (sessionable && (await read($, trusted)).includes(def.name)) return true
+  const always = `Allow ${def.name} for this session`
+  const options = sessionable ? ['Allow', always, 'Deny'] : ['Allow', 'Deny']
   try {
-    const why = reason ? `${reason.replace(/[?？]\s*$/, '')}. ` : ''
-    const answer = await $.ui.ask(`${why}Allow zebra-mod to run ${def.name}?`, ['Allow', 'Deny'])
+    const why = verdict.reason ? `${verdict.reason.replace(/[?？.。]\s*$/, '')}. ` : ''
+    const answer = await $.ui.ask(`${why}Allow zebra-mod to run ${def.name}?`, options)
+    if (sessionable && answer === always) {
+      await update($, trusted, t => (t.includes(def.name) ? t : [...t, def.name]))
+      return true
+    }
     return answer === 'Allow'
   } catch {
     return false // dismissed, or a headless run with nobody to ask
@@ -597,8 +622,14 @@ function helpText(r: Ready | null, active: string | null): string {
 }
 
 function doctorText(result: unknown): string {
-  const r = (result ?? {}) as { checks?: Array<{ name: string; ok: boolean; detail?: string }> }
-  const rows = (r.checks ?? []).map(c => `${c.ok ? '✓' : '✗'} ${c.name}${c.detail ? ` — ${c.detail}` : ''}`)
+  const r = (result ?? {}) as {
+    checks?: Array<{ name: string; ok: boolean; optional?: boolean; detail?: string }>
+    summary?: { ok?: number; failed?: number; optional_missing?: number }
+  }
+  // ○ marks what zebra works without (research keys, offline data): not a failure
+  const rows = (r.checks ?? []).map(c => `${c.ok ? '✓' : c.optional ? '○' : '✗'} ${c.name}${c.detail ? ` — ${c.detail}` : ''}`)
+  const s = r.summary
+  if (s) rows.push(`${s.ok ?? 0} ok, ${s.failed ?? 0} failed, ${s.optional_missing ?? 0} optional not set up (○)`)
   return rows.length ? rows.join('\n') : JSON.stringify(result, null, 1)
 }
 

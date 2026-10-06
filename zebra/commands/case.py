@@ -57,6 +57,16 @@ def _summary(args: argparse.Namespace) -> Outcome:
         lines.append("therapy leads:")
         for t in s["therapy_leads"]:
             lines.append(f"  {t['id']} [{t['kind']}] {t['name']} {t['status'] or ''}")
+    if s.get("tests"):
+        lines.append("tests done:")
+        for t in s["tests"]:
+            lines.append(f"  {t['id']} {t.get('date') or ''} {t.get('type')}: {t.get('result') or '(result not entered)'}")
+    if s.get("family"):
+        cons = s.get("consanguinity")
+        lines.append("family" + (f" (consanguinity: {cons})" if cons is not None else "") + ":")
+        for m in s["family"]:
+            aff = {True: "affected", False: "unaffected"}.get(m.get("affected"), m.get("affected") or "status unknown")
+            lines.append(f"  {m['id']} {m.get('relation') or '?'} — {aff}" + (f"; {m['genotype']}" if m.get("genotype") else ""))
     if s["questions"]:
         lines.append("open questions:")
         for q in s["questions"]:
@@ -148,16 +158,34 @@ def _remove(args: argparse.Namespace) -> Outcome:
     return Outcome({"removed": ok}, text="removed" if ok else "nothing matched")
 
 
+def _positive_int(text: str) -> int:
+    try:
+        n = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{text!r} is not a whole number") from None
+    if n < 1:
+        raise argparse.ArgumentTypeError("must be 1 or more")
+    return n
+
+
 def _ledger(args: argparse.Namespace) -> Outcome:
     rows = case_mod.read_ledger(_dir(args))
     if args.eid:
         rows = [r for r in rows if r.get("eid") in set(args.eid)]
+    tail = getattr(args, "tail", None)
+    shown = rows[-tail:] if tail else rows
     text = "\n".join(f"{r.get('eid') or '(no id)'}\t{r.get('db')}\t{r.get('record') or ''}\t"
-                     f"{r.get('url') or ''}\t{r.get('retrieved_at') or ''}" for r in rows)
+                     f"{r.get('url') or ''}\t{r.get('retrieved_at') or ''}" for r in shown)
+    if tail:
+        # the newest rows and the true count: an output-size trim keeps a list's head,
+        # which for a ledger is the oldest evidence (C-P1-5)
+        return Outcome({"total": len(rows), "rows": shown},
+                       text=f"{len(rows)} rows; last {len(shown)}:\n{text}" if rows else "(empty ledger)")
     return Outcome(rows, text=text or "(empty ledger)")
 
 
-OPS_KEYS = ("profile", "phenotypes", "variants", "hypotheses", "leads", "acmg", "questions", "remove")
+OPS_KEYS = ("profile", "phenotypes", "variants", "hypotheses", "leads", "acmg", "questions", "remove",
+            "family", "tests", "timeline", "identifiers")
 # the fields each list item may carry; an unknown one is a typo that would
 # otherwise be dropped in silence while the envelope reported success
 ITEM_FIELDS = {
@@ -166,12 +194,17 @@ ITEM_FIELDS = {
     "leads": ("name", "kind", "status", "evidence", "ids", "note"),
     "acmg": ("variant_id", "codes", "note"),
     "remove": ("kind", "id"),
+    "family": case_mod.FAMILY_FIELDS,
+    "tests": case_mod.TEST_FIELDS,
+    "timeline": case_mod.TIMELINE_FIELDS,
 }
 # keys people and models reach for, and what they meant
 OPS_ALIASES = {"phenotype": "phenotypes", "variant": "variants", "hypothesis": "hypotheses",
                "hypothese": "hypotheses", "lead": "leads", "therapy_leads": "leads", "therapy": "leads",
-               "question": "questions", "removals": "remove", "delete": "remove", "acmg_codes": "acmg"}
-_LIST_OPS = ("phenotypes", "variants", "hypotheses", "leads", "acmg", "remove")
+               "question": "questions", "removals": "remove", "delete": "remove", "acmg_codes": "acmg",
+               "relatives": "family", "pedigree": "family", "members": "family", "test": "tests",
+               "tests_done": "tests", "events": "timeline", "identifier": "identifiers", "names": "identifiers"}
+_LIST_OPS = ("phenotypes", "variants", "hypotheses", "leads", "acmg", "remove", "family", "tests", "timeline")
 
 
 def _ids_map(raw: Any, field: str) -> Dict[str, str]:
@@ -236,6 +269,24 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
             clean[key] = list(ops[key])
         if ops.get("questions") is not None:
             clean["questions"] = case_mod.str_list(ops["questions"], "questions")
+        if ops.get("identifiers") is not None:
+            clean["identifiers"] = case_mod.str_list(ops["identifiers"], "identifiers")
+        for m in clean.get("family", []):
+            if m.get("relation") is not None and str(m["relation"]).strip().lower() not in case_mod.RELATIONS:
+                raise case_mod.CaseError(f"family: relation {m['relation']!r} is not one of " + ", ".join(case_mod.RELATIONS))
+            if m.get("affected") is not None and not isinstance(m["affected"], (bool, str)):
+                raise case_mod.CaseError("family: affected must be true, false or 'unknown'")
+            for k, v in m.items():
+                if k != "affected" and v is not None and not isinstance(v, (str, int, float)):
+                    raise case_mod.CaseError(f"family: {k} must be text, got {type(v).__name__}")
+        for key in ("tests", "timeline"):
+            for item in clean.get(key, []):
+                for k, v in item.items():
+                    if v is not None and not isinstance(v, (str, int, float)):
+                        raise case_mod.CaseError(f"{key}: {k} must be text, got {type(v).__name__}")
+                need = "type" if key == "tests" else "event"
+                if not str(item.get(need) or "").strip():
+                    raise case_mod.CaseError(f"{key}: every item needs {need!r}")
 
         for p in clean.get("phenotypes", []):
             hid = str(p.get("id", "")).strip()
@@ -393,6 +444,17 @@ def _apply(args: argparse.Namespace) -> Outcome:
                 errors.append(f"acmg {a.get('variant_id')}: {err}")
         for q in ops.get("questions", []):
             done["questions"] = case_mod.apply_question(data, q)
+        if ops.get("family"):
+            case_mod.apply_family(data, ops["family"])
+            done["family"] = len(ops["family"])
+        for t in ops.get("tests", []):
+            done.setdefault("tests", []).append(case_mod.apply_test(data, t)["id"])
+        for ev in ops.get("timeline", []):
+            case_mod.apply_timeline(data, ev)
+            done["timeline"] = done.get("timeline", 0) + 1
+        if ops.get("identifiers"):
+            # the count only: the values are protected and never echoed back into a transcript
+            done["identifiers"] = {"protected": case_mod.apply_identifiers(data, ops["identifiers"])}
         for r in ops.get("remove", []):
             done.setdefault("removed", []).append({"kind": r["kind"], "id": r["id"],
                                                    "ok": case_mod.apply_remove(data, r["kind"], r["id"])})
@@ -426,7 +488,10 @@ def register(sub: argparse._SubParsersAction) -> None:
     q = add("add-hpo", _add_hpo, "add phenotypes by HPO id (label verified against HPO)", positional_dir=False)
     q.add_argument("hpo", nargs="+", help="HP:0001250 ...")
     q.add_argument("--label", help="only with one id, and only when HPO cannot be reached")
-    q.add_argument("--status", choices=case_mod.PHENO_STATUS, default="present")
+    # no default: an omitted status keeps the recorded one (an `excluded` term must not
+    # become `present` because it was re-added with a new source); a new term is present
+    q.add_argument("--status", choices=case_mod.PHENO_STATUS, default=None,
+                   help="present (default for a new term) or excluded; omitted keeps the recorded status")
     q.add_argument("--onset", help="HPO onset term or free text (e.g. HP:0003593 or '6 months')")
     q.add_argument("--source", help="where it is documented (records/report.pdf p.2)")
     q.add_argument("--note")
@@ -493,3 +558,4 @@ def register(sub: argparse._SubParsersAction) -> None:
 
     q = add("ledger", _ledger, "list evidence ledger rows", positional_dir=False)
     q.add_argument("eid", nargs="*", help="only these ids")
+    q.add_argument("--tail", type=_positive_int, help="only the newest N rows, with the total count")

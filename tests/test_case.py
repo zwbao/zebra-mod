@@ -807,3 +807,166 @@ def test_f34_apply_ledgers_without_an_explicit_case_flag(case_dir):
     env, code = zebra("case", "apply", case_dir, "--ops", json.dumps({"phenotypes": [{"id": "HP:0002373"}]}))
     assert code == 0 and env["ledger"] == ["E1"]
     assert C.ledger_ids(case_dir) == {"E1"}
+
+
+def test_cp1_11_family_tests_timeline_identifiers_ops(tmp_path):
+    """CP1-11/SP1: relatives, tests done, a timeline and identifiers are first-class case ops."""
+    import json as _json
+
+    from zebra import case as case_mod
+    from zebra.commands import case as case_cmd
+
+    d = str(tmp_path / "c")
+    case_mod.init(d, title="t")
+    ops = {
+        "family": [{"relation": "Mother", "affected": False, "genotype": "het for v1"}, {"relation": "brother", "affected": True}],
+        "tests": [{"type": "CMA", "date": "2025-03", "result": "normal"}],
+        "timeline": [{"date": "2025-01", "event": "regression"}, {"date": "2024-06", "event": "first seizure"}],
+        "identifiers": ["王小雨", "MZ0012345"],
+    }
+    out = case_cmd._apply(_ns(d, _json.dumps(ops, ensure_ascii=False)))
+    applied = out.result["applied"]
+    assert applied["identifiers"] == {"protected": 2}
+    assert "王小雨" not in _json.dumps(out.result, ensure_ascii=False)  # never echoed back
+    data = case_mod.load(d)
+    assert [m["relation"] for m in data["family"]["members"]] == ["mother", "brother"]
+    assert [m["id"] for m in data["family"]["members"]] == ["f1", "f2"]
+    assert data["tests"][0]["id"] == "x1" and data["tests"][0]["result"] == "normal"
+    assert [e["event"] for e in data["timeline"]] == ["first seizure", "regression"]  # sorted by date
+    assert set(data["privacy"]["identifiers"]) == {"王小雨", "MZ0012345"}
+    s = case_mod.summary(d)
+    assert s["tests"][0]["type"] == "CMA" and s["family"][1]["affected"] is True and s["identifiers"] == 2
+
+    # removal by the new kinds, and an id is never re-used after removal
+    case_cmd._apply(_ns(d, _json.dumps({"remove": [{"kind": "relative", "id": "f2"}, {"kind": "test", "id": "x1"}]})))
+    case_cmd._apply(_ns(d, _json.dumps({"family": [{"relation": "sister"}], "tests": [{"type": "exome"}]})))
+    data = case_mod.load(d)
+    assert [m["id"] for m in data["family"]["members"]] == ["f1", "f3"]
+    assert [t["id"] for t in data["tests"]] == ["x2"]
+
+
+def test_cp1_11_bad_family_op_writes_nothing(tmp_path):
+    import json as _json
+
+    import pytest
+
+    from zebra import case as case_mod
+    from zebra.commands import case as case_cmd
+    from zebra.core import UsageError
+
+    d = str(tmp_path / "c")
+    case_mod.init(d, title="t")
+    with pytest.raises(UsageError):
+        case_cmd._apply(_ns(d, _json.dumps({"tests": [{"type": "CMA"}], "family": [{"relation": "neighbour"}]})))
+    with pytest.raises(UsageError):
+        case_cmd._apply(_ns(d, _json.dumps({"tests": [{"result": "normal"}]})))
+    assert case_mod.load(d)["tests"] == []
+
+
+def test_c_p1_1_bad_ledger_lines_never_break_the_case(tmp_path):
+    """C-P1-1: a non-object row or bytes cut inside a character must not stop reading or numbering."""
+    from zebra import case as case_mod
+
+    d = str(tmp_path / "c")
+    case_mod.init(d, title="t")
+    ledger = tmp_path / "c" / "evidence" / "ledger.jsonl"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    with open(ledger, "wb") as fh:
+        fh.write(b'{"eid": "E4", "db": "HPO"}\n')
+        fh.write(b'null\n[1, 2]\n42\n')
+        fh.write('{"eid": "E5", "db": "中文'.encode("utf-8")[:-1] + b"\n")  # cut inside a character
+    rows = case_mod.read_ledger(d)
+    assert [r["eid"] for r in rows] == ["E4"]
+    assert case_mod.append_ledger(d, "x", {}, [{"db": "HPO"}]) == ["E6"]
+    assert case_mod.summary(d)["evidence_count"] == 2
+
+
+def _ns(case_dir, ops_json):
+    return type("A", (), {"ops": ops_json, "dir": case_dir, "case": None})()
+
+
+def test_c_p1_6_readding_an_excluded_term_keeps_it_excluded(tmp_path):
+    from zebra import case as case_mod
+    from zebra.cli import main
+
+    d = str(tmp_path / "c")
+    case_mod.init(d, title="t")
+    assert main(["--json", "case", "add-hpo", "HP:0001250", "--label", "Seizure", "--status", "excluded",
+                 "--note", "EEG normal", "--case", d]) == 0
+    assert main(["--json", "case", "add-hpo", "HP:0001250", "--label", "Seizure", "--source", "records/neuro.pdf",
+                 "--case", d]) == 0
+    p = case_mod.load(d)["phenotypes"][0]
+    assert p["status"] == "excluded" and p["note"] == "EEG normal" and p["source"] == "records/neuro.pdf"
+    assert main(["--json", "case", "add-hpo", "HP:0001263", "--label", "Global developmental delay", "--case", d]) == 0
+    assert case_mod.load(d)["phenotypes"][1]["status"] == "present"
+
+
+def test_c_p1_5_ledger_tail_keeps_the_newest_rows_and_the_true_count(tmp_path, capsys):
+    import json as _json
+
+    from zebra import case as case_mod
+    from zebra.cli import main
+
+    d = str(tmp_path / "c")
+    case_mod.init(d, title="t")
+    case_mod.append_ledger(d, "x", {}, [{"db": "HPO", "record": f"r{i}", "url": "https://x.org/" + "a" * 200}
+                                        for i in range(1000)])
+    capsys.readouterr()
+    assert main(["--json", "case", "ledger", "--case", d, "--tail", "25"]) == 0
+    out = _json.loads(capsys.readouterr().out)
+    assert out["result"]["total"] == 1000
+    assert [r["eid"] for r in out["result"]["rows"]][-1] == "E1000"
+    assert len(out["result"]["rows"]) == 25
+
+
+def test_c_p1_4_a_bad_cached_body_is_evicted_and_not_found_lives_a_day(tmp_path, monkeypatch):
+    import json as _json
+    import time as _time
+
+    from zebra import http
+    from zebra.sources import validated_json
+
+    monkeypatch.setenv("ZEBRA_CACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.delenv("ZEBRA_NO_CACHE", raising=False)
+    url = "https://rest.genenames.org/fetch/symbol/SCN1A"
+    key = f"GET {url} "
+    path = http._cache_path(key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    def store(status, text, age):
+        path.write_text(_json.dumps({"stored": _time.time() - age, "status": status, "text": text,
+                                     "retrieved_at": "2026-10-01T00:00:00+00:00"}), "utf-8")
+
+    # an error document cached with HTTP 200: read once, rejected, and gone
+    store(200, '{"error": "Service temporarily unavailable"}', 5 * 86400)
+    resp = http.request(url, source="HGNC", cache_ttl=30 * 86400)
+    assert resp.cached
+    try:
+        validated_json(resp, "HGNC", require="response")
+        raise AssertionError("an error body was accepted")
+    except http.SourceError:
+        pass
+    assert not path.exists()
+
+    # an empty or HTML 200 body in the cache is never served
+    def no_network(*a, **k):
+        raise http.SourceError("HGNC", url, None, "network error: offline")
+
+    monkeypatch.setattr(http, "_opener", lambda: type("O", (), {"open": staticmethod(no_network)})())
+    monkeypatch.setattr(http, "_wait_for_retry", lambda s: False)
+    store(200, "   ", 60)
+    try:
+        http.request(url, source="HGNC", cache_ttl=30 * 86400, retries=0)
+        raise AssertionError("an empty cached body was served")
+    except http.SourceError:
+        pass
+
+    # an accepted 404 is served for a day, not for the record's 30
+    store(404, '{"detail": "not found"}', 2 * 86400)
+    try:
+        http.request(url, source="HGNC", cache_ttl=30 * 86400, ok_statuses=(200, 404), retries=0)
+        raise AssertionError("a two-day-old not-found was served from a 30-day cache")
+    except http.SourceError:
+        pass
+    store(404, '{"detail": "not found"}', 3600)
+    assert http.request(url, source="HGNC", cache_ttl=30 * 86400, ok_statuses=(200, 404)).status == 404

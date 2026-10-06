@@ -12,7 +12,7 @@ Output: an updated case (via `mcp__zebra-mod__case_update`) and a short summary 
 1. **Case.** `mcp__zebra-mod__case_status`. No case → ask the person to run `/zebra new <folder>` and put files in `<folder>/records/`.
 2. **Profile.** Set the case `profile` (via `case_update`): `role` and `language` from how the person writes (a mother writing Chinese → family, zh; a fellow writing English → clinician or researcher, en), proband sex and age band. No names or birth dates.
 3. **Inventory.** List `records/`. More than 6 files → fan out: one `zebra-mod:phenotype-curator` subagent per ~5 files, all in one message, each returning its JSON; otherwise read them yourself (Read handles PDF and images).
-4. **Protect identifiers first.** Patient and relatives' names, birth dates, ID/record/insurance numbers, phone, address → `zebra case identifiers --add "<value>" ...` via Bash with `--case <case dir>`. Never repeat them in chat or in any other tool call.
+4. **Protect identifiers first** — before any lookup. Patient and relatives' names (汉字 and pinyin, each spelling), birth dates, ID/record/insurance numbers, phone, address → `case_update` with `identifiers: [...]` (the result shows only a count). From the shell the same is `zebra case identifiers --add "<value>" ... --case <case dir>`. Never repeat them in chat or in any other tool call.
 5. **Phenotypes.** For each clinical finding:
    - phrase it in English clinical terms, `mcp__zebra-mod__hpo_search`, choose the most specific term the record supports (not more specific);
    - present vs excluded: excluded only when the record states absence or a normal result for that feature (normal brain MRI → excluded `Abnormality of brain morphology`);
@@ -25,7 +25,11 @@ Output: an updated case (via `mcp__zebra-mod__case_update`) and a short summary 
    - SMN1-type copy number (`SMN1 exon 7 copy number 0`);
    - a repeat expansion (`FMR1 CGG 230`).
    It returns the genes covered, dosage sensitivity and the ACMG/ClinGen CNV evidence inputs — never a classification; that judgement belongs to `zebra-variant` and the laboratory.
-7. **Family and tests.** Consanguinity, affected relatives (who, what, age), parental testing; tests done and results (CMA, panel, exome/genome — singleton or trio, year, lab), biochemical/metabolic tests, imaging, EEG/EMG, biopsy. Put these in the case's notes via questions or variants' `source` fields; record "test not done" gaps as questions.
+7. **Family, tests, timeline.** `case_update`:
+   - `profile.consanguinity`; `family`: each relative as `{relation, affected, genotype, age, note, source}` — mother, father, siblings, affected relatives further out; parental testing as `genotype` ("het for v1", "not carrier of v1", "not tested"). Never names.
+   - `tests`: every test already done as `{type, date, result, lab, method, source}` — CMA, karyotype, panel, exome/genome (singleton or trio), MLPA, repeat sizing, biochemical/metabolic tests, imaging, EEG/EMG, biopsy. A normal result is a result: it rules things out.
+   - `timeline`: onset, regressions, key admissions, diagnoses and treatments with `{date, event, source}`.
+   - Gaps that matter ("no CMA yet", "parents not tested") → `questions`.
 8. **Write once.** One `case_update` call with all phenotypes, variants and questions.
 9. **Report back.** Board summary, then the gaps that would change the analysis (e.g. no parental samples, exome from 2019 never reanalysed, no metabolic screen, onset ages unknown) as questions for the care team.
 

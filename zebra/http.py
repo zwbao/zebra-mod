@@ -120,6 +120,9 @@ class Response:
     text: str
     retrieved_at: str
     cached: bool
+    # the cache entry this answer was read from or written to, so a caller that finds
+    # the body unusable can drop it (`evict`) instead of having it replayed for days
+    cache_key: Optional[str] = None
 
     def json(self) -> Any:
         return json.loads(self.text)
@@ -241,16 +244,20 @@ def request(
     use_cache = cache_ttl > 0 and os.environ.get("ZEBRA_NO_CACHE") != "1"
     key = f"{method} {url} {data.decode('utf-8', 'replace') if data else ''}"
     path = _cache_path(key)
+    # Whether a record exists changes far sooner than its content: an accepted
+    # "not found" lives a day unless the caller says otherwise (C-P1-4).
+    if not_found_ttl is None:
+        not_found_ttl = min(cache_ttl, NOT_FOUND_TTL)
     if use_cache and not refresh and path.exists():
         try:
             entry = json.loads(path.read_text("utf-8"))
             ttl = cache_ttl
-            if not_found_ttl is not None and entry["status"] != 200:
+            if entry["status"] != 200:
                 ttl = min(ttl, not_found_ttl)
             if time.time() - entry["stored"] < ttl:
-                bad = validate(entry["text"]) if validate and entry["status"] == 200 else None
+                bad = _body_problem(entry["text"], accept, validate) if entry["status"] == 200 else None
                 if bad is None:
-                    return Response(url, entry["status"], entry["text"], entry["retrieved_at"], True)
+                    return Response(url, entry["status"], entry["text"], entry["retrieved_at"], True, key)
                 # a bad body stored earlier: fetch again rather than serve it
         except (ValueError, KeyError, OSError):
             pass
@@ -309,12 +316,7 @@ def request(
 
         if status not in ok_statuses:
             raise SourceError(source, url, status, _short(text))
-        bad: Optional[str] = None
-        if status == 200:
-            if accept == "application/json" and text.lstrip()[:1] == "<":
-                bad = "HTML page where JSON was expected"
-            elif validate is not None:
-                bad = validate(text)
+        bad = _body_problem(text, accept, validate) if status == 200 else None
         if bad is not None:
             # a body the caller cannot use: never cached, and only retried while
             # the server might still answer differently
@@ -334,8 +336,32 @@ def request(
                 os.replace(tmp, path)
             except OSError:
                 pass
-        return Response(url, status, text, retrieved, False)
+        return Response(url, status, text, retrieved, False, key if use_cache else None)
     raise SourceError(source, url, status, f"gave up: {last_error}")
+
+
+NOT_FOUND_TTL = 86400.0
+
+
+def _body_problem(text: str, accept: str, validate: Optional[Callable[[str], Optional[str]]]) -> Optional[str]:
+    """Why a 200 body cannot be used, or None. Checked before a body is cached and when it is read back."""
+    if accept == "application/json":
+        head = text.lstrip()[:1]
+        if not head:
+            return "empty body where JSON was expected"
+        if head == "<":
+            return "HTML page where JSON was expected"
+    return validate(text) if validate is not None else None
+
+
+def evict(resp: "Response") -> None:
+    """Drop the cache entry behind `resp`: its body turned out to be unusable (an error document
+    sent with HTTP 200), and it must not be served again for the rest of its time to live."""
+    key = resp.cache_key or f"GET {resp.url} "
+    try:
+        _cache_path(key).unlink()
+    except OSError:
+        pass
 
 
 def get_json(url: str, *, source: str, **kw: Any) -> Response:

@@ -23,7 +23,7 @@ Facts come from tools in this session (disease_card, gene_card, variant_card, tr
 
 ## Visit preparation
 
-Write a one-page list: what happened since last visit (from the case), the 3–5 most important questions (from the case's open questions and the analysis), tests to ask about and why, what to bring (reports, videos of episodes, growth charts). Save to `reports/visit-prep-<date>.md` if there is a case.
+Write a one-page list: what happened since last visit (from the case), the 3–5 most important questions (from the case's open questions and the analysis), tests to ask about and why, what to bring (reports, videos of episodes, growth charts). Save to `reports/visit-prep-<date>.md` if there is a case, and export it with `mcp__zebra-mod__report_export` (Word and PDF) so it can be printed or sent to the family's phone.
 
 ## Support and care
 

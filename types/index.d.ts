@@ -12,6 +12,10 @@ export type BoardHypothesis = { id: string; disease: string; status: string; sup
 
 export type BoardLead = { id: string; name: string; kind: string; status: string | null }
 
+export type BoardTest = { id: string; type: string; date: string | null; result: string | null }
+
+export type BoardRelative = { id: string; relation: string | null; affected: boolean | string | null; genotype: string | null }
+
 export type Board = {
   path: string
   id: string
@@ -24,6 +28,8 @@ export type Board = {
   hypotheses: BoardHypothesis[]
   therapy_leads: BoardLead[]
   questions: string[]
+  tests?: BoardTest[]
+  family?: BoardRelative[]
   evidence_count: number
   identifiers: number
 }
@@ -37,6 +43,7 @@ declare module 'claude-code' {
       casePath: string | null
       guard: string[]
       ready: Ready | null
+      trusted: string[]
     }
   }
 }

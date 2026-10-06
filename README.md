@@ -43,22 +43,31 @@
 
 ## Install
 
-Requirements: Claude Code ≥ 2.1.289 (function-hook mods), Python ≥ 3.9 on `PATH` as `python3` (or set the plugin's `python` option). No pip installs.
+Requirements: Claude Code ≥ 2.1.289 (function-hook mods) and Python ≥ 3.9. No sudo, no pip installs.
 
-```bash
-# from GitHub (the repository is private: you need access, and git over SSH or a token)
-claude plugin marketplace add zwbao/zebra-mod
-claude plugin install zebra-mod@zebra-mod
+**One sentence.** In Claude Code, say:
 
-# or from a local checkout, for one session
-git clone https://github.com/zwbao/zebra-mod ~/zebra-mod
-claude --plugin-dir ~/zebra-mod
+```text
+Install https://github.com/zwbao/zebra-mod
 ```
 
-Optional, once (≈ 80 MB, enables offline phenotype ranking and instant HPO search):
+Claude Code reads [INSTALL.md](INSTALL.md) and does the rest: checks versions and Python, registers and installs the plugin, downloads the HPO release (~80 MB), and runs `zebra doctor`. Then start a new session (or type `/reload-plugins`) and run `/zebra-mod:zebra-start`.
+
+**One command** (the same steps):
 
 ```bash
-~/zebra-mod/bin/zebra hpo fetch
+curl -fsSL https://raw.githubusercontent.com/zwbao/zebra-mod/main/install.sh | sh
+# while the repository is private, clone it first:
+git clone https://github.com/zwbao/zebra-mod ~/zebra-mod && ~/zebra-mod/install.sh
+```
+
+**By hand:**
+
+```bash
+claude plugin marketplace add zwbao/zebra-mod
+claude plugin install zebra-mod@zebra-mod
+python3 <installPath>/bin/zebra hpo fetch     # optional: offline phenotype ranking, instant HPO search
+# one session only, no install: claude --plugin-dir ~/zebra-mod
 ```
 
 Optional heavy S2F models: install the `s2f` CLI from [s2f-penguin](https://github.com/zwbao/s2f-penguin) (`uv tool install "git+https://github.com/zwbao/s2f-penguin"`), and set `ALPHAGENOME_API_KEY` (AlphaGenome: non-commercial, not for clinical decisions) and/or `NVCF_RUN_KEY` (Evo 2 on NVIDIA). Check everything with `/zebra doctor`.

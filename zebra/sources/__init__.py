@@ -22,9 +22,9 @@ call `record()` (defined here) instead of `zebra.http.source_record`.
 `validated_json` rejects the bodies a 200 can still carry — empty, HTML, or
 JSON that is really an error document — before a caller parses them (F10).
 `zebra.http.request` writes its cache before any caller has seen the body, so
-such an answer is otherwise served from disk for 7-30 days; raising here turns
-it into a warning now, and `refetch=` re-requests once when the bad body came
-from the cache.
+such an answer would otherwise be served from disk for 7-30 days; raising here
+turns it into a warning now and evicts the entry, and `refetch=` re-requests
+once when the bad body came from the cache.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 
-from zebra.http import Response, SourceError
+from zebra.http import Response, SourceError, evict
 from zebra.http import source_record as _source_record
 
 T = TypeVar("T")
@@ -92,10 +92,17 @@ def validated_json(resp: Response, source: str, *, require: Any = None,
     try:
         return _validate(resp, source, require)
     except SourceError:
+        # `request` cached this body before anyone could read it: drop it, so a
+        # transient error document is not replayed for the cache's lifetime (C-P1-4)
+        evict(resp)
         if not (resp.cached and refetch):
             raise
     fresh = refetch()
-    return _validate(fresh, source, require)
+    try:
+        return _validate(fresh, source, require)
+    except SourceError:
+        evict(fresh)
+        raise
 
 
 def _validate(resp: Response, source: str, require: Any) -> Any:
@@ -128,9 +135,15 @@ def validated_text(resp: Response, source: str, *, must_contain: Optional[str] =
     try:
         return _validate_text(resp, source, must_contain)
     except SourceError:
+        evict(resp)
         if not (resp.cached and refetch):
             raise
-    return _validate_text(refetch(), source, must_contain)
+    fresh = refetch()
+    try:
+        return _validate_text(fresh, source, must_contain)
+    except SourceError:
+        evict(fresh)
+        raise
 
 
 def _validate_text(resp: Response, source: str, must_contain: Optional[str]) -> str:

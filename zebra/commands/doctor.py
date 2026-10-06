@@ -110,8 +110,13 @@ KEYS = [
 ]
 
 
-def _check(name: str, ok: bool, detail: str) -> Dict[str, Any]:
-    return {"name": name, "ok": bool(ok), "detail": detail}
+def _check(name: str, ok: bool, detail: str, optional: bool = False) -> Dict[str, Any]:
+    """One line of the report. `optional`: zebra works without it (a key for a heavy model, offline
+    data); a missing optional item is listed as such, never counted as a failure."""
+    out: Dict[str, Any] = {"name": name, "ok": bool(ok), "detail": detail}
+    if optional:
+        out["optional"] = True
+    return out
 
 
 def _probe(name: str, url: str, method: str, body: Optional[Any], accept: str,
@@ -136,7 +141,7 @@ def _probe(name: str, url: str, method: str, body: Optional[Any], accept: str,
 def _tool(name: str, exe: str, args: List[str], missing_hint: str) -> Dict[str, Any]:
     path = shutil.which(exe)
     if not path:
-        return _check(name, False, f"not on PATH — {missing_hint}")
+        return _check(name, False, f"not on PATH — {missing_hint}", optional=missing_hint.startswith("optional"))
     try:
         ran = subprocess.run([path] + args, capture_output=True, text=True, timeout=10)
         out = (ran.stdout or ran.stderr or "").strip().splitlines()
@@ -171,7 +176,8 @@ def _hpo() -> Dict[str, Any]:
     d = hpo_local.data_dir()
     missing = hpo_local.missing_files()
     if missing:
-        return _check("HPO local files", False, f"missing in {d}: {', '.join(missing)} — run: zebra hpo fetch")
+        return _check("HPO local files", False, f"missing in {d}: {', '.join(missing)} — optional (online search "
+                                                f"still works): run zebra hpo fetch for offline ranking", optional=True)
     version, hp_release = None, None
     try:
         with open(d / "phenotype.hpoa", encoding="utf-8") as fh:
@@ -211,7 +217,7 @@ def _keys() -> List[Dict[str, Any]]:
         if present:
             out.append(_check(name, True, f"{present[0]} is set"))
         else:
-            out.append(_check(name, False, f"{' / '.join(envs)} not set — optional: {what}"))
+            out.append(_check(name, False, f"{' / '.join(envs)} not set — optional: {what}", optional=True))
     return out
 
 
@@ -266,14 +272,17 @@ def run_checks(case_dir: Optional[str] = None, deadline: float = DEADLINE,
     checks += [got(lbl) for lbl, _ in jobs if lbl.startswith("network: ")]
     seconds = round(time.monotonic() - t0, 1)
     n_ok = sum(1 for c in checks if c["ok"])
-    return {"checks": checks, "summary": {"ok": n_ok, "failed": len(checks) - n_ok, "seconds": seconds}}
+    n_optional = sum(1 for c in checks if not c["ok"] and c.get("optional"))
+    return {"checks": checks, "summary": {"ok": n_ok, "failed": len(checks) - n_ok - n_optional,
+                                          "optional_missing": n_optional, "seconds": seconds}}
 
 
 def _doctor(args: argparse.Namespace) -> Outcome:
     res = run_checks(case_dir=getattr(args, "case", None))
-    lines = [f"{'✓' if c['ok'] else '✗'} {c['name']} — {c['detail']}" for c in res["checks"]]
+    lines = [f"{'✓' if c['ok'] else '○' if c.get('optional') else '✗'} {c['name']} — {c['detail']}"
+             for c in res["checks"]]
     s = res["summary"]
-    lines.append(f"{s['ok']} ok, {s['failed']} not ok, {s['seconds']} s")
+    lines.append(f"{s['ok']} ok, {s['failed']} failed, {s['optional_missing']} optional not set up (○), {s['seconds']} s")
     return Outcome(res, text="\n".join(lines), query={})
 
 

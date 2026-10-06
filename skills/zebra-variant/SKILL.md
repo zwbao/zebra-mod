@@ -27,7 +27,7 @@ You justify codes; `zebra` does the arithmetic. Every code cites a ledger id or 
    - **PM1** hotspot or critical domain without benign variation (cap PM1 + PP3 at Strong — zebra applies it).
    - **PM3 / BP2** recessive: in trans with a P/LP variant (needs phase: parents or reads); in cis argues benign.
    - **PM4 / BP3** in-frame length change outside / inside a repeat.
-   - **PP1 / BS4** segregation → `rare_stats` `segregation` (counted meioses); non-segregation in an affected relative → BS4.
+   - **PP1 / BS4** segregation → `rare_stats` `segregation` (counted meioses: `ad_meioses`, `xlr_male_meioses`, `ar_affected_sibs`); an affected relative without the variant → `nonsegregations` (BS4); unaffected relatives count only with `full_penetrance: true`.
    - **PP4** phenotype highly specific for the gene (use sparingly).
    - **BS2** observed in healthy adults incompatible with penetrance.
    - **BP7** synonymous or deep intronic with SpliceAI ≤ 0.1.

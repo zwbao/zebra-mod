@@ -9,13 +9,13 @@ Run `mcp__zebra-mod__rare_stats` (`method`, `params` = the flags below without d
 
 | Question | Method | Key params | Assumption to state |
 |---|---|---|---|
-| Does the variant track with disease in the family? | `segregation` | `ad_meioses`, or `ar_affected_sibs` / `ar_unaffected_sibs` | full penetrance, no phenocopies; count only informative meioses (Jarvik & Browning 2016); LR → PP1 strength by Tavtigian odds |
+| Does the variant track with disease in the family? | `segregation` | `ad_meioses`, `xlr_male_meioses`, or `ar_affected_sibs` / `ar_unaffected_sibs`; against it: `nonsegregations` (affected relatives without the variant → BS4), `unaffected_carriers`; `full_penetrance: true` before any unaffected relative counts | no phenocopies; count only informative meioses; points per ClinGen 2024 (Biesecker) → PP1 strength; BS4 from non-segregation |
 | Too common to cause this disease? | `maxaf` | `prevalence`, `allelic`, `genetic`, `penetrance`, `inheritance`, `faf95`, `an` | Whiffin 2017; prevalence and heterogeneity estimates drive it — cite where they came from |
 | How many carriers / how common genetically? | `carrier` | `prevalence` or `allele_freqs` | Hardy–Weinberg, random mating, full penetrance; consanguinity and founder effects break it |
 | Risk for the next child? | `recurrence` | `mode` (AR, AD-inherited, AD-de-novo, XLR-carrier-mother, XLR-bayes), `penetrance`, `mosaic`, `prior`, `unaffected_sons` | parental genotypes confirmed; de novo risk is germline mosaicism, gene-dependent |
 | Enriched in my cases? | `burden` / `fisher` | carrier counts and sizes | comparable sequencing and calling in cases and controls; say so when controls are gnomAD |
 | More de novo hits than chance? | `denovo` | `observed`, `trios`, `mu` | per-gene mutation rate for the variant class (cite the table); exome-wide threshold ~2.6e-6 per class |
-| Natural history, event-free survival | `km` | `csv`, `time_col`, `event_col`, `group_col` | non-informative censoring; small n → wide intervals; report n at risk |
+| Natural history, event-free survival | `km` | `csv`, `time_col`, `event_col`, `group_col`, `event_coding` (`0/1` default, `1/2` as R's survival package) | non-informative censoring; small n → wide intervals; report n at risk |
 | Does treatment help this one patient? | `nof1` | design: `effect`, `sd_diff`; analysis: `treatment`, `control` | exchangeable periods, washout, no carryover, stable disease |
 
 Rules:

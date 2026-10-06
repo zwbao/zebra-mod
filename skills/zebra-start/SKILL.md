@@ -16,10 +16,11 @@ Read it from the message; ask only when it changes what you do.
 | patient / family | plain, warm, exact; Chinese when they write Chinese | what it means, what to ask the doctors, what to do next |
 | clinician | precise, clinical | differential, evidence codes, tests to order |
 | researcher | technical | methods, statistics, raw outputs, reproducibility |
+| someone running it **for a family** (代操作: a clinician, genetic counsellor, volunteer or relative who uses Claude Code on the family's behalf) | technical with the operator; the deliverables plain Chinese for the family | the full workup, then a family letter and a visit-preparation sheet exported to Word/PDF (`zebra-report`, "for a family") |
 
 ## 2. A case or not
 
-- Records, a report, or work that will continue → a case: tell them `/zebra new <folder> [title]` (or `/zebra case <folder>`), files go in `records/`. Everything stays on this machine; the ledger records every source.
+- Records, a report, or work that will continue → a case: tell them `/zebra new <folder> [title]` (or `/zebra case <folder>`), files go in `records/`. zebra writes the case only on this machine; what Claude reads from it reaches the model provider as in any Claude Code session. If the records name the patient, register the name (every spelling), date of birth and record numbers with `case_update` → `identifiers` before any lookup: the privacy gate then keeps them out of every outgoing call. The ledger records every source.
 - A one-off question ("what is NGLY1 deficiency?") → answer without a case.
 
 ## 3. Route
@@ -35,7 +36,7 @@ Read it from the message; ask only when it changes what you do.
 | segregation, allele-frequency limits, carrier/recurrence risk, burden, de novo, natural history, N-of-1 trial design | `zebra-stats` |
 | a literature review or a specific evidence question | `zebra-literature` |
 | explain to a family; prepare a clinic visit; recurrence and family testing; patient groups; China resources | `zebra-family` |
-| a written report (clinician summary, family letter) with audited sources | `zebra-report` |
+| a written report (clinician summary, family letter, visit-preparation sheet) with audited sources, exported to Word/PDF | `zebra-report` |
 | "is this urgent?", a symptom happening now, a drug or anaesthesia question, an upcoming procedure | `zebra-safety` (read it first, before any analysis) |
 
 Undiagnosed with records, typical chain: intake → diagnose → (variant / reanalysis / s2f) → family or report. Diagnosed, typical chain: disease_card → therapy → family.

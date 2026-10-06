@@ -51,7 +51,7 @@ def test_shape_and_failures(monkeypatch, tmp_path):
     res = D.run_checks(case_dir=None, deadline=10)
     names = [c["name"] for c in res["checks"]]
     assert names[:5] == ["Python ≥ 3.9", "zebra", "cache dir writable", "HPO local files", "case"]
-    assert all(set(c) == {"name", "ok", "detail"} for c in res["checks"])
+    assert all(set(c) - {"optional"} == {"name", "ok", "detail"} for c in res["checks"])
     by = {c["name"]: c for c in res["checks"]}
     assert len([n for n in names if n.startswith("network: ")]) == len(D.NETWORK) == 18
     assert by["network: Ensembl REST GRCh37"]["ok"] is False and "HTTP 503" in by["network: Ensembl REST GRCh37"]["detail"]
@@ -59,7 +59,8 @@ def test_shape_and_failures(monkeypatch, tmp_path):
     assert by["network: Ensembl REST GRCh38"]["ok"] is True
     assert by["HPO local files"]["ok"] is False and "zebra hpo fetch" in by["HPO local files"]["detail"]
     assert by["case"]["ok"] is True and "no active case" in by["case"]["detail"]
-    assert res["summary"]["ok"] + res["summary"]["failed"] == len(res["checks"])
+    s = res["summary"]
+    assert s["ok"] + s["failed"] + s["optional_missing"] == len(res["checks"])
 
 
 def test_keys_are_never_printed(monkeypatch):
@@ -126,3 +127,16 @@ def test_live_doctor_under_30s():
     net = [c for c in res["checks"] if c["name"].startswith("network: ")]
     assert len(net) == 18
     assert sum(c["ok"] for c in net) >= 12, [c for c in net if not c["ok"]]
+
+
+def test_install_optional_items_are_not_failures(monkeypatch):
+    """A family installing zebra-mod must not read 'not ok' for a research key they do not need."""
+    from zebra.commands import doctor
+
+    for _name, envs, _what in doctor.KEYS:
+        for e in envs:
+            monkeypatch.delenv(e, raising=False)
+    res = doctor.run_checks(network=[], deadline=5)
+    keys = [c for c in res["checks"] if c["name"] in {k[0] for k in doctor.KEYS}]
+    assert keys and all(c.get("optional") and not c["ok"] for c in keys)
+    assert res["summary"]["optional_missing"] >= len(keys)

@@ -15,8 +15,9 @@ Rules for every answer in this mode:
 5. Research, not a clinical report. Classifications here are research-grade until an accredited laboratory or clinical geneticist confirms them. No dosing, no stopping or starting a treatment; a possible diagnosis is a question for the care team, never news delivered to a family as fact.
 6. Sequence-to-function predictions (SpliceAI, AlphaGenome, Evo 2, AlphaMissense) are hypotheses: give model, score and what level they speak to (molecular, cellular); combine independent axes by agreement, never average them into one number.
 7. Look beyond the obvious ("think zebras"), and say how strong each lead is: established, emerging, speculative.
-8. Privacy: case files stay on this machine; never send names, birth dates, record numbers or raw genome files to a web service; query with HPO ids, genes and variants.
-9. Register: with families plain, warm and exact (Chinese by default for Chinese speakers); with clinicians and researchers precise and technical.`
+8. Privacy: zebra writes case files only on this machine, but what you read (records, reports, this conversation) reaches the model provider as in any Claude Code session — say so if asked. When records name the patient, first register those identifiers with case_update \`identifiers\` (name in every spelling, date of birth, record and ID numbers); the privacy gate then keeps them out of every outgoing call. Never send names, birth dates, record numbers or raw genome files to a web service; query with HPO ids, genes and variants.
+9. Register: with families plain, warm and exact (Chinese by default for Chinese speakers); with clinicians and researchers precise and technical.
+10. Work through the skills: zebra-start routes to the procedure for the question (intake, diagnose, variant, reanalysis, s2f, therapy, stats, literature, family, report); a wide search goes to the zebra-mod subagents, several in one message.\``
 
 export function renderDoctrine(base: string, active: string | null, board: Board | null): string {
   if (!active) {
@@ -26,8 +27,11 @@ export function renderDoctrine(base: string, active: string | null, board: Board
   if (board) {
     const present = board.phenotypes.filter(p => p.status === 'present').length
     lines.push(
-      `It holds ${present} present phenotypes, ${board.variants.length} variants, ${board.hypotheses.length} hypotheses, ${board.evidence_count} evidence rows. Read it with mcp__zebra-mod__case_status before relying on it; record findings with mcp__zebra-mod__case_update.`,
+      `It holds ${present} present phenotypes, ${board.variants.length} variants, ${board.hypotheses.length} hypotheses, ${board.tests?.length ?? 0} tests done, ${board.evidence_count} evidence rows. Read it with mcp__zebra-mod__case_status before relying on it; record findings with mcp__zebra-mod__case_update.`,
     )
+    if (board.identifiers === 0) {
+      lines.push('No protected identifiers are registered for this case: if its records name the patient, register them (case_update identifiers) before any outgoing lookup.')
+    }
   }
   return lines.join('\n')
 }

@@ -11,7 +11,11 @@ const def = (name: string) => {
 describe('tool → CLI argv', () => {
   test('every tool has a unique, legal name and an object schema', () => {
     const names = TOOLS.map(t => t.name)
-    expect(names.length).toBe(16)
+    for (const core of ['case_status', 'case_update', 'hpo_search', 'phenotype_rank', 'gene_card', 'variant_card', 'disease_card',
+      'acmg', 'cnv_interpret', 's2f_predict', 'therapy_landscape', 'trials_search', 'literature_search', 'rare_stats',
+      'edit_check', 'china_rare', 'report_export']) {
+      expect(names.includes(core)).toBe(true)
+    }
     expect(new Set(names).size).toBe(names.length)
     for (const t of TOOLS) {
       expect(/^[A-Za-z0-9_-]{1,64}$/.test(t.name)).toBe(true)
@@ -84,5 +88,12 @@ describe('tool → CLI argv', () => {
       failed = true
     }
     expect(failed).toBe(true)
+  })
+
+  test('CP1-13 report_export resolves a case-relative report and passes formats', async () => {
+    const argv = await toolArgv(def('report_export'), { report: 'reports/family-letter.md', formats: ['docx', 'pdf'] }, '/cases/x/')
+    expect(argv).toEqual(['report', 'export', '/cases/x/reports/family-letter.md', '--to', 'docx,pdf'])
+    const abs = await toolArgv(def('report_export'), { report: '/tmp/r.md' }, '/cases/x')
+    expect(abs).toEqual(['report', 'export', '/tmp/r.md'])
   })
 })

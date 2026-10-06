@@ -33,6 +33,9 @@ _EID_IN_TEXT = re.compile(r'"eid"\s*:\s*"E(\d+)"')
 # hold) stays the default, so a case.json written before these existed reads
 # unchanged; the report forms Chinese families usually hold get their own kinds.
 VARIANT_KINDS = ("small", "cnv", "exon_cnv", "copy_number", "repeat_expansion")
+# what a model or a person may write for a kind, and what it means (A-P1-5)
+KIND_ALIASES = {"sequence": "small", "snv": "small", "indel": "small", "repeat": "repeat_expansion",
+                "str": "repeat_expansion", "exon": "exon_cnv", "dosage": "copy_number", "sv": "cnv"}
 CNV_TYPES = ("gain", "loss", "duplication", "deletion", "amplification", "unknown")
 
 # Identifier shapes, so an id that cannot exist is refused at the door. Values
@@ -196,6 +199,7 @@ def init(case_dir: str, title: str = "", role: str = "family", language: str = "
         "therapy_leads": [],
         "questions": [],
         "timeline": [],
+        "tests": [],
         "privacy": {"identifiers": []},
     }
     _write(root, data)
@@ -206,7 +210,7 @@ def init(case_dir: str, title: str = "", role: str = "family", language: str = "
     return data
 
 
-_LIST_KEYS = ("phenotypes", "variants", "hypotheses", "therapy_leads", "questions", "timeline")
+_LIST_KEYS = ("phenotypes", "variants", "hypotheses", "therapy_leads", "questions", "timeline", "tests")
 _DICT_KEYS = {"proband": {"sex": "unknown", "age": None, "ancestry": None, "consanguinity": None},
               "family": {"members": [], "notes": ""},
               "privacy": {"identifiers": []}}
@@ -244,7 +248,7 @@ def _validate(data: Any, where: str) -> Dict[str, Any]:
     for key in _LIST_KEYS:
         if key == "questions":
             data[key] = [str(q) for q in data[key]]
-        elif key != "timeline":
+        else:
             bad = [i for i in data[key] if not isinstance(i, dict)]
             if bad:
                 raise CaseError(f"{where}: every item in {key!r} must be an object, got {bad[0]!r}")
@@ -325,15 +329,17 @@ def editing(case_dir: str) -> Iterator[Dict[str, Any]]:
         _write(root, data)
 
 
-def _next_id(data: Dict[str, Any], key: str, prefix: str) -> str:
-    """The next id for `data[key]`, numbered from the highest ever issued.
+def _next_id(data: Dict[str, Any], key: str, prefix: str, items: Optional[List[Any]] = None) -> str:
+    """The next id for `data[key]` (or `items`), numbered from the highest ever issued.
 
     A deleted item must not let its id be re-used: `v1` quoted from an earlier
     `case summary` would otherwise attach an ACMG reading to a different gene.
     """
     issued = data.setdefault("_issued_ids", {})
     highest = 0
-    for item in data.get(key) or []:
+    for item in (items if items is not None else data.get(key) or []):
+        if not isinstance(item, dict):
+            continue
         text = str(item.get("id") or "")
         if text.startswith(prefix) and text[len(prefix):].isdigit():
             highest = max(highest, int(text[len(prefix):]))
@@ -372,7 +378,7 @@ def apply_phenotype(data: Dict[str, Any], hpo_id: str, label: str, status: Optio
     return entry
 
 
-def add_phenotype(case_dir: str, hpo_id: str, label: str, status: str = "present", onset: Optional[str] = None,
+def add_phenotype(case_dir: str, hpo_id: str, label: str, status: Optional[str] = None, onset: Optional[str] = None,
                   source: Optional[str] = None, note: Optional[str] = None) -> Dict[str, Any]:
     with editing(case_dir) as data:
         return apply_phenotype(data, hpo_id, label, status=status, onset=onset, source=source, note=note)
@@ -394,6 +400,7 @@ VARIANT_FIELDS = ("gene", "hgvs_c", "hgvs_g", "hgvs_p", "vcf", "assembly", "zygo
 def check_variant(**fields: Any) -> Dict[str, Any]:
     """Validate a variant record of any kind, without writing. Returns the normalised fields."""
     kind = fields.get("kind") or "small"
+    kind = KIND_ALIASES.get(str(kind).strip().lower(), kind)
     if kind not in VARIANT_KINDS:
         raise CaseError(f"variant kind must be one of {', '.join(VARIANT_KINDS)}, got {kind!r}")
     fields["kind"] = kind
@@ -517,6 +524,53 @@ def set_acmg(case_dir: str, variant_id: str, classification: str, points: Option
         return apply_acmg(data, variant_id, classification, points, codes, note=note)
 
 
+FAMILY_FIELDS = ("relation", "sex", "affected", "status", "genotype", "age", "note", "source")
+TEST_FIELDS = ("type", "date", "result", "lab", "method", "source", "note")
+TIMELINE_FIELDS = ("date", "event", "source")
+RELATIONS = ("mother", "father", "sibling", "brother", "sister", "half-sibling", "child", "son", "daughter",
+             "maternal grandmother", "maternal grandfather", "paternal grandmother", "paternal grandfather",
+             "maternal aunt", "maternal uncle", "paternal aunt", "paternal uncle", "cousin", "twin", "other")
+
+
+def apply_family(data: Dict[str, Any], members: List[Dict[str, Any]], consanguinity: Optional[bool] = None,
+                 notes: Optional[str] = None) -> Dict[str, Any]:
+    """Relatives as the records describe them: who, affected or not, tested or not. No names."""
+    fam = data["family"]
+    for m in members:
+        entry = {k: m.get(k) for k in FAMILY_FIELDS if m.get(k) is not None}
+        if isinstance(entry.get("relation"), str):
+            entry["relation"] = entry["relation"].strip().lower()
+        entry["id"] = _next_id(data, "family", "f", fam["members"])
+        fam["members"].append(entry)
+    if consanguinity is not None:
+        data["proband"]["consanguinity"] = bool(consanguinity)
+    if notes:
+        fam["notes"] = (fam.get("notes") + "\n" if fam.get("notes") else "") + notes
+    return fam
+
+
+def apply_test(data: Dict[str, Any], test: Dict[str, Any]) -> Dict[str, Any]:
+    """A test already done (CMA, panel, exome, metabolic screen, MRI…) and its result as reported."""
+    entry = {k: test.get(k) for k in TEST_FIELDS if test.get(k) is not None}
+    entry["id"] = _next_id(data, "tests", "x")
+    data["tests"].append(entry)
+    return entry
+
+
+def apply_timeline(data: Dict[str, Any], event: Dict[str, Any]) -> Dict[str, Any]:
+    entry = {k: event.get(k) for k in TIMELINE_FIELDS if event.get(k) is not None}
+    data["timeline"].append(entry)
+    data["timeline"].sort(key=lambda e: str(e.get("date") or ""))
+    return entry
+
+
+def apply_identifiers(data: Dict[str, Any], values: List[str]) -> int:
+    """Add protected identifiers inside an open edit; returns how many the case now holds (never the values)."""
+    merged = _clean_identifiers(list(data["privacy"].get("identifiers") or []) + list(values))
+    data["privacy"]["identifiers"] = merged
+    return len(merged)
+
+
 def apply_question(data: Dict[str, Any], text: str) -> List[str]:
     if not isinstance(text, str) or not text.strip():
         raise CaseError(f"a question must be a non-empty string, got {text!r}")
@@ -577,18 +631,19 @@ def add_identifiers(case_dir: str, identifiers: List[str]) -> List[str]:
 
 
 REMOVE_KINDS = {"phenotype": "phenotypes", "variant": "variants", "hypothesis": "hypotheses",
-                "lead": "therapy_leads"}
+                "lead": "therapy_leads", "test": "tests", "relative": "family"}
 
 
 def apply_remove(data: Dict[str, Any], kind: str, item_id: str) -> bool:
     key = REMOVE_KINDS.get(kind)
     if not key:
-        raise CaseError("kind must be phenotype, variant, hypothesis or lead")
+        raise CaseError("kind must be one of " + ", ".join(REMOVE_KINDS))
     if not isinstance(item_id, str) or not item_id.strip():
-        raise CaseError(f"remove needs the item's id as a string (v1, h2, t1, or an HPO id), got {item_id!r}")
-    before = len(data[key])
-    data[key] = [i for i in data[key] if str(i.get("id")) != item_id]
-    return len(data[key]) < before
+        raise CaseError(f"remove needs the item's id as a string (v1, h2, t1, x1, f1, or an HPO id), got {item_id!r}")
+    holder, field = (data["family"], "members") if key == "family" else (data, key)
+    before = len(holder[field])
+    holder[field] = [i for i in holder[field] if not (isinstance(i, dict) and str(i.get("id")) == item_id)]
+    return len(holder[field]) < before
 
 
 def remove(case_dir: str, kind: str, item_id: str) -> bool:
@@ -616,7 +671,8 @@ def append_ledger(case_dir: str, command: str, query: Dict[str, Any], sources: L
                 pass
         unterminated = False
         if ledger.exists():
-            with open(ledger, "r", encoding="utf-8") as fh:
+            # errors="replace": a row cut inside a multi-byte character must not stop the ledger
+            with open(ledger, "r", encoding="utf-8", errors="replace") as fh:
                 last = ""
                 for line in fh:
                     last = line
@@ -624,7 +680,10 @@ def append_ledger(case_dir: str, command: str, query: Dict[str, Any], sources: L
                     if not text:
                         continue
                     try:
-                        highest = max(highest, _eid_num(json.loads(text).get("eid", "")))
+                        row = json.loads(text)
+                        if not isinstance(row, dict):
+                            raise ValueError("not a row")
+                        highest = max(highest, _eid_num(str(row.get("eid", ""))))
                     except ValueError:
                         # a truncated row: recover its id from the raw text
                         found = _EID_IN_TEXT.search(text)
@@ -660,7 +719,7 @@ def read_ledger(case_dir: str) -> List[Dict[str, Any]]:
     if not ledger.exists():
         return []
     rows = []
-    with open(ledger, "r", encoding="utf-8") as fh:
+    with open(ledger, "r", encoding="utf-8", errors="replace") as fh:
         for line in fh:
             line = line.strip()
             if not line:
@@ -730,6 +789,12 @@ def summary(case_dir: str) -> Dict[str, Any]:
         "therapy_leads": [{"id": t.get("id"), "name": t.get("name"), "kind": t.get("kind"), "status": t.get("status")}
                           for t in data["therapy_leads"]],
         "questions": data["questions"],
+        "tests": [{"id": t.get("id"), "type": t.get("type"), "date": t.get("date"), "result": t.get("result")}
+                  for t in data["tests"]],
+        "family": [{"id": m.get("id"), "relation": m.get("relation"), "affected": m.get("affected"),
+                    "genotype": m.get("genotype")} for m in data["family"].get("members") or [] if isinstance(m, dict)],
+        "consanguinity": data["proband"].get("consanguinity"),
+        "timeline": len(data["timeline"]),
         "evidence_count": len(ledger),
         "identifiers": len(data["privacy"].get("identifiers", [])),
     }

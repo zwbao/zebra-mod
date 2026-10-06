@@ -22,14 +22,15 @@ const flag = (name: string, v: string | undefined): string[] => (v === undefined
 
 // What each statistics method accepts, so a params key cannot smuggle --help or --case.
 const STATS_FLAGS: Record<string, string[]> = {
-  segregation: ['ad-meioses', 'ar-affected-sibs', 'ar-unaffected-sibs'],
+  segregation: ['ad-meioses', 'xlr-male-meioses', 'ar-affected-sibs', 'ar-unaffected-sibs', 'nonsegregations',
+    'unaffected-carriers', 'full-penetrance'],
   maxaf: ['prevalence', 'allelic', 'genetic', 'penetrance', 'inheritance', 'an', 'faf95'],
   carrier: ['prevalence', 'allele-freqs'],
   recurrence: ['mode', 'penetrance', 'mosaic', 'prior', 'unaffected-sons', 'affected-sons'],
   fisher: ['a', 'b', 'c', 'd'],
   burden: ['case-carriers', 'case-n', 'control-carriers', 'control-n'],
   denovo: ['observed', 'trios', 'mu'],
-  km: ['csv', 'time-col', 'event-col', 'group-col'],
+  km: ['csv', 'time-col', 'event-col', 'group-col', 'event-coding'],
   nof1: ['effect', 'sd-diff', 'alpha', 'power', 'treatment', 'control'],
 }
 
@@ -50,7 +51,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'case_update',
     description:
-      'Record findings in the active case. profile: role (family/patient/clinician/researcher), language, proband sex/age. phenotypes: HPO terms present or excluded (labels are verified against HPO; never invent an id — find it with hpo_search). variants, hypotheses (with ORPHA/OMIM/MONDO ids and ledger evidence ids for and against), ACMG readings of recorded variants (codes in, class computed by zebra), therapy leads, questions for the care team, and removals. Several at once.',
+      'Record findings in the active case. identifiers FIRST when records name the patient: the name (every spelling: 汉字, pinyin), date of birth, record/ID numbers — the privacy gate then keeps them out of every outgoing call; they are never echoed back. profile: role (family/patient/clinician/researcher), language, proband sex/age, consanguinity. phenotypes: HPO terms present or excluded (labels are verified against HPO; never invent an id — find it with hpo_search). variants, hypotheses (with ORPHA/OMIM/MONDO ids and ledger evidence ids for and against), ACMG readings of recorded variants (codes in, class computed by zebra), therapy leads, tests already done (CMA, panel, exome…, with result), family members (relation, affected, genotype — never names), timeline events, questions for the care team, and removals. Several at once.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -99,8 +100,8 @@ export const TOOLS: ToolDef[] = [
               description: { type: 'string' },
               kind: {
                 type: 'string',
-                enum: ['sequence', 'cnv', 'exon_cnv', 'copy_number', 'repeat'],
-                description: 'sequence (default) for SNV/indel; cnv for a CMA/CNV-seq result; exon_cnv for an exon-level deletion or duplication; copy_number for SMN1-type dosage; repeat for an expansion',
+                enum: ['small', 'cnv', 'exon_cnv', 'copy_number', 'repeat_expansion'],
+                description: 'small (default) for an SNV/indel; cnv for a CMA/CNV-seq result; exon_cnv for an exon-level deletion or duplication; copy_number for SMN1-type dosage; repeat_expansion for a repeat expansion',
               },
               region: { type: 'string', description: 'cnv: chr15:23123715-28193120' },
               iscn: { type: 'string', description: 'cnv: the ISCN string as reported, e.g. arr[GRCh38] 22q11.21(18648855_21800471)x1' },
@@ -157,11 +158,61 @@ export const TOOLS: ToolDef[] = [
           },
         },
         questions: { type: 'array', items: { type: 'string' } },
+        identifiers: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'protected identifiers to add (name in every spelling, date of birth, record/ID numbers); kept out of every outgoing call, never shown back',
+        },
+        tests: {
+          type: 'array',
+          description: 'tests already done and their reported result',
+          items: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', description: 'CMA, karyotype, gene panel, trio exome, genome, MLPA, repeat sizing, metabolic screen, MRI, EEG…' },
+              date: { type: 'string' },
+              result: { type: 'string', description: 'as reported, e.g. "normal", "VUS SCN1A c.…", "arr[GRCh38] 22q11.21(…)x1"' },
+              lab: { type: 'string' },
+              method: { type: 'string' },
+              source: { type: 'string', description: 'which record file it came from' },
+              note: { type: 'string' },
+            },
+            required: ['type'],
+          },
+        },
+        family: {
+          type: 'array',
+          description: 'relatives as the records describe them — relation, affected or not, genotype if tested; never names',
+          items: {
+            type: 'object',
+            properties: {
+              relation: { type: 'string', enum: ['mother', 'father', 'sibling', 'brother', 'sister', 'half-sibling', 'child', 'son', 'daughter', 'maternal grandmother', 'maternal grandfather', 'paternal grandmother', 'paternal grandfather', 'maternal aunt', 'maternal uncle', 'paternal aunt', 'paternal uncle', 'cousin', 'twin', 'other'] },
+              sex: { type: 'string' },
+              affected: { type: ['boolean', 'string'], description: 'true, false or "unknown"' },
+              status: { type: 'string', description: 'alive, deceased, …' },
+              genotype: { type: 'string', description: 'e.g. "het for v1", "not carrier of v1", "not tested"' },
+              age: { type: 'string' },
+              note: { type: 'string' },
+              source: { type: 'string' },
+            },
+          },
+        },
+        timeline: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { date: { type: 'string' }, event: { type: 'string' }, source: { type: 'string' } },
+            required: ['event'],
+          },
+        },
         remove: {
           type: 'array',
           items: {
             type: 'object',
-            properties: { kind: { type: 'string', enum: ['phenotype', 'variant', 'hypothesis', 'lead'] }, id: { type: 'string' } },
+            properties: {
+              kind: { type: 'string', enum: ['phenotype', 'variant', 'hypothesis', 'lead', 'test', 'relative'] },
+              id: { type: 'string' },
+            },
             required: ['kind', 'id'],
           },
         },
@@ -436,6 +487,28 @@ export const TOOLS: ToolDef[] = [
     inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
     argv: i => ['china', str(i.query) ?? ''],
     deferred: true,
+  },
+  {
+    name: 'report_export',
+    description:
+      'Turn a Markdown report from the case (family letter, visit-preparation sheet, clinician summary) into Word (.docx) and PDF — and HTML — with Chinese typography, for a family that does not use a terminal: the person running zebra-mod hands them the files. Written next to the report. Refuses a report that still contains the case\'s protected identifiers or a resident ID number. PDF is printed by a browser on this machine (Chrome, Edge, Chromium, Brave) or LibreOffice; without one the result says so and the other formats are still made.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        report: { type: 'string', description: 'the .md report: an absolute path, or relative to the case folder (reports/family-letter-2026-10-06.md)' },
+        formats: { type: 'array', items: { type: 'string', enum: ['docx', 'pdf', 'html'] }, description: 'default docx and pdf' },
+        title: { type: 'string', description: 'document title (default: the first heading)' },
+      },
+      required: ['report'],
+    },
+    argv: (i, casePath) => {
+      const report = str(i.report) ?? ''
+      const path = report && casePath && !/^(?:\/|~)/.test(report) ? `${casePath.replace(/\/$/, '')}/${report}` : report
+      const formats = list(i.formats)
+      return ['report', 'export', path, ...flag('--to', formats.length ? formats.join(',') : undefined), ...flag('--title', str(i.title))]
+    },
+    deferred: true,
+    timeoutMs: 150_000,
   },
 ]
 

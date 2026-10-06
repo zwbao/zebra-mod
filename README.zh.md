@@ -42,22 +42,31 @@
 
 ## 安装
 
-前置条件：Claude Code ≥ 2.1.289（支持函数钩子 mod）；`PATH` 中有 Python ≥ 3.9（名为 `python3`，或在插件选项 `python` 中指定）。无需 pip 安装任何依赖。
+前置条件：Claude Code ≥ 2.1.289（支持函数钩子 mod）；Python ≥ 3.9。无需 sudo，无需 pip 安装任何依赖。
 
-```bash
-# 从 GitHub 安装（私有仓库：需具备访问权限，并配置好 SSH 或 token）
-claude plugin marketplace add zwbao/zebra-mod
-claude plugin install zebra-mod@zebra-mod
+**一句话安装。** 在 Claude Code 里说：
 
-# 或从本地目录加载，仅对当前会话生效
-git clone https://github.com/zwbao/zebra-mod ~/zebra-mod
-claude --plugin-dir ~/zebra-mod
+```text
+帮我安装 https://github.com/zwbao/zebra-mod
 ```
 
-可选，一次性下载约 80 MB 的 HPO 数据，以启用离线表型排序与即时术语检索：
+Claude Code 会读取仓库中的 [INSTALL.md](INSTALL.md) 并逐步完成：检查版本与 Python、注册并安装插件、下载 HPO 数据（约 80 MB）、运行 `zebra doctor` 自检。装好后在新会话中输入 `/zebra-mod:zebra-start` 即可开始（已打开的会话可输入 `/reload-plugins`）。
+
+**一条命令安装**（效果相同）：
 
 ```bash
-~/zebra-mod/bin/zebra hpo fetch
+curl -fsSL https://raw.githubusercontent.com/zwbao/zebra-mod/main/install.sh | sh
+# 仓库为私有时，先克隆再运行：
+git clone https://github.com/zwbao/zebra-mod ~/zebra-mod && ~/zebra-mod/install.sh
+```
+
+**手动安装**：
+
+```bash
+claude plugin marketplace add zwbao/zebra-mod
+claude plugin install zebra-mod@zebra-mod
+python3 <安装目录>/bin/zebra hpo fetch     # 可选：离线表型排序与即时术语检索
+# 仅对当前会话试用：claude --plugin-dir ~/zebra-mod
 ```
 
 可选的重型 S2F 模型：安装 [s2f-penguin](https://github.com/zwbao/s2f-penguin) 的 `s2f` 命令行（`uv tool install "git+https://github.com/zwbao/s2f-penguin"`），并设置 `ALPHAGENOME_API_KEY`（AlphaGenome：仅限非商业用途，不得用于临床决策）和/或 `NVCF_RUN_KEY`（NVIDIA 托管的 Evo 2）。可用 `/zebra doctor` 检查全部环境。
