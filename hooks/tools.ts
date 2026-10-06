@@ -227,7 +227,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'hpo_search',
     description:
-      'Find Human Phenotype Ontology terms for a clinical phrase. Chinese works once the HPO release is fetched (official Chinese labels plus the lay phrases families use: 走路晚, 抽风, 不会说话, 发热惊厥); English works either way. Returns verified ids with the label, the Chinese label where there is one, and what matched (label, synonym or lay phrase). Use it for every phenotype before recording one.',
+      'Find Human Phenotype Ontology terms for a clinical phrase. Chinese: official Chinese labels once the HPO release is fetched, and the lay phrases families use (走路晚, 抽风, 不会说话, 发热惊厥, 头围小, 听力下降) with or without it — also inside a short sentence ("孩子走路晚"); a negation (无明显抽搐) is not read as the feature and is warned about. English works either way. Returns verified ids with the label, the Chinese label where there is one, and what matched (label, synonym or lay phrase). Use it for every phenotype before recording one.',
     inputSchema: {
       type: 'object',
       properties: { text: { type: 'string' }, limit: { type: 'number', default: 8 } },
@@ -238,7 +238,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'phenotype_rank',
     description:
-      'Phenotype-driven differential diagnosis: rank diseases and genes for a set of HPO terms (present, and excluded). Sources: local (offline Resnik best-match over HPO annotations), monarch (Monarch semantic similarity), pubcasefinder (PubCaseFinder). Each source ranks on its own; agreement across them is the signal. from_case uses the active case\'s phenotypes.',
+      'Phenotype-driven differential diagnosis: rank diseases and genes for a set of HPO terms (present, and excluded). Sources: local (offline Resnik best-match over HPO annotations), monarch (Monarch semantic similarity), pubcasefinder (PubCaseFinder). Each source ranks on its own; agreement across them is the signal. Excluded terms are checked against each disease and listed in `excluded_hits` (a disease that usually has a feature the patient lacks) but do not lower the local score — on the phenopacket-store benchmark that ranked better (docs/BENCHMARK.md); read the hits and weigh them yourself, or set excluded_weight 1 for the 0.1.0 penalty. Ties at the top are reported. Measured accuracy (held-out cases whose own paper is not an HPO annotation source): correct disease in the local top 10 for 28%; all held-out cases 70% (an upper bound). from_case uses the active case\'s phenotypes.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -247,6 +247,8 @@ export const TOOLS: ToolDef[] = [
         from_case: { type: 'boolean' },
         sources: { type: 'array', items: { type: 'string', enum: ['local', 'monarch', 'pubcasefinder'] } },
         top: { type: 'number', default: 15 },
+        local_method: { type: 'string', enum: ['resnik', 'lr'], description: 'local scoring (default resnik)' },
+        excluded_weight: { type: 'number', description: 'local penalty for excluded terms present in a disease: 0 (default, flagged only) to 10; 1 = zebra 0.1.0' },
       },
     },
     argv: i => {
@@ -258,7 +260,8 @@ export const TOOLS: ToolDef[] = [
       if (i.from_case === true) out.push('--from-case')
       const sources = list(i.sources)
       if (sources.length) out.push('--sources', sources.join(','))
-      return [...out, ...flag('--top', num(i.top))]
+      return [...out, ...flag('--top', num(i.top)), ...flag('--local-method', str(i.local_method)),
+        ...flag('--excluded-weight', num(i.excluded_weight))]
     },
     timeoutMs: 180_000,
   },
@@ -275,10 +278,18 @@ export const TOOLS: ToolDef[] = [
       'Annotate one variant: normalized forms (HGVS, GRCh38/37 coordinates), consequence on the MANE transcript (Ensembl VEP), population frequency (gnomAD, by genetic ancestry group, with filtering AF), ClinVar classification with review status, in-silico predictors (REVEL, AlphaMissense, CADD, SpliceAI where available) and literature mentions (LitVar). Input: HGVS with transcript (NM_...:c.), rsID, or chrom-pos-ref-alt with assembly.',
     inputSchema: {
       type: 'object',
-      properties: { variant: { type: 'string' }, assembly: ASSEMBLY, gene: { type: 'string' } },
+      properties: {
+        variant: { type: 'string', description: 'HGVS, chrom-pos-ref-alt, rsID, or an mtDNA change such as "m.3243A>G 35%"' },
+        assembly: ASSEMBLY,
+        gene: { type: 'string' },
+        heteroplasmy: { type: 'number', description: 'mtDNA only: the reported heteroplasmy, in percent' },
+      },
       required: ['variant'],
     },
-    argv: i => ['variant', str(i.variant) ?? '', ...flag('--assembly', str(i.assembly)), ...flag('--gene', str(i.gene))],
+    argv: i => [
+      'variant', str(i.variant) ?? '', ...flag('--assembly', str(i.assembly)), ...flag('--gene', str(i.gene)),
+      ...flag('--heteroplasmy', num(i.heteroplasmy)),
+    ],
     timeoutMs: 180_000,
   },
   {
@@ -301,16 +312,30 @@ export const TOOLS: ToolDef[] = [
         variant: { type: 'string' },
         assembly: ASSEMBLY,
         inheritance: { type: 'string', enum: ['AD', 'AR', 'XLD', 'XLR', 'unknown'] },
+        prevalence: { type: 'number', description: 'suggest: disease prevalence (e.g. 0.0001) for the Whiffin maximum credible AF behind BS1' },
+        allelic: { type: 'number', description: 'suggest: maximum allelic contribution of one variant (0-1]' },
+        genetic: { type: 'number', description: 'suggest: maximum genetic contribution of this gene (0-1]' },
+        penetrance: { type: 'number', description: 'suggest: penetrance (0-1]' },
+        inheritance_mode: { type: 'string', enum: ['monoallelic', 'biallelic'], description: 'suggest: only for XLR, XLD or unknown inheritance; AD/AR choose it themselves' },
+        pm2_max_af: { type: 'number', description: 'suggest: a gene-specific PM2 ceiling from a ClinGen VCEP' },
+        heteroplasmy: { type: 'number', description: 'suggest, mtDNA: heteroplasmy in percent' },
+        no_splice_lookup: { type: 'boolean', description: 'suggest: skip the SpliceAI/Pangolin lookup (±4,999 nt) and use VEP\'s precomputed SpliceAI' },
       },
       required: ['mode'],
     },
     argv: i => {
       if (i.mode === 'suggest') {
-        return ['acmg', 'suggest', str(i.variant) ?? '', ...flag('--assembly', str(i.assembly)), ...flag('--inheritance', str(i.inheritance))]
+        return [
+          'acmg', 'suggest', str(i.variant) ?? '', ...flag('--assembly', str(i.assembly)), ...flag('--inheritance', str(i.inheritance)),
+          ...flag('--prevalence', num(i.prevalence)), ...flag('--allelic', num(i.allelic)), ...flag('--genetic', num(i.genetic)),
+          ...flag('--penetrance', num(i.penetrance)), ...flag('--inheritance-mode', str(i.inheritance_mode)),
+          ...flag('--pm2-max-af', num(i.pm2_max_af)), ...flag('--heteroplasmy', num(i.heteroplasmy)),
+          ...(i.no_splice_lookup === true ? ['--no-splice-lookup'] : []),
+        ]
       }
       return ['acmg', 'classify', ...list(i.codes)]
     },
-    timeoutMs: 180_000,
+    timeoutMs: 240_000,
   },
   {
     name: 's2f_predict',
@@ -362,6 +387,7 @@ export const TOOLS: ToolDef[] = [
         term: { type: 'string', description: 'extra keyword: gene, drug, modality' },
         country: { type: 'string', description: 'e.g. China, United States; only trials with a site there, and those sites are listed' },
         full_eligibility: { type: 'boolean', description: 'the whole eligibility text instead of its first 600 characters' },
+        keep_unrelated: { type: 'boolean', description: 'keep trials whose conditions do not name this disease (normally moved to result.filtered)' },
         status: { type: 'string', enum: ['RECRUITING', 'NOT_YET_RECRUITING', 'ACTIVE_NOT_RECRUITING', 'COMPLETED', 'ANY'] },
         limit: { type: 'number', default: 20 },
       },
@@ -371,6 +397,7 @@ export const TOOLS: ToolDef[] = [
       'trials', str(i.condition) ?? '',
       ...flag('--term', str(i.term)), ...flag('--country', str(i.country)), ...flag('--status', str(i.status)),
       ...(i.full_eligibility === true ? ['--full-eligibility'] : []), ...flag('--limit', num(i.limit)),
+      ...(i.keep_unrelated === true ? ['--keep-unrelated'] : []),
     ],
     deferred: true,
   },
@@ -454,7 +481,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'cnv_interpret',
     description:
-      'Read the report forms that are not a single sequence variant: a CNV or microarray result (region or ISCN string) → the genes it spans with ClinGen dosage sensitivity and the ACMG/ClinGen CNV scoring inputs (section 1–5 evidence, never a classification — that judgement is yours); an exon-level deletion or duplication (e.g. "DMD exon 45-50 deletion", NM_004006.3:c.6439-?_7309+?del) → exon coordinates, size, whether the reading frame is kept, and which additional exon would restore it (the exon-skipping question); SMN1-type copy number and repeat expansions → recorded as structured findings with what they mean for the mechanism. Coordinates come from Ensembl.',
+      'Read the report forms that are not a single sequence variant. A CNV or microarray result (region or ISCN, with build, mosaicism such as x1~2 or 30%, de novo/maternal/paternal) → the genes it spans, every one checked against ClinGen gene dosage, and the ClinGen curated regions it overlaps (22q11.2, 1p36, Williams, PWS/AS, 16p11.2 …) with HI/TS scores, coverage and the ACMG/ClinGen 2020 section-2 row they point to; section 3 by gene count for losses and gains separately — inputs, never a classification (sections 4-5 need the case). An exon-level deletion or duplication (DMD exon 45-50 deletion, NM_004006.3:c.6439-?_7309+?del, intronic breakpoints) → exons, coding bases, whether the frame is kept, and — only when it is not — which additional exon skip restores it. SMN1/SMN2 copy number (clinical exon numbering 1, 2a, 2b, 3-8) read with the SMN2 count, framed as population data, not a prognosis. Repeat expansions (FMR1, HTT, DMPK, FXN, C9orf72) placed in their published size bands with sex-specific wording and what else is needed (methylation, AGG interruptions, the other allele) — a referenced reading, not a classification. Coordinates from Ensembl.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -467,7 +494,10 @@ export const TOOLS: ToolDef[] = [
         copies: { type: 'number', description: 'copy number the report gives, when it is not in the string' },
         inheritance: { type: 'string', enum: ['de_novo', 'maternal', 'paternal', 'biparental', 'unknown'] },
         method: { type: 'string', description: 'CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR …' },
-        record: { type: 'boolean', description: 'also record it in the active case' },
+        record: { type: 'boolean', description: 'also record it in the active case (a write: asked about like any case change)' },
+        sex: { type: 'string', enum: ['male', 'female'], description: 'decides what an X/Y copy number means (default: the case profile)' },
+        smn2_copies: { type: 'number', description: 'SMN2 copy number, read together with SMN1' },
+        related: { type: 'array', items: { type: 'string' }, description: 'other findings in the same report (the second allele of a repeat, a second CNV)' },
       },
       required: ['result'],
     },
@@ -475,6 +505,8 @@ export const TOOLS: ToolDef[] = [
       'cnv', str(i.result) ?? '',
       ...flag('--assembly', str(i.assembly)), ...flag('--gene', str(i.gene)), ...flag('--copies', num(i.copies)),
       ...flag('--inheritance', str(i.inheritance)), ...flag('--method', str(i.method)),
+      ...flag('--sex', str(i.sex)), ...flag('--smn2-copies', num(i.smn2_copies)),
+      ...(list(i.related).length ? ['--related', ...list(i.related)] : []),
       ...(i.record === true ? ['--record'] : []),
     ],
     touchesCase: true,
@@ -483,10 +515,93 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'china_rare',
     description:
-      "China's national rare disease lists (第一批罕见病目录 2018, 第二批 2023): is a disease on them, its Chinese name and list number. Input: Chinese or English name.",
-    inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
-    argv: i => ['china', str(i.query) ?? ''],
+      "China's national rare disease lists (第一批罕见病目录 2018, 第二批 2023): is a disease on them, its Chinese name and list number. status: on_list (the published entry, or a named member of a listed group); qualified (only a subtype or form is listed — the result says which); possible (closest entries to verify, e.g. an acronym or a shared stretch of text — not a match); not_found. With query \"hospitals\": the 国家罕见病诊疗协作网 hospitals (NHC 2024 list, 419), by province with the lead hospitals. Input: Chinese or English name.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'a disease name, or "hospitals" for the collaboration-network hospitals' },
+        province: { type: 'string', description: 'with "hospitals": e.g. 浙江 or 浙江省' },
+      },
+      required: ['query'],
+    },
+    argv: i => ['china', str(i.query) ?? '', ...flag('--province', str(i.province))],
     deferred: true,
+  },
+  {
+    name: 'case_recheck',
+    description:
+      'Ask the active case\'s questions again and say what changed since the last recheck: ClinVar classification and stars of each recorded sequence variant, gnomAD frequency, ClinGen gene-disease validity of its genes, recruiting trials (new and no longer recruiting) and papers first published since then for each open hypothesis. The first run records the baseline. Each change says what to look at again (an ACMG reading, a trial\'s eligibility); nothing is concluded. Queries carry biology only and skip anything holding a protected identifier. plan: true lists the questions without sending them.',
+    inputSchema: { type: 'object', properties: { plan: { type: 'boolean' } } },
+    argv: (i, casePath) => {
+      if (!casePath) throw new Error('no active case (the person can run /zebra new <dir> or /zebra case <dir>)')
+      return ['case', 'recheck', casePath, ...(i.plan === true ? ['--plan'] : [])]
+    },
+    touchesCase: true,
+    deferred: true,
+    timeoutMs: 600_000,
+  },
+  {
+    name: 'access',
+    description:
+      'Access to a treatment, for a drug, a disease or a gene, with the source of every line: FDA and EMA status from the agencies\' own records (openFDA labels, Drugs@FDA, EMA medicine data — withdrawn and refused shown as such), approval in China from the bundled official NMPA/CDE documents (approved_in_china, named_not_approved, or not_in_bundled_list — which is not "not approved"), China\'s 2025 national reimbursement list (NRDL) entry with its restriction text verbatim, trials with sites in China (ClinicalTrials.gov; ChiCTR cannot be queried by a script — it blocks them), and the collaboration-network hospitals for a province. A name it cannot resolve exactly comes back unresolved with candidates; it never answers for a near match.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'drug (INN or Chinese name), disease (Chinese or English) or gene symbol' },
+        as: { type: 'string', enum: ['auto', 'drug', 'disease', 'gene'] },
+        province: { type: 'string', description: 'list the collaboration-network hospitals of this province, e.g. 浙江' },
+        trials: { type: 'number', description: 'how many trials with a site in China (default a few)' },
+        status: { type: 'string', description: 'trial status filter, e.g. RECRUITING or ANY' },
+      },
+      required: ['query'],
+    },
+    argv: i => [
+      'access', str(i.query) ?? '', ...flag('--as', str(i.as)), ...flag('--province', str(i.province)),
+      ...flag('--trials', num(i.trials)), ...flag('--status', str(i.status)),
+    ],
+    timeoutMs: 180_000,
+  },
+  {
+    name: 'expression',
+    description:
+      'Median expression of a gene per tissue (GTEx v8/v10) with each tissue\'s ontology id (UBERON/EFO) — for choosing the AlphaGenome tissue and the tissue an RNA test can use: the result states whether blood, lymphoblastoid cells, fibroblasts, skin or muscle reach 1 TPM. Bulk adult medians, not a detection limit; an NMD-degraded transcript reads low.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        gene: { type: 'string' },
+        top: { type: 'number' },
+        dataset: { type: 'string', enum: ['gtex_v8', 'gtex_v10'] },
+      },
+      required: ['gene'],
+    },
+    argv: i => ['expression', str(i.gene) ?? '', ...flag('--top', num(i.top)), ...flag('--dataset', str(i.dataset))],
+    deferred: true,
+  },
+  {
+    name: 'aso_screen',
+    description:
+      'Splice-switching antisense feasibility screen for researchers: from SpliceAI for the variant, the aberrant event (pseudoexon / cryptic acceptor / cryptic donor, boundaries checked for AG/GT in the patient sequence; or exon_skip to restore a reading frame), then candidate target windows on the pre-mRNA with coordinates, target and antisense sequence, GC, hairpin and homopolymer flags, whether the variant lies inside, every ranking component shown, and published N-of-1 precedents retrieved from Europe PMC. When no aberrant splicing is predicted it says so and stops. Optional genomic uniqueness via NCBI BLAST (slow: 30-700 s). A screen, not a design: no chemistry, dose or delivery; RNA evidence of the aberrant splicing comes first.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        variant: { type: 'string', description: 'chrom-pos-ref-alt, transcript HGVS or rsID' },
+        assembly: ASSEMBLY,
+        event: { type: 'string', enum: ['auto', 'pseudoexon', 'cryptic_acceptor', 'cryptic_donor', 'exon_skip'] },
+        lengths: { type: 'string', description: 'target lengths LO-HI between 12 and 40 (default 18-25)' },
+        min_delta: { type: 'number', description: 'SpliceAI delta threshold (default 0.2)' },
+        top: { type: 'number', description: '1-60 (default 12)' },
+        uniqueness: { type: 'boolean', description: 'one NCBI BLAST search of the shortlist; adds 30-700 s' },
+        distance: { type: 'number' },
+      },
+      required: ['variant'],
+    },
+    argv: i => [
+      'aso', str(i.variant) ?? '', ...flag('--assembly', str(i.assembly)), ...flag('--event', str(i.event)),
+      ...flag('--lengths', str(i.lengths)), ...flag('--min-delta', num(i.min_delta)), ...flag('--top', num(i.top)),
+      ...flag('--distance', num(i.distance)), ...(i.uniqueness === true ? ['--uniqueness'] : []),
+    ],
+    deferred: true,
+    timeoutMs: 600_000,
   },
   {
     name: 'report_export',

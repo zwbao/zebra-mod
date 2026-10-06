@@ -1,0 +1,20 @@
+{
+ "assembly": "GRCh38",
+ "built_by": "tools/aso/fetch_fixtures.py",
+ "chrom": "17",
+ "end": 7676310,
+ "expected_length": 351,
+ "length": 351,
+ "name": "tp53_exon4_boundaries",
+ "sequence": "GTCTCATGGAAGCCAGCCCCTCAGGGCAACTGACCGTGCAAGTCACAGACTTGGCTGTCCCAGAATGCAAGAAGCCCAGACGGAAACCGTAGCTGCCCTGGTAGGTTTTCTGGGAAGGGACAGAAGATGACAGGGGCCAGGAGGGGGCTGGTGCAGGGGCCGCCGGTGTAGGAGCTGCTGGTGCAGGGGCCACGGGGGGAGCAGCCTCTGGCATTCTGGGAGCTTCATCTGGACCTGGGTCTTCAGTGAACCATTGTTCAATATCGTCCGGGGACAGCATCAAATCATCCATTGCTTGGGACGGCAAGGGGGACTGTAGATGGGTGAAAAGAGCAGTCAGAGGACCAGGTC",
+ "sha256": "a4ad8200a5a1c63063332f2c58f7bf92e7c1fd2f55699439a714f35620796703",
+ "source": {
+  "db": "Ensembl sequence",
+  "retrieved_at": "2026-10-06T10:34:46+00:00",
+  "status": 200,
+  "url": "https://rest.ensembl.org/sequence/region/human/17:7675960..7676310:1"
+ },
+ "start": 7675960,
+ "strand": 1,
+ "why": "TP53 exon 4 (7675994-7676272) with flanks, on the minus strand: the acceptor is the HIGHER genomic coordinate and the donor the lower one, which is what the strand handling has to get right."
+}

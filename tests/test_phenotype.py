@@ -320,9 +320,58 @@ def test_E9_non_ascii_query_is_not_sent_to_the_jax_endpoint(monkeypatch):
 
     monkeypatch.setattr(hpo_src, "_ols_search", empty_ols)
     monkeypatch.setattr(hpo_src, "_jax_search", boom)
-    out = hpo_src.search("发育迟缓", 3)
+    monkeypatch.setattr(hpo_src, "term", lambda tid, prefer_local=True: Outcome({"id": tid, "name": None}))
+    out = hpo_src.search("一个没有对应词条的短语", 3)
     assert out.result["hits"] == []
     assert any("is not ASCII" in w for w in out.warnings)
+
+
+def test_cp1_7_fresh_install_answers_chinese_lay_phrases_online(monkeypatch):
+    """CP1-7: without `zebra hpo fetch`, 抽风 / 孩子走路晚 came back "no match"; the curated lay
+    phrases need no files, so they are answered, each id verified through the HPO API."""
+    from zebra.http import Response
+    from zebra.sources import hpo as hpo_src
+
+    def empty_ols(text, rows=100):
+        return Response("https://www.ebi.ac.uk/ols4/api/search", 200, "{}", "2026-10-06T00:00:00+00:00", True), []
+
+    def boom(text, rows=50):
+        raise AssertionError("the JAX endpoint rejects non-ASCII and must not be called")
+
+    verified = []
+    labels = {"HP:0001250": "Seizure", "HP:0031936": "Delayed ability to walk", "HP:0001270": "Motor delay"}
+
+    def fake_term(tid, prefer_local=True):
+        verified.append((tid, prefer_local))
+        return Outcome({"id": tid, "name": labels.get(tid), "obsolete": False},
+                       sources=[{"db": "HPO", "record": tid, "url": "fixture"}])
+
+    monkeypatch.setattr(hpo_src, "_ols_search", empty_ols)
+    monkeypatch.setattr(hpo_src, "_jax_search", boom)
+    monkeypatch.setattr(hpo_src, "term", fake_term)
+    out = hpo_src.search("抽风", 3)
+    assert out.result["hits"][0]["id"] == "HP:0001250"
+    assert out.result["hits"][0]["matched_on"] == "lay phrase"
+    assert ("HP:0001250", False) in verified, "each lay id is checked against the HPO API, not trusted blind"
+    walk = hpo_src.search("孩子走路晚", 3)
+    assert [h["id"] for h in walk.result["hits"]][:2] == ["HP:0031936", "HP:0001270"]
+    # a negated phrase is never turned into a present finding
+    assert hpo_src.search("没有抽搐", 3).result["hits"] == []
+
+
+def test_e_12_term_lookups_cache_hits_30_days_and_misses_1_day(monkeypatch):
+    from zebra.http import Response
+    from zebra.sources import hpo as hpo_src
+
+    seen = {}
+
+    def fake_get_json(url, **kw):
+        seen.update(kw)
+        return Response(url, 404, "", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(hpo_src, "get_json", fake_get_json)
+    hpo_src.term("HP:0001250", prefer_local=False)
+    assert seen["cache_ttl"] == 30 * 86400 and seen["not_found_ttl"] == 86400
 
 
 # -------------------------------------- F14: `phenotype rank` with no usable terms fails usefully
@@ -402,13 +451,15 @@ def test_F10_an_empty_pubcasefinder_answer_is_not_no_match(monkeypatch):
     ttls = []
 
     def fake_request(url, source, **kw):
-        ttls.append(kw.get("cache_ttl"))
+        ttls.append((kw.get("cache_ttl"), kw.get("refresh", False)))
         return Response(url, 200, "", "2026-10-06T00:00:00+00:00", len(ttls) == 1)
 
     monkeypatch.setattr(pubcasefinder, "request", fake_request)
     with pytest.raises(SourceError) as err:
         pubcasefinder.ranked(["HP:0001250"], "omim", 5)
-    assert ttls == [7 * 86400, 0]  # the cached empty body was refetched before giving up
+    # the cached empty body was refetched before giving up -- with refresh, so a good answer is
+    # written back to the cache (E-6), not with cache_ttl=0
+    assert ttls == [(7 * 86400, False), (7 * 86400, True)]
     assert "empty body" in err.value.message
 
 
@@ -431,3 +482,153 @@ def test_F10_a_row_with_no_score_is_dropped_not_emitted_as_nan():
         "2\t\tOMIM:111111\tNo score\t\t\n", "omim", 5)
     assert [r["id"] for r in rows] == ["OMIM:607208"]
     json.dumps(rows, allow_nan=False)  # would raise if a NaN had got through
+
+
+# -------------------------------------- v0.2 regressions (review ids D-P2-1, D-P2-2)
+
+@pytest.fixture
+def fixture_hpo(tmp_path, monkeypatch):
+    import shutil
+
+    from zebra import hpo_local
+
+    d = tmp_path / "hpo"
+    d.mkdir()
+    for f in hpo_local.FILES:
+        shutil.copy(FIX / "hpo" / f, d / f)
+    monkeypatch.setenv("ZEBRA_HPO_DIR", str(d))
+    return d
+
+
+def test_d_p2_2_a_resolved_id_is_not_reported_as_unsent(fixture_hpo, capsys):
+    """HP:0009999 is obsolete, replaced by HP:0001250: it resolves, so nothing was dropped."""
+    code = cli.main(["--json", "phenotype", "rank", "--present", "HP:0009999", "HP:0001263", "--sources", "local"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0 and env["ok"]
+    assert not any("not sent to the web sources" in w for w in env["warnings"])
+    assert any("obsolete" in n for n in env["result"]["notes"])
+
+
+def test_d_p2_1_contradictory_present_and_excluded_terms_are_warned_about(fixture_hpo, capsys):
+    code = cli.main(["--json", "phenotype", "rank", "--present", "HP:0002373", "HP:0001263",
+                     "--exclude", "HP:0001250", "HP:0001263", "--sources", "local"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0 and env["ok"]
+    w = " | ".join(env["warnings"])
+    assert "both present and excluded: HP:0001263" in w
+    assert "HP:0001250" in w and "ancestor of the present term HP:0002373" in w
+    # both contradictions are dropped from the query that is reported (R-A review: it used to list them)
+    assert env["result"]["query"]["excluded"] == []
+    assert env["result"]["per_source"]["local"]["contradictions"][0]["excluded"] == "HP:0001250"
+
+
+def test_local_method_flag_selects_the_scoring(fixture_hpo, capsys):
+    for method in ("resnik", "lr"):
+        cli.main(["--json", "phenotype", "rank", "--present", "HP:0002373", "--sources", "local",
+                  "--local-method", method])
+        env = json.loads(capsys.readouterr().out)
+        assert env["result"]["per_source"]["local"]["method_id"] == method
+    cli.main(["--json", "phenotype", "rank", "--present", "HP:0002373", "--sources", "local"])
+    env = json.loads(capsys.readouterr().out)
+    assert env["result"]["per_source"]["local"]["method_id"] == P.LOCAL_METHOD
+
+
+def test_benchmark_choice_flags_excluded_terms_instead_of_scoring_them(fixture_hpo, capsys):
+    """docs/BENCHMARK.md: penalising excluded terms cost accuracy on the benchmark, also on held-out cases whose
+    paper was not an annotation source. The default flags a candidate annotated with an excluded feature;
+    --excluded-weight 1 restores 0.1.0."""
+    base = ["--json", "phenotype", "rank", "--present", "HP:0001250", "--exclude", "HP:0001252", "--sources", "local"]
+    cli.main(base)
+    env = json.loads(capsys.readouterr().out)
+    local = env["result"]["per_source"]["local"]
+    rows = {d["id"]: d for d in local["diseases"]}
+    assert local["excluded_scored"] is False and "not scored" in local["excluded_handling"]
+    assert rows["OMIM:2"]["excluded_hits"] == ["HP:0001252"], "the candidate is still flagged"
+    assert any("do not lower its score" in n for n in env["result"]["notes"])
+    cli.main(base + ["--excluded-weight", "1"])
+    env1 = json.loads(capsys.readouterr().out)
+    local1 = env1["result"]["per_source"]["local"]
+    rows1 = {d["id"]: d for d in local1["diseases"]}
+    assert local1["excluded_scored"] is True and rows1["OMIM:2"]["score"] < rows["OMIM:2"]["score"]
+    code = cli.main(base + ["--excluded-weight", "-1"])
+    assert code != 0 and "between 0 and 10" in json.loads(capsys.readouterr().out)["error"]["message"]
+
+
+def test_hpo_rank_uses_the_same_benchmark_choice(fixture_hpo, capsys):
+    cli.main(["--json", "hpo", "rank", "HP:0001250", "--exclude", "HP:0001252"])
+    res = json.loads(capsys.readouterr().out)["result"]
+    rows = {d["disease"]: d for d in res["diseases"]}
+    assert rows["OMIM:2"]["penalty"] == 0 and rows["OMIM:2"]["excluded_hits"] == ["HP:0001252"]
+    assert "not scored" in res["method"]
+    cli.main(["--json", "hpo", "rank", "HP:0001250", "--exclude", "HP:0001252", "--excluded-weight", "1"])
+    res1 = json.loads(capsys.readouterr().out)["result"]
+    assert {d["disease"]: d for d in res1["diseases"]}["OMIM:2"]["penalty"] > 0
+
+
+def test_excluded_weight_is_refused_with_the_lr_method(fixture_hpo, capsys):
+    code = cli.main(["--json", "phenotype", "rank", "--present", "HP:0001250", "--sources", "local",
+                     "--local-method", "lr", "--excluded-weight", "1"])
+    assert code != 0 and "applies to the resnik method" in json.loads(capsys.readouterr().out)["error"]["message"]
+
+
+def test_r_a_p1_8_a_replaced_id_is_not_reported_unsent_without_a_local_release(monkeypatch, tmp_path):
+    """Without local files the HPO API resolves HP:0001388 to its replacement, which is what is sent."""
+    from zebra.sources import hpo as hpo_src
+
+    monkeypatch.setenv("ZEBRA_HPO_DIR", str(tmp_path / "no-hpo"))
+    monkeypatch.setattr(hpo_src, "term", lambda t, prefer_local=True: Outcome(
+        {"id": t, "name": "x", "obsolete": True, "replaced_by": "HP:0001382"}))
+    sent = {}
+    monkeypatch.setattr(P, "run_monarch", lambda terms, top, warn: (sent.setdefault("t", list(terms)),
+                                                                      Outcome({"diseases": [], "genes": []}))[1])
+    out = P._rank(_rank_args(["HP:0001388"], "monarch"))
+    assert sent["t"] == ["HP:0001382"]
+    assert not any("not sent to the web sources" in w for w in out.warnings)
+
+
+def test_e_6_a_bad_cached_pubcasefinder_body_is_replaced_in_the_cache(monkeypatch, tmp_path):
+    """E-6: the re-request after a bad cached body used cache_ttl=0, which never wrote the good answer
+    back, so every later call replayed the bad entry. It must refresh the cache entry instead."""
+    from zebra import http
+
+    monkeypatch.setenv("ZEBRA_CACHE_DIR", str(tmp_path / "cache"))
+    good = "Rank\tScore\tOMIM_ID\tDisease_Name\tMatched_Phenotype\tCausative_Gene\n1\t0.9\tOMIM:607208\tDravet\tHP:0001250\tSCN1A\n"
+    served = []
+
+    class FakeResp:
+        status = 200
+
+        def __init__(self, body):
+            self.body = body.encode()
+
+        def read(self, *a):
+            b, self.body = self.body, b""
+            return b
+
+        read1 = read
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    class FakeOpener:
+        def open(self, req, timeout=None):
+            served.append(req.full_url)
+            return FakeResp(good)
+
+    monkeypatch.setattr(http, "_opener", lambda: FakeOpener())
+    monkeypatch.setattr(http, "_HOST_INTERVAL", {})
+    url = ("https://pubcasefinder.dbcls.jp/api/pcf_get_ranked_list?target=omim&format=tsv&hpo_id=HP%3A0001250")
+    path = http._cache_path(f"GET {url} ")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    import time as _t
+    path.write_text(json.dumps({"stored": _t.time(), "status": 200, "text": "<html>maintenance</html>",
+                                "retrieved_at": "2026-10-06T00:00:00+00:00"}), "utf-8")
+    first = pubcasefinder.ranked(["HP:0001250"], "omim", 5)
+    assert first.result["hits"][0]["id"] == "OMIM:607208" and len(served) == 1
+    assert "Rank" in json.loads(path.read_text("utf-8"))["text"], "the good answer was written back"
+    again = pubcasefinder.ranked(["HP:0001250"], "omim", 5)
+    assert again.result["hits"][0]["id"] == "OMIM:607208" and len(served) == 1, "served from cache, no new request"
+    assert again.sources[0]["cached"] is True

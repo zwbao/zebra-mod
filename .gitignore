@@ -17,3 +17,5 @@ docs/superpowers/
 # synthetic test fixtures (real public coordinates, invented genotypes) are fine to commit
 !tests/fixtures/**/*.vcf
 !tests/fixtures/**/*.vcf.gz
+# eval run outputs (traces, reports) stay local
+evals/results/

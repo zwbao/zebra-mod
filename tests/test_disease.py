@@ -444,3 +444,241 @@ def test_live_F12_the_command_calls_it_a_miss_not_an_unavailable_source(capsys):
     assert code == 0
     assert env["result"]["status"] in ("ambiguous", "not_found")  # never "unavailable"
     assert not any("Orphanet name search unavailable" in w for w in env["warnings"])
+
+
+# ---------------------------------------------------------------- E-2: a generic Chinese word never resolves silently
+
+@pytest.mark.parametrize("query,near", [("糖尿病", "ORPHA:511"), ("白内障", "ORPHA:98989"),
+                                        ("智力障碍", "ORPHA:87277"), ("心肌病", "ORPHA:167848")])
+def test_e_2_a_generic_chinese_word_is_ambiguous_not_a_card(query, near, monkeypatch, capsys):
+    called = []
+    monkeypatch.setattr(orphanet, "disorder", lambda *a, **k: called.append(a) or Outcome(None))
+    code = cli.main(["--json", "disease", query])
+    env = json.loads(capsys.readouterr().out)
+    r = env["result"]
+    assert code == 0 and r["status"] == "ambiguous", r
+    assert near in {c["id"] for c in r["candidates"]}
+    assert called == []  # no card was fetched for a near miss
+    assert any("not an exact Chinese disease name" in w for w in env["warnings"])
+
+
+def test_a_near_exact_chinese_name_still_resolves(monkeypatch):
+    seen = []
+
+    def from_orpha(self, orpha_id, how="given"):
+        seen.append((orpha_id, how))
+        self.orpha = orpha_id
+        return True
+
+    monkeypatch.setattr(D.Resolver, "from_orpha", from_orpha)
+    r, status, _ = D.resolve("杜氏肌营养不良")
+    assert status == "resolved" and seen[0][0] == "ORPHA:98896"  # bigram 0.923 >= 0.85
+
+
+# ---------------------------------------------------------------- CP1-7: the Chinese entry is as strong as the English
+
+def test_cp1_7_pompe_in_chinese_resolves_to_pompe_disease_not_the_gsd_group(monkeypatch):
+    seen = []
+
+    def from_orpha(self, orpha_id, how="given"):
+        seen.append((orpha_id, how))
+        self.orpha = orpha_id
+        return True
+
+    monkeypatch.setattr(D.Resolver, "from_orpha", from_orpha)
+    r, status, _ = D.resolve("庞贝病")
+    assert status == "resolved" and seen[0][0] == "ORPHA:365"
+    assert "names ORPHA:365 itself" in seen[0][1]
+
+
+def test_cp1_7_a_list_name_with_no_orphacode_follows_the_english_name(monkeypatch):
+    """脊髓性肌萎缩症 (list #110, no ORPHAcode) used to stop at ORPHA:70 by bigram 0.769 and lost GeneReviews."""
+    tried = []
+
+    def by_name(name, lang="en"):
+        tried.append(name)
+        return Outcome({"id": "ORPHA:83330", "name": "x"})
+
+    monkeypatch.setattr(orphanet, "by_name", by_name)
+    monkeypatch.setattr(orphanet, "name_matches", lambda row, name: False)
+    monkeypatch.setattr(monarch, "search", lambda *a, **k: Outcome({"hits": [{"id": "MONDO:0001516",
+                                                                             "name": "spinal muscular atrophy"}]}))
+    monkeypatch.setattr(D.Resolver, "from_mondo", lambda self, mid: setattr(self, "name", "spinal muscular atrophy") or True)
+    r, status, _ = D.resolve("脊髓性肌萎缩症")
+    assert status == "resolved" and "Spinal Muscular Atrophy" in tried
+
+
+def test_cp1_7_genereviews_is_found_by_disease_gene_when_name_and_omim_miss(monkeypatch):
+    calls = []
+
+    def chapters(omim_ids=(), genes=(), name=None, limit=5, with_text=True):
+        calls.append({"omim": list(omim_ids), "genes": list(genes), "name": name})
+        if genes:
+            return Outcome({"chapters": [{"nbk": "NBK1352", "title": "Spinal Muscular Atrophy", "url": "u",
+                                          "matched_by": ["gene SMN1"]}]})
+        return Outcome({"chapters": []})
+
+    from zebra.sources import hpo, medlineplus
+
+    monkeypatch.setattr(genereviews, "chapters", chapters)
+    monkeypatch.setattr(orphanet, "disorder", lambda c, lang="en": Outcome(None))
+    monkeypatch.setattr(orphanet, "epidemiology", lambda c: Outcome([]))
+    monkeypatch.setattr(orphanet, "natural_history", lambda c: Outcome({}))
+    monkeypatch.setattr(orphanet, "genes", lambda c: Outcome([{"symbol": "SMN1", "hgnc": "HGNC:11117",
+                                                               "association": "Disease-causing germline mutation(s) in",
+                                                               "status": "Assessed", "pmids": []}]))
+    monkeypatch.setattr(hpo, "disease_annotations", lambda i: Outcome({"phenotypes": []}))
+    monkeypatch.setattr(medlineplus, "condition", lambda names, omim=(): Outcome(None))
+    r = D.Resolver()
+    r.orpha, r.orpha_row, r.name = "ORPHA:70", {"id": "ORPHA:70", "name": "Proximal spinal muscular atrophy"}, \
+        "Proximal spinal muscular atrophy"
+    card = D.build_card(r)
+    assert [c["nbk"] for c in card["genereviews"]] == ["NBK1352"]
+    assert calls[-1]["genes"] == ["SMN1"]
+
+
+# ---------------------------------------------------------------- E-1 on the disease card
+
+def test_e_1_the_card_does_not_match_the_list_through_an_acronym_synonym(monkeypatch):
+    """catastrophic antiphospholipid syndrome has the synonym CAPS, which is also cryopyrin-associated periodic syndrome."""
+    from zebra.sources import hpo, medlineplus
+
+    monkeypatch.setattr(genereviews, "chapters", lambda **k: Outcome({"chapters": []}))
+    monkeypatch.setattr(orphanet, "disorder", lambda c, lang="en": Outcome(None))
+    monkeypatch.setattr(orphanet, "epidemiology", lambda c: Outcome([]))
+    monkeypatch.setattr(orphanet, "natural_history", lambda c: Outcome({}))
+    monkeypatch.setattr(orphanet, "genes", lambda c: Outcome([]))
+    monkeypatch.setattr(hpo, "disease_annotations", lambda i: Outcome({"phenotypes": []}))
+    monkeypatch.setattr(medlineplus, "condition", lambda names, omim=(): Outcome(None))
+    r = D.Resolver()
+    r.orpha = "ORPHA:464343"
+    r.orpha_row = {"id": "ORPHA:464343", "name": "Catastrophic antiphospholipid syndrome",
+                   "synonyms": ["CAPS", "Catastrophic APS", "caps"]}
+    r.name = "Catastrophic antiphospholipid syndrome"
+    card = D.build_card(r)
+    assert card["china_rare_list"]["on_list"] is False
+    assert all(m.get("matched_on") not in ("CAPS", "caps") for m in card["china_rare_list"]["matches"])
+
+
+def test_e_1_the_card_matches_by_orphacode_and_says_qualified(monkeypatch):
+    from zebra.sources import hpo, medlineplus
+
+    monkeypatch.setattr(genereviews, "chapters", lambda **k: Outcome({"chapters": []}))
+    monkeypatch.setattr(orphanet, "disorder", lambda c, lang="en": Outcome(None))
+    monkeypatch.setattr(orphanet, "epidemiology", lambda c: Outcome([]))
+    monkeypatch.setattr(orphanet, "natural_history", lambda c: Outcome({}))
+    monkeypatch.setattr(orphanet, "genes", lambda c: Outcome([]))
+    monkeypatch.setattr(hpo, "disease_annotations", lambda i: Outcome({"phenotypes": []}))
+    monkeypatch.setattr(medlineplus, "condition", lambda names, omim=(): Outcome(None))
+    r = D.Resolver()
+    r.orpha, r.orpha_row, r.name = "ORPHA:79201", {"id": "ORPHA:79201", "name": "Glycogen storage disease"}, \
+        "Glycogen storage disease"
+    card = D.build_card(r)
+    cn = card["china_rare_list"]
+    assert cn["status"] == "qualified" and cn["on_list"] is False and cn["matches"][0]["no"] == 35
+    assert any("covers glycogen storage disease types I and II only" in w for w in r.warnings)
+    assert "only a subtype is listed" in D.render(dict(card, status="resolved"))
+
+
+# ---------------------------------------------------------------- E-7: a 404 slug is not evidence
+
+def test_e_7_medlineplus_records_only_the_page_that_answered(monkeypatch):
+    from zebra.http import Response
+    from zebra.sources import medlineplus
+
+    good = json.dumps({"name": "Spinal muscular atrophy", "ghr_page": "https://medlineplus.gov/genetics/condition/spinal-muscular-atrophy",
+                       "text-list": [], "db-key-list": []})
+
+    def fake_get(url, source, **kw):
+        if url.endswith("/spinal-muscular-atrophy.json"):
+            return Response(url, 200, good, "2026-10-06T00:00:00+00:00", False)
+        return Response(url, 404, "<!DOCTYPE html><html>not found", "2026-10-06T00:00:00+00:00", False)
+
+    monkeypatch.setattr(medlineplus, "get_json", fake_get)
+    out = medlineplus.condition(["Proximal spinal muscular atrophy", "SMA type 1", "Spinal muscular atrophy"])
+    assert out.result["slug"] == "spinal-muscular-atrophy"
+    assert [s["record"] for s in out.sources] == ["spinal-muscular-atrophy"]
+    assert out.result["tried"] == ["proximal-spinal-muscular-atrophy", "sma-type-1", "spinal-muscular-atrophy"]
+    miss = medlineplus.condition(["Dravet syndrome", "SMEI"])
+    assert miss.result is None and miss.sources == []
+    assert any("dravet-syndrome" in w for w in miss.warnings)
+
+
+@pytest.mark.live
+def test_live_e_2_cp1_7_chinese_entries(capsys):
+    code = cli.main(["--json", "disease", "糖尿病"])
+    assert json.loads(capsys.readouterr().out)["result"]["status"] == "ambiguous"
+    code = cli.main(["--json", "disease", "脊髓性肌萎缩症"])
+    r = json.loads(capsys.readouterr().out)["result"]
+    assert r["status"] == "resolved" and "NBK1352" in {c["nbk"] for c in r["genereviews"]}
+    assert r["plain_language"] and r["china_rare_list"]["status"] == "on_list"
+    code = cli.main(["--json", "disease", "庞贝病"])
+    r = json.loads(capsys.readouterr().out)["result"]
+    assert r["ids"]["ORPHA"] == "ORPHA:365" and r["china_rare_list"]["matches"][0]["no"] == 35
+
+
+@pytest.mark.parametrize("raw", ["0.0", "0", 0, 0.0, "0.00", None])
+def test_e_13_orphanet_mean_value_zero_is_no_value(raw):
+    data = {"data": {"results": {"Prevalence": [{"PrevalenceType": "Point prevalence", "ValMoy": raw}]}}}
+    rows = orphanet.parse_epidemiology(data)
+    assert rows and rows[0]["value"] is None
+    data["data"]["results"]["Prevalence"][0]["ValMoy"] = "3.3"
+    assert orphanet.parse_epidemiology(data)[0]["value"] == "3.3"
+
+
+# ---------------------------------------------------------------- adversarial review (W4 round), Chinese resolution
+
+@pytest.mark.parametrize("query,wrong", [("甲基丙二酸血症", "ORPHA:289504"), ("神经纤维瘤病", "ORPHA:252183"),
+                                         ("地中海贫血", "ORPHA:846"), ("酪氨酸血症Ⅲ型", "ORPHA:28378"),
+                                         ("脊髓小脑性共济失调3型", "ORPHA:276183"), ("黏多糖贮积症Ⅲ型", "ORPHA:217085"),
+                                         ("神经元蜡样脂褐质沉积症", "ORPHA:228329")])
+def test_rev_p0_3_a_near_chinese_name_never_resolves_to_a_different_disease(query, wrong, monkeypatch):
+    seen = []
+
+    def from_orpha(self, orpha_id, how="given"):
+        seen.append(orpha_id)
+        self.orpha = orpha_id
+        return True
+
+    monkeypatch.setattr(D.Resolver, "from_orpha", from_orpha)
+    r = D.Resolver()
+    D.resolve_chinese(r, query)
+    assert wrong not in seen, (query, seen)
+
+
+def test_rev_p0_3_zh_near_exact_rule():
+    assert D.zh_near_exact("杜氏肌营养不良", "杜氏肌营养不良症")
+    assert D.zh_near_exact("成骨不全症", "成骨不全")
+    assert not D.zh_near_exact("神经纤维瘤病", "神经纤维瘤")
+    assert not D.zh_near_exact("酪氨酸血症Ⅲ型", "酪氨酸血症Ⅱ型")
+
+
+def test_rev_p0_3_a_misspelt_list_name_is_followed_by_its_corrected_spelling(monkeypatch):
+    tried = []
+    monkeypatch.setattr(orphanet, "by_name", lambda name, lang="en": tried.append(name) or Outcome(None))
+    monkeypatch.setattr(orphanet, "name_matches", lambda row, name: False)
+    monkeypatch.setattr(monarch, "search", lambda *a, **k: Outcome({"hits": []}))
+    D.resolve("甲基丙二酸血症")
+    assert tried and tried[0] == "Methylmalonic Acidemia"
+
+
+def test_rev_p1_genereviews_outage_is_not_written_as_no_chapter(monkeypatch):
+    from zebra.http import SourceError
+    from zebra.sources import hpo, medlineplus
+
+    def boom(**k):
+        raise SourceError("GeneReviews (NCBI FTP)", "u", 503, "down")
+
+    monkeypatch.setattr(genereviews, "chapters", boom)
+    monkeypatch.setattr(orphanet, "disorder", lambda c, lang="en": Outcome(None))
+    monkeypatch.setattr(orphanet, "epidemiology", lambda c: Outcome([]))
+    monkeypatch.setattr(orphanet, "natural_history", lambda c: Outcome({}))
+    monkeypatch.setattr(orphanet, "genes", lambda c: Outcome([]))
+    monkeypatch.setattr(hpo, "disease_annotations", lambda i: Outcome({"phenotypes": []}))
+    monkeypatch.setattr(medlineplus, "condition", lambda names, omim=(): Outcome(None))
+    r = D.Resolver()
+    r.orpha, r.orpha_row, r.name = "ORPHA:33069", {"id": "ORPHA:33069", "name": "Dravet syndrome"}, "Dravet syndrome"
+    card = D.build_card(r)
+    text = D.render(dict(card, status="resolved"))
+    assert "GeneReviews: not checked — the source was unavailable" in text
+    assert "no chapter found" not in text

@@ -83,6 +83,12 @@ def render(r: Dict[str, Any]) -> str:
         top = "; ".join(f"{p['panel']} ({p['rating']}, {_moi_panelapp(p.get('moi'))})" for p in (x.get("panels") or [])[:4])
         lines.append(f"{label}: {s.get('panels', 0)} panels, {s.get('green', 0)} green, {s.get('amber', 0)} amber, {s.get('red', 0)} red"
                      + (f" — {top}" if top else ""))
+    ex = r.get("expression")
+    if ex:
+        ts = ex.get("tissues") or []
+        lines.append("expression (GTEx median TPM): " + (", ".join(
+            f"{t.get('tissue')} {t.get('median_tpm')}" for t in ts[:6]) or "no tissue data")
+            + (f"  [{ex.get('gencode_id')}]" if ex.get("gencode_id") else ""))
     pr = r.get("protein")
     if pr:
         lines.append(f"protein: {pr.get('accession')} {pr.get('protein')} ({pr.get('length')} aa)")

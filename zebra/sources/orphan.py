@@ -40,11 +40,14 @@ def ema_designations(terms: Iterable[str], limit: int = 25) -> Outcome:
     resp = get_json(EMA_URL, source="EMA orphan designations", cache_ttl=7 * 86400, timeout=150)
     data = resp.json()
     rows = data.get("data") or []
-    pats = [(t, re.compile(r"(?<![\w-])" + re.escape(t) + r"(?![\w-])", re.I)) for t in terms]
+    # possessives and the "type II" / "II" spelling do not decide a match: the Pompe designations
+    # read "glycogen storage disease type II (Pompe's disease)" (adversarial review P1-12)
+    pats = [(t, re.compile(r"(?<![\w-])" + re.escape(_fold(t)) + r"(?![\w-])", re.I)) for t in terms]
     hits: List[Dict[str, Any]] = []
     for r in rows:
         use = r.get("intended_use") or ""
-        matched = [t for t, p in pats if p.search(use)]
+        folded = _fold(use)
+        matched = [t for t, p in pats if p.search(folded)]
         if not matched:
             continue
         hits.append({
@@ -62,11 +65,19 @@ def ema_designations(terms: Iterable[str], limit: int = 25) -> Outcome:
     result = {"register": "EMA orphan designations (EU)", "terms": terms, "count": len(hits),
               "dataset_timestamp": meta.get("timestamp"), "records_scanned": len(rows),
               "order": "positive first, then newest designation",
-              "note": "matched on the wording of the intended use; a designation worded differently "
-                      "(e.g. 'severe myoclonic epilepsy in infancy') is missed",
+              "note": "matched on the wording of the intended use (possessives and 'type' ignored); a "
+                      "designation worded differently (e.g. 'severe myoclonic epilepsy in infancy') is missed",
               "designations": hits[:limit]}
     return Outcome(result, sources=[source_record("EMA orphan designations", ", ".join(terms), resp,
                                                   note=f"dataset {meta.get('timestamp')}; {len(hits)} matched")])
+
+
+def _fold(text: str) -> str:
+    """Lower case, no possessive 's, 'type ii' read as 'ii', one space: for matching only."""
+    t = (text or "").lower().replace("’", "'")
+    t = re.sub(r"'s\b", "", t)
+    t = re.sub(r"\btype\s+(?=[ivx0-9]+\b)", "", t)
+    return " ".join(t.split())
 
 
 def _date_key(d: Any) -> str:

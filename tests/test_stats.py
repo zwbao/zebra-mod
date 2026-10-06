@@ -338,7 +338,8 @@ def test_f28_bs4_is_available():
 def test_f28_unaffected_carriers_are_bs4_under_full_penetrance():
     with pytest.raises(ValueError):
         S.segregation(unaffected_carriers=1)
-    assert S.segregation(unaffected_carriers=1, full_penetrance=True)["bs4_code"] == "BS4"
+    # D-P1-1: the strength is always written out; a bare "BS4" reads as Strong in `acmg classify`
+    assert S.segregation(unaffected_carriers=1, full_penetrance=True)["bs4_code"] == "BS4_Supporting"
 
 
 def test_f28_both_directions_at_once_is_flagged():
@@ -358,3 +359,48 @@ def test_f28_cli_exposes_the_new_counts():
                  nonsegregations=3, unaffected_carriers=0, full_penetrance=False)
     res = CS._run(CS._segregation)(args).result
     assert res["pp1_code"] == "PP1_Moderate" and res["bs4_code"] == "BS4_Moderate"
+
+
+# ===================================================================== v0.2 (W6)
+
+def test_d_p1_1_bs4_code_carries_its_strength_into_classify():
+    """A Supporting BS4 was emitted as plain "BS4", which `acmg classify` scores as Strong (-4)."""
+    from zebra import acmg
+
+    seg = S.segregation(nonsegregations=1)
+    assert seg["bs4_strength"] == "Supporting" and seg["bs4_code"] == "BS4_Supporting"
+    assert acmg.classify([seg["bs4_code"]])["codes"][0]["points"] == -1
+    assert S.segregation(nonsegregations=4)["bs4_code"] == "BS4_Strong"
+
+
+def test_d_p2_3_fisher_reports_log10_p_where_p_underflows():
+    f = S.fisher_exact(5000, 5000, 1, 9999)
+    assert f["p_two_sided"] == 0.0
+    assert f["log10_p_two_sided"] < -300
+    assert "10^" in f["p_note"]
+    small = S.fisher_exact(1, 9, 11, 3)  # R fisher.test: 0.002759
+    assert small["log10_p_two_sided"] == pytest.approx(math.log10(0.002759456), abs=1e-4)
+
+
+def test_d_p2_3_denovo_reports_log10_p_where_p_underflows():
+    d = S.denovo_enrichment(5000, 1000000, 0.001)
+    assert d["p"] == 0.0 and d["log10_p"] < -600 and "10^" in d["p_note"]
+    # agrees with the plain p where that is representable
+    d2 = S.denovo_enrichment(3, 1000, 1e-4)
+    assert d2["log10_p"] == pytest.approx(math.log10(d2["p"]), abs=1e-9)
+
+
+def test_d_p2_4_nof1_accepts_a_reduction_as_the_target_effect():
+    assert S.nof1_pairs_needed(-2, 3)["pairs"] == S.nof1_pairs_needed(2, 3)["pairs"]
+    assert S.nof1_pairs_needed(-2, 3)["target_direction"] == "decrease"
+    with pytest.raises(ValueError):
+        S.nof1_pairs_needed(0, 3)
+
+
+def test_d_p2_8_logrank_uses_the_hypergeometric_tie_correction():
+    """Ties at t=1 (3 events in 8) and t=2 (3 in 5). By hand, the variance with (n-d)/(n-1):
+    3*(1/2)(1/2)(5/7) + 3*(2/5)(3/5)(2/4) = 0.895714; O-E = 0.5 - 0.2 = 0.3; chi2 = 0.100478
+    (R survdiff uses the same variance). Without the correction the variance is 1.47 and chi2 0.0612."""
+    r = S.logrank([1, 1, 2, 3], [1, 1, 1, 0], [1, 2, 2, 4], [1, 1, 1, 1])
+    assert r["observed_minus_expected_a"] == pytest.approx(0.3)
+    assert r["chi2"] == pytest.approx(0.09 / 0.8957142857, rel=1e-6)

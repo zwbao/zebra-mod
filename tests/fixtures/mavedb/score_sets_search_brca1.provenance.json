@@ -1,0 +1,13 @@
+{
+ "built_by": "tools/aso/fetch_fixtures.py",
+ "bytes": 196967,
+ "characters": 196958,
+ "method": "POST",
+ "name": "score_sets_search_brca1",
+ "request_body": "{\"targets\": [\"BRCA1\"], \"published\": true}",
+ "retrieved_at": "2026-10-06T11:13:20+00:00",
+ "sha256": "776f2f304c41bbc47a7da38b417f7f22c84179c9c97d6776f54d53e2026d5dcf",
+ "status": 200,
+ "url": "https://api.mavedb.org/api/v1/score-sets/search",
+ "written_at": "2026-10-06T11:13:20+00:00"
+}

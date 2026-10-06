@@ -1,0 +1,2 @@
+query	tpos	tnt	qnt	ntchange	allele	calc_locus	calc_aachange	conservation	haplogroup	verbose_haplogroup	patientphenotype	mmutid	rtmutid	polyid	subvar_cnt	is_polymorphism	is_mmut	is_rtmut	is_submitted	gb_cnt	gb_perc	hap_cnt	hap_perc
+q	3243	A	G	transition	A3243G	-<br>L(UUA/G)	MitoTIP Pathogenic (58.80%)	97.78%		n/a low homology	MELAS / Leigh Syndrome / DMDF / MIDD / SNHL / CPEO / MM / FSGS / ASD / Cardiac+multi-organ dysfunction	0	16	0	0	false	false	true	false	10	0.015	0	0.000

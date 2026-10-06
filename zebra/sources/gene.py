@@ -9,6 +9,8 @@ Each part runs through zebra.core.attempt: a failing source becomes a warning.
 
 from __future__ import annotations
 
+import importlib
+
 import re
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
@@ -225,6 +227,29 @@ def card(symbol: str) -> Outcome:
         tasks["monarch"] = ("Monarch", lambda: monarch_diseases(hid))
     else:
         warnings.append("Monarch diseases skipped: no HGNC id")
+    # GTEx tissue expression (W7's contract `zebra.sources.gtex.top_tissues`): which tissue expresses
+    # the gene, for choosing an RNA test tissue and an AlphaGenome ontology term. Guarded: a build
+    # without the module says so instead of leaving the section silently empty.
+    try:
+        gtex = importlib.import_module("zebra.sources.gtex")
+    except ImportError:
+        gtex = None
+        warnings.append("GTEx expression: not checked — zebra.sources.gtex is not available in this build")
+    except Exception as err:  # noqa: BLE001 - a module that fails at import must not sink the gene card
+        gtex = None
+        warnings.append(f"GTEx expression: not checked — zebra.sources.gtex failed to load ({type(err).__name__}: {err})")
+    if gtex is not None:
+        def _gtex() -> Outcome:
+            # another package's module: anything it raises becomes this section's named gap
+            try:
+                got = gtex.top_tissues(s, n=10)
+            except Exception as err:  # noqa: BLE001
+                return Outcome(None, warnings=[f"GTEx expression: not checked — {type(err).__name__}: {str(err)[:300]}"])
+            if not isinstance(got, Outcome):
+                return Outcome(None, warnings=[f"GTEx expression: not used — top_tissues returned {type(got).__name__}"])
+            return got
+
+        tasks["gtex"] = ("GTEx expression", _gtex)
     got = _run(tasks)
 
     def take(key: str) -> Any:
@@ -251,6 +276,7 @@ def card(symbol: str) -> Outcome:
     pa_ge = take("panelapp_ge")
     pa_au = take("panelapp_au")
     protein = take("protein")
+    expression = take("gtex") if "gtex" in tasks else None
     diseases = (mon or {}).get("diseases") if mon else None
     for d in diseases or []:
         if d.get("inheritance"):
@@ -274,4 +300,6 @@ def card(symbol: str) -> Outcome:
         "panelapp": {"genomics_england": pa_ge, "australia": pa_au},
         "protein": protein,
     }
+    if expression is not None:
+        result["expression"] = expression
     return Outcome(result, sources=sources, warnings=warnings)

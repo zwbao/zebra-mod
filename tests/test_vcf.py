@@ -847,228 +847,6 @@ def test_c_p2_7_in_region_candidates_are_capped(fake_ensembl):
     assert any("NOT annotated" in w and "narrow the gene list" in w for w in got.warnings)
 
 
-# -------------------------------------------- P1d: the other report forms
-
-@pytest.fixture
-def fake_cnv_sources(monkeypatch):
-    """Ensembl overlap/lookup and ClinGen dosage answered from captured responses."""
-    from zebra import cnv as C
-    from zebra.sources import clingen
-    from zebra.sources import ensembl as ens
-
-    overlap = json.loads((FIX / "overlap_cnv.json").read_text())
-    dosage_tsv = json.loads((FIX / "dosage_cnv.json").read_text())["tsv"]
-    dmd = json.loads((FIX / "lookup_dmd.json").read_text())["response"]
-    calls = {"overlap": [], "dosage": [], "lookup": []}
-
-    def get_json(url, source, params=None, **kw):
-        calls["overlap"].append(url)
-        return Response(url, 200, json.dumps(overlap["response"]), "2026-10-06T00:00:00+00:00", False)
-
-    def request(url, source, **kw):
-        """The ClinGen bulk TSV, fetched once and parsed per gene (its real header and rows)."""
-        calls["dosage"].append(url)
-        return Response(url, 200, dosage_tsv, "2026-10-06T00:00:00+00:00", False)
-
-    def lookup_symbol(symbol, assembly="GRCh38", expand=False):
-        calls["lookup"].append((symbol, expand))
-        if symbol.upper() == "DMD":
-            data = dmd if expand else {k: v for k, v in dmd.items() if k != "Transcript"}
-            return Outcome(data, sources=[source_record("Ensembl lookup", symbol,
-                                                        url="https://rest.ensembl.org/lookup/symbol")])
-        return Outcome({"seq_region_name": "5", "start": 70925030, "end": 70953942, "strand": 1,
-                        "id": "ENSG00000172062", "biotype": "protein_coding"},
-                       sources=[source_record("Ensembl lookup", symbol,
-                                              url="https://rest.ensembl.org/lookup/symbol")])
-
-    monkeypatch.setattr(C, "get_json", get_json)
-    monkeypatch.setattr(C, "request", request)
-    monkeypatch.setattr(ens, "lookup_symbol", lookup_symbol)
-    assert clingen.DOSAGE_TSV["GRCh38"]  # the real url the bulk fetch uses
-    return calls
-
-
-def test_p1d_input_forms_are_read_or_refused():
-    from zebra import cnv as C
-
-    iscn = C.parse("arr[GRCh38] 15q11.2q13.1(23123715_28193120)x1")
-    assert iscn["kind"] == "cnv" and iscn["chrom"] == "15" and iscn["copy_number"] == 1
-    assert (iscn["start"], iscn["end"]) == (23123715, 28193120) and iscn["cnv_type"] == "loss"
-    assert iscn["assembly"] == "GRCh38"
-    assert C.parse("seq[hg19] 22q11.21(18,648,855_21,800,471)x3")["assembly"] == "GRCh37"
-    assert C.parse("seq[hg19] 22q11.21(18,648,855_21,800,471)x3")["cnv_type"] == "gain"
-
-    coords = C.parse("chr15:23123715-28193120 loss")
-    assert coords["kind"] == "cnv" and coords["cnv_type"] == "loss" and coords["copy_number"] is None
-
-    exon = C.parse("DMD exon 45-50 deletion")
-    assert exon == {"kind": "exon_cnv", "input": "DMD exon 45-50 deletion", "gene": "DMD", "transcript": None,
-                    "first": 45, "last": 50, "cds_start": None, "cds_end": None, "cnv_type": "loss"}
-    assert C.parse("SMN1 exon 7 deletion")["first"] == 7
-    assert C.parse("MLPA: DMD exon 8 duplication".split(": ")[1])["cnv_type"] == "gain"
-
-    hgvs = C.parse("NM_004006.3:c.6439-?_7309+?del")
-    assert hgvs["kind"] == "exon_cnv" and (hgvs["cds_start"], hgvs["cds_end"]) == (6439, 7309)
-    assert hgvs["transcript"] == "NM_004006.3" and hgvs["cnv_type"] == "loss"
-
-    cn = C.parse("SMN1 exon 7 copy number 0")
-    assert cn == {"kind": "copy_number", "input": "SMN1 exon 7 copy number 0", "gene": "SMN1", "exon": "7",
-                  "copy_number": 0}
-    assert C.parse("SMN2 copy number 2")["copy_number"] == 2
-    assert C.parse("SMN1 0 copies")["copy_number"] == 0
-
-    rep = C.parse("FMR1 CGG 230")
-    assert rep == {"kind": "repeat_expansion", "input": "FMR1 CGG 230", "gene": "FMR1", "motif": "CGG",
-                   "repeat_count": 230}
-    assert C.parse("HTT (CAG)n 42 repeats")["repeat_count"] == 42
-    assert C.parse("FMR1 CGG 55-200")["repeat_count"] == "55-200"
-
-    # nothing is invented: a band without coordinates is refused
-    with pytest.raises(UsageError, match="names a band but no coordinates"):
-        C.parse("del(15)(q11.2q13.1)")
-    with pytest.raises(UsageError, match="cannot read"):
-        C.parse("the array was abnormal")
-    with pytest.raises(UsageError, match="Accepted forms"):
-        C.parse("")
-
-
-def test_p1d_cnv_reports_genes_dosage_and_acmg_inputs(fake_cnv_sources):
-    from zebra import cnv as C
-
-    got = C.card("chr15:25200000-25500000 loss", copies=1, inheritance="de_novo")
-    r = got.result
-    assert r["kind"] == "cnv" and r["region"] == {"chrom": "15", "start": 25200000, "end": 25500000,
-                                                  "length_bp": 300001, "band_as_reported": None}
-    assert r["cnv_type"] == "loss" and r["copy_number"] == 1
-    assert r["genes"]["total"] == 38 and r["genes"]["protein_coding"] == 1
-    assert r["genes"]["protein_coding_symbols"] == ["UBE3A"]
-    assert len(fake_cnv_sources["dosage"]) == 1  # one bulk TSV, not one request per gene
-    assert "ClinGen_gene_curation_list" in fake_cnv_sources["dosage"][0]
-    inputs = r["acmg_cnv_inputs"]
-    assert inputs["framework"].startswith("ACMG/ClinGen technical standard")
-    assert inputs["section_1_variant_type"]["contains_protein_coding_genes"] is True
-    hi = inputs["section_2_overlap_with_established_regions_or_genes"]["clingen_established_haploinsufficient_genes"]
-    assert hi == [{"gene": "UBE3A", "score": "3", "description": "Sufficient evidence for dosage pathogenicity"}]
-    assert inputs["section_3_gene_number"]["protein_coding_genes"] == 1
-    assert inputs["section_4_case_level_evidence"] is None
-    assert inputs["section_5_inheritance_and_family_history"] == {"reported_inheritance": "de_novo"}
-    # the interpretation itself is never invented
-    assert inputs["classification"] is None and "does not score or classify" in inputs["classification_note"]
-    assert any(s["db"] == "Ensembl overlap" for s in got.sources)
-    assert any(s["db"] == "ClinGen dosage sensitivity" for s in got.sources)
-    assert r["caveats"] and any("not a breakpoint" in c for c in r["caveats"])
-
-
-def test_p1d_cnv_without_a_copy_number_says_so(fake_cnv_sources):
-    from zebra import cnv as C
-
-    got = C.card("15:25200000-25500000")
-    assert got.result["copy_number"] is None and got.result["cnv_type"] == "unknown"
-    assert any("no copy number in the input" in w for w in got.warnings)
-    with pytest.raises(UsageError, match="copy number 1 and --copies"):
-        C.card("arr[GRCh38] 15q11.2(25200000_25500000)x1", copies=3)
-
-
-def test_p1d_exon_deletion_resolves_coordinates_and_frame(fake_cnv_sources):
-    """DMD exon 45-50 is 871 bp: out of frame, and exon 51's removal restores it."""
-    from zebra import cnv as C
-
-    got = C.card("DMD exon 45-50 deletion")
-    r = got.result
-    assert r["kind"] == "exon_cnv" and r["gene"] == "DMD" and r["cnv_type"] == "loss"
-    assert r["transcript"]["resolved"] == "ENST00000357033" and r["transcript"]["exon_total"] == 79
-    assert r["exons"]["count"] == 6
-    assert [e["length_bp"] for e in r["exons"]["per_exon"]] == [176, 148, 150, 186, 102, 109]
-    assert r["coordinates"] == {"chrom": "X", "start": 31819975, "end": 31968514,
-                                "note": "the exon boundaries; the real breakpoints lie in the flanking introns"}
-    assert r["frame"]["bases"] == 871 and r["frame"]["modulo_3"] == 1
-    assert r["frame"]["consequence"] == "out of frame"
-    restoration = {c["exon"]: c["restores_frame"] for c in r["frame_restoration"]["candidates"]}
-    assert restoration == {44: False, 51: True}
-    assert "separate question" in r["frame_restoration"]["note"]
-    assert fake_cnv_sources["lookup"] == [("DMD", True)]
-
-
-def test_p1d_exon_hgvs_form_gives_the_same_frame(fake_cnv_sources):
-    from zebra import cnv as C
-
-    got = C.card("NM_004006.3:c.6439-?_7309+?del", gene="DMD")
-    r = got.result
-    assert r["cds_span"] == {"from": 6439, "to": 7309, "length_bp": 871}
-    assert r["frame"]["modulo_3"] == 1 and r["frame"]["consequence"] == "out of frame"
-    assert r["transcript"]["as_reported"] == "NM_004006.3"
-    assert any("not sequenced" in w for w in got.warnings)
-    # an in-frame example: a 3-base multiple
-    inframe = C.card("NM_004006.3:c.6439-?_7308+?del", gene="DMD").result
-    assert inframe["frame"]["bases"] == 870 and inframe["frame"]["consequence"] == "in frame"
-
-
-def test_p1d_exon_number_beyond_the_transcript_is_refused(fake_cnv_sources):
-    from zebra import cnv as C
-
-    with pytest.raises(UsageError, match="has 79 exons"):
-        C.card("DMD exon 80 deletion")
-
-
-def test_p1d_copy_number_and_repeats_are_structure_not_prediction(fake_cnv_sources):
-    from zebra import cnv as C
-
-    got = C.card("SMN1 exon 7 copy number 0", related=["SMN2 copy number 2"], method="MLPA")
-    r = got.result
-    assert r["kind"] == "copy_number" and r["gene"] == "SMN1" and r["copy_number"] == 0 and r["exon"] == "7"
-    assert r["related_results"] == [{"gene": "SMN2", "copy_number": 2, "exon": None}]
-    assert r["method"] == "MLPA" and r["classification"] is None
-    assert any("2+0" in m for m in r["mechanism"])  # the silent-carrier caveat
-    assert any("modifier" in m for m in r["mechanism"])
-    assert r["gene_location"]["seq_region_name"] == "5"
-
-    rep = C.card("FMR1 CGG 230").result
-    assert rep["kind"] == "repeat_expansion" and rep["motif"] == "CGG" and rep["repeat_count"] == 230
-    assert rep["classification"] is None and rep["thresholds"] is None
-    assert "gene-specific" in rep["thresholds_note"]
-    assert any("length measurement" in m for m in rep["mechanism"])
-    with pytest.raises(UsageError, match="--related takes further copy-number results"):
-        C.card("SMN1 copy number 1", related=["FMR1 CGG 230"])
-
-
-def test_p1d_findings_are_recorded_in_the_case(fake_cnv_sources, tmp_path, capsys):
-    """Every new form reaches case.json as its own variant kind, and case.json stays readable."""
-    from zebra import case as case_mod
-    from zebra.cli import main
-
-    case_dir = tmp_path / "cnvcase"
-    case_mod.init(str(case_dir))
-    for text, extra in (("DMD exon 45-50 deletion", []),
-                        ("SMN1 exon 7 copy number 0", ["--related", "SMN2 copy number 2"]),
-                        ("FMR1 CGG 230", []),
-                        ("15:25200000-25500000 loss", ["--copies", "1"])):
-        code = main(["--json", "cnv", text, "--case", str(case_dir), "--record", *extra])
-        env = json.loads(capsys.readouterr().out)
-        assert code == 0 and env["ok"], env
-        assert env["result"]["recorded_in_case"]["kind"] in case_mod.VARIANT_KINDS
-    data = case_mod.load(str(case_dir))
-    assert [v["kind"] for v in data["variants"]] == ["exon_cnv", "copy_number", "repeat_expansion", "cnv"]
-    summary = case_mod.summary(str(case_dir))
-    labels = {v["kind"]: v["label"] for v in summary["variants"]}
-    assert labels["exon_cnv"] == "DMD exon 45-50 loss"
-    assert labels["copy_number"] == "SMN1 copy number 0"
-    assert labels["repeat_expansion"] == "FMR1 CGG 230 repeats"
-    assert labels["cnv"] == "loss 15:25200000-25500000 CN1"
-    # a case written before these kinds existed still reads
-    data["variants"].append({"id": "v9", "gene": "SCN1A", "hgvs_c": "NM_001165963.4:c.2134C>T"})
-    (case_dir / "case.json").write_text(json.dumps(data), "utf-8")
-    old = next(v for v in case_mod.summary(str(case_dir))["variants"] if v["id"] == "v9")
-    assert old["kind"] == "small" and old["label"] == "NM_001165963.4:c.2134C>T"
-
-
-def test_p1d_record_without_a_case_is_refused(fake_cnv_sources, capsys):
-    from zebra.cli import main
-
-    assert main(["--json", "cnv", "FMR1 CGG 230", "--record"]) == 2
-    env = json.loads(capsys.readouterr().out)
-    assert env["error"]["type"] == "UsageError" and "--record needs a case" in env["error"]["message"]
-
-
 def test_e11_the_clinvar_exemption_stops_at_the_ba1_threshold(fake_ensembl, tmp_path):
     """A ClinVar assertion must not smuggle a >5 % allele past the frequency filter."""
     rec = json.loads(json.dumps(_vep_record("7 117587806 . G A . . .")))
@@ -1166,68 +944,6 @@ def test_f31_a_female_hom_alt_x_call_still_flags_the_father(fake_ensembl):
     assert V._classify("x_nonpar", "male", "hom_alt", _p("het"), _p("hom_ref", True))[0] == "x_hemizygous"
     cls, _, flags = V._classify("x_nonpar", None, "hom_alt", _p("het"), _p("hom_ref", True))
     assert not any("Mendelian conflict" in f for f in flags)
-
-
-def test_p1d_a_small_indel_is_sent_to_zebra_variant(fake_cnv_sources):
-    """The exon-boundary HGVS form must not swallow an ordinary 3 bp deletion."""
-    from zebra import cnv as C
-
-    with pytest.raises(UsageError, match="that is a small variant"):
-        C.card("NM_000492.4:c.1521_1523del")
-    assert C.parse("NM_004006.3:c.6439-?_7309+?del")["cds_start"] == 6439  # '?' marks the exon form
-    assert C.parse("NM_004006.3:c.6439_7309del")["cds_start"] == 6439  # 871 bp: large enough to be an exon event
-
-
-def test_p1d_impossible_coordinates_are_refused(fake_cnv_sources):
-    """A CNV interval is checked against the real chromosome lengths before anything is looked up."""
-    from zebra import cnv as C
-
-    with pytest.raises(UsageError, match="runs past the end of chromosome 15"):
-        C.card("chr15:23123715-999000000 loss")
-    with pytest.raises(UsageError, match="not a chromosome zebra can place"):
-        C.card("chr23:100-200 loss")
-    with pytest.raises(UsageError, match="ends before it starts"):
-        C.card("15:25500000-25200000 loss")
-    assert fake_cnv_sources["overlap"] == []  # refused before any request
-    # an ISCN string's own build is honoured, and checked against that build's lengths
-    assert C.parse("arr[GRCh37] 15q11.2(23123715_28193120)x1")["assembly"] == "GRCh37"
-
-
-def test_p1d_a_copy_number_on_x_is_not_a_gain_by_itself(fake_cnv_sources):
-    """One copy of X is normal in a male and a loss in a female: zebra must not pick one."""
-    from zebra import cnv as C
-
-    for text, copies in (("arr[GRCh38] Xq28(154021812_154137257)x2", 2),
-                         ("arr[GRCh38] Xp21.1(31000000_31200000)x1", 1),
-                         ("chrX:31000000-31200000 x1", 1)):
-        got = C.parse(text)
-        assert got["chrom"] == "X" and got["copy_number"] == copies
-        assert got["cnv_type"] == "unknown"
-        assert "normal in a male" in got["cnv_type_note"]
-    # zero copies is a loss in either sex, and the report's own word always wins
-    assert C.parse("arr[GRCh38] Xq28(154021812_154137257)x0")["cnv_type"] == "loss"
-    assert C.parse("chrX:31000000-31200000 deletion")["cnv_type"] == "loss"
-    # autosomes are unambiguous
-    assert C.parse("chr15:23123715-25193120 x1")["cnv_type"] == "loss"
-    assert C.parse("chr15:23123715-25193120 x3")["cnv_type"] == "gain"
-    got = C.card("chrX:31000000-31200000 x1")
-    assert got.result["cnv_type"] == "unknown"
-    assert any("normal in a male" in w for w in got.warnings)
-    assert got.result["acmg_cnv_inputs"]["scope"].startswith("unknown")
-
-
-def test_p1d_a_transcript_in_the_gene_slot_is_handled(fake_cnv_sources):
-    from zebra import cnv as C
-
-    got = C.parse("NM_004006.3 exon 45-50 deletion")
-    assert got["gene"] is None and got["transcript"] == "NM_004006.3"
-    with pytest.raises(UsageError, match="which gene"):
-        C.card("NM_004006.3 exon 45-50 deletion")
-    with_gene = C.card("NM_004006.3 exon 45-50 deletion", gene="DMD").result
-    assert with_gene["frame"]["bases"] == 871 and with_gene["gene"] == "DMD"
-    assert with_gene["transcript"]["as_reported"] == "NM_004006.3"
-    with pytest.raises(UsageError, match="exons are numbered from 1"):
-        C.parse("DMD exon 0 deletion")
 
 
 # -------------- second-round review findings (same ids, deeper defects)
@@ -1416,72 +1132,6 @@ def test_f21_triage_names_a_corrupt_stream_instead_of_blaming_the_samples(tmp_pa
         V.triage(str(trunc), "P2", mother="M2", father="F2")
 
 
-def test_p1d_a_band_pair_is_never_read_as_coordinates(fake_cnv_sources):
-    """"chr22:11.21-11.23" is 22q11.21-q11.23, not an 11 bp interval."""
-    from zebra import cnv as C
-
-    with pytest.raises(UsageError, match="names a band but no coordinates|does not read as one interval"):
-        C.card("chr22:11.21-11.23 deletion")
-    with pytest.raises(UsageError, match="names a band but no coordinates|does not read as one interval"):
-        C.card("chr7:11.23-11.25 del")
-    assert fake_cnv_sources["overlap"] == []  # nothing was looked up
-    # a real interval with a dotted separator still reads
-    assert C.parse("15:25200000..25500000 loss")["end"] == 25500000
-
-
-def test_p1d_an_oversized_or_mosaic_input_is_refused(fake_cnv_sources):
-    from zebra import cnv as C
-
-    with pytest.raises(UsageError, match="runs past the end of chromosome"):
-        C.card("chr1:1-999999999 loss")
-    assert C.MAX_REGION_BP == 50_000_000
-    with pytest.raises(UsageError, match="will not walk more than"):
-        C.genes_in_region("1", 1, 60_000_000)
-    with pytest.raises(UsageError, match="copy-number range"):
-        C.card("arr[GRCh38] 15q11.2(23123715_23200000)x1~2")
-    with pytest.raises(UsageError, match="after the copy number"):
-        C.card("arr[GRCh38] 15q11.2(23123715_23200000)x3 mos")
-    with pytest.raises(UsageError, match="names a band but no coordinates"):
-        C.parse("junk arr[GRCh38] 15q11.2(1000_2000)x1 junk")
-
-
-def test_p1d_a_copy_number_that_contradicts_the_report_is_refused(fake_cnv_sources):
-    from zebra import cnv as C
-
-    with pytest.raises(UsageError, match="the report says loss and the copy number says gain"):
-        C.card("chr15:23123715-23200000 loss", copies=3)
-    with pytest.raises(UsageError, match="--copies applies to a CNV or a copy-number result"):
-        C.card("FMR1 CGG 230", copies=3)
-    with pytest.raises(UsageError, match="--copies applies to a CNV or a copy-number result"):
-        C.card("DMD exon 45-50 deletion", copies=1)
-    # agreeing values are fine
-    assert C.card("chr15:25200000-25500000 loss", copies=1).result["copy_number"] == 1
-
-
-def test_p1d_the_record_keeps_the_exon_and_every_related_result(fake_cnv_sources, tmp_path):
-    """SMN2 copy number is the modifier the mechanism note names: it must persist."""
-    from zebra import case as case_mod
-    from zebra import cnv as C
-
-    case_dir = tmp_path / "smn"
-    case_mod.init(str(case_dir))
-    got = C.card("SMN1 exon 7 copy number 0", related=["SMN2 copy number 2"], method="MLPA")
-    fields = C.case_fields(got.result, method="MLPA")
-    entry = case_mod.add_variant(str(case_dir), **fields)
-    assert entry["copy_number"] == 0 and entry["exons"] == "7" and entry["method"] == "MLPA"
-    assert "SMN2 copy number 2" in entry["note"]
-    assert entry["genes"] == ["SMN1", "SMN2"]
-
-
-def test_p1d_the_gene_count_bands_are_labelled_section_3(fake_cnv_sources):
-    from zebra import cnv as C
-
-    inputs = C.card("chr15:25200000-25500000 loss", copies=1).result["acmg_cnv_inputs"]
-    bands = inputs["section_3_gene_number"]["clingen_bands"]
-    assert "section 3 bands (3A/3B/3C)" in bands and "2A/2B" not in bands
-    assert "<25, 25-34 and >=35" in bands
-
-
 def test_f22_a_nonsense_genotype_or_ref_is_not_quietly_accepted():
     assert V.parse_gt("-1/1") == ((None, 1), False)  # a negative allele index is not an allele
     assert V.zygosity(V.parse_call(["GT"], "-1/1"), 1) == "het"  # one real ALT copy, one unknown
@@ -1489,3 +1139,675 @@ def test_f22_a_nonsense_genotype_or_ref_is_not_quietly_accepted():
     assert rec is not None and rec.ref == "N"  # N is a reference base VEP understands
     rec, why = V.parse_line_why("chr1\t100\t.\tRY\tG\t.\t.\t.", 0)
     assert rec is None and "is not a DNA sequence" in why
+
+
+# ------------------------------------------------------- v0.2 regressions (W5)
+
+def test_b_p1_7_ar_homozygote_with_two_carrier_parents_is_not_flagged(fake_ensembl):
+    """ALDH7A1 P 1/1, M 0/1, F 0/1: the textbook recessive trio carries no 'not adequately genotyped' flag."""
+    res = V.triage(GZ, "P", mother="M", father="F", sex="female", genes=_genes()).result
+    ald = _by_gene(res)["ALDH7A1"]
+    assert ald["class"] == "hom_recessive" and ald["origin"] == "biparental"
+    assert not any("adequately genotyped" in f or "carrier status unknown" in f for f in ald["flags"]), ald["flags"]
+    # X: a female 1/1 with a het mother and a hemizygous father (haploid or diploid 1/1)
+    for father in (_p("hemi"), _p("hom_alt")):
+        cls, origin, flags = V._classify("x_nonpar", "female", "hom_alt", _p("het"), father)
+        assert (cls, origin) == ("hom_recessive", "biparental") and flags == [], flags
+    # a hom-alt mother is still worth a word; an untestable parent is still unknown
+    _, origin, flags = V._classify("auto", "female", "hom_alt", _p("hom_alt"), _p("het"))
+    assert origin == "biparental" and flags == ["mother is also hom-alt"]
+    _, origin, flags = V._classify("auto", "female", "hom_alt", _p("het"), _p("hom_ref", False, ["DP 4 < 10"]))
+    assert origin is None and any("father not adequately genotyped (DP 4 < 10)" in f for f in flags)
+
+
+def _sv_vcf(tmp_path, rows, name="sv.vcf"):
+    p = tmp_path / name
+    head = ["##fileformat=VCFv4.2", "##contig=<ID=chr22,length=50818468>", "##contig=<ID=chr7,length=159345973>",
+            '##INFO=<ID=END,Number=1,Type=Integer,Description="End">',
+            '##INFO=<ID=SVTYPE,Number=1,Type=String,Description="SV type">',
+            '##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DUP,Description="Duplication">',
+            "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP\tM\tF"]
+    p.write_text("\n".join(head + rows) + "\n")
+    return str(p)
+
+
+SV_ROWS = ["chr22\t18648855\t.\tN\t<DEL>\t99\tPASS\tSVTYPE=DEL;END=21800471\tGT\t0/1\t0/0\t0/0",
+           "chr7\t73330452\t.\tN\t<DUP>\t99\tPASS\tEND=74800000\tGT\t0/1\t0/0\t0/0"]
+
+
+def test_b_p1_8_a_cnv_sv_vcf_is_refused_not_reported_empty(tmp_path, fake_ensembl):
+    path = _sv_vcf(tmp_path, SV_ROWS)
+    with pytest.raises(UsageError, match="CNV/SV VCF") as err:
+        V.triage(path, "P", mother="M", father="F", sex="female")
+    assert 'zebra cnv "chr22:18648855-21800471 loss"' in str(err.value)
+    ins = V.inspect(path).result
+    assert ins["symbolic_alleles"]["structural"] == 2 and ins["symbolic_alleles"]["types"] == {"DEL": 1, "DUP": 1}
+    assert any("CNV/SV VCF" in n and "zebra cnv" in n for n in ins["notes"])
+
+
+def test_b_p1_8_symbolic_alleles_in_a_mixed_vcf_are_named(tmp_path, fake_ensembl):
+    rows = SV_ROWS + ["chr22\t30000000\t.\tC\tT\t99\tPASS\t.\tGT:DP:GQ\t0/1:30:99\t0/0:30:99\t0/0:30:99",
+                      "chr22\t30000100\t.\tC\tT,*\t99\tPASS\t.\tGT:DP:GQ\t0/2:30:99\t0/0:30:99\t0/0:30:99"]
+    got = V.triage(_sv_vcf(tmp_path, rows), "P", mother="M", father="F", sex="female")
+    sv = got.result["structural_variants"]
+    assert sv["count"] == 2 and sv["types"] == {"DEL": 1, "DUP": 1}
+    assert sv["calls"][1]["zebra_cnv"] == 'zebra cnv "chr7:73330452-74800000 gain"' and sv["calls"][0]["gt"] == "0/1"
+    assert any(w.startswith("2 symbolic CNV/SV allele(s) (DEL 1, DUP 1) were NOT assessed") for w in got.warnings)
+    assert got.result["counts"]["spanning_deletion_alleles"] == 1  # '*' is not an SV and is not reported as one
+    assert "CNV/SV: 2 symbolic allele(s)" in got.text
+
+
+def _x_rows(gt, n=25, start=31178721):
+    return [f"chrX\t{start + i * 97}\t.\tG\tA\t500\tPASS\t.\tGT:DP:GQ:AD\t{gt}:30:99:15,15" for i in range(n)]
+
+
+def test_b_p2_4_a_given_sex_is_checked_against_the_genotypes(tmp_path, fake_ensembl):
+    p = tmp_path / "female_as_male.vcf"
+    p.write_text("\n".join(["##fileformat=VCFv4.2", "##contig=<ID=chrX,length=156040895>",
+                            "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP"] + _x_rows("0/1")) + "\n")
+    got = V.triage(str(p), "P", sex="male")
+    assert got.result["sex_check"]["agrees"] is False and got.result["sex_check"]["sex"] == "female"
+    assert any(w.startswith("--sex male contradicts the proband's own genotypes, which look female") for w in got.warnings)
+    agree = V.triage(str(p), "P", sex="female")
+    assert agree.result["sex_check"]["agrees"] is True
+    assert not any("contradicts" in w for w in agree.warnings)
+
+
+def test_b_p2_5_sex_scan_cap_counts_only_x_and_y_records(tmp_path, monkeypatch):
+    """A sorted WGS VCF reaches chrX after millions of autosomal records; those must not use up the cap."""
+    rows = [f"chr1\t{1000 + i}\t.\tA\tG\t50\tPASS\t.\tGT\t0/1" for i in range(300)]
+    rows += [f"chrX\t{31178721 + i * 97}\t.\tG\tA\t500\tPASS\t.\tGT\t1" for i in range(30)]
+    p = tmp_path / "wgs_like.vcf"
+    p.write_text("\n".join(["##fileformat=VCFv4.2", "##contig=<ID=chr1,length=248956422>",
+                            "##contig=<ID=chrX,length=156040895>",
+                            "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP"] + rows) + "\n")
+    monkeypatch.setattr(V, "SEX_SCAN_MAX", 100)  # far fewer than the 300 autosomal records in front of X
+    got = V.infer_sex(str(p), "P", "GRCh38")
+    assert got["sex"] == "male" and got["counts"]["scan_complete"] is True
+    assert got["counts"]["records_scanned"] == 330 and got["counts"]["xy_records"] == 30
+    # the cap still bounds the X/Y work, and says so
+    monkeypatch.setattr(V, "SEX_SCAN_MAX", 10)
+    capped = V.infer_sex(str(p), "P", "GRCh38")
+    assert capped["counts"]["scan_complete"] is False and "cap of 10 X/Y records" in capped["basis"]
+
+
+# real GRCh38 bases (Ensembl /sequence/region, 2026-10-06) at the trio fixture's positions
+GRCH38_BASES = {"2:166036097": "A", "2:166042334": "G", "2:166122240": "C", "2:178560007": "C",
+                "3:25751134": "G", "5:126554292": "C", "7:117587806": "G", "7:117652877": "C"}
+
+
+def _headerless(tmp_path, rows, name="nobuild.vcf"):
+    p = tmp_path / name
+    p.write_text("\n".join(["##fileformat=VCFv4.2", "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP"]
+                           + rows) + "\n")
+    return str(p)
+
+
+def test_b_p2_6_a_vcf_on_the_wrong_build_is_refused_before_vep(tmp_path, fake_ensembl, monkeypatch):
+    """No build in the header + a given --assembly: the REF bases are checked against that build."""
+    asked = []
+    lookup_post = V.post_json
+
+    def post_json(url, payload, source, **kw):
+        if "/sequence/region/" not in url:
+            return lookup_post(url, payload, source, **kw)
+        asked.append(list(payload["regions"]))
+        data = [{"query": q, "seq": GRCH38_BASES.get(q.split("..")[0], "N")} for q in payload["regions"]]
+        return Response(url, 200, json.dumps(data), "2026-10-06T10:00:00+00:00", False)
+
+    monkeypatch.setattr(V, "post_json", post_json)
+    # REF written as another build would have it: every sampled base disagrees with GRCh38
+    wrong = [f"{k.split(':')[0]}\t{k.split(':')[1]}\t.\t{'T' if b != 'T' else 'G'}\tA\t50\tPASS\t.\tGT:DP:GQ\t0/1:30:99"
+             for k, b in GRCH38_BASES.items()]
+    with pytest.raises(UsageError, match=r"do not match GRCh38 at 8 of 8 sampled positions"):
+        V.triage(_headerless(tmp_path, wrong), "P", assembly="GRCh38", sex="female")
+    assert fake_ensembl["vep"] == []  # refused before anything was annotated
+    right = [f"{k.split(':')[0]}\t{k.split(':')[1]}\t.\t{b}\t{'T' if b != 'T' else 'G'}\t50\tPASS\t.\tGT:DP:GQ\t0/1:30:99"
+             for k, b in GRCH38_BASES.items()]
+    got = V.triage(_headerless(tmp_path, right, "right.vcf"), "P", assembly="GRCh38", sex="female")
+    assert got.result["ref_check"] == {"checked": 8, "mismatch": 0, "examples": [], "asked": 8}
+    assert len(asked) == 2 and all(len(r) <= V.REF_CHECK_N for r in asked)
+    # a header that states the build is trusted: no extra call
+    V.triage(GZ, "P", mother="M", father="F", sex="female", genes=_genes())
+    assert len(asked) == 2
+
+
+@pytest.mark.live
+def test_live_b_p2_6_reference_check(tmp_path):
+    got = V.ref_check([("2", 166036097, "G", "T"), ("2", 166042334, "G", "A")], "GRCh38")
+    assert got.result["checked"] == 2 and got.result["mismatch"] == 1
+    assert got.result["examples"] == ["2:166036097 VCF G vs GRCh38 A"]
+
+
+# ------------------------------------------------ CP0-5: whole-exome path (MyVariant prefilter)
+
+from zebra.sources import myvariant as MV  # noqa: E402
+
+
+@pytest.fixture
+def fake_myvariant(monkeypatch):
+    """MyVariant.info answered from the POST body captured for both families (myvariant_families.json)."""
+    cap = json.loads((FIX / "myvariant_families.json").read_text())
+    by_id = {h["query"]: h for h in cap["response"]}
+    calls = {"post": [], "fail": set()}
+
+    def post_json(url, payload, source, **kw):
+        n = len(calls["post"])
+        calls["post"].append(list(payload["ids"]))
+        if n in calls["fail"]:
+            raise SourceError("MyVariant.info", url, 503, "Service Unavailable")
+        assert payload["assembly"] == "hg38" and len(payload["ids"]) <= MV.MAX_IDS
+        hits = [by_id.get(i, {"query": i, "notfound": True}) for i in payload["ids"]]
+        return Response(url, 200, json.dumps(hits), cap["_source"]["retrieved_at"], False)
+
+    def get_json(url, source, params=None, **kw):
+        meta = {"build_date": cap["_source"]["build_date"],
+                "src": {k: {"version": v} for k, v in cap["_source"]["versions"].items()}}
+        return Response(url, 200, json.dumps(meta), cap["_source"]["retrieved_at"], False)
+
+    monkeypatch.setattr(MV, "post_json", post_json)
+    monkeypatch.setattr(MV, "get_json", get_json)
+    return calls
+
+
+def test_cp0_5_hgvs_ids_match_myvariant_spelling():
+    assert MV.hgvs_id("7", 117559479, "G", "A") == "chr7:g.117559479G>A"
+    assert MV.hgvs_id("7", 117559590, "ATCT", "A") == "chr7:g.117559591_117559593del"   # verified live
+    assert MV.hgvs_id("1", 12282654, "CT", "C") == "chr1:g.12282655del"                 # verified live
+    assert MV.hgvs_id("2", 176093093, "C", "CA") == "chr2:g.176093093_176093094insA"    # verified live
+    assert MV.hgvs_id("2", 100, "AT", "GC") == "chr2:g.100_101delinsGC"
+    assert MV.hgvs_id("2", 100, "A", "TG") == "chr2:g.100delinsTG"
+    assert MV.hgvs_id("MT", 3243, "A", "G") == "chrMT:g.3243A>G"                        # verified live
+    assert MV.hgvs_id("1", 5, "A", "<DEL>") is None and MV.hgvs_id("1", 5, "A", "A") is None
+
+
+def test_cp0_5_parse_normalises_collapsed_lists_and_keys_like_vep():
+    hit = {"_id": "x", "snpeff": {"ann": {"putative_impact": "MODERATE", "effect": "missense_variant",
+                                          "gene_id": "CFTR"}},
+           "clinvar": {"rcv": {"clinical_significance": "Pathogenic", "review_status": "reviewed by expert panel"}},
+           "dbnsfp": {"revel": {"score": [0.2, 0.91]}, "alphamissense": {"score": 0.97, "pred": "P"},
+                      "cadd": {"phred": 31}},
+           "gnomad_exome": {"af": {"af": 0.001, "af_nfe": 0.004, "af_nfe_female": 0.9, "af_eas_jpn": 0.5},
+                            "an": {"an": 251000}}}
+    p = MV.parse(hit)
+    assert p["impact"] == "MODERATE" and p["genes"] == ["CFTR"] and p["clinvar"] == ["Pathogenic"]
+    assert p["revel"] == 0.91 and p["alphamissense"] == 0.97 and p["am_class"] == "likely_pathogenic"
+    assert p["cadd"] == 31 and p["groups"] == {"gnomade": 0.001, "gnomade_nfe": 0.004}
+    af = V.af_summary(p["groups"])
+    assert af["filter_af"] == 0.004 and af["grpmax_group"] == "gnomade_nfe"
+
+
+def test_cp0_5_batches_are_capped_sorted_and_failures_are_not_absence(fake_myvariant):
+    keys = [("7", 117559479, "G", "A"), ("2", 166042334, "G", "A"), ("7", 117559590, "ATCT", "A"),
+            ("1", 1000, "A", "T"), ("2", 166036097, "A", "C")]
+    fake_myvariant["fail"].add(1)  # the second request fails
+    got = MV.batch(keys, "GRCh38", chunk=2)
+    posts = fake_myvariant["post"]
+    assert [len(p) for p in posts] == [2, 2, 1]
+    flat = [i for p in posts for i in p]
+    assert flat == [MV.hgvs_id(*k) for k in sorted(keys)]  # deterministic order: the cache resumes a re-run
+    r = got.result
+    assert r["batches"] == 3 and r["answered_batches"] == 2 and len(r["unanswered"]) == 2
+    assert r["records"][("1", 1000, "A", "T")] is None  # notfound: not in MyVariant, never "absent"
+    assert any(w.startswith("MyVariant.info batch 2/3 (2 variants) unavailable") for w in got.warnings)
+    assert all(s["db"] == "MyVariant.info" and "no sample data" in s["note"] for s in got.sources)
+
+
+def test_cp0_5_prefilter_drops_common_alleles_before_vep(fake_ensembl, fake_myvariant):
+    got = V.triage(GZ, "P", mother="M", father="F", sex="female", prefilter="myvariant")
+    res = got.result
+    sent = {f"{c}-{p}-{r}-{a}" for batch in fake_ensembl["vep"] for c, p, r, a in batch}
+    for common in ("2-166053034-C-T", "2-166122240-C-A", "7-117559479-G-A"):
+        assert common not in sent
+    pf = res["restriction"]["myvariant_prefilter"]
+    assert pf["queried"] == res["counts"]["quality_pass"] == 11 and pf["dropped_af_gt_max"] == 3
+    assert pf["source_versions"]["gnomad"] == "2.1.1" and pf["not_looked_up"] == 0
+    assert res["counts"]["sent_to_vep"] == 8
+    assert res["candidates"][0]["gene"] == "SCN1A" and res["candidates"][0]["class"] == "de_novo"
+    assert sorted(res["comphet_genes"]) == ["CFTR", "TTN"]  # TTN: paternal missense + maternal stop, no gene list
+    assert res["sent_off_machine"][0] == "11 quality-passing chrom-pos-ref-alt to MyVariant.info"
+    assert any(s["db"] == "MyVariant.info" for s in got.sources)
+    assert list(res["timings"])[:3] == ["read VCF, sex check, classify", "MyVariant prefilter", "VEP annotation"]
+    assert any("removed as common" in w and "2.1.1" in w for w in got.warnings)
+    # the old path's warning now points at the whole-exome flag
+    old = V.triage(GZ, "P", mother="M", father="F", sex="female", max_annotate=2)
+    assert any("--prefilter myvariant" in w for w in old.warnings)
+
+
+def test_cp0_5_prefilter_keeps_clinvar_pathogenic_common_allele(fake_ensembl, fake_myvariant):
+    """F508del: grpmax above --max-af, ClinVar pathogenic, below BA1 -> kept at the prefilter too."""
+    got = V.triage(FAM2, "P2", mother="M2", father="F2", sex="male", prefilter="myvariant", max_af=0.005)
+    pf = got.result["restriction"]["myvariant_prefilter"]
+    assert pf["kept_clinvar_exempt"] == 1
+    sent = {f"{c}-{p}-{r}-{a}" for batch in fake_ensembl["vep"] for c, p, r, a in batch}
+    assert "7-117559590-ATCT-A" in sent
+
+
+def test_cp0_5_myvariant_down_keeps_everything_and_says_how_to_resume(fake_ensembl, fake_myvariant):
+    fake_myvariant["fail"].update(range(10))
+    got = V.triage(GZ, "P", mother="M", father="F", sex="female", prefilter="myvariant")
+    pf = got.result["restriction"]["myvariant_prefilter"]
+    assert pf["not_looked_up"] == 11 and pf["dropped_af_gt_max"] == 0
+    assert got.result["counts"]["sent_to_vep"] == 11  # nothing removed on a failure
+    assert any("NOT frequency-checked" in w and "Re-run the same command to resume" in w for w in got.warnings)
+
+
+def test_cp0_5_vep_budget_cut_is_named_by_tier(fake_ensembl, fake_myvariant):
+    got = V.triage(GZ, "P", mother="M", father="F", sex="female", prefilter="myvariant", max_annotate=3)
+    res = got.result
+    assert res["counts"]["sent_to_vep"] == 3
+    assert sum(res["restriction"]["skipped_over_budget_by_tier"].values()) == 5
+    assert sum(res["restriction"]["skipped_over_budget"].values()) == 5
+    assert any("were NOT sent to VEP" in w and "raise --max-annotate" in w for w in got.warnings)
+    # ClinVar P/LP and HIGH impact go first
+    sent = [f"{c}-{p}-{r}-{a}" for batch in fake_ensembl["vep"] for c, p, r, a in batch]
+    assert "2-166042334-G-A" in sent
+
+
+@pytest.mark.live
+def test_live_cp0_5_myvariant_batch_fields():
+    got = MV.batch([("7", 117559590, "ATCT", "A"), ("2", 166042334, "G", "A"), ("7", 117559479, "G", "A"),
+                    ("1", 1000, "A", "T")], "GRCh38")
+    rec = got.result["records"]
+    f508 = rec[("7", 117559590, "ATCT", "A")]
+    assert 0.005 < f508["groups"]["gnomade"] < 0.01 and "Pathogenic" in f508["clinvar"]
+    assert f508["impact"] == "MODERATE" and f508["genes"] == ["CFTR"]
+    assert rec[("2", 166042334, "G", "A")]["impact"] == "HIGH"
+    assert rec[("7", 117559479, "G", "A")]["groups"]["gnomade"] > 0.4
+    assert rec[("1", 1000, "A", "T")] is None
+    meta = MV.metadata("GRCh38").result
+    assert meta["versions"]["gnomad"] and meta["versions"]["dbnsfp"]
+
+
+# ------------------------------------------------ item 6: S2F splice models inside triage
+
+def _noncoding_vcf(tmp_path):
+    rows = ["chr2\t166050000\t.\tG\tA\t50\tPASS\t.\tGT:AD:DP:GQ\t0/1:15,15:30:99\t0/0:30,0:30:99\t0/0:30,0:30:99",
+            "chr2\t166070000\t.\tC\tT\t50\tPASS\t.\tGT:AD:DP:GQ\t0/1:15,15:30:99\t0/0:30,0:30:99\t0/0:30,0:30:99",
+            "chr2\t166080000\t.\tT\tC\t50\tPASS\t.\tGT:AD:DP:GQ\t0/1:15,15:30:99\t0/0:30,0:30:99\t0/0:30,0:30:99"]
+    p = tmp_path / "noncoding.vcf"
+    p.write_text("\n".join(["##fileformat=VCFv4.2", "##contig=<ID=chr2,length=242193529>",
+                            "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP\tM\tF"] + rows) + "\n")
+    return str(p)
+
+
+def _vep_rec(chrom, pos, ref, alt, term, impact="MODIFIER"):
+    return {"input": ensembl.vcf_line(chrom, pos, ref, alt), "allele_string": f"{ref}/{alt}",
+            "most_severe_consequence": term, "colocated_variants": [],
+            "transcript_consequences": [{"gene_symbol": "SCN1A", "gene_id": "ENSG00000144285", "biotype": "protein_coding",
+                                         "transcript_id": "ENST00000674923", "canonical": 1, "impact": impact,
+                                         "consequence_terms": [term]}]}
+
+
+@pytest.fixture
+def noncoding_vep(monkeypatch):
+    recs = {ensembl.vcf_line("2", 166050000, "G", "A"): _vep_rec("2", 166050000, "G", "A", "intron_variant"),
+            ensembl.vcf_line("2", 166070000, "C", "T"): _vep_rec("2", 166070000, "C", "T", "synonymous_variant", "LOW"),
+            ensembl.vcf_line("2", 166080000, "T", "C"): _vep_rec("2", 166080000, "T", "C", "5_prime_UTR_variant")}
+
+    def vep_batch(variants, assembly="GRCh38"):
+        return Outcome([recs[ensembl.vcf_line(*v)] for v in variants if ensembl.vcf_line(*v) in recs],
+                       sources=[source_record("Ensembl VEP", "fixture", url="https://rest.ensembl.org/vep/human/region")])
+
+    monkeypatch.setattr(ensembl, "vep_batch", vep_batch)
+
+
+def test_item6_s2f_splice_score_enters_the_ranking(tmp_path, noncoding_vep, monkeypatch):
+    from zebra import s2f
+
+    asked = []
+
+    def predict(variant, assembly="GRCh38", models=None, distance=500, **kw):
+        asked.append((variant, assembly, tuple(models or ()), distance))
+        value = 0.62 if variant == "2-166050000-G-A" else 0.03
+        rows = [{"model": "spliceai", "status": "ran",
+                 "headline": {"score": "DS_AG", "value": value, "position": 166050012, "refseq": "NM_001165963.4"}},
+                {"model": "pangolin", "status": "ran", "headline": {"score": "DS_SG", "value": 0.41}}]
+        return Outcome({"models": rows}, sources=[source_record("spliceai via Broad SpliceAI-lookup", variant,
+                                                                url="https://spliceai-38-xwkwwwxdwq-uc.a.run.app")])
+
+    monkeypatch.setattr(s2f, "predict", predict)
+    path = _noncoding_vcf(tmp_path)
+    base = V.triage(path, "P", mother="M", father="F", sex="female", s2f_top=0).result
+    got = V.triage(path, "P", mother="M", father="F", sex="female", s2f_top=5)
+    res = got.result
+    # only the intronic and synonymous candidates go to the splice models, never the UTR one
+    assert sorted(a[0] for a in asked) == ["2-166050000-G-A", "2-166070000-C-T"]
+    assert all(a[2] == ("spliceai", "pangolin") and a[3] == 500 for a in asked)
+    top = res["candidates"][0]
+    assert top["variant"] == "2-166050000-G-A" and top["components"]["splice_s2f"] == 0.62
+    assert top["components"]["variant"] == 0.85 and any("Broad lookup" in s for s in top["support"])
+    assert top["s2f"]["pangolin"]["value"] == 0.41  # shown, not scored
+    before = {c["variant"]: c["score"] for c in base["candidates"]}
+    assert top["score"] > before["2-166050000-G-A"]
+    syn = next(c for c in res["candidates"] if c["variant"] == "2-166070000-C-T")
+    assert syn["components"]["variant"] == 0.25  # 0.03 is below 0.2: no support, no change
+    utr = next(c for c in res["candidates"] if c["variant"] == "2-166080000-T-C")
+    assert any("alphagenome" in f and "zebra does not choose a tissue" in f for f in utr["flags"])
+    assert res["s2f"]["ran"] == ["2-166070000-C-T", "2-166050000-G-A"]  # in rank order before the rerank
+    assert any("SpliceAI-lookup" in x for x in res["sent_off_machine"])
+    assert "s2f 0.62" in got.text
+
+
+def test_item6_s2f_respects_the_deadline(tmp_path, noncoding_vep, monkeypatch):
+    from zebra import s2f
+
+    monkeypatch.setattr(s2f, "predict", lambda *a, **k: pytest.fail("must not run past the deadline"))
+    monkeypatch.setenv("ZEBRA_DEADLINE_MS", "1")
+    got = V.triage(_noncoding_vcf(tmp_path), "P", mother="M", father="F", sex="female", s2f_top=5)
+    assert got.result["s2f"]["ran"] == [] and len(got.result["s2f"]["not_run"]) == 2
+    assert any(w.startswith("S2F: 2 of 2 selected candidate(s) not run within the call's time budget") for w in got.warnings)
+
+
+# ------------------------------------------------ PED input, siblings, mosaic de novo (CP1-15 in triage)
+
+def _trio_ped(tmp_path, sib_affected="1", name="t.ped"):
+    p = tmp_path / name
+    p.write_text(f"fam M 0 0 2 1\nfam F 0 0 1 1\nfam P F M 2 2\nfam S F M 1 {sib_affected}\n")
+    return str(p)
+
+
+def test_cp1_15_ped_fills_the_trio_and_refuses_contradictions(fake_ensembl, tmp_path):
+    ped = _trio_ped(tmp_path)
+    got = V.triage(GZ, ped=ped, genes=_genes())
+    res = got.result
+    assert (res["proband"], res["mother"], res["father"], res["sex"], res["mode"]) == ("P", "M", "F", "female", "trio")
+    assert res["pedigree"]["siblings"] == [{"id": "S", "affected": False, "sex": "male"}]
+    assert res["candidates"][0]["gene"] == "SCN1A"
+    with pytest.raises(UsageError, match="contradicts the PED"):
+        V.triage(GZ, ped=ped, mother="F")
+    with pytest.raises(UsageError, match="contradicts the PED"):
+        V.triage(GZ, ped=ped, sex="male")
+    with pytest.raises(UsageError, match="not in the PED"):
+        V.triage(GZ, "X9", ped=ped)
+
+
+def test_cp1_15_sibling_segregation_flags(fake_ensembl, tmp_path):
+    unaff = V.triage(GZ, ped=_trio_ped(tmp_path), genes=_genes()).result
+    dmd = _by_gene(unaff)["DMD"]  # P het (maternal), brother S hemizygous and unaffected
+    assert any("unaffected brother S is hemizygous for it: against an X-linked cause" in f for f in dmd["flags"])
+    assert dmd["siblings"]["S"].endswith("(unaffected)")
+    with pytest.raises(UsageError, match="exactly one affected individual"):  # P and S both affected
+        V.triage(GZ, ped=_trio_ped(tmp_path, "2", "aff.ped"), genes=_genes())
+    aff = V.triage(GZ, "P", ped=_trio_ped(tmp_path, "2", "aff.ped"), genes=_genes()).result
+    scn = _by_gene(aff)["SCN1A"]
+    assert any("affected sibling S does not carry it" in f for f in scn["flags"])
+    cftr = [c for c in aff["candidates"] if c["gene"] == "CFTR"]
+    assert all(any("affected sibling S does not carry both alleles" in f for f in c["flags"]) for c in cftr)
+    # on X a heterozygous sister is a carrier, affected or not: no 'against' flag
+    flags = V._sibling_flags("x_hemizygous", [{"id": "D", "affected": True, "sex": "female", "z": "het",
+                                                "adequate_ref": False}], "x_nonpar")
+    assert flags == ["affected sister D is a heterozygous carrier (on X a carrier sister may or may not be affected)"]
+
+
+def test_cp1_15_mosaic_de_novo_is_flagged_in_triage(fake_ensembl, tmp_path):
+    rows = ["chr2\t166042334\t.\tG\tA\t50\tPASS\t.\tGT:AD:DP:GQ\t0/1:40,8:48:99\t0/0:30,0:30:99\t0/0:30,0:30:99",
+            "chr3\t25751134\t.\tG\tA\t50\tPASS\t.\tGT:AD:DP:GQ\t0/1:20,22:42:99\t0/0:30,0:30:99\t0/0:30,0:30:99"]
+    p = tmp_path / "mosaic.vcf"
+    p.write_text("\n".join(["##fileformat=VCFv4.2", "##contig=<ID=chr2,length=242193529>",
+                            "##contig=<ID=chr3,length=198295559>",
+                            "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP\tM\tF"] + rows) + "\n")
+    res = V.triage(str(p), "P", mother="M", father="F", sex="female").result
+    by = {c["variant"]: c for c in res["candidates"]}
+    m = by["2-166042334-G-A"]
+    assert m["class"] == "de_novo" and m["mosaic"]["possible_mosaic"] is True
+    assert any("possible postzygotic mosaic" in f for f in m["flags"])
+    assert not any("low allele balance" in f for f in m["flags"])  # one flag, not two
+    g = by["3-25751134-G-A"]
+    assert "mosaic" not in g and not any("mosaic" in f for f in g["flags"])
+
+
+def test_b_p2_5_a_tabix_index_jumps_straight_to_x(tmp_path, monkeypatch):
+    """xy_indexed.vcf.gz(.tbi): 500 chr1 records, then 30 haploid chrX calls; bgzip + tabix 1.x wrote both."""
+    path = str(FIX / "xy_indexed.vcf.gz")
+    starts = V.tabix_starts(path)
+    assert set(starts) == {"chr1", "chrX"} and starts["chrX"] > starts["chr1"]
+    got = V.infer_sex(path, "P", "GRCh38")
+    assert got["sex"] == "male" and got["counts"]["records_scanned"] == 30  # the autosomes were never read
+    # a damaged index is not trusted: the file is read from the start instead
+    import shutil
+
+    copy = tmp_path / "copy.vcf.gz"
+    shutil.copy(path, copy)
+    (tmp_path / "copy.vcf.gz.tbi").write_bytes(b"\x1f\x8b not an index")
+    assert V.tabix_starts(str(copy)) is None
+    linear = V.infer_sex(str(copy), "P", "GRCh38")
+    assert linear["sex"] == "male" and linear["counts"]["records_scanned"] == 530
+
+
+def test_item6_s2f_selection_covers_exonic_splice_region_not_plain_missense(monkeypatch):
+    from zebra import s2f
+
+    asked = []
+    monkeypatch.setattr(s2f, "predict", lambda key, **kw: asked.append(key) or Outcome({"models": []}))
+
+    def cand(n, csq):
+        return {"variant": f"1-{n}-A-G", "chrom": "1", "pos": n, "ref": "A", "alt": "G", "flags": [],
+                "ann": {"consequence": csq}}
+
+    final = [cand(1, "missense_variant"), cand(2, "missense_variant,splice_region_variant"),
+             cand(3, "stop_gained,splice_region_variant"), cand(4, "splice_donor_variant"),
+             cand(5, "synonymous_variant"), cand(6, "3_prime_UTR_variant"), cand(7, "intron_variant")]
+    info = V._s2f_rerank(final, "GRCh38", 10, 60.0, [], [], None)
+    assert asked == ["1-2-A-G", "1-5-A-G", "1-7-A-G"] and info["selected"] == ["1-2-A-G", "1-5-A-G", "1-7-A-G"]
+
+
+def test_cp0_5_myvariant_clinvar_fills_in_when_vep_cannot_match_the_allele(fake_ensembl, fake_myvariant, monkeypatch):
+    """GRCh37 VEP serves no clin_sig_allele and writes F508del's rs record as TCTT/T/TCTTCTT (live, 2026-10-06):
+    the ClinVar exemption must then come from MyVariant's allele-keyed record, or the textbook allele is filtered."""
+    by_input = {}
+    for name in ("vep_trio.json", "vep_family2.json"):
+        for r in json.loads((FIX / name).read_text())["records"]:
+            by_input[r["input"]] = r
+    line = ensembl.vcf_line("7", 117559590, "ATCT", "A")
+    stripped = json.loads(json.dumps(by_input[line]))
+    for cv in stripped.get("colocated_variants") or []:
+        cv.pop("clin_sig_allele", None)
+        cv["allele_string"] = "TCTT/T/TCTTCTT"
+
+    def vep_batch(variants, assembly="GRCh38"):
+        lines = [ensembl.vcf_line(*v) for v in variants]
+        return Outcome([stripped if l == line else by_input[l] for l in lines if l in by_input],
+                       sources=[source_record("Ensembl VEP", "fixture", url="https://rest.ensembl.org/vep/human/region")])
+
+    monkeypatch.setattr(ensembl, "vep_batch", vep_batch)
+    got = V.triage(FAM2, "P2", mother="M2", father="F2", sex="male", prefilter="myvariant", max_af=0.005)
+    f508 = next(c for c in got.result["candidates"] if c["variant"] == "7-117559590-ATCT-A")
+    assert "Pathogenic" in f508["clinvar"] and f508["af_exempt"].startswith("ClinVar")
+    assert any("ClinVar from MyVariant.info" in f for f in f508["flags"])
+
+
+# ------------------------------------------------ fixes after the adversarial review (W5)
+
+def test_item6_review_p0_an_unplaceable_contig_never_aborts_triage(monkeypatch):
+    """A GL000220.1 / decoy candidate is not sent to the lookup; a variant the lookup refuses costs its own row."""
+    from zebra import s2f
+
+    def predict(key, **kw):
+        if key.startswith("1-"):
+            raise UsageError(f"cannot read {key!r}")
+        return Outcome({"models": []})
+
+    monkeypatch.setattr(s2f, "predict", predict)
+    final = [{"variant": "GL000220.1-105000-C-T", "chrom": "GL000220.1", "pos": 105000, "ref": "C", "alt": "T",
+              "flags": [], "ann": {"consequence": "non_coding_transcript_exon_variant"}},
+             {"variant": "1-5-A-G", "chrom": "1", "pos": 5, "ref": "A", "alt": "G", "flags": [],
+              "ann": {"consequence": "intron_variant"}},
+             {"variant": "2-5-A-G", "chrom": "2", "pos": 5, "ref": "A", "alt": "G", "flags": [],
+              "ann": {"consequence": "intron_variant"}}]
+    warnings: list = []
+    info = V._s2f_rerank(final, "GRCh37", 5, 60.0, warnings, [], None)
+    assert info["selected"] == ["1-5-A-G", "2-5-A-G"] and info["failed"] == ["1-5-A-G"] and info["ran"] == ["2-5-A-G"]
+    assert any("S2F 1-5-A-G not run: cannot read" in w for w in warnings)
+
+
+def test_b_p2_5_a_stale_tabix_index_is_not_trusted(tmp_path):
+    import importlib.util
+    import os
+    import shutil
+    import time
+
+    spec = importlib.util.spec_from_file_location("mkfix", str(FIX / "make_fixtures.py"))
+    mk = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mk)  # type: ignore[union-attr]
+    path = tmp_path / "x.vcf.gz"
+    shutil.copy(FIX / "xy_indexed.vcf.gz.tbi", tmp_path / "x.vcf.gz.tbi")
+    time.sleep(0.01)
+    rows = gzip.decompress((FIX / "xy_indexed.vcf.gz").read_bytes()).decode().splitlines()
+    head = [r for r in rows if r.startswith("#")]
+    body = [r for r in rows if not r.startswith("#")]
+    extra = [f"chr1\t{900000 + i}\t.\tA\tG\t50\tPASS\t.\tGT:DP:GQ\t0/1:30:99" for i in range(4000)]
+    path.write_bytes(mk.bgzf(("\n".join(head + body[:500] + extra + body[500:]) + "\n").encode()))
+    os.utime(tmp_path / "x.vcf.gz.tbi", (time.time() - 3600, time.time() - 3600))  # the index is older
+    got = V.infer_sex(str(path), "P", "GRCh38")
+    assert got["sex"] == "male" and got["counts"]["xy_records"] == 30 and not got["counts"].get("indexed")
+    # an index as new as the file but pointing elsewhere is caught by the first-line check
+    os.utime(tmp_path / "x.vcf.gz.tbi", None)
+    assert V._usable_xy_index(str(path)) == {}
+    assert V.infer_sex(str(path), "P", "GRCh38")["sex"] == "male"
+
+
+def test_b_p1_8_gvcf_non_ref_placeholders_are_not_svs(tmp_path, fake_ensembl):
+    rows = ["chr22\t30000000\t.\tC\tT,<NON_REF>\t99\tPASS\t.\tGT:DP:GQ\t0/1:30:99\t0/0:30:99\t0/0:30:99",
+            "chr22\t30000100\t.\tC\t<NON_REF>\t.\t.\tEND=30000200\tGT:DP:GQ\t0/0:30:99\t0/0:30:99\t0/0:30:99"]
+    got = V.triage(_sv_vcf(tmp_path, rows, "g.vcf"), "P", mother="M", father="F", sex="female")
+    assert "structural_variants" not in got.result
+    assert not any("CNV/SV" in w for w in got.warnings)
+    ref_only = V.triage(_sv_vcf(tmp_path, rows[1:], "ref.g.vcf"), "P", mother="M", father="F", sex="female")
+    assert ref_only.result["total_candidates"] == 0  # not refused as a CNV VCF
+    assert V.inspect(_sv_vcf(tmp_path, rows, "g2.vcf")).result["symbolic_alleles"]["structural"] == 0
+
+
+def _sib(z, aff, sid="S", adequate=False, sex=None):
+    return {"id": sid, "affected": aff, "z": z, "adequate_ref": adequate, "gt": z, "sex": sex}
+
+
+def test_cp1_15_review_sibling_partner_unknown_is_not_absence(tmp_path, fake_ensembl):
+    """Two sibs; S2's call at the CFTR partner is ./. -> 'not assessed', never 'does not carry both'."""
+    p = tmp_path / "sibs.vcf"
+    p.write_text("\n".join([
+        "##fileformat=VCFv4.2", "##contig=<ID=chr7,length=159345973>",
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP\tM\tF\tS1\tS2",
+        "chr7\t117587806\t.\tG\tA\t50\tPASS\t.\tGT:DP:GQ\t0/1:30:99\t0/1:30:99\t0/0:30:99\t0/1:30:99\t0/1:30:99",
+        "chr7\t117652877\t.\tC\tG\t50\tPASS\t.\tGT:DP:GQ\t0/1:30:99\t0/0:30:99\t0/1:30:99\t0/0:30:99\t./.:0:0",
+    ]) + "\n")
+    ped = tmp_path / "s.ped"
+    ped.write_text("f M 0 0 2 1\nf F 0 0 1 1\nf P F M 2 2\nf S1 F M 1 2\nf S2 F M 2 2\n")
+    res = V.triage(str(p), "P", ped=str(ped)).result
+    cftr = {c["variant"]: c for c in res["candidates"] if c["gene"] == "CFTR"}
+    g551 = cftr["7-117587806-G-A"]
+    assert any("sibling S2: genotype at the partner allele unknown" in f for f in g551["flags"])
+    assert not any("S2 does not carry both" in f for f in g551["flags"])
+    assert any("affected sibling S1 does not carry both alleles" in f for f in g551["flags"])  # S1 is hom-ref there
+
+
+def test_cp0_5_review_vep_budget_never_starves_the_strong_classes(monkeypatch):
+    from zebra.sources import myvariant
+
+    def mk(n, cls, gene, impact, af):
+        return {"variant": f"1-{n}-A-G", "chrom": "1", "pos": n, "ref": "A", "alt": "G", "class": cls,
+                "flags": [], "_rec": {"groups": {"gnomade": af} if af is not None else {}, "clinvar": [],
+                                      "impact": impact, "effects": [], "genes": [gene]}}
+
+    cands = [mk(1, "de_novo", "G1", "LOW", 1e-5), mk(2, "hom_recessive", "G2", "MODIFIER", 1e-4),
+             mk(3, "inherited_het", "G3", "MODERATE", 1e-3),  # doomed: above the dominant cut-off, alone in G3
+             mk(4, "inherited_het", "G4", "MODERATE", 1e-5), mk(5, "inherited_het", "G4", "MODERATE", 1e-3),
+             mk(6, "het", "G5", "HIGH", 1e-5)]
+    recs = {(v["chrom"], v["pos"], v["ref"], v["alt"]): v.pop("_rec") for v in cands}
+    monkeypatch.setattr(myvariant, "metadata", lambda a: Outcome({"versions": {"gnomad": "2.1.1"}}))
+    monkeypatch.setattr(myvariant, "batch", lambda keys, assembly, **kw: Outcome(
+        {"records": recs, "unanswered": [], "queried": len(keys), "batches": 1, "answered_batches": 1,
+         "cached_batches": 0, "found": len(keys), "not_found": 0, "answered_keys": len(keys)}))
+    out, info = V._myvariant_prefilter(cands, "GRCh38", 0.01, 50_000, {}, [], [], None, dom_af=0.0001)
+    order = [v["variant"] for v in out]
+    # HIGH first; then the strong classes whatever their tier; then hets; the doomed lone het last
+    assert order == ["1-6-A-G", "1-1-A-G", "1-2-A-G", "1-4-A-G", "1-5-A-G", "1-3-A-G"], order
+    assert "late" in out[-1]["prefilter"] and "no second candidate" in out[-1]["prefilter"]["late"]
+    assert "late" not in out[4]["prefilter"]  # 1e-3 too, but G4 has a second candidate: possible comp-het
+
+
+def test_cp0_5_review_prefilter_rules(monkeypatch):
+    """BA1 caps the ClinVar exemption; conflicting ClinVar never exempts; unanswered is not 'novel';
+    --max-prefilter is honoured."""
+    from zebra.sources import myvariant
+
+    keys = [("1", n, "A", "G") for n in range(1, 7)]
+    cands = [{"variant": f"1-{n}-A-G", "chrom": "1", "pos": n, "ref": "A", "alt": "G", "class": "het",
+              "flags": []} for n in range(1, 7)]
+    recs = {keys[0]: {"groups": {"gnomade": 0.08}, "clinvar": ["Pathogenic"], "impact": "HIGH", "effects": [],
+                      "genes": ["A"]},  # above BA1: dropped despite ClinVar
+            keys[1]: {"groups": {"gnomade": 0.03}, "clinvar": ["Conflicting interpretations of pathogenicity",
+                                                               "Pathogenic"], "impact": "HIGH", "effects": [],
+                      "genes": ["A"]},  # conflicting: dropped
+            keys[2]: {"groups": {"gnomade": 0.03}, "clinvar": ["Pathogenic, low penetrance"], "impact": "MODERATE",
+                      "effects": [], "genes": ["A"]},  # P/LP spelled with a comma: exempt
+            keys[3]: None}
+    monkeypatch.setattr(myvariant, "metadata", lambda a: Outcome({"versions": {}}))
+    monkeypatch.setattr(myvariant, "batch", lambda k, assembly, **kw: Outcome(
+        {"records": {x: recs.get(x) for x in k if x != keys[4]}, "unanswered": [keys[4]], "queried": len(k),
+         "batches": 1, "answered_batches": 1, "cached_batches": 0, "found": 3, "not_found": 1,
+         "answered_keys": len(k) - 1}))
+    out, info = V._myvariant_prefilter(cands, "GRCh38", 0.01, 5, {}, [], [], None)
+    by = {v["variant"]: v["prefilter"] for v in out}
+    assert "1-1-A-G" not in by and "1-2-A-G" not in by and info["dropped_af_gt_max"] == 2
+    assert by["1-3-A-G"]["kept_because"].startswith("ClinVar Pathogenic, low penetrance")
+    assert by["1-4-A-G"]["status"].startswith("not in MyVariant") and by["1-4-A-G"]["tier"] == 1
+    assert by["1-5-A-G"]["status"].startswith("not looked up") and by["1-5-A-G"]["tier"] == 4
+    assert by["1-6-A-G"]["status"].startswith("beyond --max-prefilter 5") and info["beyond_max_prefilter"] == 1
+
+
+def test_cp0_5_review_partial_answers_are_asked_again_and_chunks_stay_under_1000(fake_myvariant, monkeypatch):
+    posted = []
+    real = MV.post_json
+
+    def post_json(url, payload, source, **kw):
+        posted.append((len(payload["ids"]), kw.get("cache_ttl")))
+        resp = real(url, payload, source, **kw)
+        if len(posted) == 1:  # the first answer leaves one id out
+            hits = json.loads(resp.text)[1:]
+            return Response(resp.url, 200, json.dumps(hits), resp.retrieved_at, False)
+        return resp
+
+    monkeypatch.setattr(MV, "post_json", post_json)
+    keys = [("7", 117559479, "G", "A"), ("2", 166042334, "G", "A"), ("7", 117559590, "ATCT", "A")]
+    got = MV.batch(keys, "GRCh38")
+    assert got.result["unanswered"] == [] and posted == [(3, MV.CACHE_TTL), (1, 0)]
+    many = [("1", 1000 + i, "A", "G") for i in range(2500)]
+    posted.clear()
+    MV.batch(many, "GRCh38")
+    assert sorted(n for n, _ in posted if _ != 0) == [500, 1000, 1000]
+
+
+def test_b_p1_7_review_unknown_sex_on_x_is_not_called_biparental():
+    cls, origin, flags = V._classify("x_nonpar", None, "hom_alt", _p("het"), _p("hom_alt"))
+    assert cls == "hom_recessive" and origin is None
+
+
+def test_cp1_15_review_mosaic_check_is_for_de_novo_only(fake_ensembl, tmp_path):
+    rows = ["chr2\t166042334\t.\tG\tA\t50\tPASS\t.\tGT:AD:DP:GQ\t0/1:40,8:48:99\t0/1:15,15:30:99\t0/0:30,0:30:99"]
+    p = tmp_path / "inh.vcf"
+    p.write_text("\n".join(["##fileformat=VCFv4.2", "##contig=<ID=chr2,length=242193529>",
+                            "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tP\tM\tF"] + rows) + "\n")
+    c = V.triage(str(p), "P", mother="M", father="F", sex="female").result["candidates"][0]
+    assert c["class"] == "inherited_het" and "mosaic" not in c
+    assert any(f.startswith("low allele balance 0.17") for f in c["flags"])
+
+
+def test_b_p2_6_review_a_few_mismatches_warn_and_do_not_refuse(tmp_path, fake_ensembl, monkeypatch):
+    lookup_post = V.post_json
+
+    def post_json(url, payload, source, **kw):
+        if "/sequence/region/" not in url:
+            return lookup_post(url, payload, source, **kw)
+        data = [{"query": q, "seq": GRCH38_BASES.get(q.split("..")[0], "N")} for q in payload["regions"]]
+        return Response(url, 200, json.dumps(data), "2026-10-06T10:00:00+00:00", False)
+
+    monkeypatch.setattr(V, "post_json", post_json)
+    rows = []
+    for i, (k, b) in enumerate(GRCH38_BASES.items()):
+        ref = b if i >= 3 else ("T" if b != "T" else "G")  # 3 of 8 wrong
+        rows.append(f"{k.split(':')[0]}\t{k.split(':')[1]}\t.\t{ref}\t{'C' if ref != 'C' else 'A'}\t50\tPASS\t.\t"
+                    "GT:DP:GQ\t0/1:30:99")
+    got = V.triage(_headerless(tmp_path, rows), "P", assembly="GRCh38", sex="female")
+    assert got.result["ref_check"]["mismatch"] == 3
+    assert any(w.startswith("3 of 8 sampled REF bases differ from GRCh38") for w in got.warnings)

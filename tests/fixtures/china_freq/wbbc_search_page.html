@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Westlake BioBank for Chinese</title>
+    <meta name="viewport" content="width=1920px, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="vendor/my/my.css">
+    <style>
+    .div_button 
+    {
+        position:absolute;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        /*border-radius: 22px;*/
+        background: #fff;
+        /*padding: 2px 4px 3px 4px;*/
+        border:1px solid #123566;
+        margin-left:-100px;
+        background-color:#123566;
+    }
+    .div_button .font
+    {
+        position:absolute;
+        width:80px;
+        left:50%;
+        margin-left:-40px;
+        top:4px;
+        color:#fff;
+        font-size:25px;
+    }
+    .div_button:hover
+    {
+        cursor:pointer;
+    }
+    .div_title_font
+    {
+        position:relative;
+        width:100%;
+        height:100px;
+    }
+    .font_big
+    {
+        position:relative;
+        width:100%;
+        height:40px;
+        font-size:30px;
+        color:#123566;
+        font-weight:bolder;
+    }
+    .font_list_big
+    {
+        position:relative;
+        width:100%;
+        height:40px;
+        font-size:25px;
+        color:#123566;
+        font-weight:bolder;
+    }
+    .font_small
+    {
+        position:relative;
+        width:600px;;
+        height:30px;
+        font-size:25px;
+        color:#123566;
+        left:50px;
+        text-indent: 50px;
+        word-break: break-all;
+        word-wrap: break-word;
+    }
+    .font_list
+    {
+        position:relative;
+        width:600px;;
+        height:30px;
+        font-size:18px;
+        color:#123566;
+        left:50px;
+        text-indent: 50px;
+        word-break: break-all;
+        word-wrap: break-word;
+        top:50px;
+    }
+    .div_login
+    {
+        position:absolute;
+        width:400px;
+        height:30px;
+        font-size:18px;
+        left:850px;
+        top:15px;
+        background-color: #123566;
+    }
+    .div_login .login:hover
+    {   
+        cursor:pointer;
+    }
+    .div_login .signin:hover
+    {   
+        cursor:pointer;
+    }
+    .create_html
+    {
+        position:absolute;
+        width:100px;
+        height:50px;
+        top:-3px;
+        background-color: #123566;
+    }
+    .create_html:hover
+    {
+        cursor:pointer;
+        background-color: #224576;
+    }
+    .create_html_downline
+    {
+        cursor:pointer;
+        border-bottom: 3px solid #ff862d;
+    }
+    .create_html .create_html_font
+    {
+        position:absolute;
+        width:100%;
+        height:30px;
+        top:19px;
+        font-size:18px;
+        color:#fff;
+    }
+    .font_pub_big
+    {
+        position:relative;
+        width:250px;
+        height:40px;
+        font-size:25px;
+        color:#fff;
+        border-bottom:2px solid #ff862d;
+    }
+    .font_pub_small
+    {
+        position:relative;
+        width:1300px;
+        height:40px;
+        font-size:18px;
+        color:#fff;
+        word-break: break-all;
+        word-wrap: break-word;
+        line-height:30px;
+        text-align:center;
+    }
+    .placeholder
+    {
+        position:absolute;
+        height:32px;
+        width:500px;
+        left:10px;
+        top:4px;
+        font-size: 20px;
+        border: 0;
+        outline: none;
+        background-color: rgba(0, 0, 0, 0);
+    }
+    .font_example
+    {
+        position:relative;
+        height:32px;
+        width:500px;
+        font-size: 18px;
+        left:20px;
+        top:20px;
+    }
+    </style>
+    <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+</head>
+    <body style="width:100%;overflow-x:hidden;height:930px;margin:0;padding:0;font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;">
+        <div class="head_line" style="background-color: #123566;height: 80px;">
+            <div class="font_title" style="background-color: #123566;height: 80px;">
+                <div style="position:absolute;top:20px;">
+                    <i class="fa fa-cubes fa-1x" aria-hidden="true" style="font-size: 40px; margin-left: -30px;"></i>
+                </div>
+                <div class="font" style="position:absolute;left:35px;top:12px;" onclick="window.location.href ='index.html'">
+                    Westlake BioBank for Chinese (WBBC)           
+                </div>
+                <div class="font" style="position:absolute;left:100px;top:40px;font-family:MicrosoftYaHei-Bold" onclick="window.location.href ='index.html'">
+                    西湖(中国)生物样本库
+                </div>
+                <div id="login" v-html="html" style="position:absolute;width:800px;height:50px;left:480px;top:8px;">
+                    <div class="create_html" onclick="window.location.href='index.html'">
+                        <div class="create_html_font" style="font-size: 20px">
+                            Home
+                        </div>
+                    </div>
+                   <!-- <div class="create_html" onclick="window.location.href='study.html'" style="width:140px;left:100px;">
+                        <div class="create_html_font">
+                            Study Samples
+                        </div>
+                    </div> -->
+                    <div class="create_html create_html_downline" onclick="window.location.href='genotype.html'" style="width:100px;left:110px;height: 55px">
+                        <div class="create_html_font" style="font-size: 20px">
+                            Genotype
+                        </div>
+                    </div>
+                    <div class="create_html" onclick="window.open('https://imputationserver.westlake.edu.cn/');" style="width:180px;left:220px;">
+                        <div class="create_html_font" style="font-size: 20px">
+                            Imputation Server
+                        </div>
+                    </div>
+                    <div class="create_html" onclick="window.location.href='publications.html'" style="width:140px;left:400px;">
+                        <div class="create_html_font" style="font-size: 20px">
+                            Publications
+                        </div>
+                    </div>
+                    <div class="create_html" onclick="window.location.href='downloads.html'" style="width:120px;left:540px;">
+                        <div class="create_html_font" style="font-size: 20px">
+                            DownLoads
+                        </div>
+                    </div>
+                    <div class="create_html" onclick="window.location.href='contact.html'" style="width:100px;left:660px;">
+                        <div class="create_html_font" style="font-size: 20px">
+                            Contact
+                        </div>
+                    </div>
+                    <div class="create_html" onclick="window.location.href='research.html'" style="width:150px;left:760px;">
+                        <div class="create_html_font" style="color: #FBB03B;font-size: 20px">
+                            Research Team
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="position:relative;height:0px;width:1400px;left:50%;margin-left:-700px;">
+            <div id="input_type" style="position:absolute;top:140px;left:350px;z-index: 2;">
+                <label><input type="radio" name="input_type" value="grch37" checked>GRCh37</label>
+                <label><input type="radio" name="input_type" value="grch38">GRCh38</label>
+            </div>
+        </div>
+        <div style="position:relative;height:200px;width:1400px;left:50%;margin-left:-700px;">
+            <div style="position:absolute;height:40px;width:550px;left:350px;top:170px;border:2px solid #123566;border-radius: 10px;">
+                <input class="placeholder" id="search" placeholder="" autocomplete="off">
+            </div>
+            <div class="div_button" onclick="search()" style="height:40px;left:1020px;top:170px;width:150px;">
+                <div class="font">
+                    Search
+                </div>
+            </div>
+        </div>
+        <div style="position:relative;height:200px;width:400px;top:100px;left:50%;margin-left:-350px;border:1px solid #123566;border-radius: 25px;">
+            <div class="font_example">
+                Examples of input data :
+            </div>
+            <div class="font_example" style="left:50px;top:30px;">
+                <div style="position:absolute;left:0px;">Gene</div>
+                <div style="position:absolute;left:120px;">ADH1B</div>
+            </div>
+            <div class="font_example" style="left:50px;top:30px;">
+                <div style="position:absolute;left:0px;">Chr:Region</div>
+                <div style="position:absolute;left:120px;">4:100220000-100230000</div>
+            </div>
+            <div class="font_example" style="left:50px;top:30px;">
+                <div style="position:absolute;left:0px;">Chr:Position</div>
+                <div style="position:absolute;left:120px;">4:100239319</div>
+            </div>
+            <div class="font_example" style="left:50px;top:30px;">
+                <div style="position:absolute;left:0px;">rsID</div>
+                <div style="position:absolute;left:120px;">rs1229984</div>
+            </div>
+        </div>
+        <div style="position:relative;width:100%;height:240px;top:200px;background-color:#123566;opacity:0.8;">
+            <div style="position:relative;height:100%;width:1400px;left:50%;margin-left:-700px;top:15px;">
+                <div class="font_pub_small" style="top:30px;left:-220px;">
+                    © 2020 Westlake University. All Rights Reserved
+                </div>
+                <div class="font_pub_small" style="top:30px;left:-220px;">
+                    No.18 Shilongshan Road, Cloud Town, Xihu District, Hangzhou, Zhejiang, China
+                </div>
+                <div class="font_pub_small" style="top:30px;left:-220px;">
+                    Westlake University  <a style="color:#fff" href="https://en.westlake.edu.cn/">https://en.westlake.edu.cn/</a> 
+                </div>
+                <div class="font_pub_small" style="top:30px;left:-220px;">
+                    Westlake Imputation Server <a style="color:#fff" href="https://imputationserver.westlake.edu.cn">https://imputationserver.westlake.edu.cn/</a>
+                </div>
+                <img src="img/2.png" style="position:absolute;width:190px;height:190px;left:900px;top:20px;"></img>
+                <img src="img/3.png" style="position:absolute;width:130px;height:130px;left:1100px;top:50px;"></img>
+            </div>
+        </div>
+    </body>
+    
+    <script type="text/javascript" src="vendor/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="vendor/layui/layui.all.js"></script>
+    <script type="text/javascript" src="vendor/vue/Vue.js"></script>
+    <script type="text/javascript">
+        $(window).resize(function ()
+        {
+            //这个大小只在1300px范围外有效，不然无效了
+            if(document.body.clientWidth < 1380)
+            {
+                document.body.style.width = 1380;
+            }
+            else
+            {
+                document.body.style.width = document.body.clientWidth;
+            }
+        });
+
+        $('#search').bind('keyup', function(event) {
+　　        if (event.keyCode == "13") {
+　　        　　//回车执行查询
+　　        　　search();
+　　        }
+        });
+        function search()
+        {
+            var search = document.getElementById('search');
+            value = search.value.replace(/\s/g,"");
+
+            if(value == "")
+            {
+                alert("Please input search.");
+                return;
+            }
+            match_snp = /^rs\d+$/g;
+            match_position = /^\d+:\d+$/g;
+            match_regions = /^\d+:\d+-\d+$/g;
+
+            localStorage.setItem("grch", $('input[name="input_type"]:checked').val());
+            if(match_snp.test(value))
+            {
+                localStorage.setItem("type", "snp");
+                localStorage.setItem("value", value);
+                //alert("snp");
+                window.open('search.html');
+            }
+            else if(match_position.test(value))
+            {
+                localStorage.setItem("type", "position");
+                localStorage.setItem("value", value);
+                //alert("position");
+                window.open('search.html');
+            }
+            else if(match_regions.test(value))
+            {
+                vec_value = value.split(":");
+                vec_regions = vec_value[1].split("-");
+                start = vec_regions[0];
+                end = vec_regions[1];
+
+                if(parseInt(end) - parseInt(start) > 100000)
+                {
+                    alert("Region must less than 100000 !");
+                    return;
+                }
+
+                localStorage.setItem("type", "regions");
+                localStorage.setItem("value", value);
+                //alert("regions");
+                window.open('search.html');
+            }
+            else
+            {
+                localStorage.setItem("type", "gene");
+                localStorage.setItem("value", value);
+                //alert("gene");
+                window.open('search.html');
+            }
+        }
+    </script>
+</html>

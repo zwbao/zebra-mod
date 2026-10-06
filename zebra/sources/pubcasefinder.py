@@ -60,10 +60,13 @@ def parse_tsv(text: str, target: str, limit: int) -> List[Dict[str, Any]]:
     return out
 
 
-def ranked(hpo_ids: Sequence[str], target: str = "omim", limit: int = 15, timeout: float = 60.0) -> Outcome:
+def ranked(hpo_ids: Sequence[str], target: str = "omim", limit: int = 15, timeout: float = 60.0,
+           retries: int = 1) -> Outcome:
     """PubCaseFinder's ranked list for one target (omim, orphanet or gene), top `limit` rows.
 
-    One retry at most (usage limits); typical time 10-20 s per list.
+    One retry at most by default (usage limits); typical time 10-20 s per list. A caller that
+    meters its own requests against the published limits passes retries=0, so that one call is
+    at most one request (plus one re-request when a bad body came from the cache).
     """
     if target not in TARGETS:
         raise ValueError(f"target must be one of {', '.join(TARGETS)}")
@@ -74,8 +77,18 @@ def ranked(hpo_ids: Sequence[str], target: str = "omim", limit: int = 15, timeou
     def fetch(refresh=False):
         return request(f"{BASE}/pcf_get_ranked_list", source="PubCaseFinder",
                        params={"target": target, "format": "tsv", "hpo_id": hpo},
-                       accept="text/tab-separated-values, text/plain, */*", timeout=timeout, retries=1,
-                       cache_ttl=0 if refresh else 7 * 86400)
+                       accept="text/tab-separated-values, text/plain, */*", timeout=timeout,
+                       retries=max(0, min(int(retries), 1)),
+                       # E-6: a re-request after a bad cached body skips the cache READ but still
+                       # WRITES the good answer back; cache_ttl=0 used to skip both, so every later
+                       # call replayed the bad entry and paid another request for the whole TTL
+                       cache_ttl=7 * 86400, refresh=refresh)
+
+    used = []
+
+    def refetch():
+        used.append(fetch(refresh=True))
+        return used[-1]
 
     resp = fetch()
     # F10: an empty or HTML 200 was cached for 7 days and parsed to `hits: []`
@@ -83,7 +96,8 @@ def ranked(hpo_ids: Sequence[str], target: str = "omim", limit: int = 15, timeou
     # patient". `Rank` is the first column of the real TSV header
     # (`Rank\tScore\tOMIM_ID\tDisease_Name\tMatched_Phenotype\tCausative_Gene`,
     # checked live 2026-10-06).
-    text = validated_text(resp, "PubCaseFinder", must_contain="Rank", refetch=lambda: fetch(refresh=True))
+    text = validated_text(resp, "PubCaseFinder", must_contain="Rank", refetch=refetch)
+    resp = used[-1] if used else resp  # provenance names the answer actually used
     rows = parse_tsv(text, target, limit)
     return Outcome({"target": target, "hits": rows},
                    sources=[source_record("PubCaseFinder", f"{target}: {hpo}", resp,

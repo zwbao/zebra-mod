@@ -1,0 +1,63 @@
+{
+ "args": [
+  "2",
+  166042334,
+  "G",
+  "A",
+  "GRCh38"
+ ],
+ "recorded_at": "2026-10-06T10:18:37+00:00",
+ "exchanges": [
+  {
+   "method": "GET",
+   "url": "https://rest.ensembl.org/sequence/region/human/2:166042134..166042534:1",
+   "body": null,
+   "source": "Ensembl sequence",
+   "status": 200,
+   "text": "TCTAGAATATCTGAGTAGATATAAGAAATAACAGCTCTTGAATTAGACTGTCTTTTCATTAGAATGCACTATTCCCAACTCACAAATATATTTGTTTGAAATGAGACAATATAAGTTTGGTGAAAATAATTGAAACGAAAATAGAATTTGTTACCAACCTTCTACTGTATTTGTTAGAATGCTGGCTATACTCATTGCTCGTTGCCTTTGGGAAGGATCTTCTAGAAAGTCCATGGAAACGTGGAAAGAACTTGACCTTCTCTTTCTCATTTCAGTTTCAGTGGTTGTTCCCTGTAAAAAAAAATGCTAATGCATTAAACAATTAATTTGAGCAATATGACAAGCAAACAACCAAATGGTGACACAGTGAATTTCATGAAACACATGCATCATGCACTTTC"
+  },
+  {
+   "method": "GET",
+   "url": "http://bigdata.ibp.ac.cn/NyuWa_variants/singlepage.php?variant=2-166042334-G-A",
+   "body": null,
+   "source": "NyuWa NCVD",
+   "status": 200,
+   "text": "<!DOCTYPE html>\n<html>\n <head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <!--<link href=\"bootstrap/css/bootstrap.min.css\" rel=\"stylesheet\">\n  <script src=\"https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js\"></script>\n  <script src=\"bootstrap/js/bootstrap.min.js\"></script>-->\n  <!--<link rel=\"stylesheet\" href=\"https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css\">-->\n  <link rel=\"stylesheet\" href=\"bootstrap/bootstrap-3.3.7-dist/css/bootstrap.min.css\">\n  <!--<script src=\"https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js\"></script>-->\n  <!--<script src=\"https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js\"></script>-->\n  <script src=\"bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js\"></script>\n  <script type=\"text/javascript\" src=\"js/incubator-echarts-4.8.0/dist/echarts.js\"></script>\n  <link href=\"css/index_final.css\" rel=\"stylesheet\">\n  <title>Nyuwa variants</title>\n  <style type=\"text/css\">\n   #home_add {\n        float:right;\n        padding-right:10px;\n        margin-top:10px;\n   }\n\n   #home_add ul {\n        list-style-type: none;\n   }\n\n   #home_add li {\n        display:inline;\n        padding-left: 5px;\n        padding-right: 5px;\n        color: #ffffff;\n   }\n\n   #home_add a {\n        color:#ffffff;\n   }\n\n   #home_add a:hover {\n        color: #ccc;\n   }\n  </style>\n </head>\n <body>\n  <div id=\"nav-local\" style=\"background:#11538c;height:130px\">\n   <div class=\"container-fluid\">\n    <div class=\"navbar-header\">\n     <a class=\"navbar-brand\" href='https://bigd.big.ac.cn' target='_blank' style=\"margin-left:-10px\"><img src='https://bigd.big.ac.cn/static/image/CNCB-NGDC-white.png' width='140'/></a>\n     <a class=\"navbar-brand\" href=\"#\" style=\"color:#e0e9ee;font-size:30px;margin-top:45px;margin-left:-120px\">NyuWa Chinese Population Variant Database (NCVD)</a>\n    </div>\n    <div id=\"home_add\">\n     <ul>\n      <li><a href=\"../NyuWa\">Home</a> &nbsp&nbsp|</li>\n      <li><a href=\"index.php\">NCVD</a> &nbsp&nbsp|</li>\n      <li><a href=\"../refpanel\">reference panel</a></li>\n     </ul>\n    </div>\n\n   <div id=\"Signin\">\n                       <ul>\n                        <li id = \"signin_border\"><a href=\"Signin.php\">Sign in</a></li>\n                        <li><a href=\"register.php\">Sign up</a></li>\n                       </ul>    \n                      </div>\n\n   </div>\n  </div>\n  <nav class=\"navbar navbar-default\">\n   <div class=\"container-fluid\">\n    <!-- Collect the nav links, forms, and other content for toggling -->\n    <div class=\"navbar-header\">\n     <a class=\"navbar-brand\" style=\"border-right:1px solid #a4a6a9\" href=\"index.php\" target=\"_parent\"><span class=\"glyphicon glyphicon-home\" aria-hidden=\"true\" style=\"padding-right:7px\"></span>NCVD <span class=\"sr-only\">(current)</span></a>\n    </div>\n    <div class=\"collapse navbar-collapse\" id=\"bs-example-navbar-collapse-1\">\n     <ul class=\"nav navbar-nav\">\n      <li><a href=\"search.php\" target=\"_parent\" class=\"active2\"><span class=\"glyphicon glyphicon-search\" aria-hidden=\"true\" style=\"padding-right:7px\"></span>Search <span class=\"sr-only\">(current)</span></a></li>\n      <li><a href=\"about.php\" target=\"_parent\"><span class=\"glyphicon glyphicon-envelope\" aria-hidden=\"true\" style=\"padding-right:7px\"></span>About <span class=\"sr-only\">(current)</span></a></li>\n      <li><a href=\"browser.php\" target=\"_parent\"><span class=\"glyphicon glyphicon-th-large\" aria-hidden=\"true\" style=\"padding-right:7px\"></span>Browser <span class=\"sr-only\">(current)</span></a></li>\n      <li><a href=\"download.php\" target=\"_parent\"><span class=\"glyphicon glyphicon-download-alt\" aria-hidden=\"true\" style=\"padding-right:7px\"></span>Download <span class=\"sr-only\">(current)</span></a></li>\n      <li><a href=\"help.php\" target=\"_parent\"><span class=\"glyphicon glyphicon-question-sign\" aria-hidden=\"true\" style=\"padding-right:7px\"></span>Help <span class=\"sr-only\">(current) </span></a></li>\n      <li><a href=\"contact.php\" target=\"_parent\"><span class=\"glyphicon glyphicon-earphone\" aria-hidden=\"true\" style=\"padding-right:7px\"></span>Contact <span class=\"sr-only\">(current) </span></a></li>\n     </ul>\n    </div>\n   </div>\n  </nav>\n\n  <p></p>\n  <div id=\"link-bar\">\n     </div>\n  <ol class=\"breadcrumb\" style=\"background:#fff;margin-left:20px;margin-top:10px\">\n   <li><a href=\"index.php\">NCVD</a></li>\n   <li><a href=\"search.php\">Search</a></li>\n   <li><a href=searchact.php?variant=2-166042334-G-A>Result</a></li>   <li class=\"active\">Variant</li>\n  </ol>\n  <div class=\"container\">\n   <div class=\"row\">\n    <div  class=\"col-md-3\">\n\t<div class=\"nav-test\" id=\"nav-left\">\n         <ul>\n          <li><a href=\"#general\">Basic</a></li>\n          <li><a href=\"#Qualitymetrics\">Quality Metrics</a></li>\n          <li><a href=\"#Externaldata\">External data</a></li>\n          <li><a href=\"#Regionannotation\">Region Annotation</a></li>\n  \t  <li><a href=\"#Nonsynonymousimpact\">Nonsynonymous impact</a></li>\n       \t  <li><a href=\"#Lossoffunctionpredict\">Loss of function predict</a></li>\n          <li><a href=\"#Diseaseannotation\">Clinical annotation</a></li>\n          <li><a href=\"#Pharmacogenomics\">Pharmacogenomics</a></li>\n         </ul>\n\t</div>\n\t<script type=\"text/javascript\">\n\t\tvar h = 168;\n    \t\tvar nav = document.querySelector(\"#nav-left\");\n    \t\twindow.onscroll = function(){\n        \t\t//获取页面滚走距离\n        \t\tvar sTop = document.documentElement.scrollTop || document.body.scrollTop;\n        \t\tif( sTop > h ){\n            \t\t\tnav.style.position = \"fixed\";\n            \t\t\tnav.style.top = 0;\n\t\t\t\tnav.style.width = \"285px\";\n        \t\t}else{\n            \t\t\tnav.style.position = \"static\";\n        \t\t}\n    \t\t}\n\t</script>\n    </div>\n    <div class=\"col-md-9\">\n    <p>There is no results for your searching request.</p>    </div>\n  </div>\n  </div>\n </body>\n</html>\n  \n"
+  },
+  {
+   "method": "POST",
+   "url": "https://wbbc.westlake.edu.cn/search_position.php",
+   "body": {
+    "position": "2:166042334",
+    "grch": "grch38"
+   },
+   "source": "WBBC",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "method": "GET",
+   "url": "https://rest.ensembl.org/overlap/region/human/2:166042334-166042335?feature=variation",
+   "body": null,
+   "source": "Ensembl overlap",
+   "status": 200,
+   "text": "[{\"id\":\"rs794726730\",\"source\":\"dbSNP\",\"end\":166042334,\"assembly_name\":\"GRCh38\",\"consequence_type\":\"stop_gained\",\"strand\":1,\"clinical_significance\":[\"pathogenic\"],\"feature_type\":\"variation\",\"start\":166042334,\"alleles\":[\"G\",\"A\"],\"seq_region_name\":\"2\"},{\"feature_type\":\"variation\",\"start\":166042334,\"alleles\":[\"HGMD_MUTATION\"],\"seq_region_name\":\"2\",\"strand\":1,\"clinical_significance\":[],\"assembly_name\":\"GRCh38\",\"consequence_type\":\"coding_sequence_variant\",\"id\":\"CM024300\",\"source\":\"HGMD-PUBLIC\",\"end\":166042334},{\"strand\":1,\"clinical_significance\":[],\"feature_type\":\"variation\",\"start\":166042334,\"alleles\":[\"HGMD_MUTATION\"],\"seq_region_name\":\"2\",\"id\":\"CX096176\",\"source\":\"HGMD-PUBLIC\",\"end\":166042334,\"consequence_type\":\"coding_sequence_variant\",\"assembly_name\":\"GRCh38\"}]"
+  },
+  {
+   "method": "GET",
+   "url": "https://rest.ensembl.org/variation/human/rs794726730?pops=1",
+   "body": null,
+   "source": "Ensembl variation",
+   "status": 200,
+   "text": "{\"clinical_significance\":[\"pathogenic\"],\"synonyms\":[\"RCV001824659\",\"RCV000534243\",\"RCV004535158\",\"RCV001004670\",\"RCV002515207\",\"RCV000174291\",\"VCV000189886\",\"RCV001527645\",\"RCV000188886\",\"RCV003927568\"],\"var_class\":\"SNP\",\"evidence\":[\"Frequency\",\"Cited\",\"Phenotype_or_Disease\",\"TOPMed\"],\"ambiguity\":\"R\",\"minor_allele\":null,\"most_severe_consequence\":\"stop_gained\",\"populations\":[{\"frequency\":1,\"allele_count\":610,\"allele\":\"G\",\"population\":\"ALFA:SAMN10492700\"},{\"population\":\"ALFA:SAMN10492704\",\"frequency\":1,\"allele\":\"G\",\"allele_count\":108},{\"allele_count\":2816,\"allele\":\"G\",\"frequency\":1,\"population\":\"ALFA:SAMN10492703\"},{\"frequency\":1,\"allele_count\":2708,\"allele\":\"G\",\"population\":\"ALFA:SAMN10492698\"},{\"population\":\"ALFA:SAMN10492702\",\"frequency\":1,\"allele_count\":94,\"allele\":\"G\"},{\"population\":\"ALFA:SAMN10492695\",\"allele\":\"G\",\"allele_count\":7618,\"frequency\":1},{\"allele_count\":84,\"allele\":\"G\",\"frequency\":1,\"population\":\"ALFA:SAMN10492697\"},{\"frequency\":1,\"allele\":\"G\",\"allele_count\":470,\"population\":\"ALFA:SAMN11605645\"},{\"frequency\":1,\"allele_count\":24,\"allele\":\"G\",\"population\":\"ALFA:SAMN10492701\"},{\"population\":\"ALFA:SAMN10492699\",\"allele\":\"G\",\"allele_count\":146,\"frequency\":1},{\"population\":\"ALFA:SAMN10492696\",\"frequency\":1,\"allele\":\"G\",\"allele_count\":108},{\"population\":\"ALFA:SAMN10492705\",\"frequency\":1,\"allele\":\"G\",\"allele_count\":11862}],\"name\":\"rs794726730\",\"source\":\"Variants (including SNPs and indels) imported from dbSNP\",\"mappings\":[{\"seq_region_name\":\"2\",\"strand\":1,\"assembly_name\":\"GRCh38\",\"allele_string\":\"G/A\",\"ancestral_allele\":\"G\",\"coord_system\":\"chromosome\",\"location\":\"2:166042334-166042334\",\"end\":166042334,\"start\":166042334}],\"MAF\":null}"
+  },
+  {
+   "method": "POST",
+   "url": "https://taiwanview.twbiobank.org.tw/ssss_query.php",
+   "body": "type=variant&database=WGS&chr=&chrFrom=&chrTo=&searchBy=R&geneOrVariant=rs794726730&page=1&pathogenic=false&likely_pathogenic=false&drug_response=false&pLoF=false&MI=false&synonymous_variant=false&other=false&CO=&fromV=&toV=",
+   "source": "Taiwan Biobank (TaiwanView)",
+   "status": 200,
+   "text": "[]"
+  }
+ ]
+}

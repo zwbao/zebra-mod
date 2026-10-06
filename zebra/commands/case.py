@@ -467,6 +467,110 @@ def _apply(args: argparse.Namespace) -> Outcome:
     return Outcome(result, sources=sources, warnings=warnings, query={"ops": sorted(ops)})
 
 
+def _recheck(args: argparse.Namespace) -> Outcome:
+    """Ask the case's questions again (ClinVar, ClinGen, trials, papers) and say what changed (CP1-12)."""
+    from zebra import recheck
+
+    target = _dir(args)
+    data = case_mod.load(target)
+    if not getattr(args, "case", None):
+        args.case = target  # the answers' sources go into this case's ledger
+    if getattr(args, "plan", False):
+        todo = recheck.plan(data)
+        lines = [f"variant {v['id']}: {v['query']}" for v in todo["variants"]]
+        lines += [f"gene {g['symbol']}: ClinGen validity" for g in todo["genes"]]
+        lines += [f"hypothesis {h['id']}: trials and papers for {h['disease']}" for h in todo["hypotheses"]]
+        return Outcome(todo, text="\n".join(lines) or "nothing to recheck: no sequence variants, genes or open hypotheses")
+    outcome, current, previous = recheck.run(target, data)
+    recheck.save_snapshot(target, current, previous)
+    line = ("recheck: baseline recorded" if outcome.result["first_check"]
+            else recheck.summary_line(outcome.result["changes"]))
+    with case_mod.editing(target) as d:
+        case_mod.apply_timeline(d, {"date": current["checked_on"], "event": line, "source": "zebra case recheck"})
+    r = outcome.result
+    text = [line if r["changes"] or not r["first_check"] else "recheck: baseline recorded (the next recheck reports changes)"]
+    for c in r["changes"]:
+        detail = c.get("after") if "after" in c else c.get("count") or ", ".join(t["nct_id"] if isinstance(t, dict) else t for t in c.get("trials") or [])
+        text.append(f"  {c['about']}: {c['what']}" + (f" {c.get('before')} → {detail}" if "before" in c else f": {detail}"))
+    if r["not_checked"]:
+        text.append("not checked: " + ", ".join(r["not_checked"]))
+    outcome.text = "\n".join(text)
+    outcome.query = {"recheck": target.rsplit("/", 1)[-1]}
+    return outcome
+
+
+def _phenopacket(args: argparse.Namespace) -> Outcome:
+    """Write the case as a GA4GH Phenopacket v2 (for a matchmaker, a collaborator, Exomiser/LIRICAL)."""
+    import json as _json
+
+    from zebra import phenopacket
+
+    target = _dir(args)
+    warnings: List[str] = []
+    try:
+        packet = phenopacket.from_case(case_mod.load(target), warnings=warnings)
+    except phenopacket.PhenopacketError as err:
+        raise UsageError(f"not exported: {err}") from None
+    out = args.out or str(case_mod.case_file(target).parent / "reports" / "phenopacket.json")
+    from pathlib import Path as _P
+
+    dest = _P(out).expanduser()
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(_json.dumps(packet, ensure_ascii=False, indent=1) + "\n", "utf-8")
+    n_feat = len(packet.get("phenotypicFeatures") or [])
+    n_int = len(packet.get("interpretations") or [])
+    return Outcome({"path": str(dest), "phenotypic_features": n_feat, "interpretations": n_int,
+                    "schema_version": (packet.get("metaData") or {}).get("phenopacketSchemaVersion")},
+                   warnings=warnings,
+                   text=f"{dest}: {n_feat} phenotypic features, {n_int} interpretations (no free text, no identifiers)")
+
+
+def _import_phenopacket(args: argparse.Namespace) -> Outcome:
+    """Read a Phenopacket (v1 or v2) into the case: phenotypes present and excluded, variants, diagnoses as hypotheses."""
+    from zebra import phenopacket
+
+    target = _dir(args)
+    try:
+        got = phenopacket.read(args.file)
+    except phenopacket.PhenopacketError as err:
+        raise UsageError(str(err)) from None
+    warnings = list(got.get("warnings") or [])
+    done = {"phenotypes": 0, "variants": 0, "hypotheses": 0}
+    with case_mod.editing(target) as data:
+        for status, rows in (("present", got.get("present") or []), ("excluded", got.get("excluded") or [])):
+            for f in rows:
+                try:
+                    case_mod.apply_phenotype(data, f["id"], f.get("label") or f["id"], status=status,
+                                             onset=f.get("onset"), source=f"phenopacket {got.get('id') or ''}".strip())
+                    done["phenotypes"] += 1
+                except case_mod.CaseError as err:
+                    warnings.append(f"phenotype {f.get('id')}: {err}")
+        for v in got.get("variants") or []:
+            fields = {k: v.get(k) for k in case_mod.VARIANT_FIELDS if v.get(k) not in (None, "", [])}
+            fields.setdefault("source", "phenopacket")
+            try:
+                case_mod.apply_variant(data, **fields)
+                done["variants"] += 1
+            except (case_mod.CaseError, TypeError) as err:
+                warnings.append(f"variant {v.get('hgvs_c') or v.get('vcf') or v.get('description')}: {err}")
+        for d in got.get("diseases") or []:
+            if d.get("excluded") or not d.get("label"):
+                continue
+            ids = {}
+            if isinstance(d.get("id"), str) and ":" in d["id"]:
+                prefix, value = d["id"].split(":", 1)
+                ids[prefix] = value
+            try:
+                case_mod.apply_hypothesis(data, d["label"], status="considered", ids=ids,
+                                          note=f"from phenopacket ({d.get('from')})")
+                done["hypotheses"] += 1
+            except (case_mod.CaseError, TypeError) as err:
+                warnings.append(f"diagnosis {d.get('id')}: {err}")
+    return Outcome({"imported": done, "phenopacket": got.get("id")}, warnings=warnings,
+                   text=f"imported {done['phenotypes']} phenotypes, {done['variants']} variants, "
+                        f"{done['hypotheses']} diagnoses (as hypotheses to review)")
+
+
 def register(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("case", help="local case workspace: profile, phenotypes, variants, hypotheses, evidence ledger")
     cs = p.add_subparsers(dest="action", metavar="<action>")
@@ -555,6 +659,15 @@ def register(sub: argparse._SubParsersAction) -> None:
     # the HPO verifications this performs are evidence: they must get E-ids, or a
     # hypothesis can never cite the phenotype it rests on
     q.set_defaults(no_ledger=False)
+
+    q = add("recheck", _recheck, "ask the case's questions again — ClinVar, ClinGen, trials, papers — and say what changed")
+    q.add_argument("--plan", action="store_true", help="only list what would be asked")
+    q.set_defaults(no_ledger=False)
+
+    q = add("phenopacket", _phenopacket, "write the case as a GA4GH Phenopacket v2 (no free text, no identifiers)")
+    q.add_argument("--out", help="file to write (default <case>/reports/phenopacket.json)")
+    q = add("import-phenopacket", _import_phenopacket, "read a Phenopacket (v1/v2) into the case", positional_dir=False)
+    q.add_argument("file", help="phenopacket JSON file")
 
     q = add("ledger", _ledger, "list evidence ledger rows", positional_dir=False)
     q.add_argument("eid", nargs="*", help="only these ids")

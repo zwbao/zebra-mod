@@ -110,3 +110,9 @@ def test_cp1_13_pdf_is_printed_by_a_local_browser(tmp_path):
     pdf = next(f for f in got["files"] if f["format"] == "pdf")
     assert open(pdf["path"], "rb").read(5) == b"%PDF-"
     assert not (md.parent / "family-letter.html").exists()  # the HTML was only a print source
+
+
+def test_cp1_13_a_record_number_never_matches_inside_a_scientific_id(tmp_path):
+    text = "| HP:0012345 | Seizure |\nPMID 30012345, rs1060500100, NM_0012345.1, chr2:166012345\n"
+    assert rx.identifier_hits(text, ["MZ0012345", "30012345"])[0] is None
+    assert rx.identifier_hits(text + "病历号 MZ-001-2345\n", ["MZ0012345"])[0] is not None

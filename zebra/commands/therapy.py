@@ -78,6 +78,14 @@ def _drug_line(d: Dict[str, Any], with_indications: bool) -> str:
         line += f"\n      status by jurisdiction: {reg.get('headline')}"
         for j in reg.get("by_jurisdiction") or []:
             line += f"\n        {j['jurisdiction']}: {j['stage']} — {j['reading']}" + (f" {j['url']}" if j.get("url") else "")
+    chk = d.get("agency_check")
+    if chk:
+        for k in ("FDA", "EMA"):
+            b = chk.get(k) or {}
+            if b.get("status") and b["status"] != "unavailable":
+                line += f"\n        {k} check: {b.get('reading') or b['status'].replace('_', ' ')}" \
+                        + (f" {b['url']}" if b.get("url") else "") \
+                        + (f" (approved {b['approved_on']})" if b.get("approved_on") else "")
     if d.get("stage_warning"):
         line += f"\n      ! {d['stage_warning']}"
     if with_indications and d.get("indications"):
@@ -86,8 +94,26 @@ def _drug_line(d: Dict[str, Any], with_indications: bool) -> str:
     return line
 
 
+# E-8: words that say what a substance is made of or delivered by, not which substance
+# it is. A shared "sodium", "hydrochloride" or "vector" hid real gaps (a designated
+# "Newdrugamab sodium" matched VALPROATE SODIUM).
+GAP_STOPWORDS = frozenset((
+    "sodium", "disodium", "potassium", "calcium", "magnesium", "hydrochloride", "dihydrochloride", "hydrobromide",
+    "bromide", "chloride", "acetate", "citrate", "phosphate", "sulfate", "sulphate", "mesylate", "maleate",
+    "tartrate", "succinate", "fumarate", "besylate", "tosylate", "lactate", "gluconate", "monohydrate", "hydrate",
+    "acid", "salt", "base", "ester", "virus", "viral", "vector", "vectors", "adeno", "associated", "serotype",
+    "recombinant", "human", "humanised", "humanized", "monoclonal", "antibody", "antibodies", "fragment",
+    "oligonucleotide", "antisense", "synthetic", "single", "stranded", "phosphorothioate", "morpholino",
+    "cells", "cell", "autologous", "allogeneic", "derived", "expressing", "encoding", "containing", "gene",
+    "genes", "protein", "fusion", "conjugated", "conjugate", "modified", "transduced", "complementary",
+    "against", "targeting", "with", "from", "into", "that", "this", "type", "base", "length", "full",
+    # suffixes shared by unrelated biologics: a shared "alfa" hid cipaglucosidase alfa and olipudase alfa
+    "alfa", "alpha", "beta", "gamma", "delta", "pegol", "mab", "ase",
+))
+
+
 def _tokens(text: str) -> set:
-    return {t for t in re.split(r"[^a-z0-9]+", (text or "").lower()) if len(t) > 3}
+    return {t for t in re.split(r"[^a-z0-9]+", (text or "").lower()) if len(t) > 3 and t not in GAP_STOPWORDS}
 
 
 def _gap_label(m: Dict[str, Any]) -> str:
@@ -115,10 +141,94 @@ def _designations_not_in_drug_list(designations: List[Dict[str, Any]], rows: Lis
     out = []
     for d in designations:
         subj = _tokens(d.get("substance") or "") | _tokens(d.get("medicine") or "")
-        if subj and not (subj & known):
-            out.append({"substance": d.get("substance"), "medicine": d.get("medicine"), "status": d.get("status"),
-                        "eu_number": d.get("eu_number"), "url": d.get("url")})
+        if not (subj & known):
+            sub = str(d.get("substance") or "")
+            out.append({"substance": sub if len(sub) <= 90 else sub[:87].rsplit(" ", 1)[0] + "…",
+                        "medicine": d.get("medicine"), "status": d.get("status"), "eu_number": d.get("eu_number"),
+                        "url": d.get("url"),
+                        **({} if subj else {"why": "described only generically (no distinctive word to compare)"})})
     return out
+
+
+AGENCY_CHECK_MAX = 12  # distinct APPROVAL moieties checked against FDA labels and the EMA register per disease
+DESIGNATIONS_SHOWN = 15
+GAP_SHOWN = 12
+
+
+def _slim_rows(rows: List[Dict[str, Any]]) -> None:
+    """Drop what repeats on every row (empty lists, the stock reading of a stage): the 60,000-character
+    budget then holds more drug rows (Duchenne: 40 rows, of which 23 used to be cut)."""
+    for r in rows:
+        reg = r.get("regulatory") or {}
+        for k in [k for k, v in reg.items() if v == []]:
+            reg.pop(k)
+        for j in reg.get("by_jurisdiction") or []:
+            j.pop("reading", None)
+            j.pop("source", None)
+        r.pop("report_sources", None)
+
+
+def _compact_agency(b: Dict[str, Any]) -> Dict[str, Any]:
+    """Status, date and link per agency; the reading only when it says something the status does not."""
+    keep = ("status", "approved_on", "date", "url") if b.get("status") == "approved_for_disease" else \
+        ("status", "reading", "approved_on", "date", "url")
+    return {f: b.get(f) for f in keep if b.get(f) is not None}
+
+
+def _agency_checks(rows: List[Dict[str, Any]], disease_names: List[str], out: Outcome) -> None:
+    """E-4: read the FDA label and EMA records for every APPROVAL row before anything is called (un)approved.
+
+    Open Targets' maxClinicalStage APPROVAL with no agency report used to be
+    labelled "do not read this as an approved therapy" — for cannabidiol and
+    fenfluramine in Dravet syndrome, both FDA- and EMA-approved. The agency's
+    own record now decides, and finding nothing is "unknown here".
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    from zebra.sources import regulators
+
+    terms = [n for n in dict.fromkeys(disease_names) if n and len(n) >= 5 and not n.isupper()]
+    # one check per active moiety: GIVINOSTAT and GIVINOSTAT HYDROCHLORIDE are the same drug
+    by_moiety: Dict[str, List[Dict[str, Any]]] = {}
+    for r in rows:
+        if r.get("stage") == "APPROVAL" and r.get("drug"):
+            by_moiety.setdefault(regulators.moiety(r["drug"]), []).append(r)
+    keys = list(by_moiety)[:AGENCY_CHECK_MAX]
+    if not keys or not terms:
+        return
+    warn: Dict[int, List[str]] = {i: [] for i in range(len(keys))}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futs = [pool.submit(attempt, f"agency check {by_moiety[k][0]['drug']}",
+                            lambda k=k: regulators.check(by_moiety[k][0]["drug"], terms), warn[i])
+                for i, k in enumerate(keys)]
+        results = [f.result() for f in futs]
+    pairs = []
+    for i, (k, got) in enumerate(zip(keys, results)):
+        out.warnings.extend(warn[i])
+        if got is not None:
+            chk = out.add(got)
+            pairs += [(row, chk) for row in by_moiety[k]]
+    for row, chk in pairs:
+        # compact: the reading, the date and the link per agency (a full block per row overflowed the
+        # 60,000-character tool budget for Duchenne's 40 rows)
+        row["agency_check"] = {k: _compact_agency(chk.get(k) or {}) for k in ("FDA", "EMA")}
+        if chk["approved_in"]:
+            row.pop("stage_warning", None)
+        elif chk["refused_or_withdrawn_in"] and not row["regulatory"]["approved_in"]:
+            row["stage_warning"] = (f"agency record: {chk['headline']} — do not read this as an approved therapy "
+                                    "where the record says refused or withdrawn")
+    # one provenance row per distinct record: every check reads the same EMA export
+    seen, kept = set(), []
+    for src in out.sources:
+        key = (src.get("db"), src.get("record"), src.get("url"))
+        if key not in seen:
+            seen.add(key)
+            kept.append(src)
+    out.sources[:] = kept
+    skipped = [by_moiety[k][0]["drug"] for k in list(by_moiety)[AGENCY_CHECK_MAX:]]
+    if skipped:
+        out.warnings.append(f"{len(skipped)} APPROVAL row(s) were not checked against FDA/EMA records (cap "
+                            f"{AGENCY_CHECK_MAX}): {', '.join(skipped[:6])}")
 
 
 def _disease_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:
@@ -137,7 +247,9 @@ def _disease_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:
     lines.append(f"what Open Targets holds for this disease: {dr['count']} drugs and clinical candidates "
                  f"(showing {dr['shown']}, {dr['order']}). Not a list of approved therapies — see each row's "
                  "status by jurisdiction")
+    _agency_checks(dr["rows"], [d["name"]] + list(d.get("synonyms") or []), out)
     lines += [_drug_line(x, False) for x in dr["rows"]] or ["  none in Open Targets"]
+    _slim_rows(dr["rows"])
     if dr.get("withdrawn_or_suspended"):
         out.warnings.append("withdrawn or suspended in at least one jurisdiction, despite showing APPROVAL as a "
                             "highest-ever stage: " + ", ".join(dr["withdrawn_or_suspended"])
@@ -146,25 +258,32 @@ def _disease_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:
         lines.append("top associated targets (Open Targets association score): " +
                      ", ".join(f"{t['symbol']} {t['score']}" for t in d["top_targets"]))
     terms = orphan.match_terms(d["name"], d.get("synonyms") or [])
-    od = attempt("EMA orphan designations", lambda: orphan.ema_designations(terms), out.warnings)
+    # every designation is compared with the drug list; only the first DESIGNATIONS_SHOWN are listed
+    od = attempt("EMA orphan designations", lambda: orphan.ema_designations(terms, limit=1000), out.warnings)
     if od is not None:
         o = out.add(od)
+        all_designations = list(o.get("designations") or [])
+        o["designations"] = all_designations[:DESIGNATIONS_SHOWN]
         out.result["orphan_designations"] = o
         lines.append(f"EU orphan designations (EMA register, dataset {o['dataset_timestamp']}) naming "
                      f"{' / '.join(o['terms'])}: {o['count']}" + (f" (showing {len(o['designations'])})" if o["count"] > len(o["designations"]) else ""))
         for x in o["designations"]:
             lines.append(f"  {x['status']:<9} {x['substance']}" + (f" ({x['medicine']})" if x.get("medicine") else "")
                          + f" — {x['intended_use']} — {x['eu_number']} {x['date']} {x['url']}")
-        missing = _designations_not_in_drug_list(o.get("designations") or [], dr["rows"])
+        missing = _designations_not_in_drug_list(all_designations, dr["rows"])
         if missing:
-            out.result["coverage_gap"] = missing
+            out.result["coverage_gap"] = [{k: m[k] for k in ("substance", "medicine", "eu_number", "why") if m.get(k)}
+                                          for m in missing[:GAP_SHOWN]]
+            out.result["coverage_gap_total"] = len(missing)
             out.warnings.append(
-                f"{len(missing)} EU orphan-designated substance(s) for this disease are NOT in the Open Targets "
-                "drug list above, so an approved or late-stage therapy can be missing from it: "
+                f"{len(missing)} EU orphan-designated substance(s) for this disease are possibly missing from the "
+                "Open Targets drug list above (no shared distinctive word with any row; a substance described "
+                "chemically can still be a listed INN), so an approved or late-stage therapy can be missing from it: "
                 + "; ".join(_gap_label(m) for m in missing[:6])
-                + (f"; +{len(missing) - 6} more in result.coverage_gap" if len(missing) > 6 else "")
-                + ". Check each against the FDA (Drugs@FDA / Purple Book), the EMA register and, for China, NMPA "
-                  "and the national reimbursement list — none of which this command queries")
+                + (f"; +{len(missing) - 6} more (result.coverage_gap lists {min(len(missing), GAP_SHOWN)})"
+                   if len(missing) > 6 else "")
+                + ". Check each against the FDA (Drugs@FDA / Purple Book) and the EMA register; for China "
+                  "(NMPA approvals, 医保) run `zebra access <disease>`")
 
 
 def _target_block(m: Dict[str, Any], out: Outcome, lines: List[str]) -> None:

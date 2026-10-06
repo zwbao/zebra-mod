@@ -1,0 +1,13 @@
+{
+ "built_by": "tools/aso/fetch_fixtures.py",
+ "bytes": 11303,
+ "characters": 11303,
+ "method": "GET",
+ "name": "calibration_brca1_sge",
+ "request_body": null,
+ "retrieved_at": "2026-10-06T11:13:22+00:00",
+ "sha256": "49ae8c52e78d01349a3cd964bf29112051f51bfac640963bc6327cd99472c555",
+ "status": 200,
+ "url": "https://api.mavedb.org/api/v1/score-calibrations/score-set/urn:mavedb:00000097-0-2/primary",
+ "written_at": "2026-10-06T11:13:22+00:00"
+}

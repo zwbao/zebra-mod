@@ -1,17 +1,11 @@
 """zebra vcf: inspect and triage a local VCF (singleton, duo or trio). The VCF is never uploaded.
 
-This module also registers `zebra cnv`, the sibling entry for the result forms
-that are not an SNV/indel list: a CMA/CNV-seq interval, an exon-level deletion
-or duplication, a copy-number count (SMN1/SMN2) and a repeat expansion. They
-live next to `vcf` because they answer the same question from a different
-report: what did the laboratory actually find. The analysis is in `zebra.cnv`.
+The sibling entry for CNV, exon-level, copy-number and repeat results is `zebra cnv` (zebra/commands/cnv.py).
 """
 
 from __future__ import annotations
 
 import argparse
-from typing import Any, Dict
-
 from zebra import vcf as vcf_mod
 from zebra.core import Outcome, UsageError
 
@@ -23,56 +17,24 @@ def _inspect(args: argparse.Namespace) -> Outcome:
 def _triage(args: argparse.Namespace) -> Outcome:
     if args.max_annotate < 1:
         raise UsageError("--max-annotate must be at least 1")
+    if args.max_prefilter < 1:
+        raise UsageError("--max-prefilter must be at least 1")
+    if args.s2f_top < 0:
+        raise UsageError("--s2f-top must be 0 or more")
     genes = vcf_mod.read_gene_file(args.genes) if args.genes else None
+    from zebra.qc import stderr_progress
+
     return vcf_mod.triage(
         args.vcf, proband=args.proband, mother=args.mother, father=args.father, sex=args.sex,
         max_af=args.max_af, min_dp=args.min_dp, min_gq=args.min_gq, assembly=args.assembly, genes=genes,
         hpo_genes=args.hpo_genes, case_dir=getattr(args, "case", None), max_annotate=args.max_annotate,
-        out=args.out, hpo_terms=args.hpo, max_af_dominant=args.max_af_dominant,
+        out=args.out, hpo_terms=args.hpo, max_af_dominant=args.max_af_dominant, ped=args.ped,
+        prefilter=args.prefilter, max_prefilter=args.max_prefilter, s2f_top=args.s2f_top,
+        progress=stderr_progress("zebra vcf triage"),
     )
 
 
-def _cnv(args: argparse.Namespace) -> Outcome:
-    from zebra import cnv as cnv_mod
-
-    out = cnv_mod.card(args.result, assembly=args.assembly, gene=args.gene, copies=args.copies,
-                       inheritance=args.inheritance, method=args.method, related=args.related)
-    if args.record:
-        from zebra import case as case_mod
-
-        target = getattr(args, "case", None)
-        if not target:
-            raise UsageError("--record needs a case: pass --case <dir> (or set ZEBRA_CASE)")
-        try:
-            fields: Dict[str, Any] = cnv_mod.case_fields(out.result, method=args.method)
-            entry = case_mod.add_variant(target, **fields)
-        except case_mod.CaseError as err:
-            raise UsageError(str(err)) from None
-        out.result = dict(out.result)
-        out.result["recorded_in_case"] = {"id": entry["id"], "kind": entry["kind"], "case": target}
-        if out.text:
-            out.text += f"\n[recorded in the case as {entry['id']} ({entry['kind']})]"
-    return out
-
-
 def register(sub: argparse._SubParsersAction) -> None:
-    c = sub.add_parser("cnv", help="a CNV/CMA interval, an exon-level del/dup, a copy-number or repeat-expansion "
-                                   "result: genes spanned, dosage sensitivity, frame, ACMG CNV inputs")
-    c.add_argument("result", help='e.g. "chr15:23123715-28193120 loss" | "arr[GRCh38] 22q11.21(18648855_21800471)x1" '
-                                 '| "DMD exon 45-50 deletion" | "NM_004006.3:c.6439-?_7309+?del" '
-                                 '| "SMN1 exon 7 copy number 0" | "FMR1 CGG 230"')
-    c.add_argument("--assembly", choices=("GRCh38", "GRCh37"), default="GRCh38",
-                   help="build of the coordinates (default GRCh38; an ISCN string's own build wins)")
-    c.add_argument("--gene", help="gene symbol when the input does not name one (exon forms)")
-    c.add_argument("--copies", type=int, help="copy number the report gives, when it is not in the string")
-    c.add_argument("--inheritance", choices=("de_novo", "maternal", "paternal", "biparental", "unknown"),
-                   help="ACMG CNV section 5 input, as the family study found it")
-    c.add_argument("--method", help="how it was measured (CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR, …)")
-    c.add_argument("--related", nargs="*", metavar="RESULT",
-                   help='further copy-number results from the same report, e.g. "SMN2 copy number 2"')
-    c.add_argument("--record", action="store_true", help="also record the finding in the case (--case)")
-    c.set_defaults(func=_cnv)
-
     p = sub.add_parser("vcf", help="local VCF reanalysis: inspect, triage (only candidate variants go to VEP)")
     vs = p.add_subparsers(dest="action", metavar="<action>")
 
@@ -82,7 +44,10 @@ def register(sub: argparse._SubParsersAction) -> None:
 
     q = vs.add_parser("triage", help="filter by quality and inheritance, annotate survivors (VEP), rank by phenotype fit")
     q.add_argument("vcf", help="VCF file (plain, gzip or bgzip)")
-    q.add_argument("--proband", required=True, help="proband sample name")
+    q.add_argument("--proband", help="proband sample name (required unless --ped names one affected child)")
+    q.add_argument("--ped", metavar="FILE",
+                   help="PED file: fills --mother/--father/--sex for the proband and adds full siblings' "
+                        "segregation (affected status) to each candidate; a flag that contradicts it is refused")
     q.add_argument("--mother", help="mother sample name")
     q.add_argument("--father", help="father sample name")
     q.add_argument("--sex", choices=("male", "female"), help="proband sex (X hemizygosity)")
@@ -98,6 +63,18 @@ def register(sub: argparse._SubParsersAction) -> None:
                    help="restrict to the top 200 genes for the case's HPO profile (offline ranking)")
     q.add_argument("--hpo", nargs="*", metavar="HP:0000000", help="HPO terms to use instead of the case's")
     q.add_argument("--max-annotate", type=int, default=1500,
-                   help="max variants sent to VEP when there is no gene set (default 1500)")
+                   help="max variants sent to VEP (default 1500); with --prefilter the rare survivors are sent "
+                        "most plausible first and the rest are counted")
+    q.add_argument("--prefilter", choices=("none", "myvariant"), default="none",
+                   help="whole-exome path: 'myvariant' looks every quality-passing allele up in MyVariant.info "
+                        "(gnomAD, dbNSFP, ClinVar, snpEff; 1000 per request, cached, resumable) and drops the common "
+                        "ones before VEP. Sends chrom-pos-ref-alt keys only, no sample data")
+    q.add_argument("--max-prefilter", type=int, default=50_000,
+                   help="max alleles looked up in MyVariant.info (default 50000, ~50 requests; an exome fits)")
+    q.add_argument("--s2f-top", type=int, default=5,
+                   help="run SpliceAI+Pangolin on this many best-ranked splice-region/synonymous/intronic "
+                        "candidates and use SpliceAI in the score (default 5; 0 = off). Sends those variant keys "
+                        "(chrom-pos-ref-alt, no sample data) to the Broad SpliceAI-lookup (Google Cloud Run); "
+                        "result.sent_off_machine counts every key that left the machine")
     q.add_argument("--out", metavar="TSV", help="ranked TSV (default <case>/reports/triage-<date>.tsv)")
     q.set_defaults(func=_triage)

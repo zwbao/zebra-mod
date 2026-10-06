@@ -2,9 +2,9 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Board, Ready } from '../types'
-import { DOCTRINE, renderDoctrine } from './doctrine'
+import { DOCTRINE, DOCTRINE_BRIEF, renderDoctrine } from './doctrine'
 import { schemaArgs, TOOLS, toolArgv, type ToolDef } from './tools'
-import { guardInput, isOutboundShell, outboundText, shellWords, uploadedPaths, uploadsGenome } from './privacy'
+import { guardInput, isOutboundShell, outboundText, sendsVariantList, shellWords, uploadedPaths, uploadsGenome } from './privacy'
 
 const PLUGIN = 'zebra-mod'
 const PANE = 'zebra-board'
@@ -20,7 +20,7 @@ const OUTBOUND_HINT = /^(?:Bash|WebFetch|WebSearch|Artifact|SendMessage|Agent|mc
 const READ_ONLY_TOOLS = new Set([
   'case_status', 'hpo_search', 'phenotype_rank', 'gene_card', 'variant_card', 'disease_card', 'acmg',
   's2f_predict', 'therapy_landscape', 'trials_search', 'literature_search', 'rare_stats', 'edit_check', 'china_rare',
-  'cnv_interpret',
+  'cnv_interpret', 'access', 'expression', 'aso_screen',
 ])
 
 const board = atom({ plugin: 'zebra-mod', key: 'board' } as const, null as Board | null)
@@ -29,6 +29,9 @@ const guard = atom({ plugin: 'zebra-mod', key: 'guard' } as const, [] as string[
 const ready = atom({ plugin: 'zebra-mod', key: 'ready' } as const, null as Ready | null)
 // zebra tools the person allowed for the rest of this session in zebra's own approval dialog
 const trusted = atom({ plugin: 'zebra-mod', key: 'trusted' } as const, [] as string[])
+// identifiers registered while no case was open: protected for this session, kept only in memory,
+// and added to the next case that is opened or created
+const sessionIds = atom({ plugin: 'zebra-mod', key: 'sessionIds' } as const, [] as string[])
 
 type Envelope = {
   ok: boolean
@@ -41,7 +44,7 @@ type Envelope = {
 
 export const register: Register = (on, options) => {
   const python = String(options.python ?? 'python3')
-  const doctrineMode = String(options.doctrine ?? 'always')
+  const doctrineMode = String(options.doctrine ?? 'auto')
   const privacyOn = options.privacyGate !== false
 
   // ------------------------------------------------------------ session
@@ -120,12 +123,11 @@ export const register: Register = (on, options) => {
     if (doctrineMode === 'off' || e.traits.includes('bare')) return composed
     const active = await read($, casePath)
     if (doctrineMode === 'case' && !active) return composed
-    const b = await read($, board)
+    // auto (the default): the full doctrine with a case open; otherwise a short section that
+    // applies only to rare-disease questions, so other work in the same Claude Code is untouched
+    const text = doctrineMode === 'auto' && !active ? DOCTRINE_BRIEF : renderDoctrine(DOCTRINE, active, await read($, board))
     return {
-      sections: [
-        ...composed.sections,
-        { id: 'zebra-mod:doctrine', text: renderDoctrine(DOCTRINE, active, b), scope: 'session' as const },
-      ],
+      sections: [...composed.sections, { id: 'zebra-mod:doctrine', text, scope: 'session' as const }],
     }
   })
 
@@ -144,6 +146,10 @@ export const register: Register = (on, options) => {
     if (verdict.decision === 'deny') return { deny: verdict.reason ?? `${def.name} was refused` }
     if (verdict.decision === 'ask' && !(await approved($, def, verdict))) {
       return { deny: `${def.name} was not approved` }
+    }
+    if (def.name === 'case_update' && !(await read($, casePath))) {
+      const held = await holdForSession($, input)
+      if (held) return { result: held }
     }
     let argv: string[]
     try {
@@ -197,6 +203,14 @@ export const register: Register = (on, options) => {
         : own !== undefined ? schemaArgs(own, (e.input ?? {}) as Record<string, unknown>)
         : e.input
       const hit = guardInput(scanned, held.ids)
+      if (hit && !active && own === undefined) {
+        // No case is open, so this is not known to be patient work: an email or a phone number
+        // in an ordinary call (a PR body, an API request) is asked about, never refused outright.
+        return {
+          decision: 'ask' as const,
+          reason: `zebra-mod privacy gate: this call would send ${hit} off this machine. If it belongs to a patient, do not send it; if it is yours or public, confirm.`,
+        }
+      }
       if (hit) {
         return {
           decision: 'deny' as const,
@@ -233,6 +247,12 @@ export const register: Register = (on, options) => {
         return {
           decision: 'ask' as const,
           reason: 'zebra-mod: this command may move raw genome data (VCF/BAM/CRAM/FASTQ) to another machine. A genome identifies a person and their relatives — confirm the destination is one you trust.',
+        }
+      }
+      if (e.tool === 'Bash' && sendsVariantList(command)) {
+        return {
+          decision: 'ask' as const,
+          reason: 'zebra-mod: --prefilter myvariant sends every quality-passing variant position in this VCF (often tens of thousands) to myvariant.info. Taken together they are the person\'s genome — confirm, or run triage without the prefilter (only the candidates that survive local filtering go out).',
         }
       }
     }
@@ -467,17 +487,43 @@ async function refreshBoard($: EngineInterface, python: string): Promise<void> {
  * `isClosed` means the file could not be read: the caller must refuse outbound calls.
  */
 async function identifiersNow($: EngineInterface, active: string | null): Promise<{ ids: string[]; isClosed: boolean }> {
-  if (!active) return { ids: [], isClosed: false }
+  const session = await read($, sessionIds)
+  if (!active) return { ids: session, isClosed: false }
   try {
     const raw = JSON.parse(await $.fs.read(`${active}/case.json`)) as { privacy?: { identifiers?: unknown } }
     const listed = raw.privacy?.identifiers
-    if (listed === undefined || listed === null) return { ids: [], isClosed: false }
-    if (!Array.isArray(listed)) return { ids: [], isClosed: true }
-    return { ids: listed.filter((s): s is string => typeof s === 'string' && s.trim().length >= 2), isClosed: false }
+    if (listed === undefined || listed === null) return { ids: session, isClosed: false }
+    if (!Array.isArray(listed)) return { ids: session, isClosed: true }
+    return { ids: [...session, ...listed.filter((s): s is string => typeof s === 'string' && s.trim().length >= 2)], isClosed: false }
   } catch {
     const kept = await read($, guard)
-    return { ids: kept, isClosed: true }
+    return { ids: [...session, ...kept], isClosed: true }
   }
+}
+
+/**
+ * case_update with no case open. Identifiers are the one thing worth keeping without a case: a
+ * parent pastes a clinic note before any folder exists, and the gate must know the child's name
+ * from that moment. They are held in memory for this session (written nowhere) and added to the
+ * next case opened or created. Anything else in the call needs a case and is reported as not
+ * recorded. Returns the tool's answer, or undefined when the call carries no identifiers.
+ */
+async function holdForSession($: EngineInterface, input: Record<string, unknown>): Promise<string | undefined> {
+  const raw = Array.isArray(input.identifiers) ? input.identifiers : []
+  const values = raw.filter((v): v is string => typeof v === 'string' && v.trim().length >= 2).map(v => v.trim())
+  if (values.length === 0) return undefined
+  const held = await update($, sessionIds, list => [...new Set([...list, ...values])])
+  const other = Object.keys(input).filter(k => k !== 'identifiers' && k !== 'tool' && k !== 'tool_use_id' && input[k] !== undefined)
+  const fields = TOOLS.find(t => t.name === 'case_update')
+  const declared = new Set(Object.keys(((fields?.inputSchema as { properties?: object })?.properties ?? {}) as object))
+  const lost = other.filter(k => declared.has(k))
+  return JSON.stringify({
+    warnings: lost.length ? [`no case is open, so ${lost.join(', ')} ${lost.length === 1 ? 'was' : 'were'} not recorded: /zebra new <dir> starts a case`] : [],
+    result: {
+      identifiers: { protected_for_this_session: held.length },
+      note: 'No case is open: these identifiers are protected for the rest of this session (kept in memory only, never written) and will be added to the next case opened or created.',
+    },
+  })
 }
 
 async function setCase($: EngineInterface, python: string, path: string | null, isInteractive: boolean): Promise<void> {
@@ -492,6 +538,13 @@ async function setCase($: EngineInterface, python: string, path: string | null, 
   }
   if (path) await $.env.set('ZEBRA_CASE', path)
   else await $.env.set('ZEBRA_CASE', undefined)
+  if (path) {
+    const pending = await read($, sessionIds)
+    if (pending.length) {
+      const got = await runZebra($, python, ['case', 'apply', path, '--ops', JSON.stringify({ identifiers: pending })], 30_000)
+      if (!got.ok) $.ui.toast(`zebra-mod: the identifiers held for this session could not be added to ${path}: ${got.error?.message ?? 'unknown error'}`)
+    }
+  }
   await refreshBoard($, python)
 }
 

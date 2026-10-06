@@ -4,6 +4,29 @@ From three independent adversarial reviews of 0.1.0 (engineering, scientific cor
 
 Status: `[ ]` open · `[x]` fixed in this tree · `[>]` deliberately deferred with a reason.
 
+## 0.2 round — 2026-10-06
+
+Goal set by the owner: make "a workstation for patients and families seeking a diagnosis, clinicians and researchers" literally true. Done in 0.2.0 (CHANGELOG has the detail):
+
+- [x] **1** CNV: ClinGen curated regions, every gene checked, special loci (SMN1/2, repeat expansions) with referenced readings.
+- [x] **2** Identifiers registered by the model before any lookup (`case_update` → `identifiers`, also before a case exists); the "stays on this machine" wording corrected everywhere.
+- [x] **3** Accuracy measured on phenopacket-store with a held-out split and leakage strata (docs/BENCHMARK.md); `evals/` for `claude plugin eval`.
+- [x] **4** China access: NMPA/CDE approvals, the 2025 reimbursement list, collaboration-network hospitals, Chinese-cohort frequencies, trials with sites in China.
+- [x] **5** Exome-scale reanalysis (MyVariant prefilter) and family QC (sex, kinship, ROH, Mendelian errors, UPD, mosaicism).
+- [x] **6** S2F inside ACMG (SpliceAI ±4,999 nt) and triage; ASO screen, GTEx expression, MaveDB.
+- [x] **7** Families reached through someone else: Word/PDF handouts and the for-a-family flow; one-sentence install.
+- [x] **A-P0-1** The mod's own tools bypassed the permission chain and the privacy gate.
+- [x] **CP1-11/12/13** Pedigree, tests and timeline in the case; `case_recheck`; Phenopacket export and import.
+
+Open after 0.2.0, with the reason:
+
+- [ ] **Local de-identification** of photos and PDFs before the model reads them (CP1-14, second half): needs OCR on the machine; the gate covers tool calls, not the conversation.
+- [ ] **MME / GeneMatcher** submission format (CP1-13): the Phenopacket export is the first half.
+- [ ] **ChiCTR**: every scripted request is refused by its firewall; ICTRP forbids automated access. The skills give the search address instead.
+- [ ] **Benchmark**: a leave-one-paper-out rebuild of the annotations (the non-leaked stratum is the honest number meanwhile); ≥ 300 Chinese lay phrases; onset/sex constraints; an Exomiser/LIRICAL bridge. The PRD acceptance query (Dravet in the top 5 of ≥ 2 methods) is not met by the local ranker in 0.2 (16th) — kept visible, not tuned for.
+- [ ] **VEP `check_ref`** on region calls in triage (a stand-in reference check runs when the VCF header names no build).
+- [ ] **NyuWa** is reachable over plain HTTP only (the result says so); **MyVariant**'s cache keeps queried variant ids for 30 days in `~/.cache/zebra-mod`.
+
 ## P0 — wrong result, unsafe statement, data leak, or a blocked core user
 
 ### Scientific correctness

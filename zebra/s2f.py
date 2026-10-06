@@ -175,7 +175,7 @@ def _pace_lookup() -> None:
 
 
 def lookup(tool: str, v: Dict[str, Any], assembly: str = "GRCh38", distance: int = 500,
-           mask: int = 0, gene_set: str = "basic") -> Tuple[Dict[str, Any], Dict[str, Any]]:
+           mask: int = 0, gene_set: str = "basic", timeout: float = 180.0) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """One call to the SpliceAI-lookup service; returns (payload, source record)."""
     base = LOOKUP_BASE.get((tool, assembly))
     if base is None:
@@ -195,7 +195,7 @@ def lookup(tool: str, v: Dict[str, Any], assembly: str = "GRCh38", distance: int
             f"{base}/{tool}/",
             source=f"{tool} (SpliceAI-lookup)",
             params=params,
-            timeout=180,
+            timeout=timeout,
             retries=1,
             cache_ttl=ttl,
             # the service answers input errors and rate limits with a JSON body; read it
@@ -250,8 +250,10 @@ SPLICEAI_READING = (
     "towards 'no effect' (CFTR 3849+10kbC>T, a CF-causing variant, scores 0.162 here). "
     "Scope: BP4 from a splicing predictor covers intronic and synonymous variants, and missense variants only "
     "once protein functional impact has been excluded by a missense predictor. BP7 is NOT established by this "
-    "number: it needs a synonymous or deep-intronic variant AND the nucleotide not to be highly conserved "
-    "(Richards et al. 2015), which is not checked here. At canonical +/-1 and +/-2 sites the thresholds do not "
+    "number alone: Walker et al. 2023 applies it only after BP4, and only to a synonymous variant outside the "
+    "first base / last 3 bases of the exon or an intronic variant at or beyond +7/-21 (the paper cautions against "
+    "requiring conservation, which Richards et al. 2015 had asked for); `zebra acmg suggest` checks that scope. "
+    "At canonical +/-1 and +/-2 sites the thresholds do not "
     "apply at all -- PVS1 covers that mechanism and PP3 is not stacked on it. "
     "Run settings vs calibration: zebra calls the lookup at distance +/-500 on raw (mask=0) scores, while the "
     "ClinGen thresholds were derived with SpliceAI v1.3.1 at a maximum distance of 10,000 nt (+/-4,999) on raw "
@@ -331,8 +333,9 @@ def _aberrations(payload: Dict[str, Any], limit: int = 3) -> List[Dict[str, Any]
     return out
 
 
-def run_spliceai(v: Dict[str, Any], assembly: str, distance: int, mask: int = 0) -> Dict[str, Any]:
-    payload, rec = lookup("spliceai", v, assembly=assembly, distance=distance, mask=mask)
+def run_spliceai(v: Dict[str, Any], assembly: str, distance: int, mask: int = 0,
+                 timeout: float = 180.0) -> Dict[str, Any]:
+    payload, rec = lookup("spliceai", v, assembly=assembly, distance=distance, mask=mask, timeout=timeout)
     out: Dict[str, Any] = {
         "model": "spliceai",
         "version": "SpliceAI via Broad SpliceAI-lookup (GENCODE basic)",
@@ -376,8 +379,9 @@ def run_spliceai(v: Dict[str, Any], assembly: str, distance: int, mask: int = 0)
     return out
 
 
-def run_pangolin(v: Dict[str, Any], assembly: str, distance: int, mask: int = 0) -> Dict[str, Any]:
-    payload, rec = lookup("pangolin", v, assembly=assembly, distance=distance, mask=mask)
+def run_pangolin(v: Dict[str, Any], assembly: str, distance: int, mask: int = 0,
+                 timeout: float = 180.0) -> Dict[str, Any]:
+    payload, rec = lookup("pangolin", v, assembly=assembly, distance=distance, mask=mask, timeout=timeout)
     out: Dict[str, Any] = {
         "model": "pangolin",
         "version": "Pangolin via Broad SpliceAI-lookup (GENCODE basic)",
@@ -472,7 +476,8 @@ def workspace_dir(case: Optional[str] = None, workspace: Optional[str] = None) -
     return Path(os.path.expanduser("~")) / ".cache" / "zebra-mod" / "s2f-runs"
 
 
-def _s2f_call(binary: str, args: Sequence[str], ws: Path, timeout: float) -> Dict[str, Any]:
+def _s2f_call(binary: str, args: Sequence[str], ws: Path, timeout: float,
+              deadline_cut: bool = False) -> Dict[str, Any]:
     """Run `s2f run --json --workspace <ws> <args>`; cwd=ws so stray index files land there."""
     ws.mkdir(parents=True, exist_ok=True)
     cmd = [binary, "run", "--json", "--workspace", str(ws)] + list(args)
@@ -490,6 +495,9 @@ def _s2f_call(binary: str, args: Sequence[str], ws: Path, timeout: float) -> Dic
         stdout, stderr = proc.communicate()
         timed_out = True
     wall = round(time.time() - started, 2)
+    # C-P2-9: say which limit stopped the run. `predict` passes deadline_cut=True when it had to shrink
+    # --timeout to what was left of the caller's deadline; only then was it the deadline.
+    deadline_limited = bool(timed_out and deadline_cut)
     manifest: Optional[Dict[str, Any]] = None
     text = stdout or ""
     brace = text.find("{")
@@ -499,7 +507,7 @@ def _s2f_call(binary: str, args: Sequence[str], ws: Path, timeout: float) -> Dic
         except ValueError:
             manifest = None
     return {"manifest": manifest, "exit_code": proc.returncode, "wall_s": wall, "timed_out": timed_out,
-            "stdout_tail": " ".join(text.split())[-400:], "stderr_tail": " ".join((stderr or "").split())[-400:],
+            "deadline_limited": deadline_limited, "stdout_tail": " ".join(text.split())[-400:], "stderr_tail": " ".join((stderr or "").split())[-400:],
             "command": " ".join(cmd)}
 
 
@@ -521,7 +529,14 @@ def _from_receipt(model: str, call: Dict[str, Any], ws: Path, timeout: float) ->
     out: Dict[str, Any] = {"model": model, "claim_ceiling": CLAIM_CEILINGS[model],
                            "wall_s": call["wall_s"], "s2f_command": call["command"]}
     if call["timed_out"]:
-        out.update(status="error", reason=f"timed out after {timeout:g}s (raise --timeout or run it in the background)")
+        if call.get("deadline_limited"):
+            # C-P2-9: the caller's deadline (ZEBRA_DEADLINE_MS, the tool's own timeout) cut the run,
+            # not --timeout: raising --timeout would change nothing.
+            out.update(status="error", reason=(
+                f"stopped after {timeout:g}s because the call's overall time budget (the tool deadline) ran out, "
+                "not because of --timeout; run this model on its own, in the background if it is slow"))
+        else:
+            out.update(status="error", reason=f"timed out after {timeout:g}s (raise --timeout or run it in the background)")
         return out
     manifest = call["manifest"]
     if not isinstance(manifest, dict):
@@ -561,7 +576,8 @@ def _from_receipt(model: str, call: Dict[str, Any], ws: Path, timeout: float) ->
     return out
 
 
-def run_gpn_msa(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, timeout: float) -> Dict[str, Any]:
+def run_gpn_msa(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, timeout: float,
+                deadline_cut: bool = False) -> Dict[str, Any]:
     base = {"model": "gpn_msa", "claim_ceiling": CLAIM_CEILINGS["gpn_msa"]}
     if not binary:
         return dict(base, status="not_run", reason=f"the s2f CLI was not found ($S2F_BIN or PATH); install: {INSTALL_HINT}")
@@ -572,14 +588,14 @@ def run_gpn_msa(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Pat
     if not shutil.which("tabix"):
         return dict(base, status="not_run", reason="gpn_msa reads the published table with `tabix`, which is not on PATH (brew install htslib)")
     args = ["gpn_msa", "variant", "--chrom", f"chr{v['chrom']}", "--pos", str(v["pos"]), "--ref", v["ref"], "--alt", v["alt"]]
-    out = _from_receipt("gpn_msa", _s2f_call(binary, args, ws, timeout), ws, timeout)
+    out = _from_receipt("gpn_msa", _s2f_call(binary, args, ws, timeout, deadline_cut), ws, timeout)
     out["note"] = ("log-likelihood ratio from the authors' published hg38 table (not a model call). "
                    "The suggested -7 cutoff is not a pathogenicity test.")
     return out
 
 
 def run_evo2(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, timeout: float,
-             window: int = 2048) -> Dict[str, Any]:
+             window: int = 2048, deadline_cut: bool = False) -> Dict[str, Any]:
     base = {"model": "evo2", "claim_ceiling": CLAIM_CEILINGS["evo2"]}
     if not binary:
         return dict(base, status="not_run", reason=f"the s2f CLI was not found ($S2F_BIN or PATH); install: {INSTALL_HINT}")
@@ -591,7 +607,7 @@ def run_evo2(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, 
         return dict(base, status="not_run", reason="the Evo 2 variant runner scores single-base substitutions only")
     args = ["evo2", "score", "--chrom", f"chr{v['chrom']}", "--pos", str(v["pos"]), "--ref", v["ref"],
             "--alt", v["alt"], "--variant-window-len", str(int(window))]
-    out = _from_receipt("evo2", _s2f_call(binary, args, ws, timeout), ws, timeout)
+    out = _from_receipt("evo2", _s2f_call(binary, args, ws, timeout, deadline_cut), ws, timeout)
     out["note"] = ("delta_loglik is ALT minus REF summed over the window, in nats: negative = the ALT window is less "
                    "likely under the model. A constraint hypothesis, with no tissue and no direction of effect. "
                    "Known upstream defect: the runner can fall back between evo2-7b and 40b while reporting 7b.")
@@ -599,7 +615,7 @@ def run_evo2(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, 
 
 
 def run_alphagenome(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, timeout: float,
-                    ontology: Optional[str] = None, outputs: str = "RNA_SEQ") -> Dict[str, Any]:
+                    ontology: Optional[str] = None, outputs: str = "RNA_SEQ", deadline_cut: bool = False) -> Dict[str, Any]:
     base = {"model": "alphagenome", "claim_ceiling": CLAIM_CEILINGS["alphagenome"]}
     if not binary:
         return dict(base, status="not_run", reason=f"the s2f CLI was not found ($S2F_BIN or PATH); install: {INSTALL_HINT}")
@@ -616,7 +632,7 @@ def run_alphagenome(v: Dict[str, Any], assembly: str, binary: Optional[str], ws:
         return dict(base, status="not_run", reason="this AlphaGenome runner scores single-base substitutions only")
     args = ["alphagenome", "variant", "--assembly", "hg38", "--chrom", f"chr{v['chrom']}", "--position", str(v["pos"]),
             "--ref", v["ref"], "--alt", v["alt"], "--ontology", ontology, "--outputs", outputs]
-    out = _from_receipt("alphagenome", _s2f_call(binary, args, ws, timeout), ws, timeout)
+    out = _from_receipt("alphagenome", _s2f_call(binary, args, ws, timeout, deadline_cut), ws, timeout)
     out["ontology"] = ontology
     out["requested_outputs"] = outputs
     out["terms"] = ("AlphaGenome's hosted API is for non-commercial use and, in Google DeepMind's own terms, "
@@ -658,7 +674,8 @@ def _select(models: Optional[Sequence[str]], v: Dict[str, Any], assembly: str, o
 
 def predict(variant: str, assembly: str = "GRCh38", models: Optional[Sequence[str]] = None, distance: int = 500,
             workspace: Optional[str] = None, ontology: Optional[str] = None, timeout: float = DEFAULT_TIMEOUT,
-            case: Optional[str] = None, mask: int = 0, evo2_window: int = 2048) -> Outcome:
+            case: Optional[str] = None, mask: int = 0, evo2_window: int = 2048,
+            lookup_timeout: float = 180.0) -> Outcome:
     """Run the chosen sequence-to-function models on one variant, each reported on its own."""
     if assembly not in ("GRCh38", "GRCh37"):
         raise UsageError("assembly must be GRCh38 or GRCh37")
@@ -693,15 +710,16 @@ def predict(variant: str, assembly: str = "GRCh38", models: Optional[Sequence[st
             budget = min(budget, left)
         try:
             if name == "spliceai":
-                row = run_spliceai(v, assembly, int(distance), mask)
+                row = run_spliceai(v, assembly, int(distance), mask, timeout=lookup_timeout)
             elif name == "pangolin":
-                row = run_pangolin(v, assembly, int(distance), mask)
+                row = run_pangolin(v, assembly, int(distance), mask, timeout=lookup_timeout)
             elif name == "gpn_msa":
-                row = run_gpn_msa(v, assembly, binary, ws, budget)
+                row = run_gpn_msa(v, assembly, binary, ws, budget, deadline_cut=budget < float(timeout))
             elif name == "evo2":
-                row = run_evo2(v, assembly, binary, ws, budget, window=evo2_window)
+                row = run_evo2(v, assembly, binary, ws, budget, window=evo2_window, deadline_cut=budget < float(timeout))
             else:
-                row = run_alphagenome(v, assembly, binary, ws, budget, ontology=ontology)
+                row = run_alphagenome(v, assembly, binary, ws, budget, ontology=ontology,
+                                      deadline_cut=budget < float(timeout))
         except UsageError:
             raise
         except Exception as err:  # one model failing must not take the others down

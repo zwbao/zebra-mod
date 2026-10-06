@@ -548,3 +548,59 @@ def test_live_cli_lit(capsys, monkeypatch):
     assert cli.main(["lit", "Dravet syndrome", "--limit", "3", "--json"]) == 0
     env = json.loads(capsys.readouterr().out)
     assert len(env["result"]["europepmc"]["hits"]) == 3 and not env["warnings"]
+
+
+# ===================================================================== v0.2 (W6)
+
+def test_cp1_9_lit_excludes_the_record_of_another_allele_at_the_same_rsid(monkeypatch, capsys):
+    """CFTR p.Gly542Arg (a VUS): LitVar's only record is the rsID record spelled p.G542X with 842 papers."""
+    fetched = []
+
+    def lv(url, source, params=None, **kw):
+        if url.endswith("/publications"):
+            fetched.append(url)
+            return resp({"pmids": [1, 2, 3], "pmids_count": 842}, url)
+        return resp("litvar/auto_cftr_g542r.json", url)
+
+    monkeypatch.setattr(litvar, "get_json", lv)
+    monkeypatch.setattr(pubtator, "get_json", lambda url, source, params=None, **kw: resp([], url))
+    monkeypatch.delenv("ZEBRA_CASE", raising=False)
+    assert cli.main(["lit", "--gene", "CFTR", "--variant", "p.Gly542Arg", "--json"]) == 0
+    env = json.loads(capsys.readouterr().out)
+    lit = env["result"]["litvar"]
+    assert fetched == [], "the papers of p.G542X must not be fetched as this variant's literature"
+    assert lit["papers_total"] == 0
+    assert lit["excluded_other_allele"][0]["litvar_id"] == "litvar@rs113993959##"
+    assert lit["excluded_other_allele"][0]["pmid_count"] == 842
+    assert any("excluded — another allele at the same position" in w for w in env["warnings"])
+
+
+def test_cp1_9_allele_match_reads_one_and_three_letter_and_stop_spellings():
+    assert litvar.allele_match({"hgvs": "p.G542X"}, "p.Gly542Ter", None) == "same"
+    assert litvar.allele_match({"hgvs": "p.G542X"}, "p.Gly542Arg", None) == "different"
+    assert litvar.allele_match({"hgvs": "c.2134C>T"}, None, "NM_001165963.4:c.2134C>T") == "same"
+    assert litvar.allele_match({"hgvs": "c.2134C>G"}, None, "NM_001165963.4:c.2134C>T") == "different"
+    # another position may be another transcript's numbering: never excluded
+    assert litvar.allele_match({"hgvs": "p.R117H"}, "p.Gly551Asp", None) == "unknown"
+
+
+@pytest.mark.live
+def test_live_cp1_9_lit_g542r_excludes_the_g542x_record(capsys):
+    assert cli.main(["lit", "--gene", "CFTR", "--variant", "p.Gly542Arg", "--json"]) == 0
+    lit = json.loads(capsys.readouterr().out)["result"]["litvar"]
+    assert any(e["litvar_id"] == "litvar@rs113993959##" for e in lit["excluded_other_allele"])
+
+
+def test_review_b_p0_1_spellings_of_the_same_change_are_never_excluded():
+    """BRCA1 c.5266dup lost its 481 PMIDs because LitVar spells it c.5266dupC."""
+    same = [({"hgvs": "c.5266dupC"}, None, "NM_007294.4:c.5266dup"),
+            ({"hgvs": "c.1521_1523delCTT"}, "p.Phe508del", "NM_000492.4:c.1521_1523del"),
+            ({"hgvs": "c.68_69delAG"}, None, "NM_007294.4:c.68_69del"),
+            ({"hgvs": "c.1585-8_1585-5delTTTT"}, None, "NM_000492.4:c.1585-8_1585-5del"),
+            ({"hgvs": "p.T854T"}, "p.Thr854=", None)]
+    for rec, p, c in same:
+        assert litvar.allele_match(rec, p, c) == "same", rec
+    # only a substitution against a substitution at the same place is "another allele"
+    assert litvar.allele_match({"hgvs": "c.1624G>T"}, None, "NM_000492.4:c.1624del") == "unknown"
+    assert litvar.allele_match({"hgvs": "p.G542fs"}, "p.Gly542Arg", None) == "unknown"
+    assert litvar.allele_match({"hgvs": "c.1624G>T"}, None, "NM_000492.4:c.1624G>A") == "different"

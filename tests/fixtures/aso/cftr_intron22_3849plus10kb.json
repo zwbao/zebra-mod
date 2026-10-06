@@ -1,0 +1,20 @@
+{
+ "assembly": "GRCh38",
+ "built_by": "tools/aso/fetch_fixtures.py",
+ "chrom": "7",
+ "end": 117639975,
+ "expected_length": 116,
+ "length": 116,
+ "name": "cftr_intron22_3849plus10kb",
+ "sequence": "TGGATCTAAATTTCAGTTGACTTGTCATCTTGATTTCTGGAGACCACAAGGTAATGAAAAATAATTACAAGAGTCTTCCATCTGTTGCAGTATTAAAATGGCGAGTAAGACACCCT",
+ "sha256": "a55657b3dc2da9c9602b09daab133b19854c97f7c2d024a0fca0eeaa8215d5ce",
+ "source": {
+  "db": "Ensembl sequence",
+  "retrieved_at": "2026-10-06T10:34:26+00:00",
+  "status": 200,
+  "url": "https://rest.ensembl.org/sequence/region/human/7:117639860..117639975:1"
+ },
+ "start": 117639860,
+ "strand": 1,
+ "why": "CFTR intron 22 around NM_000492.4:c.3718-2477C>T (7-117639961-C-T). SpliceAI reports a gained acceptor at 117639876 and a gained donor at 117639959: 84 nt apart, the size of the cryptic exon reported for this variant. The C>T turns the reference GC at 117639960-117639961 into GT, the canonical donor."
+}

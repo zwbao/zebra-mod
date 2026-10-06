@@ -1,0 +1,1520 @@
+{
+ "GRCh37:DMD": {
+  "Transcript": [
+   {
+    "Exon": [
+     {
+      "end": 33229636,
+      "id": "ENSE00001899141",
+      "seq_region_name": "X",
+      "start": 33229399,
+      "strand": -1
+     },
+     {
+      "end": 33038317,
+      "id": "ENSE00003463064",
+      "seq_region_name": "X",
+      "start": 33038256,
+      "strand": -1
+     },
+     {
+      "end": 32867937,
+      "id": "ENSE00003691097",
+      "seq_region_name": "X",
+      "start": 32867845,
+      "strand": -1
+     },
+     {
+      "end": 32862977,
+      "id": "ENSE00001640206",
+      "seq_region_name": "X",
+      "start": 32862900,
+      "strand": -1
+     },
+     {
+      "end": 32841504,
+      "id": "ENSE00001685282",
+      "seq_region_name": "X",
+      "start": 32841412,
+      "strand": -1
+     },
+     {
+      "end": 32834757,
+      "id": "ENSE00001789498",
+      "seq_region_name": "X",
+      "start": 32834585,
+      "strand": -1
+     },
+     {
+      "end": 32827728,
+      "id": "ENSE00001436342",
+      "seq_region_name": "X",
+      "start": 32827610,
+      "strand": -1
+     },
+     {
+      "end": 32717410,
+      "id": "ENSE00001436506",
+      "seq_region_name": "X",
+      "start": 32717229,
+      "strand": -1
+     },
+     {
+      "end": 32716115,
+      "id": "ENSE00001434995",
+      "seq_region_name": "X",
+      "start": 32715987,
+      "strand": -1
+     },
+     {
+      "end": 32663269,
+      "id": "ENSE00001435581",
+      "seq_region_name": "X",
+      "start": 32663081,
+      "strand": -1
+     },
+     {
+      "end": 32662430,
+      "id": "ENSE00001435687",
+      "seq_region_name": "X",
+      "start": 32662249,
+      "strand": -1
+     },
+     {
+      "end": 32632570,
+      "id": "ENSE00001435796",
+      "seq_region_name": "X",
+      "start": 32632420,
+      "strand": -1
+     },
+     {
+      "end": 32613993,
+      "id": "ENSE00001436736",
+      "seq_region_name": "X",
+      "start": 32613874,
+      "strand": -1
+     },
+     {
+      "end": 32591963,
+      "id": "ENSE00003639921",
+      "seq_region_name": "X",
+      "start": 32591862,
+      "strand": -1
+     },
+     {
+      "end": 32591754,
+      "id": "ENSE00001479014",
+      "seq_region_name": "X",
+      "start": 32591647,
+      "strand": -1
+     },
+     {
+      "end": 32583998,
+      "id": "ENSE00001434823",
+      "seq_region_name": "X",
+      "start": 32583819,
+      "strand": -1
+     },
+     {
+      "end": 32563451,
+      "id": "ENSE00001435605",
+      "seq_region_name": "X",
+      "start": 32563276,
+      "strand": -1
+     },
+     {
+      "end": 32536248,
+      "id": "ENSE00001436267",
+      "seq_region_name": "X",
+      "start": 32536125,
+      "strand": -1
+     },
+     {
+      "end": 32519959,
+      "id": "ENSE00001436655",
+      "seq_region_name": "X",
+      "start": 32519872,
+      "strand": -1
+     },
+     {
+      "end": 32509635,
+      "id": "ENSE00001436512",
+      "seq_region_name": "X",
+      "start": 32509394,
+      "strand": -1
+     },
+     {
+      "end": 32503216,
+      "id": "ENSE00001435151",
+      "seq_region_name": "X",
+      "start": 32503036,
+      "strand": -1
+     },
+     {
+      "end": 32490426,
+      "id": "ENSE00001435583",
+      "seq_region_name": "X",
+      "start": 32490281,
+      "strand": -1
+     },
+     {
+      "end": 32486827,
+      "id": "ENSE00001435180",
+      "seq_region_name": "X",
+      "start": 32486615,
+      "strand": -1
+     },
+     {
+      "end": 32482816,
+      "id": "ENSE00001436271",
+      "seq_region_name": "X",
+      "start": 32482703,
+      "strand": -1
+     },
+     {
+      "end": 32481711,
+      "id": "ENSE00001435906",
+      "seq_region_name": "X",
+      "start": 32481556,
+      "strand": -1
+     },
+     {
+      "end": 32472949,
+      "id": "ENSE00001436731",
+      "seq_region_name": "X",
+      "start": 32472779,
+      "strand": -1
+     },
+     {
+      "end": 32466755,
+      "id": "ENSE00001436545",
+      "seq_region_name": "X",
+      "start": 32466573,
+      "strand": -1
+     },
+     {
+      "end": 32459431,
+      "id": "ENSE00001435146",
+      "seq_region_name": "X",
+      "start": 32459297,
+      "strand": -1
+     },
+     {
+      "end": 32456507,
+      "id": "ENSE00001434999",
+      "seq_region_name": "X",
+      "start": 32456358,
+      "strand": -1
+     },
+     {
+      "end": 32430030,
+      "id": "ENSE00001434585",
+      "seq_region_name": "X",
+      "start": 32429869,
+      "strand": -1
+     },
+     {
+      "end": 32408298,
+      "id": "ENSE00001435573",
+      "seq_region_name": "X",
+      "start": 32408188,
+      "strand": -1
+     },
+     {
+      "end": 32407791,
+      "id": "ENSE00001435218",
+      "seq_region_name": "X",
+      "start": 32407618,
+      "strand": -1
+     },
+     {
+      "end": 32404582,
+      "id": "ENSE00001436039",
+      "seq_region_name": "X",
+      "start": 32404427,
+      "strand": -1
+     },
+     {
+      "end": 32398797,
+      "id": "ENSE00001435954",
+      "seq_region_name": "X",
+      "start": 32398627,
+      "strand": -1
+     },
+     {
+      "end": 32383316,
+      "id": "ENSE00000978409",
+      "seq_region_name": "X",
+      "start": 32383137,
+      "strand": -1
+     },
+     {
+      "end": 32382827,
+      "id": "ENSE00001157370",
+      "seq_region_name": "X",
+      "start": 32382699,
+      "strand": -1
+     },
+     {
+      "end": 32381075,
+      "id": "ENSE00001434721",
+      "seq_region_name": "X",
+      "start": 32380905,
+      "strand": -1
+     },
+     {
+      "end": 32366645,
+      "id": "ENSE00001435398",
+      "seq_region_name": "X",
+      "start": 32366523,
+      "strand": -1
+     },
+     {
+      "end": 32364197,
+      "id": "ENSE00001436772",
+      "seq_region_name": "X",
+      "start": 32364060,
+      "strand": -1
+     },
+     {
+      "end": 32361403,
+      "id": "ENSE00001435120",
+      "seq_region_name": "X",
+      "start": 32361251,
+      "strand": -1
+     },
+     {
+      "end": 32360399,
+      "id": "ENSE00001435597",
+      "seq_region_name": "X",
+      "start": 32360217,
+      "strand": -1
+     },
+     {
+      "end": 32328393,
+      "id": "ENSE00001435825",
+      "seq_region_name": "X",
+      "start": 32328199,
+      "strand": -1
+     },
+     {
+      "end": 32305818,
+      "id": "ENSE00001434843",
+      "seq_region_name": "X",
+      "start": 32305646,
+      "strand": -1
+     },
+     {
+      "end": 32235180,
+      "id": "ENSE00003533177",
+      "seq_region_name": "X",
+      "start": 32235033,
+      "strand": -1
+     },
+     {
+      "end": 31986631,
+      "id": "ENSE00003506268",
+      "seq_region_name": "X",
+      "start": 31986456,
+      "strand": -1
+     },
+     {
+      "end": 31950344,
+      "id": "ENSE00003672492",
+      "seq_region_name": "X",
+      "start": 31950197,
+      "strand": -1
+     },
+     {
+      "end": 31947862,
+      "id": "ENSE00003571206",
+      "seq_region_name": "X",
+      "start": 31947713,
+      "strand": -1
+     },
+     {
+      "end": 31893490,
+      "id": "ENSE00003687899",
+      "seq_region_name": "X",
+      "start": 31893305,
+      "strand": -1
+     },
+     {
+      "end": 31854936,
+      "id": "ENSE00003592729",
+      "seq_region_name": "X",
+      "start": 31854835,
+      "strand": -1
+     },
+     {
+      "end": 31838200,
+      "id": "ENSE00003639303",
+      "seq_region_name": "X",
+      "start": 31838092,
+      "strand": -1
+     },
+     {
+      "end": 31792309,
+      "id": "ENSE00003669071",
+      "seq_region_name": "X",
+      "start": 31792077,
+      "strand": -1
+     },
+     {
+      "end": 31747865,
+      "id": "ENSE00001213215",
+      "seq_region_name": "X",
+      "start": 31747748,
+      "strand": -1
+     },
+     {
+      "end": 31697703,
+      "id": "ENSE00001258577",
+      "seq_region_name": "X",
+      "start": 31697492,
+      "strand": -1
+     },
+     {
+      "end": 31676261,
+      "id": "ENSE00001213199",
+      "seq_region_name": "X",
+      "start": 31676107,
+      "strand": -1
+     },
+     {
+      "end": 31645979,
+      "id": "ENSE00001258641",
+      "seq_region_name": "X",
+      "start": 31645790,
+      "strand": -1
+     },
+     {
+      "end": 31525570,
+      "id": "ENSE00003500236",
+      "seq_region_name": "X",
+      "start": 31525398,
+      "strand": -1
+     },
+     {
+      "end": 31515061,
+      "id": "ENSE00003669069",
+      "seq_region_name": "X",
+      "start": 31514905,
+      "strand": -1
+     },
+     {
+      "end": 31497220,
+      "id": "ENSE00003675980",
+      "seq_region_name": "X",
+      "start": 31497100,
+      "strand": -1
+     },
+     {
+      "end": 31496491,
+      "id": "ENSE00001259193",
+      "seq_region_name": "X",
+      "start": 31496223,
+      "strand": -1
+     },
+     {
+      "end": 31462744,
+      "id": "ENSE00001259171",
+      "seq_region_name": "X",
+      "start": 31462598,
+      "strand": -1
+     },
+     {
+      "end": 31366751,
+      "id": "ENSE00003637702",
+      "seq_region_name": "X",
+      "start": 31366673,
+      "strand": -1
+     },
+     {
+      "end": 31341775,
+      "id": "ENSE00003693649",
+      "seq_region_name": "X",
+      "start": 31341715,
+      "strand": -1
+     },
+     {
+      "end": 31279133,
+      "id": "ENSE00003620850",
+      "seq_region_name": "X",
+      "start": 31279072,
+      "strand": -1
+     },
+     {
+      "end": 31241238,
+      "id": "ENSE00003554036",
+      "seq_region_name": "X",
+      "start": 31241164,
+      "strand": -1
+     },
+     {
+      "end": 31227816,
+      "id": "ENSE00001158950",
+      "seq_region_name": "X",
+      "start": 31227615,
+      "strand": -1
+     },
+     {
+      "end": 31224784,
+      "id": "ENSE00001158943",
+      "seq_region_name": "X",
+      "start": 31224699,
+      "strand": -1
+     },
+     {
+      "end": 31222235,
+      "id": "ENSE00001158937",
+      "seq_region_name": "X",
+      "start": 31222078,
+      "strand": -1
+     },
+     {
+      "end": 31201021,
+      "id": "ENSE00001034045",
+      "seq_region_name": "X",
+      "start": 31200855,
+      "strand": -1
+     },
+     {
+      "end": 31198598,
+      "id": "ENSE00003569118",
+      "seq_region_name": "X",
+      "start": 31198487,
+      "strand": -1
+     },
+     {
+      "end": 31196922,
+      "id": "ENSE00001034039",
+      "seq_region_name": "X",
+      "start": 31196786,
+      "strand": -1
+     },
+     {
+      "end": 31196087,
+      "id": "ENSE00001158912",
+      "seq_region_name": "X",
+      "start": 31196049,
+      "strand": -1
+     },
+     {
+      "end": 31191721,
+      "id": "ENSE00001158905",
+      "seq_region_name": "X",
+      "start": 31191656,
+      "strand": -1
+     },
+     {
+      "end": 31190530,
+      "id": "ENSE00001158901",
+      "seq_region_name": "X",
+      "start": 31190465,
+      "strand": -1
+     },
+     {
+      "end": 31187718,
+      "id": "ENSE00001158895",
+      "seq_region_name": "X",
+      "start": 31187560,
+      "strand": -1
+     },
+     {
+      "end": 31165635,
+      "id": "ENSE00001158887",
+      "seq_region_name": "X",
+      "start": 31165392,
+      "strand": -1
+     },
+     {
+      "end": 31164531,
+      "id": "ENSE00001034085",
+      "seq_region_name": "X",
+      "start": 31164408,
+      "strand": -1
+     },
+     {
+      "end": 31152311,
+      "id": "ENSE00001158874",
+      "seq_region_name": "X",
+      "start": 31152219,
+      "strand": -1
+     },
+     {
+      "end": 31144790,
+      "id": "ENSE00001436107",
+      "seq_region_name": "X",
+      "start": 31144759,
+      "strand": -1
+     },
+     {
+      "end": 31140047,
+      "id": "ENSE00003600438",
+      "seq_region_name": "X",
+      "start": 31137345,
+      "strand": -1
+     }
+    ],
+    "Translation": {
+     "end": 33229429,
+     "id": "ENSP00000354923",
+     "length": 3685,
+     "start": 31140036
+    },
+    "biotype": "protein_coding",
+    "display_name": "DMD-001",
+    "end": 33229636,
+    "id": "ENST00000357033",
+    "is_canonical": 1,
+    "length": 13956,
+    "seq_region_name": "X",
+    "start": 31137345,
+    "strand": -1
+   }
+  ],
+  "assembly_name": "GRCh37",
+  "biotype": "protein_coding",
+  "canonical_transcript": "ENST00000357033.4",
+  "db_type": "core",
+  "description": "dystrophin [Source:HGNC Symbol;Acc:2928]",
+  "display_name": "DMD",
+  "end": 33357558,
+  "id": "ENSG00000198947",
+  "logic_name": "ensembl_havana_gene_homo_sapiens_37",
+  "object_type": "Gene",
+  "seq_region_name": "X",
+  "source": "ensembl_havana",
+  "species": "homo_sapiens",
+  "start": 31115794,
+  "strand": -1,
+  "version": 10
+ },
+ "GRCh38:DMD": {
+  "Transcript": [
+   {
+    "Exon": [
+     {
+      "end": 33211549,
+      "id": "ENSE00001899141",
+      "seq_region_name": "X",
+      "start": 33211282,
+      "strand": -1
+     },
+     {
+      "end": 33020200,
+      "id": "ENSE00003463064",
+      "seq_region_name": "X",
+      "start": 33020139,
+      "strand": -1
+     },
+     {
+      "end": 32849820,
+      "id": "ENSE00003691097",
+      "seq_region_name": "X",
+      "start": 32849728,
+      "strand": -1
+     },
+     {
+      "end": 32844860,
+      "id": "ENSE00001640206",
+      "seq_region_name": "X",
+      "start": 32844783,
+      "strand": -1
+     },
+     {
+      "end": 32823387,
+      "id": "ENSE00001685282",
+      "seq_region_name": "X",
+      "start": 32823295,
+      "strand": -1
+     },
+     {
+      "end": 32816640,
+      "id": "ENSE00001789498",
+      "seq_region_name": "X",
+      "start": 32816468,
+      "strand": -1
+     },
+     {
+      "end": 32809611,
+      "id": "ENSE00001436342",
+      "seq_region_name": "X",
+      "start": 32809493,
+      "strand": -1
+     },
+     {
+      "end": 32699293,
+      "id": "ENSE00001436506",
+      "seq_region_name": "X",
+      "start": 32699112,
+      "strand": -1
+     },
+     {
+      "end": 32697998,
+      "id": "ENSE00001434995",
+      "seq_region_name": "X",
+      "start": 32697870,
+      "strand": -1
+     },
+     {
+      "end": 32645152,
+      "id": "ENSE00001435581",
+      "seq_region_name": "X",
+      "start": 32644964,
+      "strand": -1
+     },
+     {
+      "end": 32644313,
+      "id": "ENSE00001435687",
+      "seq_region_name": "X",
+      "start": 32644132,
+      "strand": -1
+     },
+     {
+      "end": 32614453,
+      "id": "ENSE00001435796",
+      "seq_region_name": "X",
+      "start": 32614303,
+      "strand": -1
+     },
+     {
+      "end": 32595876,
+      "id": "ENSE00001436736",
+      "seq_region_name": "X",
+      "start": 32595757,
+      "strand": -1
+     },
+     {
+      "end": 32573846,
+      "id": "ENSE00003639921",
+      "seq_region_name": "X",
+      "start": 32573745,
+      "strand": -1
+     },
+     {
+      "end": 32573637,
+      "id": "ENSE00001479014",
+      "seq_region_name": "X",
+      "start": 32573530,
+      "strand": -1
+     },
+     {
+      "end": 32565881,
+      "id": "ENSE00001434823",
+      "seq_region_name": "X",
+      "start": 32565702,
+      "strand": -1
+     },
+     {
+      "end": 32545334,
+      "id": "ENSE00001435605",
+      "seq_region_name": "X",
+      "start": 32545159,
+      "strand": -1
+     },
+     {
+      "end": 32518131,
+      "id": "ENSE00001436267",
+      "seq_region_name": "X",
+      "start": 32518008,
+      "strand": -1
+     },
+     {
+      "end": 32501842,
+      "id": "ENSE00001436655",
+      "seq_region_name": "X",
+      "start": 32501755,
+      "strand": -1
+     },
+     {
+      "end": 32491518,
+      "id": "ENSE00001436512",
+      "seq_region_name": "X",
+      "start": 32491277,
+      "strand": -1
+     },
+     {
+      "end": 32485099,
+      "id": "ENSE00001435151",
+      "seq_region_name": "X",
+      "start": 32484919,
+      "strand": -1
+     },
+     {
+      "end": 32472309,
+      "id": "ENSE00001435583",
+      "seq_region_name": "X",
+      "start": 32472164,
+      "strand": -1
+     },
+     {
+      "end": 32468710,
+      "id": "ENSE00001435180",
+      "seq_region_name": "X",
+      "start": 32468498,
+      "strand": -1
+     },
+     {
+      "end": 32464699,
+      "id": "ENSE00001436271",
+      "seq_region_name": "X",
+      "start": 32464586,
+      "strand": -1
+     },
+     {
+      "end": 32463594,
+      "id": "ENSE00001435906",
+      "seq_region_name": "X",
+      "start": 32463439,
+      "strand": -1
+     },
+     {
+      "end": 32454832,
+      "id": "ENSE00001436731",
+      "seq_region_name": "X",
+      "start": 32454662,
+      "strand": -1
+     },
+     {
+      "end": 32448638,
+      "id": "ENSE00001436545",
+      "seq_region_name": "X",
+      "start": 32448456,
+      "strand": -1
+     },
+     {
+      "end": 32441314,
+      "id": "ENSE00001435146",
+      "seq_region_name": "X",
+      "start": 32441180,
+      "strand": -1
+     },
+     {
+      "end": 32438390,
+      "id": "ENSE00001434999",
+      "seq_region_name": "X",
+      "start": 32438241,
+      "strand": -1
+     },
+     {
+      "end": 32411913,
+      "id": "ENSE00001434585",
+      "seq_region_name": "X",
+      "start": 32411752,
+      "strand": -1
+     },
+     {
+      "end": 32390181,
+      "id": "ENSE00001435573",
+      "seq_region_name": "X",
+      "start": 32390071,
+      "strand": -1
+     },
+     {
+      "end": 32389674,
+      "id": "ENSE00001435218",
+      "seq_region_name": "X",
+      "start": 32389501,
+      "strand": -1
+     },
+     {
+      "end": 32386465,
+      "id": "ENSE00001436039",
+      "seq_region_name": "X",
+      "start": 32386310,
+      "strand": -1
+     },
+     {
+      "end": 32380680,
+      "id": "ENSE00001435954",
+      "seq_region_name": "X",
+      "start": 32380510,
+      "strand": -1
+     },
+     {
+      "end": 32365199,
+      "id": "ENSE00000978409",
+      "seq_region_name": "X",
+      "start": 32365020,
+      "strand": -1
+     },
+     {
+      "end": 32364710,
+      "id": "ENSE00001157370",
+      "seq_region_name": "X",
+      "start": 32364582,
+      "strand": -1
+     },
+     {
+      "end": 32362958,
+      "id": "ENSE00003988225",
+      "seq_region_name": "X",
+      "start": 32362788,
+      "strand": -1
+     },
+     {
+      "end": 32348528,
+      "id": "ENSE00003988222",
+      "seq_region_name": "X",
+      "start": 32348406,
+      "strand": -1
+     },
+     {
+      "end": 32346080,
+      "id": "ENSE00003988224",
+      "seq_region_name": "X",
+      "start": 32345943,
+      "strand": -1
+     },
+     {
+      "end": 32343286,
+      "id": "ENSE00003988229",
+      "seq_region_name": "X",
+      "start": 32343134,
+      "strand": -1
+     },
+     {
+      "end": 32342282,
+      "id": "ENSE00003988226",
+      "seq_region_name": "X",
+      "start": 32342100,
+      "strand": -1
+     },
+     {
+      "end": 32310276,
+      "id": "ENSE00003988221",
+      "seq_region_name": "X",
+      "start": 32310082,
+      "strand": -1
+     },
+     {
+      "end": 32287701,
+      "id": "ENSE00003988227",
+      "seq_region_name": "X",
+      "start": 32287529,
+      "strand": -1
+     },
+     {
+      "end": 32217063,
+      "id": "ENSE00003988219",
+      "seq_region_name": "X",
+      "start": 32216916,
+      "strand": -1
+     },
+     {
+      "end": 31968514,
+      "id": "ENSE00003988228",
+      "seq_region_name": "X",
+      "start": 31968339,
+      "strand": -1
+     },
+     {
+      "end": 31932227,
+      "id": "ENSE00003988223",
+      "seq_region_name": "X",
+      "start": 31932080,
+      "strand": -1
+     },
+     {
+      "end": 31929745,
+      "id": "ENSE00003988220",
+      "seq_region_name": "X",
+      "start": 31929596,
+      "strand": -1
+     },
+     {
+      "end": 31875373,
+      "id": "ENSE00003687899",
+      "seq_region_name": "X",
+      "start": 31875188,
+      "strand": -1
+     },
+     {
+      "end": 31836819,
+      "id": "ENSE00003592729",
+      "seq_region_name": "X",
+      "start": 31836718,
+      "strand": -1
+     },
+     {
+      "end": 31820083,
+      "id": "ENSE00003639303",
+      "seq_region_name": "X",
+      "start": 31819975,
+      "strand": -1
+     },
+     {
+      "end": 31774192,
+      "id": "ENSE00003669071",
+      "seq_region_name": "X",
+      "start": 31773960,
+      "strand": -1
+     },
+     {
+      "end": 31729748,
+      "id": "ENSE00001213215",
+      "seq_region_name": "X",
+      "start": 31729631,
+      "strand": -1
+     },
+     {
+      "end": 31679586,
+      "id": "ENSE00001258577",
+      "seq_region_name": "X",
+      "start": 31679375,
+      "strand": -1
+     },
+     {
+      "end": 31658144,
+      "id": "ENSE00001213199",
+      "seq_region_name": "X",
+      "start": 31657990,
+      "strand": -1
+     },
+     {
+      "end": 31627862,
+      "id": "ENSE00001258641",
+      "seq_region_name": "X",
+      "start": 31627673,
+      "strand": -1
+     },
+     {
+      "end": 31507453,
+      "id": "ENSE00003500236",
+      "seq_region_name": "X",
+      "start": 31507281,
+      "strand": -1
+     },
+     {
+      "end": 31496944,
+      "id": "ENSE00003669069",
+      "seq_region_name": "X",
+      "start": 31496788,
+      "strand": -1
+     },
+     {
+      "end": 31479103,
+      "id": "ENSE00003675980",
+      "seq_region_name": "X",
+      "start": 31478983,
+      "strand": -1
+     },
+     {
+      "end": 31478374,
+      "id": "ENSE00001259193",
+      "seq_region_name": "X",
+      "start": 31478106,
+      "strand": -1
+     },
+     {
+      "end": 31444627,
+      "id": "ENSE00001259171",
+      "seq_region_name": "X",
+      "start": 31444481,
+      "strand": -1
+     },
+     {
+      "end": 31348634,
+      "id": "ENSE00003637702",
+      "seq_region_name": "X",
+      "start": 31348556,
+      "strand": -1
+     },
+     {
+      "end": 31323658,
+      "id": "ENSE00003693649",
+      "seq_region_name": "X",
+      "start": 31323598,
+      "strand": -1
+     },
+     {
+      "end": 31261016,
+      "id": "ENSE00003620850",
+      "seq_region_name": "X",
+      "start": 31260955,
+      "strand": -1
+     },
+     {
+      "end": 31223121,
+      "id": "ENSE00003554036",
+      "seq_region_name": "X",
+      "start": 31223047,
+      "strand": -1
+     },
+     {
+      "end": 31209699,
+      "id": "ENSE00001158950",
+      "seq_region_name": "X",
+      "start": 31209498,
+      "strand": -1
+     },
+     {
+      "end": 31206667,
+      "id": "ENSE00001158943",
+      "seq_region_name": "X",
+      "start": 31206582,
+      "strand": -1
+     },
+     {
+      "end": 31204118,
+      "id": "ENSE00001158937",
+      "seq_region_name": "X",
+      "start": 31203961,
+      "strand": -1
+     },
+     {
+      "end": 31182904,
+      "id": "ENSE00001034045",
+      "seq_region_name": "X",
+      "start": 31182738,
+      "strand": -1
+     },
+     {
+      "end": 31180481,
+      "id": "ENSE00003569118",
+      "seq_region_name": "X",
+      "start": 31180370,
+      "strand": -1
+     },
+     {
+      "end": 31178805,
+      "id": "ENSE00001034039",
+      "seq_region_name": "X",
+      "start": 31178669,
+      "strand": -1
+     },
+     {
+      "end": 31177970,
+      "id": "ENSE00001158912",
+      "seq_region_name": "X",
+      "start": 31177932,
+      "strand": -1
+     },
+     {
+      "end": 31173604,
+      "id": "ENSE00001158905",
+      "seq_region_name": "X",
+      "start": 31173539,
+      "strand": -1
+     },
+     {
+      "end": 31172413,
+      "id": "ENSE00001158901",
+      "seq_region_name": "X",
+      "start": 31172348,
+      "strand": -1
+     },
+     {
+      "end": 31169601,
+      "id": "ENSE00001158895",
+      "seq_region_name": "X",
+      "start": 31169443,
+      "strand": -1
+     },
+     {
+      "end": 31147518,
+      "id": "ENSE00001158887",
+      "seq_region_name": "X",
+      "start": 31147275,
+      "strand": -1
+     },
+     {
+      "end": 31146414,
+      "id": "ENSE00001034085",
+      "seq_region_name": "X",
+      "start": 31146291,
+      "strand": -1
+     },
+     {
+      "end": 31134194,
+      "id": "ENSE00001158874",
+      "seq_region_name": "X",
+      "start": 31134102,
+      "strand": -1
+     },
+     {
+      "end": 31126673,
+      "id": "ENSE00001436107",
+      "seq_region_name": "X",
+      "start": 31126642,
+      "strand": -1
+     },
+     {
+      "end": 31121930,
+      "id": "ENSE00003901420",
+      "seq_region_name": "X",
+      "start": 31119222,
+      "strand": -1
+     }
+    ],
+    "Translation": {
+     "end": 33211312,
+     "id": "ENSP00000354923",
+     "length": 3685,
+     "start": 31121919
+    },
+    "biotype": "protein_coding",
+    "display_name": "DMD-203",
+    "end": 33211549,
+    "id": "ENST00000357033",
+    "is_canonical": 1,
+    "length": 13992,
+    "seq_region_name": "X",
+    "start": 31119222,
+    "strand": -1
+   }
+  ],
+  "assembly_name": "GRCh38",
+  "biotype": "protein_coding",
+  "canonical_transcript": "ENST00000357033.9",
+  "db_type": "core",
+  "description": "dystrophin [Source:HGNC Symbol;Acc:HGNC:2928]",
+  "display_name": "DMD",
+  "end": 33339609,
+  "id": "ENSG00000198947",
+  "logic_name": "ensembl_havana_gene_homo_sapiens",
+  "object_type": "Gene",
+  "seq_region_name": "X",
+  "source": "ensembl_havana",
+  "species": "homo_sapiens",
+  "start": 31097677,
+  "strand": -1,
+  "version": 19
+ },
+ "GRCh38:SMN1": {
+  "Transcript": [
+   {
+    "Exon": [
+     {
+      "end": 70925184,
+      "id": "ENSE00003899118",
+      "seq_region_name": "5",
+      "start": 70925087,
+      "strand": 1
+     },
+     {
+      "end": 70938910,
+      "id": "ENSE00001688516",
+      "seq_region_name": "5",
+      "start": 70938839,
+      "strand": 1
+     },
+     {
+      "end": 70941508,
+      "id": "ENSE00001638255",
+      "seq_region_name": "5",
+      "start": 70941389,
+      "strand": 1
+     },
+     {
+      "end": 70942558,
+      "id": "ENSE00001766361",
+      "seq_region_name": "5",
+      "start": 70942358,
+      "strand": 1
+     },
+     {
+      "end": 70942870,
+      "id": "ENSE00003576392",
+      "seq_region_name": "5",
+      "start": 70942718,
+      "strand": 1
+     },
+     {
+      "end": 70944753,
+      "id": "ENSE00003611930",
+      "seq_region_name": "5",
+      "start": 70944658,
+      "strand": 1
+     },
+     {
+      "end": 70946176,
+      "id": "ENSE00001593733",
+      "seq_region_name": "5",
+      "start": 70946066,
+      "strand": 1
+     },
+     {
+      "end": 70951994,
+      "id": "ENSE00003693452",
+      "seq_region_name": "5",
+      "start": 70951941,
+      "strand": 1
+     },
+     {
+      "end": 70953015,
+      "id": "ENSE00001885073",
+      "seq_region_name": "5",
+      "start": 70952439,
+      "strand": 1
+     }
+    ],
+    "Translation": {
+     "end": 70951991,
+     "id": "ENSP00000370083",
+     "length": 294,
+     "start": 70925104
+    },
+    "biotype": "protein_coding",
+    "display_name": "SMN1-202",
+    "end": 70953015,
+    "id": "ENST00000380707",
+    "is_canonical": 1,
+    "length": 1482,
+    "seq_region_name": "5",
+    "start": 70925087,
+    "strand": 1
+   }
+  ],
+  "assembly_name": "GRCh38",
+  "biotype": "protein_coding",
+  "canonical_transcript": "ENST00000380707.9",
+  "db_type": "core",
+  "description": "survival of motor neuron 1, telomeric [Source:HGNC Symbol;Acc:HGNC:11117]",
+  "display_name": "SMN1",
+  "end": 70953942,
+  "id": "ENSG00000172062",
+  "logic_name": "ensembl_havana_gene_homo_sapiens",
+  "object_type": "Gene",
+  "seq_region_name": "5",
+  "source": "ensembl_havana",
+  "species": "homo_sapiens",
+  "start": 70925030,
+  "strand": 1,
+  "version": 19
+ },
+ "GRCh38:SMN2": {
+  "Transcript": [
+   {
+    "Exon": [
+     {
+      "end": 70049766,
+      "id": "ENSE00001904512",
+      "seq_region_name": "5",
+      "start": 70049669,
+      "strand": 1
+     },
+     {
+      "end": 70063486,
+      "id": "ENSE00001725187",
+      "seq_region_name": "5",
+      "start": 70063415,
+      "strand": 1
+     },
+     {
+      "end": 70066084,
+      "id": "ENSE00003668426",
+      "seq_region_name": "5",
+      "start": 70065965,
+      "strand": 1
+     },
+     {
+      "end": 70067134,
+      "id": "ENSE00003579743",
+      "seq_region_name": "5",
+      "start": 70066934,
+      "strand": 1
+     },
+     {
+      "end": 70067446,
+      "id": "ENSE00003698225",
+      "seq_region_name": "5",
+      "start": 70067294,
+      "strand": 1
+     },
+     {
+      "end": 70069330,
+      "id": "ENSE00003550962",
+      "seq_region_name": "5",
+      "start": 70069235,
+      "strand": 1
+     },
+     {
+      "end": 70070751,
+      "id": "ENSE00003620900",
+      "seq_region_name": "5",
+      "start": 70070641,
+      "strand": 1
+     },
+     {
+      "end": 70076574,
+      "id": "ENSE00003698693",
+      "seq_region_name": "5",
+      "start": 70076521,
+      "strand": 1
+     },
+     {
+      "end": 70077595,
+      "id": "ENSE00003898412",
+      "seq_region_name": "5",
+      "start": 70077019,
+      "strand": 1
+     }
+    ],
+    "Translation": {
+     "end": 70076571,
+     "id": "ENSP00000370119",
+     "length": 294,
+     "start": 70049686
+    },
+    "biotype": "protein_coding",
+    "display_name": "SMN2-203",
+    "end": 70077595,
+    "id": "ENST00000380743",
+    "is_canonical": 1,
+    "length": 1482,
+    "seq_region_name": "5",
+    "start": 70049669,
+    "strand": 1
+   }
+  ],
+  "assembly_name": "GRCh38",
+  "biotype": "protein_coding",
+  "canonical_transcript": "ENST00000380743.9",
+  "db_type": "core",
+  "description": "survival of motor neuron 2, centromeric [Source:HGNC Symbol;Acc:HGNC:11118]",
+  "display_name": "SMN2",
+  "end": 70078522,
+  "id": "ENSG00000205571",
+  "logic_name": "ensembl_havana_gene_homo_sapiens",
+  "object_type": "Gene",
+  "seq_region_name": "5",
+  "source": "ensembl_havana",
+  "species": "homo_sapiens",
+  "start": 70049635,
+  "strand": 1,
+  "version": 17
+ },
+ "GRCh38:UBE3A": {
+  "Transcript": [
+   {
+    "Exon": [
+     {
+      "end": 25439024,
+      "id": "ENSE00003840772",
+      "seq_region_name": "15",
+      "start": 25438489,
+      "strand": -1
+     },
+     {
+      "end": 25411971,
+      "id": "ENSE00001376416",
+      "seq_region_name": "15",
+      "start": 25411908,
+      "strand": -1
+     },
+     {
+      "end": 25409207,
+      "id": "ENSE00003576935",
+      "seq_region_name": "15",
+      "start": 25409088,
+      "strand": -1
+     },
+     {
+      "end": 25405502,
+      "id": "ENSE00003638041",
+      "seq_region_name": "15",
+      "start": 25405461,
+      "strand": -1
+     },
+     {
+      "end": 25375763,
+      "id": "ENSE00000815082",
+      "seq_region_name": "15",
+      "start": 25375465,
+      "strand": -1
+     },
+     {
+      "end": 25371812,
+      "id": "ENSE00000815081",
+      "seq_region_name": "15",
+      "start": 25370566,
+      "strand": -1
+     },
+     {
+      "end": 25360527,
+      "id": "ENSE00000778629",
+      "seq_region_name": "15",
+      "start": 25360383,
+      "strand": -1
+     },
+     {
+      "end": 25356896,
+      "id": "ENSE00000778628",
+      "seq_region_name": "15",
+      "start": 25356691,
+      "strand": -1
+     },
+     {
+      "end": 25356056,
+      "id": "ENSE00000778627",
+      "seq_region_name": "15",
+      "start": 25355892,
+      "strand": -1
+     },
+     {
+      "end": 25354683,
+      "id": "ENSE00000815076",
+      "seq_region_name": "15",
+      "start": 25354528,
+      "strand": -1
+     },
+     {
+      "end": 25354426,
+      "id": "ENSE00000815075",
+      "seq_region_name": "15",
+      "start": 25354353,
+      "strand": -1
+     },
+     {
+      "end": 25340228,
+      "id": "ENSE00000815073",
+      "seq_region_name": "15",
+      "start": 25340085,
+      "strand": -1
+     },
+     {
+      "end": 25339257,
+      "id": "ENSE00002454147",
+      "seq_region_name": "15",
+      "start": 25333728,
+      "strand": -1
+     }
+    ],
+    "Translation": {
+     "end": 25409107,
+     "id": "ENSP00000497572",
+     "length": 872,
+     "start": 25339137
+    },
+    "biotype": "protein_coding",
+    "display_name": "UBE3A-226",
+    "end": 25439024,
+    "id": "ENST00000648336",
+    "is_canonical": 1,
+    "length": 8728,
+    "seq_region_name": "15",
+    "start": 25333728,
+    "strand": -1
+   }
+  ],
+  "assembly_name": "GRCh38",
+  "biotype": "protein_coding",
+  "canonical_transcript": "ENST00000648336.2",
+  "db_type": "core",
+  "description": "ubiquitin protein ligase E3A [Source:HGNC Symbol;Acc:HGNC:12496]",
+  "display_name": "UBE3A",
+  "end": 25439122,
+  "id": "ENSG00000114062",
+  "logic_name": "ensembl_havana_gene_homo_sapiens",
+  "object_type": "Gene",
+  "seq_region_name": "15",
+  "source": "ensembl_havana",
+  "species": "homo_sapiens",
+  "start": 25333728,
+  "strand": -1,
+  "version": 24
+ }
+}

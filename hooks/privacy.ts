@@ -28,13 +28,26 @@ function fold(text: string): string {
   return out.normalize('NFKC').replace(ZERO_WIDTH, '').toLowerCase()
 }
 
+// Identifiers of science, not of people: their digits must never be read as a record number
+// (HP:0012345 shares its digits with a record number MZ0012345).
+const SCIENTIFIC_IDS = new RegExp([
+  String.raw`\b(?:hp|omim|mim|orpha|orphanet|mondo|doid|ncit|efo|uberon|go|hgnc|cl|chebi|mp)\s*[:_]\s*\d+`,
+  String.raw`\brs\d+`,
+  String.raw`\b(?:nm|nr|np|nc|ng|nt|xm|xp|enst|ensg|ensp|ccds|lrg)_?\d+(?:\.\d+)?`,
+  String.raw`\bpmid\s*:?\s*\d+`, String.raw`\bpmc\d+`, String.raw`\bnct\d{8}\b`, String.raw`\bchictr-?\w+`,
+  String.raw`\b(?:chr)?(?:\d{1,2}|x|y|mt?)\s*[:-]\s*\d+(?:\s*[-_]\s*\d+)?`,
+  String.raw`\b[cgpnmr]\.\S+`,
+  String.raw`\b10\.\d{4,9}/\S+`,
+].join('|'), 'g')
+
 /** The folded text with separators kept (for word-boundary checks), removed, and digits only. */
 function forms(text: string): { spaced: string; tight: string; digits: string } {
   const folded = fold(text)
   return {
     spaced: folded.replace(/[\s_]+/g, ' '),
     tight: folded.replace(SEPARATORS, ''),
-    digits: folded.replace(/\D+/g, ''),
+    // the digits a record number could hide in: scientific identifiers removed first
+    digits: folded.replace(SCIENTIFIC_IDS, ' ').replace(/\D+/g, ''),
   }
 }
 
@@ -149,6 +162,8 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
       // a record or ID number: digits only, so separators cannot hide it
       // (not for a date: its digits joined across a value's other numbers would match by accident)
       if (dates.length === 0 && LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return label
+      // a number-only identifier is matched by its digits alone (a PMID or rsID with the same digits is not it)
+      if (/^\d+$/.test(id.tight)) continue
       if (HAS_CJK.test(raw)) {
         // Chinese names: two characters identify, and spacing carries no meaning
         if (id.tight.length >= 2 && f.tight.includes(id.tight)) return label
@@ -218,7 +233,8 @@ function isZebraLocal(segment: string): boolean {
     else if (a.startsWith('--case=')) i++
     else break
   }
-  return w[i] === 'case'
+  // `case recheck` asks public databases again: not local
+  return w[i] === 'case' && w[i + 1] !== 'recheck'
 }
 // flags whose values stay on this machine in any zebra command (sample names, file paths)
 const ZEBRA_LOCAL_FLAGS = new Set(['--case', '--proband', '--mother', '--father', '--sibling', '--out', '--genes',
@@ -325,6 +341,18 @@ const UPLOADER =
 // folders a desktop client uploads on its own: copying a file there sends it
 const SYNC_FOLDER = /(?:^|[\s'"=])(?:~|\$HOME|\/Users\/[^/\s]+|\/home\/[^/\s]+)?\/?(?:Dropbox|Google Drive|GoogleDrive|My Drive|OneDrive[^/\s]*|Library\/Mobile Documents|Library\/CloudStorage|iCloud Drive|Nutstore[^/\s]*|坚果云[^/\s]*|BaiduNetdisk[^/\s]*|百度网盘[^/\s]*|WeDrive[^/\s]*|Box Sync|pCloud Drive|MEGA)(?:\/|['"\s]|$)/i
 const COPY_INTO = /\b(?:cp|mv|rsync|ditto|ln|install|tee)\b/
+
+/** True when a zebra command would send a whole VCF's variant list to a web service (triage's MyVariant prefilter). */
+export function sendsVariantList(command: string): boolean {
+  return shellSegments(command).some(seg => {
+    const w = shellWords(seg)
+    const i = w.findIndex(a => /(?:^|\/)zebra$/.test(a))
+    if (i < 0) return false
+    const rest = w.slice(i + 1)
+    const at = rest.indexOf('--prefilter')
+    return rest.includes('--prefilter=myvariant') || (at >= 0 && rest[at + 1] === 'myvariant')
+  })
+}
 
 /** True when a command looks like it sends a raw genome file to another machine. */
 export function uploadsGenome(command: string): boolean {

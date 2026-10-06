@@ -4,9 +4,26 @@ Each trial carries its eligibility criteria, who may enrol, who to write to and
 any reason to distrust the record (see zebra.sources.ctgov). Criteria are cut to
 ctgov.ELIGIBILITY_BUDGET characters unless `--full-eligibility`, which sends the whole text and warns
 when the answer passes FULL_TEXT_BUDGET characters, because the mod cuts a tool
-result at 60,000. ChiCTR, where Chinese trials are also registered, is not
-searched here and never was; the note saying so is printed for every query and
-raised to a warning when the country asked for is China, Hong Kong or Taiwan.
+result at 60,000.
+
+Relevance (CP1-8): ClinicalTrials.gov expands a condition through MeSH, so a
+search for spinal muscular atrophy in China returned androgen-receptor prostate
+and breast cancer trials. Trials that name the condition nowhere (conditions,
+title, keywords, MeSH terms) are set aside in `result.filtered` with a warning
+naming them; `--keep-unrelated` turns the check off.
+
+ChiCTR (chictr.org.cn), where most Chinese investigator-initiated trials are
+registered, cannot be searched by a script: checked 2026-10-06, its search page
+(searchproj.html) and record pages (showproj.html) answer every scripted request
+with HTTP 405 and the Alibaba Cloud WAF block page ("your request has been
+blocked"), also with a browser User-Agent, the site's own acw_tc cookie and a
+Referer, while the home page loads the vendor's anti-bot script; only a real
+browser gets through. WHO ICTRP (trialsearch.who.int) mirrors ChiCTR and its
+search form can be posted by a script (676 records for "spinal muscular atrophy",
+including ChiCTR2600132926 registered 2026-09-20), but its robots.txt is
+"User-agent: * / Disallow: /", so zebra does not query it. The note saying so is
+printed for every query and raised to a warning when the country asked for is
+China, Hong Kong or Taiwan.
 """
 
 from __future__ import annotations
@@ -19,8 +36,12 @@ from zebra.core import Outcome, UsageError
 from zebra.sources import ctgov
 
 FULL_TEXT_BUDGET = 50_000  # characters; past this --full-eligibility warns and asks for a smaller --limit
-CHICTR_NOTE = ("Chinese trials are also registered in ChiCTR (chictr.org.cn), which is not searched here: "
-               "a trial registered only in ChiCTR will not appear in this answer")
+CHICTR_NOTE = ("Chinese trials are also registered in ChiCTR (chictr.org.cn), which is not searched here: its search "
+               "and record pages answer scripted requests with HTTP 405 from the site's Alibaba Cloud WAF (checked "
+               "2026-10-06; only a real browser gets through). A trial registered only in ChiCTR will not appear in "
+               "this answer — search it by hand at https://www.chictr.org.cn/searchproj.html, or in the WHO ICTRP "
+               "portal (https://trialsearch.who.int/), which mirrors ChiCTR records but whose robots.txt disallows "
+               "automated access, so zebra does not query it either")
 CHINESE_REGISTRIES = ("China", "Hong Kong", "Taiwan")
 
 
@@ -90,12 +111,14 @@ def _trials(args: argparse.Namespace) -> Outcome:
     term = (args.term or "").strip() or None
     country = (args.country or "").strip() or None
     full = bool(getattr(args, "full_eligibility", False))
+    keep = bool(getattr(args, "keep_unrelated", False))
     out = ctgov.search(condition, term=term, country=country, status=status, limit=args.limit,
-                       full_eligibility=full)
+                       full_eligibility=full, filter_relevance=not keep)
     r = out.result
     head = f"ClinicalTrials.gov: {condition}" + (f" + {term}" if term else "")
     head += f" · status {status}" + (f" · sites in {r['country']}" if r["country"] else "")
-    head += f" — {r['total']} trials, showing {r['returned']}"
+    head += f" — {r['total']} trials" + (" (before the relevance check)" if r.get("filtered") else "") \
+        + f", showing {r['returned']}"
     lines: List[str] = [head]
     lines += [_line(s, r["country"]) for s in r["studies"]]
     if not r["studies"]:
@@ -103,6 +126,13 @@ def _trials(args: argparse.Namespace) -> Outcome:
             lines.append(f"no {status} trials; {r['total_any_status']} in any status (--status ANY)")
         else:
             lines.append("no trials")
+    if r.get("filtered"):
+        lines.append(f"set aside as unrelated ({len(r['filtered'])}; they name '{condition}' nowhere in their "
+                     "conditions, title, keywords or MeSH terms; --keep-unrelated shows them):")
+        for f in r["filtered"][:10]:
+            lines.append(f"    {f['nct_id']} · {f['title']} · conditions: {', '.join(f['conditions'][:3]) or '-'}")
+    elif r.get("relevance_check", "").startswith("not applied"):
+        lines.append(f"note: relevance {r['relevance_check']}")
     lines.append("note: " + CHICTR_NOTE)
     if r["country"] in CHINESE_REGISTRIES:
         out.warnings.append(CHICTR_NOTE + f"; the {r['country']} sites listed here are only the ones "
@@ -121,7 +151,7 @@ def _trials(args: argparse.Namespace) -> Outcome:
                 f"60,000, so lower --limit (about {max(1, int(r['returned'] * FULL_TEXT_BUDGET / worst))} trials "
                 "fits) or drop --full-eligibility")
     out.query = {"condition": condition, "term": term, "country": country, "status": status, "limit": args.limit,
-                 "full_eligibility": full}
+                 "full_eligibility": full, "keep_unrelated": keep}
     return out
 
 
@@ -133,6 +163,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--status", default="RECRUITING", type=str.upper,
                    help="RECRUITING (default), NOT_YET_RECRUITING, ACTIVE_NOT_RECRUITING, COMPLETED, ... or ANY")
     p.add_argument("--limit", type=int, default=20)
+    p.add_argument("--keep-unrelated", action="store_true",
+                   help="do not set aside trials that name the condition nowhere (CT.gov's MeSH expansion)")
     p.add_argument("--full-eligibility", action="store_true",
                    help=f"send the whole eligibility criteria instead of the first {ctgov.ELIGIBILITY_BUDGET} "
                         "characters; use a small --limit")

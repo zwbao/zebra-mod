@@ -95,7 +95,10 @@ query($q: String!, $entities: [String!], $size: Int!) {
 
 
 def _post(payload: Dict[str, Any], *, refresh: bool = False):
-    return post_json(API, payload, source="Open Targets", cache_ttl=0 if refresh else 7 * 86400, timeout=90)
+    # E-6: `refresh=True` skips the cache read and still writes the good answer back;
+    # `cache_ttl=0` (the old recovery) disabled the write, so the bad entry stayed and
+    # every later call went to the network for the rest of its 7 days
+    return post_json(API, payload, source="Open Targets", cache_ttl=7 * 86400, refresh=refresh, timeout=90)
 
 
 def gql(query: str, variables: Dict[str, Any], record: str):
@@ -179,12 +182,16 @@ def regulatory_status(reports: List[Dict[str, Any]]) -> Dict[str, Any]:
             labels.setdefault(who, row)
     approved = sorted(w for w, r in per.items() if r["stage"] == "APPROVAL")
     gone = sorted(w for w, r in per.items() if r["stage"] in NOT_APPROVED_STAGES)
-    unresolved = sorted(w for w, r in per.items() if r["stage"] not in NOT_APPROVED_STAGES and r["stage"] != "APPROVAL")
+    review = sorted(w for w, r in per.items() if r["stage"] == "PREAPPROVAL")
+    unresolved = sorted(w for w, r in per.items() if r["stage"] not in NOT_APPROVED_STAGES
+                        and r["stage"] not in ("APPROVAL", "PREAPPROVAL"))
     parts = []
     if approved:
         parts.append("authorisation on record: " + ", ".join(approved))
     if gone:
         parts.append("WITHDRAWN/SUSPENDED: " + ", ".join(f"{w} ({per[w]['stage']})" for w in gone))
+    if review:
+        parts.append("under review, not authorised: " + ", ".join(review))
     if unresolved:
         parts.append("agency record with no stage: " + ", ".join(unresolved))
     if not per and labels:
@@ -196,6 +203,7 @@ def regulatory_status(reports: List[Dict[str, Any]]) -> Dict[str, Any]:
         "approved_in": approved,
         "withdrawn_or_suspended_in": gone,
         "unresolved_in": unresolved,
+        "under_review_in": review,
         "label_only_in": sorted(w for w in labels if w not in per),
         "headline": "; ".join(parts),
     }
@@ -228,16 +236,28 @@ def parse_drug_row(row: Dict[str, Any], with_diseases: bool = False) -> Dict[str
         "reports": len(reports),
         "trials": sum(1 for r in reports if r.get("source") == "ClinicalTrials.gov"),
         "report_sources": sorted({r.get("source") for r in reports if r.get("source")}),
-        "evidence": [_evidence(r) for r in ordered[:4]],
+        "evidence": [_evidence(r) for r in ordered[:3]],
         "url": f"{WEB}/drug/{drug.get('id')}" if drug.get("id") else None,
     }
     reg = out["regulatory"]
     if out["stage"] == "APPROVAL" and not reg["approved_in"]:
-        out["stage_warning"] = (
-            "Open Targets gives this row maxClinicalStage APPROVAL, but no agency report says it is authorised"
-            + (f"; the EU/US/JP records say: {reg['headline']}" if reg["by_jurisdiction"] else
-               " and there is no agency report at all")
-            + " — do not read this as an approved therapy")
+        # E-4: "do not read this as approved" is said only when an agency record says
+        # withdrawn / suspended / refused. No record at all (cannabidiol and fenfluramine
+        # for Dravet syndrome, both FDA- and EMA-approved) means "unknown here".
+        if reg["withdrawn_or_suspended_in"]:
+            out["stage_warning"] = (
+                "Open Targets gives this row maxClinicalStage APPROVAL, but the agency record says: "
+                f"{reg['headline']} — do not read this as an approved therapy")
+        elif reg["by_jurisdiction"]:
+            out["stage_warning"] = (
+                "Open Targets gives this row maxClinicalStage APPROVAL; the agency records it holds give no stage "
+                f"({reg['headline']}) — approval status unknown here: check Drugs@FDA, the EMA register and NMPA "
+                "before calling it approved or not approved")
+        else:
+            out["stage_warning"] = (
+                "Open Targets gives this row maxClinicalStage APPROVAL but holds no agency record for this drug and "
+                "disease — approval status unknown here: check Drugs@FDA, the EMA register and NMPA before calling "
+                "it approved or not approved")
     if with_diseases:
         names = []
         for d in row.get("diseases") or []:
@@ -251,6 +271,13 @@ def parse_drug_row(row: Dict[str, Any], with_diseases: bool = False) -> Dict[str
 def _drugs(block: Dict[str, Any], limit: int, with_diseases: bool) -> Dict[str, Any]:
     rows = [r for r in (block or {}).get("rows") or [] if r.get("drug")]
     parsed = [parse_drug_row(r, with_diseases) for r in rows]
+    # the two "meaning" strings are the same on every row: said once for the block, so the
+    # 60,000-character budget goes on rows rather than on 40 copies of the same sentence
+    meanings = {}
+    for p in parsed:
+        for k in ("stage_meaning", "drug_max_stage_meaning"):
+            if k in p:
+                meanings[k] = p.pop(k)
     parsed.sort(key=lambda d: (_stage_rank(d["stage"]), d["drug"] or ""))
     withdrawn = [d["drug"] for d in parsed[:limit] if d["regulatory"]["withdrawn_or_suspended_in"]]
     return {"count": (block or {}).get("count", len(rows)), "shown": min(limit, len(parsed)),
@@ -259,6 +286,7 @@ def _drugs(block: Dict[str, Any], limit: int, with_diseases: bool) -> Dict[str, 
                             "it has linked, at the highest stage each reached. It is NOT a list of approved "
                             "therapies and it is not complete: read `regulatory` per row for approval status",
             "withdrawn_or_suspended": withdrawn,
+            **meanings,
             "rows": parsed[:limit]}
 
 

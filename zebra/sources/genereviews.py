@@ -69,8 +69,9 @@ def parse_gene_map(text: str) -> List[Dict[str, str]]:
 
 
 def _fetch_map(name: str, refresh: bool = False):
+    # E-6: refresh=True re-requests and writes the good copy back over a bad cached one
     return request(f"{FTP}/{name}", source="GeneReviews (NCBI FTP)", accept="text/plain",
-                   cache_ttl=0 if refresh else 30 * 86400, timeout=60)
+                   cache_ttl=30 * 86400, refresh=refresh, timeout=60)
 
 
 def _fetch_maps():

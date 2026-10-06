@@ -193,7 +193,29 @@ def _litvar_section(variant: str, gene: Optional[str], limit: int, out: Outcome)
     if got is None:
         return None
     res = out.add(got)
-    top = [m for m in res["matches"] if m.get("top")][:3]
+    # CP1-9: LitVar's rsID-level record merges every allele at the rsID (CFTR p.Gly542Arg, a VUS, came
+    # back as p.G542X with 842 papers). A record spelled as ANOTHER allele at the same position is
+    # excluded from the papers, and said so; one whose allele cannot be told is kept and flagged.
+    text = (variant or "").strip()
+    v_p = text if (text.startswith("p.") or ":p." in text) else None
+    v_c = text if (text.startswith("c.") or ":c." in text) else None
+    excluded: List[Dict[str, Any]] = []
+    top = []
+    for m in [m for m in res["matches"] if m.get("top")]:
+        verdict = litvar.allele_match(m, v_p, v_c)
+        m["allele"] = {"same": "this allele", "different": "another allele at the same position",
+                       "unknown": "not verified from LitVar's spelling"}[verdict]
+        if verdict == "different":
+            excluded.append({"litvar_id": m["litvar_id"], "spelled": m.get("hgvs") or m.get("name"),
+                             "pmid_count": m.get("pmid_count"), "rsid": m.get("rsid")})
+        else:
+            top.append(m)
+    top = top[:3]
+    if excluded:
+        out.warnings.append(
+            "LitVar2: " + "; ".join(f"{e['litvar_id']} ({e['spelled']}, {e['pmid_count']} papers)" for e in excluded)
+            + f" excluded — another allele at the same position as {text}"
+            + ("; LitVar merges every allele filed under an rsID" if any(e.get("rsid") for e in excluded) else ""))
     order: List[str] = []
     origin: Dict[str, List[str]] = {}
     for m in top:
@@ -230,6 +252,7 @@ def _litvar_section(variant: str, gene: Optional[str], limit: int, out: Outcome)
             "in their title or abstract; LitVar links papers through normalised variant records that can merge "
             "different transcript numbering — check each PMID before citing it")
     return {"query": res["query"], "gene": res["gene"], "queries": res["queries"], "matches": res["matches"],
+            "excluded_other_allele": excluded,
             "papers_total": len(order), "papers": papers,
             "variant_forms_checked": forms, "mention_counts": counts,
             "note": "papers are those LitVar links to the top match(es); order as LitVar lists them. "
@@ -322,6 +345,10 @@ def _lit(args: argparse.Namespace) -> Outcome:
             lines.append(f"== LitVar2: {variant}" + (f" in {gene}" if gene else "") + f" (queried: {'; '.join(lit['queries'])})")
             for m in lit["matches"]:
                 tag = "match" if m.get("top") else "LitVar suggestion"
+                if m.get("top") and m.get("allele") == "another allele at the same position":
+                    tag = "EXCLUDED: another allele at the same position"
+                elif m.get("top") and m.get("allele"):
+                    tag += f" ({m['allele']})"
                 sig = f" · dbSNP: {', '.join(m['clinical_significance'])}" if m.get("clinical_significance") else ""
                 lines.append(f"  {m['litvar_id']} · {m.get('rsid') or '-'} · {m.get('gene')} {m.get('name')} · "
                              f"{m.get('pmid_count')} papers · {tag}{sig}")

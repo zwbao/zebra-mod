@@ -86,14 +86,16 @@ def _eutils(endpoint: str, extra: Dict[str, Any], *, timeout: float = 30.0, refr
     """Call an E-utilities endpoint; with a key set it is a POST carrying the key in the body."""
     url = f"{EUTILS}/{endpoint}"
     params = _params(extra)
-    ttl = 0 if refresh else CACHE_TTL
     body = _key_body()
+    # C-P2-8: `refresh` skips the cache read and still writes the fresh answer, so a bad cached
+    # body is repaired (cache_ttl=0, used before, read past it but never wrote the good one back).
     try:
         if body is None:
-            return get_json(url, source="ClinVar", params=params, cache_ttl=ttl, timeout=timeout)
+            return get_json(url, source="ClinVar", params=params, cache_ttl=CACHE_TTL, timeout=timeout,
+                            refresh=refresh)
         return post_json(url, body, source="ClinVar", params=params,
                          headers={"Content-Type": "application/x-www-form-urlencoded"},
-                         cache_ttl=ttl, timeout=timeout)
+                         cache_ttl=CACHE_TTL, timeout=timeout, refresh=refresh)
     except SourceError as err:
         raise SourceError(err.source, public_url(err.url) or "", err.status, redact(err.message) or "") from None
 
@@ -102,6 +104,28 @@ def stars(review_status: Optional[str]) -> Optional[int]:
     if not review_status:
         return None
     return STARS.get(review_status.strip().lower())
+
+
+def stars_text(n: Optional[int]) -> Optional[str]:
+    """"3 of 4 stars": the scale's top is 4 (practice guideline), so 3 (expert panel) is not "the highest"."""
+    if n is None:
+        return None
+    return f"{n} of 4 stars" + (" (4 = practice guideline, the top of ClinVar's scale)" if n < 4 else
+                                " (practice guideline, the top of ClinVar's scale)")
+
+
+def at_positions(chrom: str, start: int, end: int, assembly: str = "GRCh38", retmax: int = 40) -> Outcome:
+    """ClinVar records whose location falls in chrom:start-end (an Entrez range on CPOS / C37)."""
+    field = "CPOS" if assembly == "GRCh38" else "C37"
+    lo, hi = sorted((int(start), int(end)))
+    term = f"{chrom}[CHR] AND {lo}:{hi}[{field}]"
+    found = search(term, retmax=retmax)
+    out = summaries(found.result["ids"])
+    out.sources = found.sources + out.sources
+    if found.result["count"] > len(found.result["ids"]):
+        out.warnings.append(f"ClinVar: {found.result['count']} records in {chrom}:{lo}-{hi}; first "
+                            f"{len(found.result['ids'])} read")
+    return out
 
 
 def vcv_uid(vcv: str) -> str:
@@ -214,6 +238,7 @@ def parse_summary(rec: Dict[str, Any]) -> Dict[str, Any]:
         "classification": germ.get("description") or None,
         "review_status": review,
         "stars": stars(review),
+        "stars_text": stars_text(stars(review)),
         "last_evaluated": _date(germ.get("last_evaluated")),
         "conditions": conditions,
         "submissions_scv": len(subs.get("scv") or []),
@@ -238,7 +263,7 @@ def _int(x: Any) -> Optional[int]:
 
 def compact(rec: Dict[str, Any]) -> Dict[str, Any]:
     """The fields a variant card shows."""
-    keep = ("vcv", "url", "title", "classification", "review_status", "stars", "last_evaluated", "conditions",
+    keep = ("vcv", "url", "title", "classification", "review_status", "stars", "stars_text", "last_evaluated", "conditions",
             "submissions_scv", "rcv_count", "canonical_spdi", "rsid", "caid")
     out = {k: rec.get(k) for k in keep}
     out["conditions"] = (rec.get("conditions") or [])[:6]

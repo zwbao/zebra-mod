@@ -38,6 +38,7 @@ Read it from the message; ask only when it changes what you do.
 | explain to a family; prepare a clinic visit; recurrence and family testing; patient groups; China resources | `zebra-family` |
 | a written report (clinician summary, family letter, visit-preparation sheet) with audited sources, exported to Word/PDF | `zebra-report` |
 | "is this urgent?", a symptom happening now, a drug or anaesthesia question, an upcoming procedure | `zebra-safety` (read it first, before any analysis) |
+| a case coming back after weeks or months — "anything new?", "is the VUS still a VUS?", "any trial now?" | `mcp__zebra-mod__case_recheck` (ClinVar, ClinGen, trials, papers since the last check), then the skill each change points to; offer to schedule a recheck every few months |
 
 Undiagnosed with records, typical chain: intake → diagnose → (variant / reanalysis / s2f) → family or report. Diagnosed, typical chain: disease_card → therapy → family.
 

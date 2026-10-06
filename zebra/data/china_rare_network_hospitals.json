@@ -1,0 +1,4635 @@
+{
+ "schema": 1,
+ "title": "全国罕见病诊疗协作网 member hospitals",
+ "provenance": {
+  "built_at": "2026-10-06T10:17:01Z",
+  "builder": "tools/china_access/build_hospitals.py",
+  "sources": {
+   "nhc2019_157": {
+    "title": "国家卫生健康委办公厅关于建立全国罕见病诊疗协作网的通知",
+    "document_no": "国卫办医函〔2019〕157号",
+    "issuer": "国家卫生健康委办公厅",
+    "published": "2019-02-12",
+    "url": "https://www.gov.cn/zhengce/zhengceku/2019-10/08/content_5436962.htm",
+    "origin": "https://www.nhc.gov.cn/yzygj/c100068/201902/39c01916f98a45c58418a839d82fda0c.shtml",
+    "attachment_url": null,
+    "retrieved_at": "2026-10-06T10:14:03Z",
+    "sha256": "d5eb7cb1498482252b083d6ef33656214b85d0425835b472c9ee3970b21f1c66",
+    "bytes": 1474657,
+    "rows": 324,
+    "rows_in_file": 28,
+    "stated_total": 324,
+    "stated_by_role": {
+     "national_lead": 1,
+     "provincial_lead": 32,
+     "member": 291
+    },
+    "cross_check": "gov.cn page carries the attachment table twice: both copies identical (324 rows). Compared row by row (编号, 省份, 类型, 名称) with the NHC original page https://www.nhc.gov.cn/yzygj/c100068/201902/39c01916f98a45c58418a839d82fda0c.shtml (saved from a browser, sha256 7d341edd249f477c80eaec2eadec95e631ce099ba3a3a4aacdefb79b72896333): 324/324 rows identical, so per-province and per-role counts agree. Parsed roles 1/32/291 equal the notice text '1家国家级牵头医院、32家省级牵头医院和291家协作网成员医院'.",
+    "note": "附件 第一批罕见病诊疗协作网医院名单 is inline on the page as an HTML table (编号/省份/类型/协作网医院). Dated 2019-02-12; NHC posted it 2019-02-15, gov.cn 政策库 2019-10-08. All 324 rows are parsed; only the hospitals whose name is absent from the 2024 list are rows of this file with this source_id. The others are carried by their 2024 row (no_2019 gives their 2019 编号, name_2019 the 2019 spelling when it differs)."
+   },
+   "nhc2019_157_nhc_copy": {
+    "title": "国家卫生健康委办公厅关于建立全国罕见病诊疗协作网的通知",
+    "document_no": "国卫办医函〔2019〕157号",
+    "issuer": "国家卫生健康委办公厅",
+    "published": "2019-02-12",
+    "url": "https://www.nhc.gov.cn/yzygj/c100068/201902/39c01916f98a45c58418a839d82fda0c.shtml",
+    "origin": "https://www.nhc.gov.cn/yzygj/c100068/201902/39c01916f98a45c58418a839d82fda0c.shtml",
+    "attachment_url": null,
+    "retrieved_at": "2026-10-06T09:48:53Z",
+    "sha256": "7d341edd249f477c80eaec2eadec95e631ce099ba3a3a4aacdefb79b72896333",
+    "bytes": 601447,
+    "rows": 324,
+    "rows_in_file": 0,
+    "stated_total": 324,
+    "cross_check": "identical to nhc2019_157 row by row",
+    "note": "Original issuing page. nhc.gov.cn answers scripts with HTTP 412, so it was opened in a real browser (ego-browser) and the rendered DOM saved; used only as the second copy for the cross-check."
+   },
+   "nhc2024_64": {
+    "title": "国家卫生健康委办公厅关于调整全国罕见病诊疗协作网成员医院和办公室人员的通知",
+    "document_no": "国卫办医政函〔2024〕64号",
+    "issuer": "国家卫生健康委办公厅",
+    "published": "2024-02-28",
+    "url": "https://www.nhc.gov.cn/yzygj/c100068/202403/e0328f505bcc47619e464148b2304dc0.shtml",
+    "origin": "https://www.nhc.gov.cn/yzygj/c100068/202403/e0328f505bcc47619e464148b2304dc0.shtml",
+    "attachment_url": "https://www.nhc.gov.cn/yzygj/c100068/202403/e0328f505bcc47619e464148b2304dc0/files/1732871019315_14550.docx",
+    "retrieved_at": "2026-10-06T10:14:04Z",
+    "sha256": "eda1b08cf6b0a81af56322e916fba97dc9ada783377e6dcd85e0b93a1b8c9882",
+    "bytes": 55529,
+    "rows": 419,
+    "rows_in_file": 419,
+    "stated_total": null,
+    "cross_check": "Parsed 419 rows, 编号 1..419 continuous. The notice and the docx state no total; the 419 total is stated by NHC itself (nhc_reply_2024_02403: '目前已有419家医院纳入协作网范围') and by the gov.cn news page (govcn_news_2024_419): parsed 419 = stated 419. No official per-role total exists for 2024; parsed roles are 1 national lead / 32 provincial lead / 386 member. No second official copy of the 2024 list was found (gov.cn 政策库 has no entry for this notice), so no row-level cross-check. The same docx bytes were obtained via the browser and via urllib (same sha256). Against 2019: 285 same name, 11 renamed on string evidence, 123 new names, 28 2019 names absent.",
+    "note": "Dated 2024-02-28, posted by NHC 医政司 2024-03-18. 附件1 全国罕见病诊疗协作网成员医院名单 is the full adjusted list (it replaces the 2019 list; it does not mark what changed). sha256/bytes are of the docx, which nhc.gov.cn serves to scripts without the 412 challenge; the notice page itself was read in a browser (rendered DOM sha256 98664e609f0b7db6808781a9d5f8f9d022a8e264443b69192520cce726acf2a9). 附件2 (协作网办公室人员名单) is not used. Two 西藏 rows are typed 成员单位 instead of 成员医院; role=member, role_zh as published."
+   },
+   "nhc_reply_2024_02403": {
+    "title": "关于政协第十四届全国委员会第二次会议第02403号（医疗卫生类173号）提案答复的函",
+    "document_no": null,
+    "issuer": "国家卫生健康委员会",
+    "published": "2024-08",
+    "url": "https://www.nhc.gov.cn/wjw/tia/202408/bb5a1989852b4c64a7f876f86c0cb93a.shtml",
+    "origin": "https://www.nhc.gov.cn/wjw/tia/202408/bb5a1989852b4c64a7f876f86c0cb93a.shtml",
+    "attachment_url": null,
+    "retrieved_at": "2026-10-06T10:10:00Z",
+    "sha256": "da87e8595c4647c83eb998e0731971098011d9b7ab79c435f7dfab831b083264",
+    "bytes": 29819,
+    "rows": 0,
+    "rows_in_file": 0,
+    "stated_total": 419,
+    "cross_check": "states '2024年…对全国罕见病诊疗协作网成员医院进行调整，目前已有419家医院纳入协作网范围' = nhc2024_64 parsed 419",
+    "note": "Used only for the stated total. Read in a browser (HTTP 412 to scripts); month from the URL path."
+   },
+   "govcn_news_2024_419": {
+    "title": "诊疗水平再提升！全国罕见病诊疗协作网医院达419家",
+    "document_no": null,
+    "issuer": "新华社 (中国政府网 要闻)",
+    "published": "2024-10-19",
+    "url": "https://www.gov.cn/yaowen/liebiao/202410/content_6981620.htm",
+    "origin": "https://www.gov.cn/yaowen/liebiao/202410/content_6981620.htm",
+    "attachment_url": null,
+    "retrieved_at": "2026-10-06T10:14:05Z",
+    "sha256": "ea481b5519cc7fcc4a66c838a6a58157683354bee246f739e12a1a811979bdb3",
+    "bytes": 23371,
+    "rows": 0,
+    "rows_in_file": 0,
+    "stated_total": 419,
+    "cross_check": "states '全国罕见病诊疗协作网医院总数达到419家' = nhc2024_64 parsed 419",
+    "note": "News item on gov.cn; used only for the stated total."
+   },
+   "nhc2026_305": {
+    "title": "关于进一步加强罕见病防治工作的通知",
+    "document_no": "国卫办医政函〔2026〕305号",
+    "issuer": "国家卫生健康委办公厅、国家中医药局综合司",
+    "published": "2026-09-14",
+    "url": "https://www.nhc.gov.cn/yzygj/c100068/202609/1bf21303ba184697963d65dd3b5bc1ad.shtml",
+    "origin": "https://www.nhc.gov.cn/yzygj/c100068/202609/1bf21303ba184697963d65dd3b5bc1ad.shtml",
+    "attachment_url": null,
+    "retrieved_at": "2026-10-06T09:49:14Z",
+    "sha256": "404ec6127577264845c93a6b3fe81e6b5473988afe99fa76ea0785d335842626",
+    "bytes": 26145,
+    "rows": 0,
+    "rows_in_file": 0,
+    "stated_total": null,
+    "cross_check": "page has no table and no attachment: it changes no membership",
+    "note": "Posted 2026-09-20. Refers to the network as 全国罕见病诊疗协作网络 (协作网络) and directs that 有条件的中医医院 be brought into it, but lists no hospitals. Read in a browser (HTTP 412 to scripts)."
+   }
+  },
+  "counts": {
+   "total": 419,
+   "national_lead": 1,
+   "provincial_lead": 32,
+   "member": 386,
+   "by_province": {
+    "北京": 15,
+    "天津": 10,
+    "河北": 16,
+    "山西": 11,
+    "内蒙古": 15,
+    "辽宁": 15,
+    "吉林": 14,
+    "黑龙江": 15,
+    "上海": 15,
+    "江苏": 13,
+    "浙江": 15,
+    "安徽": 15,
+    "福建": 15,
+    "江西": 16,
+    "山东": 15,
+    "河南": 15,
+    "湖北": 12,
+    "湖南": 15,
+    "广东": 16,
+    "广西": 15,
+    "海南": 7,
+    "重庆": 11,
+    "四川": 15,
+    "贵州": 15,
+    "云南": 15,
+    "西藏": 3,
+    "陕西": 8,
+    "甘肃": 15,
+    "青海": 7,
+    "宁夏": 10,
+    "新疆": 14,
+    "新疆生产建设兵团": 11
+   },
+   "rows_in_file": 447,
+   "by_status": {
+    "listed_2019": 285,
+    "renamed_2024": 11,
+    "added_2024": 123,
+    "removed_2024": 28
+   },
+   "list_2019": {
+    "total": 324,
+    "national_lead": 1,
+    "provincial_lead": 32,
+    "member": 291,
+    "by_province": {
+     "北京": 15,
+     "天津": 10,
+     "河北": 12,
+     "山西": 10,
+     "内蒙古": 10,
+     "辽宁": 11,
+     "吉林": 13,
+     "黑龙江": 13,
+     "上海": 11,
+     "江苏": 13,
+     "浙江": 12,
+     "安徽": 11,
+     "福建": 14,
+     "江西": 12,
+     "山东": 14,
+     "河南": 11,
+     "湖北": 11,
+     "湖南": 10,
+     "广东": 14,
+     "广西": 10,
+     "海南": 7,
+     "重庆": 11,
+     "四川": 10,
+     "贵州": 8,
+     "云南": 10,
+     "西藏": 3,
+     "陕西": 7,
+     "甘肃": 3,
+     "青海": 5,
+     "宁夏": 9,
+     "新疆": 6,
+     "新疆生产建设兵团": 8
+    }
+   }
+  },
+  "status_definitions": {
+   "listed_2019": "in the 2019 list and in the 2024 list under the same name (no_2019 = 2019 编号)",
+   "renamed_2024": "in the 2024 list under a name that differs from its 2019 entry; name_2019 is the 2019 spelling and matched_by the string evidence used (no outside knowledge)",
+   "added_2024": "in the 2024 list; its name is not in the 2019 list of the same province (may include renamings the string rules cannot see)",
+   "removed_2024": "in the 2019 list; this name is not in the 2024 list (left the network, or renamed beyond what the string rules can see)"
+  },
+  "fields": "no = 编号 in the source table of source_id; role_zh_2019 appears only where the 2019 role differs. province is the short form; provinces maps it to the spelling published in both lists.",
+  "provinces": {
+   "北京": "北京市",
+   "天津": "天津市",
+   "河北": "河北省",
+   "山西": "山西省",
+   "内蒙古": "内蒙古自治区",
+   "辽宁": "辽宁省",
+   "吉林": "吉林省",
+   "黑龙江": "黑龙江省",
+   "上海": "上海市",
+   "江苏": "江苏省",
+   "浙江": "浙江省",
+   "安徽": "安徽省",
+   "福建": "福建省",
+   "江西": "江西省",
+   "山东": "山东省",
+   "河南": "河南省",
+   "湖北": "湖北省",
+   "湖南": "湖南省",
+   "广东": "广东省",
+   "广西": "广西壮族自治区",
+   "海南": "海南省",
+   "重庆": "重庆市",
+   "四川": "四川省",
+   "贵州": "贵州省",
+   "云南": "云南省",
+   "西藏": "西藏自治区",
+   "陕西": "陕西省",
+   "甘肃": "甘肃省",
+   "青海": "青海省",
+   "宁夏": "宁夏回族自治区",
+   "新疆": "新疆维吾尔自治区",
+   "新疆生产建设兵团": "新疆生产建设兵团"
+  },
+  "changes_2019_to_2024": {
+   "role_changes": [
+    "黑龙江: 哈尔滨医科大学附属第二医院 成员医院→省级牵头医院",
+    "黑龙江: 哈尔滨医科大学附属第一医院 省级牵头医院→成员医院",
+    "贵州: 贵州省人民医院 成员医院→省级牵头医院",
+    "贵州: 贵州医科大学附属医院 省级牵头医院→成员医院"
+   ],
+   "renamed_on_string_evidence": [
+    "北京: 北京积水潭医院 → 首都医科大学附属北京积水潭医院 (2019_name_in_2024_name)",
+    "北京: 中国人民解放军总医院 → 中国人民解放军总医院第一医学中心 (2019_name_in_2024_name)",
+    "吉林: 四平市中心医院 → 四平市中心人民医院 (2019_name_subsequence_of_2024)",
+    "福建: 宁德市医院 → 宁德师范学院附属宁德市医院 (2019_name_in_2024_name)",
+    "山东: 山东省立医院 → 山东第一医科大学附属省立医院（山东省立医院） (2019_name_in_2024_name)",
+    "山东: 山东省千佛山医院 → 山东第一医科大学第一附属医院（山东省千佛山医院） (2019_name_in_2024_name)",
+    "山东: 济南市中心医院 → 山东第一医科大学附属中心医院（济南市中心医院） (2019_name_in_2024_name)",
+    "湖南: 湖南省人民医院 → 湖南省人民医院（湖南师范大学附属第一医院） (2019_name_in_2024_name)",
+    "重庆: 陆军军医大学第三附属医院（大坪医院） → 陆军特色医学中心（大坪医院） (2019_alias_in_2024_name)",
+    "新疆生产建设兵团: 石河子大学医学院第一附属医院 → 石河子大学第一附属医院 (2024_name_subsequence_of_2019)",
+    "新疆生产建设兵团: 第十师北屯市北屯医院 → 新疆生产建设兵团第十师北屯市北屯医院 (2019_name_in_2024_name)"
+   ],
+   "role_zh_variants": [
+    "西藏 编号353 拉萨市人民医院: 成员单位",
+    "西藏 编号354 日喀则市人民医院: 成员单位"
+   ]
+  },
+  "coverage": "Hospitals of the national 全国罕见病诊疗协作网 as published by the National Health Commission: the first list (国卫办医函〔2019〕157号, 324 hospitals) and the adjusted full list that replaced it (国卫办医政函〔2024〕64号 附件1, 419 hospitals: 1 national lead, 32 provincial lead, 386 member). Current membership = the 419 rows with source_id nhc2024_64; rows with source_id nhc2019_157 are 2019 names absent from the 2024 list. As of 2026-10-06 the 2024 list is the only later official membership revision found; the 2023 第二批罕见病目录 notice carries a disease list only, and 国卫办医政函〔2026〕305号 (2026-09-14) asks for 有条件的中医医院 to be added but names none. Searched: gov.cn 政策库 API (sousuo.www.gov.cn/search-gov/data, t=zhengcelibrary_bm and zhengcelibrary, q=罕见病诊疗协作网 and q=调整全国罕见病诊疗协作网成员医院); NHC 医政司 政策文件 list (300 most recent documents, 2021-06-28..2026-09-20), titles with 罕见/协作网: 2026-09-20 关于进一步加强罕见病防治工作的通知; 2025-07-10 国家卫生健康委办公厅关于印发软骨发育不全等86个罕见病病种诊疗指南(2025年版)的通知; 2024-03-18 国家卫生健康委办公厅关于调整全国罕见病诊疗协作网成员医院和办公室人员的通知; 2023-09-20 关于公布第二批罕见病目录的通知; 2022-12-27 国家卫生健康委办公厅关于印发国家罕见病医学中心设置标准的通知; web search (exa, WebSearch) for 罕见病诊疗协作网 成员医院 调整/增补/新增 2020-2026 and for reposts of 国卫办医政函〔2024〕64号. NOT covered: provincial or city-level rare-disease networks, 罕见病门诊 designations required by the 2026 notice, 国家罕见病医学中心, which diseases or departments each hospital covers, addresses or contacts, Hong Kong/Macao/Taiwan (none are listed), and any membership change NHC made after the 2024 list without publishing a list. A 2019 name counts as renamed only on string evidence inside the two lists; a hospital that changed its name beyond that (for example a medical school upgraded to a university) appears as removed_2024 plus added_2024, so removed_2024 means 'this 2019 name is not in the 2024 list', not proof the hospital left the network.",
+  "not_retrieved": [
+   {
+    "what": "nhc.gov.cn notice pages by script (2019/157, 2024/64, 2026/305, 2024 proposal reply)",
+    "url": "https://www.nhc.gov.cn/",
+    "reason": "HTTP 412 JavaScript challenge to curl/urllib; read in a real browser instead and the rendered DOM saved (see sources)"
+   },
+   {
+    "what": "a second official copy of the 2024 list (国卫办医政函〔2024〕64号 附件1)",
+    "url": "https://sousuo.www.gov.cn/search-gov/data?t=zhengcelibrary_bm",
+    "reason": "not found: gov.cn 政策库 returns only the 2019/157 and 2020/2 notices for 罕见病诊疗协作网; no provincial 卫健委 repost with the full attachment turned up in web search"
+   },
+   {
+    "what": "provincial implementation lists (各省罕见病诊疗协作网 实施方案/名单)",
+    "url": null,
+    "reason": "out of scope for the national list; not retrieved"
+   }
+  ]
+ },
+ "hospitals": [
+  {
+   "name": "中国医学科学院北京协和医院",
+   "province": "北京",
+   "role": "national_lead",
+   "role_zh": "国家级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 1,
+   "no_2019": 1
+  },
+  {
+   "name": "北京大学第一医院",
+   "province": "北京",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 2,
+   "no_2019": 2
+  },
+  {
+   "name": "中日友好医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 3,
+   "no_2019": 4
+  },
+  {
+   "name": "北京医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 4,
+   "no_2019": 3
+  },
+  {
+   "name": "中国医学科学院阜外医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 5,
+   "no_2019": 5
+  },
+  {
+   "name": "北京大学人民医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 6,
+   "no_2019": 6
+  },
+  {
+   "name": "北京大学第三医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 7,
+   "no_2019": 7
+  },
+  {
+   "name": "首都医科大学附属北京友谊医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 8,
+   "no_2019": 10
+  },
+  {
+   "name": "首都医科大学附属北京朝阳医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 9,
+   "no_2019": 11
+  },
+  {
+   "name": "首都医科大学附属北京积水潭医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 10,
+   "no_2019": 15,
+   "name_2019": "北京积水潭医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "首都医科大学附属北京天坛医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 11,
+   "no_2019": 12
+  },
+  {
+   "name": "首都医科大学宣武医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 12,
+   "no_2019": 9
+  },
+  {
+   "name": "首都医科大学附属北京儿童医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 13,
+   "no_2019": 13
+  },
+  {
+   "name": "首都儿科研究所附属儿童医院",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 14,
+   "no_2019": 14
+  },
+  {
+   "name": "中国人民解放军总医院第一医学中心",
+   "province": "北京",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 15,
+   "no_2019": 8,
+   "name_2019": "中国人民解放军总医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "天津医科大学总医院",
+   "province": "天津",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 16,
+   "no_2019": 16
+  },
+  {
+   "name": "中国医学科学院血液病医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 17,
+   "no_2019": 17
+  },
+  {
+   "name": "天津市第一中心医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 18,
+   "no_2019": 18
+  },
+  {
+   "name": "天津市第三中心医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 19,
+   "no_2019": 19
+  },
+  {
+   "name": "天津市第五中心医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 20,
+   "no_2019": 20
+  },
+  {
+   "name": "天津市儿童医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 21,
+   "no_2019": 21
+  },
+  {
+   "name": "天津市肿瘤医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 22,
+   "no_2019": 22
+  },
+  {
+   "name": "天津医科大学第二医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 23,
+   "no_2019": 23
+  },
+  {
+   "name": "天津中医药大学第一附属医院",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 24,
+   "no_2019": 24
+  },
+  {
+   "name": "天津市中西医结合医院（南开医院）",
+   "province": "天津",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 25,
+   "no_2019": 25
+  },
+  {
+   "name": "河北医科大学第二医院",
+   "province": "河北",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 26,
+   "no_2019": 26
+  },
+  {
+   "name": "石家庄市人民医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 27
+  },
+  {
+   "name": "河北医科大学第三医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 28,
+   "no_2019": 27
+  },
+  {
+   "name": "保定市第一中心医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 29,
+   "no_2019": 30
+  },
+  {
+   "name": "邢台市人民医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 30,
+   "no_2019": 37
+  },
+  {
+   "name": "衡水市人民医院（哈励逊国际和平医院）",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 31,
+   "no_2019": 33
+  },
+  {
+   "name": "承德医学院附属医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 32
+  },
+  {
+   "name": "秦皇岛市第一医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 33
+  },
+  {
+   "name": "唐山市工人医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 34,
+   "no_2019": 36
+  },
+  {
+   "name": "河北北方学院附属第一医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 35,
+   "no_2019": 35
+  },
+  {
+   "name": "河北大学附属医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 36,
+   "no_2019": 31
+  },
+  {
+   "name": "河北省人民医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 37,
+   "no_2019": 28
+  },
+  {
+   "name": "河北省儿童医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 38,
+   "no_2019": 29
+  },
+  {
+   "name": "承德市中心医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 39
+  },
+  {
+   "name": "沧州市中心医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 40,
+   "no_2019": 32
+  },
+  {
+   "name": "邯郸市中心医院",
+   "province": "河北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 41,
+   "no_2019": 34
+  },
+  {
+   "name": "山西医科大学第一医院",
+   "province": "山西",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 42,
+   "no_2019": 38
+  },
+  {
+   "name": "山西省儿童医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 43,
+   "no_2019": 42
+  },
+  {
+   "name": "长治医学院附属和平医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 44,
+   "no_2019": 47
+  },
+  {
+   "name": "山西省人民医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 45,
+   "no_2019": 39
+  },
+  {
+   "name": "临汾市人民医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 46,
+   "no_2019": 46
+  },
+  {
+   "name": "山西医科大学第二医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 47,
+   "no_2019": 40
+  },
+  {
+   "name": "山西白求恩医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 48
+  },
+  {
+   "name": "山西省眼科医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 49,
+   "no_2019": 44
+  },
+  {
+   "name": "运城市中心医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 50
+  },
+  {
+   "name": "大同市第三人民医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 51
+  },
+  {
+   "name": "晋中市第一人民医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 52
+  },
+  {
+   "name": "内蒙古医科大学附属医院",
+   "province": "内蒙古",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 53,
+   "no_2019": 48
+  },
+  {
+   "name": "包头医学院第一附属医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 54,
+   "no_2019": 53
+  },
+  {
+   "name": "内蒙古自治区人民医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 55,
+   "no_2019": 49
+  },
+  {
+   "name": "巴彦淖尔市医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 56,
+   "no_2019": 51
+  },
+  {
+   "name": "赤峰市医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 57,
+   "no_2019": 54
+  },
+  {
+   "name": "赤峰学院附属医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 58,
+   "no_2019": 55
+  },
+  {
+   "name": "包头市中心医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 59,
+   "no_2019": 52
+  },
+  {
+   "name": "兴安盟人民医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 60,
+   "no_2019": 57
+  },
+  {
+   "name": "通辽市医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 61,
+   "no_2019": 56
+  },
+  {
+   "name": "内蒙古自治区妇幼保健院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 62,
+   "no_2019": 50
+  },
+  {
+   "name": "呼伦贝尔市人民医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 63
+  },
+  {
+   "name": "内蒙古林业总医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 64
+  },
+  {
+   "name": "锡林郭勒盟中心医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 65
+  },
+  {
+   "name": "鄂尔多斯市中心医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 66
+  },
+  {
+   "name": "乌海市人民医院",
+   "province": "内蒙古",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 67
+  },
+  {
+   "name": "中国医科大学附属第一医院",
+   "province": "辽宁",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 68,
+   "no_2019": 58
+  },
+  {
+   "name": "中国医科大学附属盛京医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 69,
+   "no_2019": 59
+  },
+  {
+   "name": "中国医科大学附属第四医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 70,
+   "no_2019": 60
+  },
+  {
+   "name": "辽宁省人民医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 71,
+   "no_2019": 61
+  },
+  {
+   "name": "辽宁中医药大学附属医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 72,
+   "no_2019": 62
+  },
+  {
+   "name": "北部战区总医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 73,
+   "no_2019": 63
+  },
+  {
+   "name": "大连市中心医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 74,
+   "no_2019": 66
+  },
+  {
+   "name": "大连医科大学附属第一医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 75,
+   "no_2019": 64
+  },
+  {
+   "name": "大连医科大学附属第二医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 76,
+   "no_2019": 65
+  },
+  {
+   "name": "鞍山市中心医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 77,
+   "no_2019": 67
+  },
+  {
+   "name": "锦州医科大学附属第一医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 78,
+   "no_2019": 68
+  },
+  {
+   "name": "大连市友谊医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 79
+  },
+  {
+   "name": "大连市第三人民医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 80
+  },
+  {
+   "name": "朝阳市中心医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 81
+  },
+  {
+   "name": "本溪市中心医院",
+   "province": "辽宁",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 82
+  },
+  {
+   "name": "吉林大学第一医院",
+   "province": "吉林",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 83,
+   "no_2019": 69
+  },
+  {
+   "name": "吉林市中心医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 84,
+   "no_2019": 74
+  },
+  {
+   "name": "吉林市人民医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 85,
+   "no_2019": 73
+  },
+  {
+   "name": "长春市儿童医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 86,
+   "no_2019": 72
+  },
+  {
+   "name": "延边大学附属医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 87,
+   "no_2019": 81
+  },
+  {
+   "name": "长春市中心医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 88,
+   "no_2019": 71
+  },
+  {
+   "name": "通化市中心医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 89,
+   "no_2019": 80
+  },
+  {
+   "name": "松原市中心医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 90,
+   "no_2019": 79
+  },
+  {
+   "name": "四平市中心人民医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 91,
+   "no_2019": 78,
+   "name_2019": "四平市中心医院",
+   "matched_by": "2019_name_subsequence_of_2024"
+  },
+  {
+   "name": "白山市中心医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 92,
+   "no_2019": 76
+  },
+  {
+   "name": "吉林大学第二医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 93,
+   "no_2019": 70
+  },
+  {
+   "name": "辽源市中心医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 94,
+   "no_2019": 77
+  },
+  {
+   "name": "白城中心医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 95,
+   "no_2019": 75
+  },
+  {
+   "name": "吉林大学中日联谊医院",
+   "province": "吉林",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 96
+  },
+  {
+   "name": "哈尔滨医科大学附属第二医院",
+   "province": "黑龙江",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 97,
+   "no_2019": 83,
+   "role_zh_2019": "成员医院"
+  },
+  {
+   "name": "哈尔滨医科大学附属第一医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 98,
+   "no_2019": 82,
+   "role_zh_2019": "省级牵头医院"
+  },
+  {
+   "name": "齐齐哈尔市第一医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 99,
+   "no_2019": 92
+  },
+  {
+   "name": "黑龙江省医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 100,
+   "no_2019": 84
+  },
+  {
+   "name": "大庆油田总医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 101,
+   "no_2019": 86
+  },
+  {
+   "name": "鸡西鸡矿医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 102,
+   "no_2019": 89
+  },
+  {
+   "name": "牡丹江市第一人民医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 103,
+   "no_2019": 91
+  },
+  {
+   "name": "佳木斯市中心医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 104,
+   "no_2019": 90
+  },
+  {
+   "name": "鹤岗市人民医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 105,
+   "no_2019": 88
+  },
+  {
+   "name": "伊春市中心医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 106,
+   "no_2019": 94
+  },
+  {
+   "name": "首都医科大学附属北京儿童医院黑龙江医院（哈尔滨医科大学附属第六医院）",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 107
+  },
+  {
+   "name": "绥化市第一医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 108,
+   "no_2019": 93
+  },
+  {
+   "name": "大兴安岭地区人民医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 109,
+   "no_2019": 87
+  },
+  {
+   "name": "哈尔滨医科大学附属第四医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 110
+  },
+  {
+   "name": "七台河市人民医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 111
+  },
+  {
+   "name": "上海交通大学医学院附属新华医院",
+   "province": "上海",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 112,
+   "no_2019": 95
+  },
+  {
+   "name": "上海市第一人民医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 113
+  },
+  {
+   "name": "上海市第六人民医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 114
+  },
+  {
+   "name": "上海交通大学医学院附属第九人民医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 115
+  },
+  {
+   "name": "上海市第十人民医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 116
+  },
+  {
+   "name": "复旦大学附属中山医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 117,
+   "no_2019": 96
+  },
+  {
+   "name": "复旦大学附属华山医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 118,
+   "no_2019": 97
+  },
+  {
+   "name": "复旦大学附属妇产科医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 119,
+   "no_2019": 98
+  },
+  {
+   "name": "复旦大学附属儿科医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 120,
+   "no_2019": 99
+  },
+  {
+   "name": "上海交通大学医学院附属瑞金医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 121,
+   "no_2019": 100
+  },
+  {
+   "name": "上海交通大学医学院附属仁济医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 122,
+   "no_2019": 101
+  },
+  {
+   "name": "上海交通大学医学院附属上海儿童医学中心",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 123,
+   "no_2019": 102
+  },
+  {
+   "name": "上海交通大学医学院附属儿童医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 124
+  },
+  {
+   "name": "上海长海医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 125,
+   "no_2019": 104
+  },
+  {
+   "name": "上海长征医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 126,
+   "no_2019": 105
+  },
+  {
+   "name": "东部战区总医院",
+   "province": "江苏",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 127,
+   "no_2019": 106
+  },
+  {
+   "name": "江苏省人民医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 128,
+   "no_2019": 108
+  },
+  {
+   "name": "南京鼓楼医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 129,
+   "no_2019": 109
+  },
+  {
+   "name": "东南大学附属中大医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 130,
+   "no_2019": 107
+  },
+  {
+   "name": "南京脑科医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 131,
+   "no_2019": 110
+  },
+  {
+   "name": "南京市儿童医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 132,
+   "no_2019": 111
+  },
+  {
+   "name": "苏州大学附属第一医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 133,
+   "no_2019": 112
+  },
+  {
+   "name": "苏州大学附属儿童医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 134,
+   "no_2019": 113
+  },
+  {
+   "name": "扬州大学附属医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 135,
+   "no_2019": 114
+  },
+  {
+   "name": "无锡市人民医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 136,
+   "no_2019": 115
+  },
+  {
+   "name": "徐州医科大学附属医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 137,
+   "no_2019": 116
+  },
+  {
+   "name": "徐州市中心医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 138,
+   "no_2019": 117
+  },
+  {
+   "name": "淮安市第一人民医院",
+   "province": "江苏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 139,
+   "no_2019": 118
+  },
+  {
+   "name": "浙江大学医学院附属第二医院",
+   "province": "浙江",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 140,
+   "no_2019": 119
+  },
+  {
+   "name": "浙江省人民医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 141,
+   "no_2019": 123
+  },
+  {
+   "name": "浙江省肿瘤医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 142,
+   "no_2019": 125
+  },
+  {
+   "name": "浙江大学医学院附属第一医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 143,
+   "no_2019": 120
+  },
+  {
+   "name": "浙江大学医学院附属邵逸夫医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 144,
+   "no_2019": 122
+  },
+  {
+   "name": "浙江大学医学院附属儿童医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 145,
+   "no_2019": 121
+  },
+  {
+   "name": "浙江大学医学院附属第四医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 146
+  },
+  {
+   "name": "浙江省中医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 147,
+   "no_2019": 124
+  },
+  {
+   "name": "温州医科大学附属第一医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 148,
+   "no_2019": 127
+  },
+  {
+   "name": "温州医科大学附属第二医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 149,
+   "no_2019": 128
+  },
+  {
+   "name": "温州医科大学附属眼视光医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 150,
+   "no_2019": 129
+  },
+  {
+   "name": "宁波大学附属第一医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 151
+  },
+  {
+   "name": "嘉兴市第一医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 152
+  },
+  {
+   "name": "浙江省台州医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 153,
+   "no_2019": 130
+  },
+  {
+   "name": "丽水市中心医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 154
+  },
+  {
+   "name": "安徽医科大学第一附属医院",
+   "province": "安徽",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 155,
+   "no_2019": 131
+  },
+  {
+   "name": "中国科学技术大学附属第一医院（安徽省立医院）",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 156,
+   "no_2019": 132
+  },
+  {
+   "name": "安徽中医药大学第一附属医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 157
+  },
+  {
+   "name": "安徽医科大学第二附属医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 158,
+   "no_2019": 133
+  },
+  {
+   "name": "皖南医学院第一附属医院（弋矶山医院）",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 159,
+   "no_2019": 141
+  },
+  {
+   "name": "蚌埠医科大学第一附属医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 160
+  },
+  {
+   "name": "六安市人民医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 161,
+   "no_2019": 140
+  },
+  {
+   "name": "淮北市人民医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 162,
+   "no_2019": 139
+  },
+  {
+   "name": "安徽省第二人民医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 163,
+   "no_2019": 135
+  },
+  {
+   "name": "安徽省儿童医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 164,
+   "no_2019": 136
+  },
+  {
+   "name": "安徽省胸科医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 165,
+   "no_2019": 137
+  },
+  {
+   "name": "阜阳市人民医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 166
+  },
+  {
+   "name": "滁州市第一人民医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 167
+  },
+  {
+   "name": "安庆市立医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 168
+  },
+  {
+   "name": "安徽中医药大学神经病学研究所附属医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 169
+  },
+  {
+   "name": "福建医科大学附属第一医院",
+   "province": "福建",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 170,
+   "no_2019": 142
+  },
+  {
+   "name": "福建医科大学附属协和医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 171,
+   "no_2019": 143
+  },
+  {
+   "name": "福建省立医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 172,
+   "no_2019": 144
+  },
+  {
+   "name": "福建省福州儿童医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 173
+  },
+  {
+   "name": "福建省儿童医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 174
+  },
+  {
+   "name": "厦门大学附属第一医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 175,
+   "no_2019": 146
+  },
+  {
+   "name": "厦门大学附属中山医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 176,
+   "no_2019": 147
+  },
+  {
+   "name": "厦门市儿童医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 177,
+   "no_2019": 148
+  },
+  {
+   "name": "泉州市第一医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 178,
+   "no_2019": 153
+  },
+  {
+   "name": "漳州市医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 179,
+   "no_2019": 155
+  },
+  {
+   "name": "莆田学院附属医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 180,
+   "no_2019": 152
+  },
+  {
+   "name": "龙岩市第一医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 181,
+   "no_2019": 150
+  },
+  {
+   "name": "三明市第一医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 182,
+   "no_2019": 154
+  },
+  {
+   "name": "宁德师范学院附属宁德市医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 183,
+   "no_2019": 151,
+   "name_2019": "宁德市医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "福建省南平市第一医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 184,
+   "no_2019": 149
+  },
+  {
+   "name": "南昌大学第一附属医院",
+   "province": "江西",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 185,
+   "no_2019": 156
+  },
+  {
+   "name": "南昌大学第二附属医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 186,
+   "no_2019": 157
+  },
+  {
+   "name": "江西省儿童医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 187,
+   "no_2019": 158
+  },
+  {
+   "name": "抚州市第一人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 188,
+   "no_2019": 159
+  },
+  {
+   "name": "赣南医学院第一附属医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 189,
+   "no_2019": 160
+  },
+  {
+   "name": "吉安市中心人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 190,
+   "no_2019": 161
+  },
+  {
+   "name": "九江市第一人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 191,
+   "no_2019": 162
+  },
+  {
+   "name": "萍乡市人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 192,
+   "no_2019": 163
+  },
+  {
+   "name": "上饶市人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 193,
+   "no_2019": 164
+  },
+  {
+   "name": "新余市人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 194,
+   "no_2019": 165
+  },
+  {
+   "name": "宜春市人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 195,
+   "no_2019": 166
+  },
+  {
+   "name": "鹰潭市人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 196,
+   "no_2019": 167
+  },
+  {
+   "name": "江西省人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 197
+  },
+  {
+   "name": "井冈山大学附属医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 198
+  },
+  {
+   "name": "景德镇市第一人民医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 199
+  },
+  {
+   "name": "九江学院附属医院",
+   "province": "江西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 200
+  },
+  {
+   "name": "山东第一医科大学附属省立医院（山东省立医院）",
+   "province": "山东",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 201,
+   "no_2019": 168,
+   "name_2019": "山东省立医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "山东第一医科大学第一附属医院（山东省千佛山医院）",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 202,
+   "no_2019": 173,
+   "name_2019": "山东省千佛山医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "济宁市第一人民医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 203,
+   "no_2019": 176
+  },
+  {
+   "name": "山东大学齐鲁医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 204,
+   "no_2019": 169
+  },
+  {
+   "name": "济宁医学院附属医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 205
+  },
+  {
+   "name": "烟台毓璜顶医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 206,
+   "no_2019": 180
+  },
+  {
+   "name": "临沂市人民医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 207,
+   "no_2019": 178
+  },
+  {
+   "name": "青岛市市立医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 208
+  },
+  {
+   "name": "滨州医学院附属医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 209
+  },
+  {
+   "name": "聊城市人民医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 210,
+   "no_2019": 177
+  },
+  {
+   "name": "青岛大学附属医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 211,
+   "no_2019": 174
+  },
+  {
+   "name": "济南市妇幼保健院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 212,
+   "no_2019": 171
+  },
+  {
+   "name": "山东大学齐鲁儿童医院(济南市儿童医院)",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 213,
+   "no_2019": 170
+  },
+  {
+   "name": "山东第一医科大学第二附属医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 214
+  },
+  {
+   "name": "山东第一医科大学附属中心医院（济南市中心医院）",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 215,
+   "no_2019": 172,
+   "name_2019": "济南市中心医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "郑州大学第一附属医院",
+   "province": "河南",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 216,
+   "no_2019": 182
+  },
+  {
+   "name": "河南省人民医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 217,
+   "no_2019": 187
+  },
+  {
+   "name": "河南省胸科医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 218,
+   "no_2019": 188
+  },
+  {
+   "name": "郑州大学第二附属医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 219,
+   "no_2019": 183
+  },
+  {
+   "name": "郑州大学第三附属医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 220,
+   "no_2019": 184
+  },
+  {
+   "name": "郑州大学第五附属医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 221,
+   "no_2019": 185
+  },
+  {
+   "name": "河南大学淮河医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 222,
+   "no_2019": 189
+  },
+  {
+   "name": "河南科技大学第一附属医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 223,
+   "no_2019": 190
+  },
+  {
+   "name": "新乡医学院第一附属医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 224,
+   "no_2019": 191
+  },
+  {
+   "name": "河南省儿童医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 225,
+   "no_2019": 186
+  },
+  {
+   "name": "郑州市中心医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 226
+  },
+  {
+   "name": "洛阳市中心医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 227
+  },
+  {
+   "name": "许昌市中心医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 228
+  },
+  {
+   "name": "南阳市中心医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 229
+  },
+  {
+   "name": "驻马店市中心医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 230
+  },
+  {
+   "name": "华中科技大学同济医学院附属同济医院",
+   "province": "湖北",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 231,
+   "no_2019": 193
+  },
+  {
+   "name": "华中科技大学同济医学院附属协和医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 232,
+   "no_2019": 194
+  },
+  {
+   "name": "武汉大学人民医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 233,
+   "no_2019": 195
+  },
+  {
+   "name": "武汉大学中南医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 234,
+   "no_2019": 196
+  },
+  {
+   "name": "武汉市中心医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 235,
+   "no_2019": 197
+  },
+  {
+   "name": "武汉市第一医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 236,
+   "no_2019": 198
+  },
+  {
+   "name": "武汉儿童医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 237,
+   "no_2019": 199
+  },
+  {
+   "name": "荆州市中心医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 238,
+   "no_2019": 200
+  },
+  {
+   "name": "十堰市太和医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 239,
+   "no_2019": 201
+  },
+  {
+   "name": "襄阳市中心医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 240,
+   "no_2019": 202
+  },
+  {
+   "name": "宜昌市中心人民医院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 241,
+   "no_2019": 203
+  },
+  {
+   "name": "湖北省妇幼保健院",
+   "province": "湖北",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 242
+  },
+  {
+   "name": "中南大学湘雅医院",
+   "province": "湖南",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 243,
+   "no_2019": 204
+  },
+  {
+   "name": "中南大学湘雅二医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 244,
+   "no_2019": 205
+  },
+  {
+   "name": "中南大学湘雅三医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 245,
+   "no_2019": 206
+  },
+  {
+   "name": "湖南省人民医院（湖南师范大学附属第一医院）",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 246,
+   "no_2019": 207,
+   "name_2019": "湖南省人民医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "湖南省妇幼保健院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 247,
+   "no_2019": 209
+  },
+  {
+   "name": "湖南省儿童医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 248,
+   "no_2019": 208
+  },
+  {
+   "name": "长沙市中心医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 249,
+   "no_2019": 210
+  },
+  {
+   "name": "株洲市中心医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 250,
+   "no_2019": 213
+  },
+  {
+   "name": "岳阳市中心医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 251
+  },
+  {
+   "name": "湖南医药学院总医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 252
+  },
+  {
+   "name": "郴州市第一人民医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 253
+  },
+  {
+   "name": "常德市第一人民医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 254
+  },
+  {
+   "name": "娄底市中心医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 255
+  },
+  {
+   "name": "南华大学附属第一医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 256
+  },
+  {
+   "name": "中信湘雅生殖与遗传专科医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 257
+  },
+  {
+   "name": "广州市妇女儿童医疗中心",
+   "province": "广东",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 258,
+   "no_2019": 214
+  },
+  {
+   "name": "深圳市儿童医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 259,
+   "no_2019": 225
+  },
+  {
+   "name": "中山大学中山眼科中心",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 260,
+   "no_2019": 217
+  },
+  {
+   "name": "深圳市妇幼保健院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 261,
+   "no_2019": 226
+  },
+  {
+   "name": "香港大学深圳医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 262
+  },
+  {
+   "name": "中山大学附属第三医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 263,
+   "no_2019": 216
+  },
+  {
+   "name": "广州医科大学附属第三医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 264,
+   "no_2019": 222
+  },
+  {
+   "name": "中山大学附属第一医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 265,
+   "no_2019": 215
+  },
+  {
+   "name": "南方医科大学珠江医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 266,
+   "no_2019": 224
+  },
+  {
+   "name": "汕头大学医学院第一附属医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 267,
+   "no_2019": 227
+  },
+  {
+   "name": "广东省妇幼保健院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 268
+  },
+  {
+   "name": "广东医科大学附属医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 269
+  },
+  {
+   "name": "南方医科大学南方医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 270,
+   "no_2019": 223
+  },
+  {
+   "name": "中山大学孙逸仙纪念医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 271,
+   "no_2019": 218
+  },
+  {
+   "name": "广东省人民医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 272,
+   "no_2019": 219
+  },
+  {
+   "name": "广州医科大学附属第一医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 273,
+   "no_2019": 221
+  },
+  {
+   "name": "广西医科大学第一附属医院",
+   "province": "广西",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 274,
+   "no_2019": 228
+  },
+  {
+   "name": "玉林市第一人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 275,
+   "no_2019": 237
+  },
+  {
+   "name": "南宁市第一人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 276
+  },
+  {
+   "name": "柳州市人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 277
+  },
+  {
+   "name": "广州市妇女儿童医疗中心柳州医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 278
+  },
+  {
+   "name": "右江民族医学院附属医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 279,
+   "no_2019": 236
+  },
+  {
+   "name": "广西壮族自治区人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 280,
+   "no_2019": 229
+  },
+  {
+   "name": "贵港市人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 281
+  },
+  {
+   "name": "桂林市人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 282
+  },
+  {
+   "name": "北海市人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 283
+  },
+  {
+   "name": "柳州市工人医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 284,
+   "no_2019": 233
+  },
+  {
+   "name": "梧州市工人医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 285,
+   "no_2019": 235
+  },
+  {
+   "name": "广西医科大学第二附属医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 286
+  },
+  {
+   "name": "钦州市第一人民医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 287,
+   "no_2019": 234
+  },
+  {
+   "name": "广西壮族自治区妇幼保健院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 288,
+   "no_2019": 230
+  },
+  {
+   "name": "海南省人民医院",
+   "province": "海南",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 289,
+   "no_2019": 238
+  },
+  {
+   "name": "海南医学院第一附属医院",
+   "province": "海南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 290,
+   "no_2019": 239
+  },
+  {
+   "name": "海口市人民医院",
+   "province": "海南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 291,
+   "no_2019": 242
+  },
+  {
+   "name": "海南省妇幼保健院",
+   "province": "海南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 292,
+   "no_2019": 241
+  },
+  {
+   "name": "儋州市人民医院",
+   "province": "海南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 293,
+   "no_2019": 243
+  },
+  {
+   "name": "琼海市人民医院",
+   "province": "海南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 294,
+   "no_2019": 244
+  },
+  {
+   "name": "海南医学院第二附属医院",
+   "province": "海南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 295,
+   "no_2019": 240
+  },
+  {
+   "name": "重庆医科大学附属第一医院",
+   "province": "重庆",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 296,
+   "no_2019": 245
+  },
+  {
+   "name": "重庆医科大学附属儿童医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 297,
+   "no_2019": 247
+  },
+  {
+   "name": "重庆医科大学附属第二医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 298,
+   "no_2019": 246
+  },
+  {
+   "name": "重庆市人民医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 299,
+   "no_2019": 248
+  },
+  {
+   "name": "重庆市中医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 300,
+   "no_2019": 255
+  },
+  {
+   "name": "陆军军医大学第一附属医院（西南医院）",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 301,
+   "no_2019": 249
+  },
+  {
+   "name": "陆军军医大学第二附属医院（新桥医院）",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 302,
+   "no_2019": 250
+  },
+  {
+   "name": "陆军特色医学中心（大坪医院）",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 303,
+   "no_2019": 251,
+   "name_2019": "陆军军医大学第三附属医院（大坪医院）",
+   "matched_by": "2019_alias_in_2024_name"
+  },
+  {
+   "name": "重庆大学附属三峡医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 304
+  },
+  {
+   "name": "重庆大学附属涪陵医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 305
+  },
+  {
+   "name": "重庆市黔江中心医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 306,
+   "no_2019": 254
+  },
+  {
+   "name": "四川大学华西医院",
+   "province": "四川",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 307,
+   "no_2019": 256
+  },
+  {
+   "name": "四川大学华西第二医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 308,
+   "no_2019": 257
+  },
+  {
+   "name": "四川省人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 309,
+   "no_2019": 258
+  },
+  {
+   "name": "四川省肿瘤医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 310
+  },
+  {
+   "name": "西南医科大学附属医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 311,
+   "no_2019": 263
+  },
+  {
+   "name": "川北医学院附属医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 312
+  },
+  {
+   "name": "成都市第三人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 313,
+   "no_2019": 259
+  },
+  {
+   "name": "成都市妇女儿童中心医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 314
+  },
+  {
+   "name": "自贡市第一人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 315,
+   "no_2019": 265
+  },
+  {
+   "name": "攀枝花市中心医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 316,
+   "no_2019": 261
+  },
+  {
+   "name": "德阳市人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 317,
+   "no_2019": 260
+  },
+  {
+   "name": "广元市第一人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 318
+  },
+  {
+   "name": "遂宁市中心医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 319,
+   "no_2019": 262
+  },
+  {
+   "name": "乐山市人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 320
+  },
+  {
+   "name": "雅安市人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 321
+  },
+  {
+   "name": "贵州省人民医院",
+   "province": "贵州",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 322,
+   "no_2019": 267,
+   "role_zh_2019": "成员医院"
+  },
+  {
+   "name": "贵州医科大学附属医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 323,
+   "no_2019": 266,
+   "role_zh_2019": "省级牵头医院"
+  },
+  {
+   "name": "黔西南州人民医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 324,
+   "no_2019": 271
+  },
+  {
+   "name": "遵义医科大学附属医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 325
+  },
+  {
+   "name": "浙江省人民医院贵州毕节医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 326
+  },
+  {
+   "name": "贵阳市妇幼保健院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 327
+  },
+  {
+   "name": "首钢水钢医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 328
+  },
+  {
+   "name": "遵义市第一人民医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 329
+  },
+  {
+   "name": "安顺市人民医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 330
+  },
+  {
+   "name": "黔南州人民医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 331
+  },
+  {
+   "name": "贵州医科大学第二附属医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 332
+  },
+  {
+   "name": "铜仁市人民医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 333,
+   "no_2019": 272
+  },
+  {
+   "name": "北京积水潭贵州医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 334
+  },
+  {
+   "name": "广州中山大学附属第一医院贵州医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 335
+  },
+  {
+   "name": "上海交通大学医学院附属上海儿童医学中心贵州医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 336
+  },
+  {
+   "name": "昆明医科大学第一附属医院",
+   "province": "云南",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 337,
+   "no_2019": 274
+  },
+  {
+   "name": "云南省第一人民医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 338,
+   "no_2019": 277
+  },
+  {
+   "name": "昆明医科大学第二附属医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 339,
+   "no_2019": 275
+  },
+  {
+   "name": "云南省第二人民医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 340,
+   "no_2019": 278
+  },
+  {
+   "name": "大理大学第一附属医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 341
+  },
+  {
+   "name": "云南省肿瘤医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 342,
+   "no_2019": 276
+  },
+  {
+   "name": "云南省阜外心血管病医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 343,
+   "no_2019": 279
+  },
+  {
+   "name": "昆明市第一人民医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 344,
+   "no_2019": 280
+  },
+  {
+   "name": "昆明市儿童医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 345,
+   "no_2019": 281
+  },
+  {
+   "name": "昆明市延安医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 346
+  },
+  {
+   "name": "昆明市妇幼保健院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 347
+  },
+  {
+   "name": "玉溪市人民医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 348,
+   "no_2019": 283
+  },
+  {
+   "name": "曲靖市第一人民医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 349,
+   "no_2019": 282
+  },
+  {
+   "name": "红河州第一人民医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 350
+  },
+  {
+   "name": "保山市人民医院",
+   "province": "云南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 351
+  },
+  {
+   "name": "西藏自治区人民医院",
+   "province": "西藏",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 352,
+   "no_2019": 284
+  },
+  {
+   "name": "拉萨市人民医院",
+   "province": "西藏",
+   "role": "member",
+   "role_zh": "成员单位",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 353
+  },
+  {
+   "name": "日喀则市人民医院",
+   "province": "西藏",
+   "role": "member",
+   "role_zh": "成员单位",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 354
+  },
+  {
+   "name": "西安交通大学第一附属医院",
+   "province": "陕西",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 355,
+   "no_2019": 287
+  },
+  {
+   "name": "西安市儿童医院",
+   "province": "陕西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 356,
+   "no_2019": 292
+  },
+  {
+   "name": "陕西省人民医院",
+   "province": "陕西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 357,
+   "no_2019": 289
+  },
+  {
+   "name": "西安交通大学第二附属医院",
+   "province": "陕西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 358,
+   "no_2019": 288
+  },
+  {
+   "name": "西北妇女儿童医院",
+   "province": "陕西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 359,
+   "no_2019": 293
+  },
+  {
+   "name": "空军军医大学第二附属医院（唐都医院）",
+   "province": "陕西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 360,
+   "no_2019": 291
+  },
+  {
+   "name": "空军军医大学第一附属医院（西京医院）",
+   "province": "陕西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 361,
+   "no_2019": 290
+  },
+  {
+   "name": "三二〇一医院",
+   "province": "陕西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 362
+  },
+  {
+   "name": "甘肃省人民医院",
+   "province": "甘肃",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 363,
+   "no_2019": 294
+  },
+  {
+   "name": "兰州大学第一医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 364,
+   "no_2019": 295
+  },
+  {
+   "name": "兰州大学第二医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 365,
+   "no_2019": 296
+  },
+  {
+   "name": "甘肃省妇幼保健院（甘肃省中心医院）",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 366
+  },
+  {
+   "name": "甘肃省中医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 367
+  },
+  {
+   "name": "甘肃省肿瘤医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 368
+  },
+  {
+   "name": "甘肃省第二人民医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 369
+  },
+  {
+   "name": "甘肃省第三人民医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 370
+  },
+  {
+   "name": "兰州石化总医院（甘肃中医药大学第四附属医院）",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 371
+  },
+  {
+   "name": "天水市第一人民医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 372
+  },
+  {
+   "name": "甘肃医学院附属医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 373
+  },
+  {
+   "name": "武威市人民医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 374
+  },
+  {
+   "name": "河西学院附属张掖人民医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 375
+  },
+  {
+   "name": "张掖市第二人民医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 376
+  },
+  {
+   "name": "酒泉市人民医院",
+   "province": "甘肃",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 377
+  },
+  {
+   "name": "青海省人民医院",
+   "province": "青海",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 378,
+   "no_2019": 297
+  },
+  {
+   "name": "青海省心脑血管病专科医院",
+   "province": "青海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 379,
+   "no_2019": 300
+  },
+  {
+   "name": "青海省妇女儿童医院",
+   "province": "青海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 380,
+   "no_2019": 299
+  },
+  {
+   "name": "青海大学附属医院",
+   "province": "青海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 381,
+   "no_2019": 298
+  },
+  {
+   "name": "青海红十字医院",
+   "province": "青海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 382,
+   "no_2019": 301
+  },
+  {
+   "name": "西宁市第一人民医院",
+   "province": "青海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 383
+  },
+  {
+   "name": "互助土族自治县人民医院",
+   "province": "青海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 384
+  },
+  {
+   "name": "宁夏医科大学总医院",
+   "province": "宁夏",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 385,
+   "no_2019": 302
+  },
+  {
+   "name": "宁夏回族自治区人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 386,
+   "no_2019": 303
+  },
+  {
+   "name": "固原市人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 387,
+   "no_2019": 309
+  },
+  {
+   "name": "吴忠市人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 388,
+   "no_2019": 306
+  },
+  {
+   "name": "银川市第一人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 389,
+   "no_2019": 305
+  },
+  {
+   "name": "中卫市人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 390,
+   "no_2019": 310
+  },
+  {
+   "name": "石嘴山市第一人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 391,
+   "no_2019": 307
+  },
+  {
+   "name": "宁夏回族自治区第五人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 392,
+   "no_2019": 304
+  },
+  {
+   "name": "石嘴山市第二人民医院",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 393,
+   "no_2019": 308
+  },
+  {
+   "name": "北京大学第一医院宁夏妇女儿童医院（宁夏回族自治区妇幼保健院）",
+   "province": "宁夏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 394
+  },
+  {
+   "name": "新疆维吾尔自治区人民医院",
+   "province": "新疆",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 395,
+   "no_2019": 311
+  },
+  {
+   "name": "新疆医科大学第一附属医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 396,
+   "no_2019": 312
+  },
+  {
+   "name": "阿克苏地区第一人民医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 397,
+   "no_2019": 313
+  },
+  {
+   "name": "昌吉回族自治州人民医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 398,
+   "no_2019": 314
+  },
+  {
+   "name": "喀什地区第一人民医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 399,
+   "no_2019": 315
+  },
+  {
+   "name": "伊犁州友谊医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 400,
+   "no_2019": 316
+  },
+  {
+   "name": "新疆维吾尔自治区妇幼保健院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 401
+  },
+  {
+   "name": "新疆维吾尔自治区儿童医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 402
+  },
+  {
+   "name": "新疆医科大学第二附属医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 403
+  },
+  {
+   "name": "新疆医科大学附属肿瘤医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 404
+  },
+  {
+   "name": "新疆医科大学附属中医医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 405
+  },
+  {
+   "name": "巴州人民医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 406
+  },
+  {
+   "name": "哈密市中心医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 407
+  },
+  {
+   "name": "克拉玛依市中心医院",
+   "province": "新疆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 408
+  },
+  {
+   "name": "石河子大学第一附属医院",
+   "province": "新疆生产建设兵团",
+   "role": "provincial_lead",
+   "role_zh": "省级牵头医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 409,
+   "no_2019": 317,
+   "name_2019": "石河子大学医学院第一附属医院",
+   "matched_by": "2024_name_subsequence_of_2019"
+  },
+  {
+   "name": "石河子市人民医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 410,
+   "no_2019": 323
+  },
+  {
+   "name": "新疆生产建设兵团第一师医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 411,
+   "no_2019": 319
+  },
+  {
+   "name": "新疆生产建设兵团医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 412,
+   "no_2019": 318
+  },
+  {
+   "name": "浙江大学医学院附属邵逸夫医院新疆兵团阿拉尔医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 413
+  },
+  {
+   "name": "新疆生产建设兵团第二师库尔勒医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 414
+  },
+  {
+   "name": "新疆生产建设兵团第四师医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 415,
+   "no_2019": 321
+  },
+  {
+   "name": "新疆生产建设兵团第五师医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 416
+  },
+  {
+   "name": "新疆生产建设兵团第七师医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "listed_2019",
+   "no": 417,
+   "no_2019": 322
+  },
+  {
+   "name": "新疆生产建设兵团第十师北屯市北屯医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "renamed_2024",
+   "no": 418,
+   "no_2019": 324,
+   "name_2019": "第十师北屯市北屯医院",
+   "matched_by": "2019_name_in_2024_name"
+  },
+  {
+   "name": "新疆生产建设兵团第十三师红星医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2024_64",
+   "status": "added_2024",
+   "no": 419
+  },
+  {
+   "name": "山西大医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 41
+  },
+  {
+   "name": "山西省心血管病医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 43
+  },
+  {
+   "name": "太原市第三人民医院",
+   "province": "山西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 45
+  },
+  {
+   "name": "哈尔滨市儿童医院",
+   "province": "黑龙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 85
+  },
+  {
+   "name": "上海市儿童医院",
+   "province": "上海",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 103
+  },
+  {
+   "name": "宁波市第一医院",
+   "province": "浙江",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 126
+  },
+  {
+   "name": "安徽中医学院第一附属医院（安徽省中医院）",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 134
+  },
+  {
+   "name": "蚌埠医学院第一附属医院",
+   "province": "安徽",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 138
+  },
+  {
+   "name": "福建医科大学附属福州市第一医院",
+   "province": "福建",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 145
+  },
+  {
+   "name": "青岛市人民医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 175
+  },
+  {
+   "name": "泰山医学院附属医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 179
+  },
+  {
+   "name": "山东省医学科学院附属医院",
+   "province": "山东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 181
+  },
+  {
+   "name": "新乡医学院第三附属医院",
+   "province": "河南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 192
+  },
+  {
+   "name": "怀化市第一人民医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 211
+  },
+  {
+   "name": "岳阳市一人民医院",
+   "province": "湖南",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 212
+  },
+  {
+   "name": "中国人民解放军南部战区总医院",
+   "province": "广东",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 220
+  },
+  {
+   "name": "广西中医药大学附属瑞康医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 231
+  },
+  {
+   "name": "桂林医学院附属医院",
+   "province": "广西",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 232
+  },
+  {
+   "name": "重庆三峡中心医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 252
+  },
+  {
+   "name": "重庆市涪陵中心医院",
+   "province": "重庆",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 253
+  },
+  {
+   "name": "宜宾市第一人民医院",
+   "province": "四川",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 264
+  },
+  {
+   "name": "贵阳市第二人民医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 268
+  },
+  {
+   "name": "贵航贵阳医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 269
+  },
+  {
+   "name": "毕节市第一人民医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 270
+  },
+  {
+   "name": "遵义医学院附属医院",
+   "province": "贵州",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 273
+  },
+  {
+   "name": "西藏自治区第二人民医院",
+   "province": "西藏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 285
+  },
+  {
+   "name": "那曲地区人民医院",
+   "province": "西藏",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 286
+  },
+  {
+   "name": "新疆生产建设兵团第一师阿拉尔医院",
+   "province": "新疆生产建设兵团",
+   "role": "member",
+   "role_zh": "成员医院",
+   "source_id": "nhc2019_157",
+   "status": "removed_2024",
+   "no": 320
+  }
+ ]
+}

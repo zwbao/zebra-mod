@@ -97,8 +97,13 @@ def dataset_for(assembly: str) -> str:
 
 
 def variant_id(chrom: str, pos: int, ref: str, alt: str) -> str:
+    """gnomAD's variant id. The mitochondrial chromosome is `M` there (`MT` is refused with HTTP 500)."""
     chrom = str(chrom).upper().replace("CHR", "")
-    return f"{'MT' if chrom == 'M' else chrom}-{int(pos)}-{ref.upper()}-{alt.upper()}"
+    return f"{'M' if chrom in ('M', 'MT') else chrom}-{int(pos)}-{ref.upper()}-{alt.upper()}"
+
+
+def is_mito(chrom: str) -> bool:
+    return str(chrom).upper().replace("CHR", "") in ("M", "MT")
 
 
 def build_variant_query(dataset: str) -> str:
@@ -124,13 +129,23 @@ def _graphql(query: str, variables: Dict[str, Any], label: str) -> Tuple[Any, Di
     body = resp.json()
     errs = [e.get("message", "") for e in body.get("errors") or []]
     if resp.cached and any(e not in EXPECTED_ERRORS for e in errs):
-        resp = post_json(API, payload, source="gnomAD", cache_ttl=0, timeout=60)
+        # C-P2-8 / E-6: refresh=True skips the cache read AND writes the fresh answer back;
+        # cache_ttl=0 bypassed the write, so the bad entry stayed for 30 days and every
+        # later call paid two requests (and a second 6 s gnomAD pacing slot).
+        resp = post_json(API, payload, source="gnomAD", cache_ttl=CACHE_TTL, timeout=60, refresh=True)
         body = resp.json()
     return resp, body
 
 
 def variant(chrom: str, pos: int, ref: str, alt: str, assembly: str = "GRCh38") -> Outcome:
-    """Frequencies of one VCF-style (left-normalised) variant, with coverage at the site."""
+    """Frequencies of one VCF-style (left-normalised) variant, with coverage at the site.
+
+    A mitochondrial variant goes to `mito_variant` (E-5): the nuclear query sent "MT" and got
+    HTTP 500 after ~25 s of retries, and sending "M" to it would answer "Variant not found",
+    a false absence for m.3243A>G, which gnomAD holds in its mtDNA callset.
+    """
+    if is_mito(chrom):
+        return mito_variant(pos, ref, alt)
     ds = dataset_for(assembly)
     vid = variant_id(chrom, pos, ref, alt)
     variables = {"id": vid, "ds": ds, "chrom": vid.split("-")[0], "pos": int(pos), "rg": assembly}
@@ -426,3 +441,85 @@ def parse_constraint(gene: Dict[str, Any], assembly: str) -> Dict[str, Any]:
         "reading": ("lower LOEUF / higher pLI = fewer loss-of-function variants observed than expected; "
                     "read with the gene's established disease mechanism, not alone"),
     }
+
+
+# ---------------------------------------------------------------- mitochondrial DNA (E-5, CP1-4)
+# gnomAD's mtDNA callset is the v3.1 genomes (56,434 samples), served under the gnomad_r3 dataset
+# (gnomad_r4 answers with the same records). The rCRS coordinates are the same in GRCh37 (Ensembl)
+# and GRCh38, so one query serves both builds. Definitions, gnomAD v3.1 mtDNA release notes
+# (gnomad.broadinstitute.org/news/2020-11-gnomad-v3-1-mitochondrial-dna-variants), fetched 2026-10-06:
+# homoplasmic = "95-100% alternate bases", heteroplasmic = "< 95% alternative bases", calls below 10%
+# heteroplasmy filtered; "We do not calculate an overall allele count and allele frequency. Instead,
+# separate allele counts and frequencies are provided for both homoplasmic and heteroplasmic variants."
+MITO_DATASET = "gnomad_r3"
+MITO_DEFINITIONS = ("homoplasmic: 95-100% alternate reads; heteroplasmic: 10% to <95% (calls below 10% are "
+                    "filtered); AF_hom = ac_hom / an and AF_het = ac_het / an, where an is the number of samples "
+                    "with a passing call at the site. gnomAD gives no overall allele frequency for mtDNA.")
+MITO_QUERY = """
+query ZebraMito($id: String!, $ds: DatasetId!) {
+  mitochondrial_variant(variant_id: $id, dataset: $ds) {
+    variant_id pos ref alt rsids an ac_het ac_hom ac_hom_mnv max_heteroplasmy filters flags
+    haplogroup_defining mitotip_score mitotip_trna_prediction pon_mt_trna_prediction
+    pon_ml_probability_of_pathogenicity
+    populations { id an ac_het ac_hom }
+  }
+}
+"""
+
+
+def mito_variant(pos: int, ref: str, alt: str) -> Outcome:
+    """gnomAD mtDNA frequencies: homoplasmic and heteroplasmic counts, never one nuclear-style AF."""
+    vid = variant_id("M", pos, ref, alt)
+    resp, body = _graphql(MITO_QUERY, {"id": vid, "ds": MITO_DATASET}, vid)
+    errors = [e.get("message", "") for e in body.get("errors") or []]
+    v = (body.get("data") or {}).get("mitochondrial_variant")
+    url = f"{BROWSER}/variant/{vid}?dataset={MITO_DATASET}"
+    other = [e for e in errors if e not in EXPECTED_ERRORS]
+    if other and not v:
+        raise SourceError("gnomAD", resp.url, resp.status, "; ".join(other))
+    result = parse_mito(v, vid, url)
+    return Outcome(result, sources=[source_record("gnomAD mtDNA", f"{vid} ({MITO_DATASET})", resp, url=url)],
+                   warnings=[f"gnomAD reported: {'; '.join(other)}"] if other else [])
+
+
+def parse_mito(v: Optional[Dict[str, Any]], vid: str, url: str) -> Dict[str, Any]:
+    base = {"mitochondrial": True, "dataset": MITO_DATASET, "variant_id": vid, "url": url,
+            "definitions": MITO_DEFINITIONS}
+    if not v:
+        # Not in the callset at all. gnomAD lists every allele it could call at a site (with zero
+        # counts and the site AN), so a missing record is not a measured zero: say so.
+        return dict(base, found=False, absent=None,
+                    note="gnomAD's mtDNA callset has no record for this allele, so there is no measured frequency "
+                         "(not the same as AC = 0 at a callable site)")
+    an = v.get("an") or 0
+    ac_hom, ac_het = v.get("ac_hom") or 0, v.get("ac_het") or 0
+    pops = []
+    for p in v.get("populations") or []:
+        gid = p.get("id") or ""
+        if not gid or "_" in gid:
+            continue
+        p_an = p.get("an") or 0
+        pops.append({"id": gid, "name": GROUP_NAMES.get(gid), "an": p_an, "ac_hom": p.get("ac_hom") or 0,
+                     "ac_het": p.get("ac_het") or 0,
+                     "af_hom": (p.get("ac_hom") or 0) / p_an if p_an else None,
+                     "af_het": (p.get("ac_het") or 0) / p_an if p_an else None})
+    pops.sort(key=lambda p: -((p["ac_hom"] + p["ac_het"]) / p["an"] if p["an"] else 0))
+    filters = v.get("filters") or []
+    return dict(
+        base,
+        found=True,
+        # a record with no passing call anywhere is zero counts at a site gnomAD tried to call
+        absent=(ac_hom + ac_het == 0),
+        rsids=v.get("rsids") or [],
+        an=an, ac_hom=ac_hom, ac_het=ac_het,
+        af_hom=ac_hom / an if an else None, af_het=ac_het / an if an else None,
+        max_heteroplasmy=v.get("max_heteroplasmy"),
+        haplogroup_defining=v.get("haplogroup_defining"),
+        filters=filters,
+        flags=v.get("flags") or [],
+        populations=pops[:12],
+        predictors={"mitotip_score": v.get("mitotip_score"), "mitotip": v.get("mitotip_trna_prediction"),
+                    "pon_mt_trna": v.get("pon_mt_trna_prediction"),
+                    "pon_ml_probability": v.get("pon_ml_probability_of_pathogenicity"),
+                    "note": "tRNA predictors as gnomAD serves them (MitoTIP, PON-mt-tRNA); they apply to tRNA genes only"},
+    )

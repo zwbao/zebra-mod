@@ -1,0 +1,156 @@
+<html>
+ <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <!--<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+  <script src="bootstrap/js/bootstrap.min.js"></script>-->
+  <!--<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">-->
+  <link rel="stylesheet" href="bootstrap/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+  <script src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
+  <!--<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
+  <script src="bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+  <link href="css/index_final3.css" rel="stylesheet">
+  <title>Nyuwa variants</title>
+  <style type="text/css">
+   #home_add {
+ 	float:right;
+	padding-right:10px;
+	margin-top:10px;
+   }
+
+   #home_add ul {
+	list-style-type: none;	
+   }
+
+   #home_add li {
+	display:inline;
+	padding-left: 5px;
+	padding-right: 5px;
+	color: #ffffff;
+   }
+  
+   #home_add a {
+	color:#ffffff;
+   }
+
+   #home_add a:hover {
+	color: #ccc;
+   }
+  </style>
+ </head>
+ <body>
+  <div id="nav-local" style="background:#11538c;height:130px">
+   <div class="container-fluid">
+    <div class="navbar-header">
+     <a class="navbar-brand" href='https://bigd.big.ac.cn' target='_blank' style="margin-left:-10px"><img src='https://bigd.big.ac.cn/static/image/CNCB-NGDC-white.png' width='140'/></a>
+     <a class="navbar-brand" href="#" style="color:#e0e9ee;font-size:30px;margin-top:45px;margin-left:-120px">NyuWa Chinese Population Variant Database (NCVD)</a>
+    </div>
+    <div id="home_add">
+     <ul>
+      <li><a href="../NyuWa">Home</a> &nbsp&nbsp|</li>
+      <li><a href="index.php">NCVD</a> &nbsp&nbsp|</li>
+      <li><a href="../refpanel">reference panel</a></li>
+     </ul>
+    </div>
+
+  <div id="Signin" style="margin-top:30px">
+                       <ul>
+                        <li id = "signin_border"><a href="Signin.php">Sign in</a></li>
+                        <li><a href="register.php">Sign up</a></li>
+                       </ul>    
+                      </div>
+   </div>
+  </div>
+  <nav class="navbar navbar-default">
+   <div class="container-fluid">
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="navbar-header">
+     <a class="navbar-brand active2" style="border-right:1px solid #a4a6a9" href="index.php" target="_parent"><span class="glyphicon glyphicon-home" aria-hidden="true" style="padding-right:7px"></span>NCVD <span class="sr-only">(current)</span></a>
+    </div>
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+     <ul class="nav navbar-nav">
+      <li><a href="search.php" target="_parent"><span class="glyphicon glyphicon-search" aria-hidden="true" style="padding-right:7px"></span>Search <span class="sr-only">(current)</span></a></li>
+      <li><a href="about.php" target="_parent"><span class="glyphicon glyphicon-envelope" aria-hidden="true" style="padding-right:7px"></span>About <span class="sr-only">(current)</span></a></li>
+      <li><a href="browser.php" target="_parent"><span class="glyphicon glyphicon-th-large" aria-hidden="true" style="padding-right:7px"></span>Browser <span class="sr-only">(current)</span></a></li>
+      <li><a href="download.php" target="_parent"><span class="glyphicon glyphicon-download-alt" aria-hidden="true" style="padding-right:7px"></span>Download <span class="sr-only">(current)</span></a></li>
+      <li><a href="help.php" target="_parent"><span class="glyphicon glyphicon-question-sign" aria-hidden="true" style="padding-right:7px"></span>Help <span class="sr-only">(current) </span></a></li>
+      <li><a href="contact.php" target="_parent"><span class="glyphicon glyphicon-earphone" aria-hidden="true" style="padding-right:7px"></span>Contact <span class="sr-only">(current) </span></a></li>
+     </ul>
+    </div>
+   </div>
+  </nav>
+
+<p></p>
+  <div class="container">
+   <div class="row">
+    <div class="col-md-1">
+    </div>
+    <div class="col-md-10">
+     <div class="jumbotron" id="home">
+      <h2> Welcome to NyuWa Chinese Population Variant Database (NCVD)!</h2>
+      <p id="home-des-p">This is a database for searching and exhibition with stored human genome variant data.</p>
+      <div class="row">
+	<div class="col-md-2">
+	</div>
+        <div class="col-md-8">
+         <form action="searchact.php" method="post" role="form">
+         <div class="input-group form-home">
+          <input type="text" name="home_input" class="form-control" aria-describedby="sizing-addon1">
+          <span class="input-group-btn">
+           <button class="btn btn-default button-home" type="submit">Search</button>
+          </span>
+         </div>
+         </form>
+	 <div id="home-link">
+          <p>Example-Region:<a href="searchact.php?region=22:42126499-42130810"><i>22:42126499-42130810</i></a>, <a href="searchact.php?region=Y:9460000-9480000"><i>Y:9460000-9480000</i></a>, Variant:<a href="searchact.php?variant=10-94780653-G-A"><i>10-94780653-G-A</i></a>, <a href="searchact.php?variant=22-42128945-C-T"><i>22-42128945-C-T</i></a>, <a href="searchact.php?variant=Y-9467257-G-A"><i>Y-9467257-G-A</i></a>, Rsid:<a href="searchact.php?rsid=rs4986893"><i>rs4986893</i></a>, <a href="searchact.php?rsid=rs3892097"><i>rs3892097</i></a>, Gene ID:<a href="searchact.php?refgene=CYP2D6"><i>CYP2D6</i></a></p>
+	</div>
+       </div>
+       <div class="col-md-2">
+       </div>
+      </div>
+     </div>
+     <div id="home-statistcs">
+      <div class="row">
+       <div class="col-md-3">
+        <div class="home-sub">
+        <h2><b>SNPs</b></h2>
+        <h4>71,057,961</h4>
+        </div>
+       </div>
+       <div class="col-md-3">
+        <div class="home-sub">
+        <h2><b>Indels</b></h2>
+        <h4>8,168,390</h4>
+        </div>
+       </div>
+       <div class="col-md-3">
+       <div class="home-sub">
+        <h2><b>Genomes</b></h2>
+        <h4 style="margin-left:40px">2,999</h4>
+       </div>
+       </div>
+       <div class="col-md-3">
+        <div class="home-sub">
+        <h2><b>Median Depth</b></h2>
+        <h4 style="margin-left:50px">26.2X</h4>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div id="dividing-line">
+     </div>
+     <div id="visit">
+	<div><h3>Visitor Statistics</h3></div>
+	<div id="visit-globe" style="height:180px;width:220px;margin-left:40%">
+	<script type="text/javascript" src="//rf.revolvermaps.com/0/0/6.js?i=5qnwattkty1&amp;m=7&amp;c=e63100&amp;cr1=ffffff&amp;f=arial&amp;l=0&amp;bv=90&amp;lx=-420&amp;ly=420&amp;hi=20&amp;he=7&amp;hc=a8ddff&amp;rs=80" async="async"></script>
+	</div>
+     </div>
+    </div>
+    <div class="col-md-1">
+    </div>
+   </div>
+  </div>
+ </body>
+</html>
+  

@@ -102,12 +102,13 @@ def chi2_sf_1df(x: float) -> float:
     return math.erfc(math.sqrt(max(x, 0.0) / 2.0))
 
 
-def _poisson_tail(k: int, mu: float, upper: bool) -> float:
-    """Poisson(mu) mass over i >= k (upper) or 0 <= i <= k-1 (lower).
+def _poisson_tail_ln(k: int, mu: float, upper: bool) -> float:
+    """ln of the Poisson(mu) mass over i >= k (upper) or 0 <= i <= k-1 (lower).
 
     Summed outwards from the largest term in the range and scaled by it, so nothing
     underflows: `exp(-mu)` on its own is 0.0 in double precision once mu > 745, which
-    is why the naive `1 - cdf` form returns p = 1.0 for every large expectation.
+    is why the naive `1 - cdf` form returns p = 1.0 for every large expectation. The
+    logarithm is returned so a tail below ~1e-308 still has a value (D-P2-3).
     """
     lo = k if upper else 0
     hi: Optional[int] = None if upper else k - 1
@@ -132,7 +133,23 @@ def _poisson_tail(k: int, mu: float, upper: bool) -> float:
         total += term
         if term < 1e-18 * total:
             break
-    return math.exp(log_star + math.log(total))
+    return log_star + math.log(total)
+
+
+def _poisson_tail(k: int, mu: float, upper: bool) -> float:
+    return math.exp(_poisson_tail_ln(k, mu, upper))
+
+
+def poisson_log10_sf(k: int, mu: float) -> Optional[float]:
+    """log10 P(X >= k) for X ~ Poisson(mu); finite where `poisson_sf` underflows to 0.0 (D-P2-3)."""
+    if k <= 0:
+        return 0.0
+    if mu <= 0:
+        return None  # P = 0 exactly; its log is undefined
+    if k > mu:
+        return min(0.0, _poisson_tail_ln(k, mu, upper=True) / math.log(10))
+    p = poisson_sf(k, mu)
+    return math.log10(p) if p > 0 else None
 
 
 def poisson_sf(k: int, mu: float) -> float:
@@ -197,26 +214,37 @@ def fisher_exact(a: int, b: int, c: int, d: int) -> Dict[str, float]:
     p = 0.0
     p_less = 0.0
     p_greater = 0.0
+    two_sided_logs: List[float] = []
     for x in range(lo, hi + 1):
         lp = _log_hyper(x, r1 - x, c1 - x, n - r1 - c1 + x)
         prob = math.exp(lp)
         if lp <= p_obs + 1e-7:
             p += prob
+            two_sided_logs.append(lp)
         if x <= a:
             p_less += prob
         if x >= a:
             p_greater += prob
+    # D-P2-3: the sum above underflows to exactly 0.0 below ~1e-308; the log-sum-exp does not.
+    top = max(two_sided_logs) if two_sided_logs else 0.0
+    log10_p = min(0.0, (top + math.log(sum(math.exp(v - top) for v in two_sided_logs))) / math.log(10)) \
+        if two_sided_logs else 0.0
     aa, bb, cc, dd = (a, b, c, d) if min(a, b, c, d) > 0 else (a + 0.5, b + 0.5, c + 0.5, d + 0.5)
     odds = (aa * dd) / (bb * cc)
     se = math.sqrt(1 / aa + 1 / bb + 1 / cc + 1 / dd)
-    return {
+    out = {
         "p_two_sided": min(1.0, p),
+        "log10_p_two_sided": log10_p,
         "p_greater": min(1.0, p_greater),
         "p_less": min(1.0, p_less),
         "odds_ratio": odds,
         "or_ci95": (math.exp(math.log(odds) - 1.96 * se), math.exp(math.log(odds) + 1.96 * se)),
         "haldane_corrected": min(a, b, c, d) == 0,
     }
+    if out["p_two_sided"] == 0.0:
+        out["p_note"] = (f"p is below the smallest double (~1e-308) and prints as 0; it is 10^{log10_p:.1f} "
+                         "(log10_p_two_sided)")
+    return out
 
 
 def burden(case_carriers: int, case_n: int, control_carriers: int, control_n: int) -> Dict[str, Any]:
@@ -252,14 +280,20 @@ def denovo_enrichment(observed: int, trios: int, mu: float) -> Dict[str, Any]:
     if not math.isfinite(float(trios)):
         raise ValueError("trios must be a finite whole number")
     expected = 2.0 * trios * mu
-    return {
+    p = poisson_sf(observed, expected)
+    log10_p = poisson_log10_sf(observed, expected)
+    out = {
         "model": "Poisson(2 * trios * mu); one-sided P(X >= observed)",
         "observed": observed,
         "expected": expected,
         "ratio": observed / expected if expected else None,
-        "p": poisson_sf(observed, expected),
+        "p": p,
+        "log10_p": log10_p,
         "exome_wide_alpha": "0.05 / (19000 genes * classes tested) ~ 2.6e-6 for one class",
     }
+    if p == 0.0 and log10_p is not None:
+        out["p_note"] = (f"p is below the smallest double (~1e-308) and prints as 0; it is 10^{log10_p:.1f} (log10_p)")
+    return out
 
 
 # ---------------------------------------------------------------- frequencies
@@ -468,7 +502,9 @@ def segregation(ad_meioses: int = 0, ar_affected_sibs: int = 0, ar_unaffected_si
         "pp1_code": None if pp1 is None else ("PP1" if pp1 == "Supporting" else f"PP1_{pp1}"),
         "bs4_points": round(benign_points, 2),
         "bs4_strength": bs4,
-        "bs4_code": None if bs4 is None else ("BS4" if bs4 == "Supporting" else f"BS4_{bs4}"),
+        # D-P1-1: always explicit. BS4's default strength is Strong (Richards et al. 2015), so a bare
+        # "BS4" carried into `acmg classify` counts -4, while the evidence here may be Supporting (-1).
+        "bs4_code": None if bs4 is None else f"BS4_{bs4}",
         "bs4_basis": ("Biesecker et al. 2024 Table 3 publishes points for co-segregation only; the same "
                       "per-individual weight (1.0 point) is applied here in the benign direction for BS4, which "
                       "is zebra's reading, not a published table"),
@@ -653,14 +689,20 @@ def nof1_pairs_needed(effect: float, sd_diff: float, alpha: float = 0.05, power:
     differences (period-to-period noise). Add washout periods; carryover and
     a progressive disease break the exchangeability this assumes.
     """
-    for name, v in (("effect", effect), ("sd_diff", sd_diff)):
-        if not math.isfinite(float(v)) or float(v) <= 0:
-            raise ValueError(f"{name} must be a finite number > 0, got {v!r}")
+    # D-P2-4: a reduction (fewer seizures) is the usual target, so the sign of the effect is the
+    # direction of benefit, not an error; the sample size depends on its magnitude only.
+    if not math.isfinite(float(effect)) or float(effect) == 0:
+        raise ValueError(f"effect must be a finite, non-zero number, got {effect!r}")
+    if not math.isfinite(float(sd_diff)) or float(sd_diff) <= 0:
+        raise ValueError(f"sd_diff must be a finite number > 0, got {sd_diff!r}")
+    direction = "decrease" if float(effect) < 0 else "increase"
+    effect = abs(float(effect))
     alpha = _prob("alpha", alpha, 0.0, 1.0, lo_open=True, hi_open=True)
     power = _prob("power", power, 0.0, 1.0, lo_open=True, hi_open=True)
     z = _N.inv_cdf(1 - alpha / 2) + _N.inv_cdf(power)
     n = math.ceil((z * sd_diff / effect) ** 2)
-    return {"model": "paired normal approximation", "pairs": max(n, 2), "standardized_effect": effect / sd_diff}
+    return {"model": "paired normal approximation", "pairs": max(n, 2), "standardized_effect": effect / sd_diff,
+            "target_direction": direction}
 
 
 def nof1_analyze(treatment: Sequence[float], control: Sequence[float]) -> Dict[str, Any]:

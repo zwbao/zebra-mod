@@ -970,3 +970,103 @@ def test_c_p1_4_a_bad_cached_body_is_evicted_and_not_found_lives_a_day(tmp_path,
         pass
     store(404, '{"detail": "not found"}', 3600)
     assert http.request(url, source="HGNC", cache_ttl=30 * 86400, ok_statuses=(200, 404)).status == 404
+
+
+def test_w6_graphql_error_500_is_final_not_retried(tmp_path, monkeypatch):
+    """A GraphQL server answering HTTP 500 with an `errors` document gives the same answer again: no retry."""
+    import io
+    import urllib.error
+
+    from zebra import http
+
+    monkeypatch.setenv("ZEBRA_CACHE_DIR", str(tmp_path / "cache"))
+    calls = []
+
+    class O:
+        @staticmethod
+        def open(req, timeout=None):
+            calls.append(1)
+            raise urllib.error.HTTPError(req.full_url, 500, "x", {}, io.BytesIO(b'{"errors":[{"message":"Variant not found"}]}'))
+
+    monkeypatch.setattr(http, "_opener", lambda: O())
+    monkeypatch.setattr(http, "_wait_for_retry", lambda s: True)
+    try:
+        http.request("https://gnomad.example/api", source="gnomAD", method="POST", body={"q": 1}, cache_ttl=0)
+        raise AssertionError("no error raised")
+    except http.SourceError as err:
+        assert "Variant not found" in err.message
+    assert len(calls) == 1
+    assert http._HOST_INTERVAL["blast.ncbi.nlm.nih.gov"] == 10.0
+
+
+def test_w3_pubcasefinder_hourly_limit_is_shared_across_calls(tmp_path, monkeypatch):
+    """A published hourly limit is counted on disk, so separate CLI processes share it; past it nothing is sent."""
+    from zebra import http
+
+    monkeypatch.setenv("ZEBRA_CACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.setitem(http._HOST_WINDOWS, "limited.example", ((3600, 2),))
+    sent = []
+
+    class Resp:
+        status = 200
+        headers = {}
+
+        def read(self, *a):
+            return b'{"ok": 1}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    class O:
+        @staticmethod
+        def open(req, timeout=None):
+            sent.append(req.full_url)
+            return Resp()
+
+    monkeypatch.setattr(http, "_opener", lambda: O())
+    monkeypatch.setattr(http, "_read_body", lambda resp, source, url: resp.read())
+    for i in range(2):
+        http.request(f"https://limited.example/q{i}", source="X", cache_ttl=0)
+    try:
+        http.request("https://limited.example/q3", source="X", cache_ttl=0)
+        raise AssertionError("the third request in the hour was sent")
+    except http.SourceError as err:
+        assert "2 requests per hour" in err.message
+    assert len(sent) == 2
+    http._last_call.clear()
+
+
+def test_cp1_13_phenopacket_round_trip_through_the_cli(tmp_path, capsys):
+    """A case written as a Phenopacket and read into a fresh case keeps phenotypes, exclusions and variants."""
+    import json as _json
+
+    from zebra import case as case_mod
+    from zebra.cli import main
+
+    a = str(tmp_path / "a")
+    case_mod.init(a, title="王小雨 seizures")
+    case_mod.add_identifiers(a, ["王小雨"])
+    with case_mod.editing(a) as data:
+        case_mod.apply_phenotype(data, "HP:0002373", "Febrile seizure (within the age range of 3 months to 6 years)", status="present")
+        case_mod.apply_phenotype(data, "HP:0001252", "Hypotonia", status="excluded")
+        case_mod.apply_variant(data, gene="SCN1A", hgvs_c="NM_001165963.4:c.2134C>T", zygosity="heterozygous",
+                               assembly="GRCh38")
+        case_mod.apply_hypothesis(data, "Dravet syndrome", status="leading", ids={"ORPHA": "33069"})
+    capsys.readouterr()
+    assert main(["--json", "case", "phenopacket", a]) == 0
+    out = _json.loads(capsys.readouterr().out)
+    packet_path = out["result"]["path"]
+    text = open(packet_path, encoding="utf-8").read()
+    assert "王小雨" not in text and "seizures" not in text  # no title, no identifier
+    b = str(tmp_path / "b")
+    case_mod.init(b, title="b")
+    assert main(["--json", "case", "import-phenopacket", packet_path, "--case", b]) == 0
+    got = _json.loads(capsys.readouterr().out)
+    assert got["result"]["imported"]["phenotypes"] == 2
+    data = case_mod.load(b)
+    status = {p["id"]: p["status"] for p in data["phenotypes"]}
+    assert status == {"HP:0002373": "present", "HP:0001252": "excluded"}
+    assert any(v.get("gene") == "SCN1A" and "c.2134C>T" in str(v.get("hgvs_c")) for v in data["variants"]), got

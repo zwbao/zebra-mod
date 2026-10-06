@@ -1,0 +1,1362 @@
+{
+ "_source": {
+  "url": "https://myvariant.info/v1/variant (POST, assembly hg38)",
+  "retrieved_at": "2026-10-06T10:21:30+00:00",
+  "sha256": "624ebdb5cbf287b5a51325fa7fc0991cb2825679b8185286a6f11ce0897514f3",
+  "ids": [
+   "chr2:g.166036097A>C",
+   "chr2:g.166036116C>A",
+   "chr2:g.166042334G>A",
+   "chr2:g.166053034C>A",
+   "chr2:g.166053034C>T",
+   "chr2:g.166122240C>A",
+   "chr2:g.178560007C>T",
+   "chr2:g.178560163T>A",
+   "chr3:g.25751134G>A",
+   "chr5:g.126554292C>G",
+   "chr7:g.117559479G>A",
+   "chr7:g.117559591_117559593del",
+   "chr7:g.117587806G>A",
+   "chr7:g.117652877C>G",
+   "chrX:g.31178721G>A",
+   "chrY:g.2786042T>G",
+   "chrY:g.2786191C>T"
+  ],
+  "hits": 17,
+  "not_found": 0,
+  "versions": {
+   "gnomad": "2.1.1",
+   "dbnsfp": "4.8a",
+   "clinvar": "2025-05",
+   "dbsnp": "156"
+  },
+  "build_date": "2025-06-24T16:27:39.012502-07:00"
+ },
+ "response": [
+  {
+   "query": "chr2:g.166036097A>C",
+   "_id": "chr2:g.166036097A>C",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": {
+     "clinical_significance": "Pathogenic",
+     "review_status": "criteria provided, single submitter"
+    },
+    "variant_id": 1073262
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "cadd": {
+     "phred": 39.0
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs2105793395"
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "non_coding_transcript_exon_variant",
+      "gene_id": "LOC102724058",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr2:g.166036116C>A",
+   "_id": "chr2:g.166036116C>A",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": {
+     "clinical_significance": "Pathogenic",
+     "review_status": "criteria provided, single submitter"
+    },
+    "variant_id": 206798
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "cadd": {
+     "phred": 42.0
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs796052993"
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "non_coding_transcript_exon_variant",
+      "gene_id": "LOC102724058",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr2:g.166042334G>A",
+   "_id": "chr2:g.166042334G>A",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "no assertion criteria provided"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "no assertion criteria provided"
+     }
+    ],
+    "variant_id": 189886
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "cadd": {
+     "phred": 37.0
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs794726730"
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "SCN1A",
+      "putative_impact": "HIGH"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr2:g.166053034C>A",
+   "_id": "chr2:g.166053034C>A",
+   "_version": 1,
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs3812718"
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr2:g.166053034C>T",
+   "_id": "chr2:g.166053034C>T",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "risk factor",
+      "review_status": "no assertion criteria provided"
+     },
+     {
+      "clinical_significance": "drug response",
+      "review_status": "reviewed by expert panel"
+     },
+     {
+      "clinical_significance": "Benign",
+      "review_status": "criteria provided, single submitter"
+     }
+    ],
+    "variant_id": 12897
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs3812718"
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.484731,
+     "af_afr": 0.348798,
+     "af_ami": 0.583516,
+     "af_amr": 0.486953,
+     "af_asj": 0.539193,
+     "af_eas": 0.557447,
+     "af_fin": 0.537632,
+     "af_mid": 0.439873,
+     "af_nfe": 0.544388,
+     "af_oth": 0.480383,
+     "af_sas": 0.556455
+    },
+    "an": {
+     "an": 151746
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr2:g.166122240C>A",
+   "_id": "chr2:g.166122240C>A",
+   "_version": 1,
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs7587026"
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.261608,
+     "af_afr": 0.277143,
+     "af_ami": 0.189693,
+     "af_amr": 0.226354,
+     "af_asj": 0.328332,
+     "af_eas": 0.160625,
+     "af_fin": 0.252743,
+     "af_mid": 0.212025,
+     "af_nfe": 0.272559,
+     "af_oth": 0.275216,
+     "af_sas": 0.176678
+    },
+    "an": {
+     "an": 151926
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "intron_variant",
+      "gene_id": "LOC101929680",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "SCN1A",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr2:g.178560007C>T",
+   "_id": "chr2:g.178560007C>T",
+   "_version": 1,
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "alphamissense": {
+     "pred": "B",
+     "score": 0.1779
+    },
+    "cadd": {
+     "phred": 20.3
+    },
+    "revel": {
+     "score": [
+      0.392,
+      0.392,
+      0.392,
+      0.392
+     ]
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs562860372"
+   },
+   "gnomad_exome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 4.04053e-06,
+     "af_afr": 0.0,
+     "af_amr": 0.0,
+     "af_asj": 0.0,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_nfe": 8.96475e-06,
+     "af_oth": 0.0,
+     "af_sas": 0.0
+    },
+    "an": {
+     "an": 247492
+    }
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 6.57263e-06,
+     "af_afr": 0.0,
+     "af_ami": 0.0,
+     "af_amr": 0.0,
+     "af_asj": 0.0,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_mid": 0.0,
+     "af_nfe": 1.46985e-05,
+     "af_oth": 0.0,
+     "af_sas": 0.0
+    },
+    "an": {
+     "an": 152146
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "missense_variant",
+      "gene_id": "TTN",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "missense_variant",
+      "gene_id": "TTN",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "missense_variant",
+      "gene_id": "TTN",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "missense_variant",
+      "gene_id": "TTN",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "missense_variant",
+      "gene_id": "TTN",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "missense_variant",
+      "gene_id": "TTN",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "TTN-AS1",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "TTN-AS1",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr2:g.178560163T>A",
+   "_id": "chr2:g.178560163T>A",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "no assertion criteria provided"
+     }
+    ],
+    "variant_id": 663697
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "cadd": {
+     "phred": 66.0
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs72648224"
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "stop_gained",
+      "gene_id": "TTN",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "TTN",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "TTN",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "TTN",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "TTN",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "TTN",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "TTN-AS1",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "TTN-AS1",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr3:g.25751134G>A",
+   "_id": "chr3:g.25751134G>A",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "criteria provided, single submitter"
+     }
+    ],
+    "variant_id": 221578
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "cadd": {
+     "phred": 36.0
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs200561967"
+   },
+   "gnomad_exome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 3.99824e-06,
+     "af_afr": 0.0,
+     "af_amr": 0.0,
+     "af_asj": 0.0,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_nfe": 8.83345e-06,
+     "af_oth": 0.0,
+     "af_sas": 0.0
+    },
+    "an": {
+     "an": 250110
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "stop_gained",
+      "gene_id": "NGLY1",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "NGLY1",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "NGLY1",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "NGLY1",
+      "putative_impact": "HIGH"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr5:g.126554292C>G",
+   "_id": "chr5:g.126554292C>G",
+   "_version": 1,
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "alphamissense": {
+     "pred": [
+      "P",
+      "P",
+      "P",
+      "P",
+      "P",
+      "P",
+      "P"
+     ],
+     "score": [
+      0.7813,
+      0.9258,
+      0.8803,
+      0.8268,
+      0.8667,
+      0.8893,
+      0.8297
+     ]
+    },
+    "cadd": {
+     "phred": 28.2
+    },
+    "revel": {
+     "score": 0.955
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "missense_variant",
+      "gene_id": "ALDH7A1",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "missense_variant",
+      "gene_id": "ALDH7A1",
+      "putative_impact": "MODERATE"
+     },
+     {
+      "effect": "intron_variant",
+      "gene_id": "ALDH7A1",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr7:g.117559479G>A",
+   "_id": "chr7:g.117559479G>A",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Benign",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Benign/Likely benign",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Likely benign",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Benign/Likely benign",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     }
+    ],
+    "variant_id": 7130
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "alphamissense": {
+     "pred": [
+      "B",
+      "B",
+      "B",
+      "B",
+      "B"
+     ],
+     "score": [
+      0.0489,
+      0.052,
+      0.0787,
+      0.0463,
+      0.0542
+     ]
+    },
+    "cadd": {
+     "phred": 13.72
+    },
+    "revel": {
+     "score": [
+      0.463,
+      0.463
+     ]
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs213950"
+   },
+   "gnomad_exome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.474742,
+     "af_afr": 0.870598,
+     "af_amr": 0.528223,
+     "af_asj": 0.283644,
+     "af_eas": 0.420248,
+     "af_fin": 0.548559,
+     "af_nfe": 0.413358,
+     "af_oth": 0.452171,
+     "af_sas": 0.480365
+    },
+    "an": {
+     "an": 251166
+    }
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.556966,
+     "af_afr": 0.861053,
+     "af_ami": 0.316484,
+     "af_amr": 0.51812,
+     "af_asj": 0.277393,
+     "af_eas": 0.418956,
+     "af_fin": 0.562132,
+     "af_mid": 0.398734,
+     "af_nfe": 0.414711,
+     "af_oth": 0.507184,
+     "af_sas": 0.488391
+    },
+    "an": {
+     "an": 151846
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": {
+     "effect": "missense_variant",
+     "gene_id": "CFTR",
+     "putative_impact": "MODERATE"
+    }
+   }
+  },
+  {
+   "query": "chr7:g.117559591_117559593del",
+   "_id": "chr7:g.117559591_117559593del",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "practice guideline"
+     },
+     {
+      "clinical_significance": "risk factor",
+      "review_status": "no assertion criteria provided"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "drug response",
+      "review_status": "reviewed by expert panel"
+     },
+     {
+      "clinical_significance": "drug response",
+      "review_status": "reviewed by expert panel"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     }
+    ],
+    "variant_id": 7105
+   },
+   "gnomad_exome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.00706849,
+     "af_afr": 0.00295421,
+     "af_amr": 0.00367286,
+     "af_asj": 0.00555666,
+     "af_eas": 0.0,
+     "af_fin": 0.00222222,
+     "af_nfe": 0.0122683,
+     "af_oth": 0.00685602,
+     "af_sas": 0.00199294
+    },
+    "an": {
+     "an": 251256
+    }
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.00789017,
+     "af_afr": 0.00260656,
+     "af_ami": 0.00109649,
+     "af_amr": 0.00373281,
+     "af_asj": 0.00403226,
+     "af_eas": 0.0,
+     "af_fin": 0.00150773,
+     "af_mid": 0.00316456,
+     "af_nfe": 0.0143021,
+     "af_oth": 0.00766284,
+     "af_sas": 0.00310559
+    },
+    "an": {
+     "an": 152088
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": {
+     "effect": "disruptive_inframe_deletion",
+     "gene_id": "CFTR",
+     "putative_impact": "MODERATE"
+    }
+   }
+  },
+  {
+   "query": "chr7:g.117587806G>A",
+   "_id": "chr7:g.117587806G>A",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "practice guideline"
+     },
+     {
+      "clinical_significance": "not provided",
+      "review_status": "no assertion provided"
+     },
+     {
+      "clinical_significance": "drug response",
+      "review_status": "reviewed by expert panel"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "no assertion criteria provided"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     }
+    ],
+    "variant_id": 7120
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "alphamissense": {
+     "pred": [
+      "P",
+      "P",
+      "P",
+      "P"
+     ],
+     "score": [
+      0.9897,
+      0.835,
+      0.9181,
+      0.89
+     ]
+    },
+    "cadd": {
+     "phred": 28.2
+    },
+    "revel": {
+     "score": [
+      0.99,
+      0.99
+     ]
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs75527207"
+   },
+   "gnomad_exome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.000175398,
+     "af_afr": 0.0,
+     "af_amr": 0.0,
+     "af_asj": 0.0,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_nfe": 0.000388117,
+     "af_oth": 0.0,
+     "af_sas": 0.0
+    },
+    "an": {
+     "an": 250858
+    }
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.000276062,
+     "af_afr": 7.23903e-05,
+     "af_ami": 0.0,
+     "af_amr": 0.0,
+     "af_asj": 0.0,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_mid": 0.0,
+     "af_nfe": 0.000573445,
+     "af_oth": 0.0,
+     "af_sas": 0.0
+    },
+    "an": {
+     "an": 152140
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "structural_interaction_variant",
+      "gene_id": "CFTR",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "missense_variant",
+      "gene_id": "CFTR",
+      "putative_impact": "MODERATE"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chr7:g.117652877C>G",
+   "_id": "chr7:g.117652877C>G",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "practice guideline"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "no assertion criteria provided"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     }
+    ],
+    "variant_id": 7136
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "alphamissense": {
+     "pred": [
+      "P",
+      "P",
+      "P"
+     ],
+     "score": [
+      0.9907,
+      0.9909,
+      0.9909
+     ]
+    },
+    "cadd": {
+     "phred": 22.2
+    },
+    "revel": {
+     "score": [
+      0.83,
+      0.83
+     ]
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs80034486"
+   },
+   "gnomad_exome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.000144262,
+     "af_afr": 0.0,
+     "af_amr": 0.000145832,
+     "af_asj": 0.000598922,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_nfe": 0.000186402,
+     "af_oth": 0.000493259,
+     "af_sas": 3.3012e-05
+    },
+    "an": {
+     "an": 249546
+    }
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 0.000157824,
+     "af_afr": 2.41441e-05,
+     "af_ami": 0.0,
+     "af_amr": 6.55652e-05,
+     "af_asj": 0.000865052,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_mid": 0.0,
+     "af_nfe": 0.000235336,
+     "af_oth": 0.00095511,
+     "af_sas": 0.000207297
+    },
+    "an": {
+     "an": 152068
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": {
+     "effect": "missense_variant",
+     "gene_id": "CFTR",
+     "putative_impact": "MODERATE"
+    }
+   }
+  },
+  {
+   "query": "chrX:g.31178721G>A",
+   "_id": "chrX:g.31178721G>A",
+   "_version": 2,
+   "clinvar": {
+    "_license": "http://bit.ly/2SQdcI0",
+    "rcv": [
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, multiple submitters, no conflicts"
+     },
+     {
+      "clinical_significance": "Pathogenic",
+      "review_status": "criteria provided, single submitter"
+     }
+    ],
+    "variant_id": 94428
+   },
+   "dbnsfp": {
+    "_license": "http://bit.ly/2VLnQBz",
+    "cadd": {
+     "phred": 46.0
+    }
+   },
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs398123832"
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     },
+     {
+      "effect": "stop_gained",
+      "gene_id": "DMD",
+      "putative_impact": "HIGH"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chrY:g.2786042T>G",
+   "_id": "chrY:g.2786042T>G",
+   "_version": 1,
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs2051121937"
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 2.96736e-05,
+     "af_afr": 0.0,
+     "af_ami": 0.0,
+     "af_amr": 0.0,
+     "af_asj": 0.0,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_mid": 0.0,
+     "af_nfe": 7.34484e-05,
+     "af_oth": 0.0,
+     "af_sas": 0.0
+    },
+    "an": {
+     "an": 33700
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "downstream_gene_variant",
+      "gene_id": "SRY",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intergenic_region",
+      "gene_id": "XGY2.2-SRY",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  },
+  {
+   "query": "chrY:g.2786191C>T",
+   "_id": "chrY:g.2786191C>T",
+   "_version": 1,
+   "dbsnp": {
+    "_license": "http://bit.ly/2AqoLOc",
+    "rsid": "rs936999469"
+   },
+   "gnomad_genome": {
+    "_license": "http://bit.ly/2I1cl1I",
+    "af": {
+     "af": 6.1565e-05,
+     "af_afr": 0.0,
+     "af_ami": 0.0,
+     "af_amr": 0.000284738,
+     "af_asj": 0.0,
+     "af_eas": 0.0,
+     "af_fin": 0.0,
+     "af_mid": 0.0,
+     "af_nfe": 7.50976e-05,
+     "af_oth": 0.0,
+     "af_sas": 0.0
+    },
+    "an": {
+     "an": 32486
+    }
+   },
+   "snpeff": {
+    "_license": "http://bit.ly/2suyRKt",
+    "ann": [
+     {
+      "effect": "downstream_gene_variant",
+      "gene_id": "SRY",
+      "putative_impact": "MODIFIER"
+     },
+     {
+      "effect": "intergenic_region",
+      "gene_id": "XGY2.2-SRY",
+      "putative_impact": "MODIFIER"
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -44,6 +44,7 @@ declare module 'claude-code' {
       guard: string[]
       ready: Ready | null
       trusted: string[]
+      sessionIds: string[]
     }
   }
 }

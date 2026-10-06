@@ -247,8 +247,10 @@ def _trim(envelope: Dict[str, Any], budget: int) -> str:
         target, path, size, bytes_ = _longest_list(envelope.get("result"))
         sources = envelope.get("sources")
         if isinstance(sources, list) and sources:
+            # Provenance goes last: results are cut first, and the source records only
+            # when there is no result list left to cut or they alone take half the budget.
             source_bytes = len(_dump(sources, None))
-            if target is None or source_bytes > bytes_:
+            if target is None or size == 0 or (source_bytes > budget // 2 and source_bytes > bytes_):
                 target, path, size = sources, "sources", len(sources)
         if target is None or size == 0:
             break

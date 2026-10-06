@@ -64,3 +64,39 @@ def test_a_p2_6_bash_zebra_runs_under_the_configured_python(tmp_path):
     env.pop("ZEBRA_REEXEC", None)
     out = subprocess.run([sys.executable, zebra, "--version"], env=env, capture_output=True, text=True, timeout=60)
     assert out.stdout.startswith("zebra ")
+
+
+def test_w5_trim_cuts_results_before_provenance():
+    """An oversized answer loses result items first; the source records survive while results remain."""
+    from zebra.cli import _trim
+
+    env = {"ok": True, "result": {"candidates": [{"id": i, "pad": "x" * 200} for i in range(200)]},
+           "sources": [{"db": "MyVariant", "record": f"batch {i}", "url": "https://myvariant.info/v1/variant"}
+                       for i in range(300)],
+           "warnings": [], "query": {}}
+    import json as _json
+
+    out = _json.loads(_trim(env, 40_000))
+    assert len(out["sources"]) == 300
+    assert 0 < len(out["result"]["candidates"]) < 200
+
+
+def test_w4_w7_tool_argv_parses_with_the_cli():
+    """The argv lists hooks/tools.test.ts expects the new tools to build are accepted by the real parser."""
+    parser = build_parser()
+    for argv in (
+        ["access", "脊髓性肌萎缩症", "--province", "浙江", "--status", "ANY"],
+        ["expression", "CFTR", "--top", "5"],
+        ["aso", "NM_000492.4:c.3718-2477C>T", "--event", "pseudoexon", "--uniqueness"],
+        ["china", "hospitals", "--province", "浙江省"],
+        ["variant", "m.3243A>G", "--heteroplasmy", "35"],
+        ["acmg", "suggest", "7-117559590-ATCT-A", "--inheritance", "AR", "--prevalence", "0.0004", "--allelic", "0.9",
+         "--no-splice-lookup"],
+        ["trials", "SMA", "--country", "China", "--keep-unrelated"],
+        ["report", "export", "/tmp/r.md", "--to", "docx,pdf"],
+        ["case", "recheck", "/cases/x", "--plan"],
+        ["cnv", "SMN1 exon 7 deletion", "--copies", "0", "--sex", "female", "--smn2-copies", "3"],
+        ["phenotype", "rank", "--present", "HP:0001250", "--local-method", "lr", "--excluded-weight", "1"],
+    ):
+        args = parser.parse_args(argv)
+        assert callable(getattr(args, "func", None)), argv

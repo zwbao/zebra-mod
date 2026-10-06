@@ -101,7 +101,9 @@ def lookup(variant_text: str, gene: Optional[str] = None) -> Outcome:
     if failures and len(failures) == len(queries):
         raise failures[-1]
     matches = list(merged.values())
-    if gene:
+    # An rsID names one locus already, and LitVar's gene label for it can differ from the gene the
+    # card annotated (m.3243A>G, rs199474657, is labelled MT-ND1/MT-ND2): never gene-filter it.
+    if gene and not RSID_RE.match(text):
         keep = [m for m in matches if gene.upper() in [g.upper() for g in m["genes"]]]
         dropped = len(matches) - len(keep)
         if dropped:
@@ -135,3 +137,79 @@ def get(litvar_id: str) -> Outcome:
               "hgvs": d.get("hgvs"), "clingen_ids": d.get("clingen_ids"), "position": d.get("data_chromosome_base_position"),
               "snp_class": d.get("data_snp_class"), "clinical_significance": d.get("data_clinical_significance")}
     return Outcome(result, sources=[source_record("LitVar2", litvar_id, resp)])
+
+
+# ------------------------------------------------------------ allele matching (CP1-9)
+# LitVar's rsID-level record merges every allele dbSNP files under the rsID: CFTR p.Gly542Arg
+# (a VUS) and p.Gly542Ter (a common CF allele) are both rs113993959, and the record, named
+# "p.G542X", carries 842 PMIDs. Each record's own spelling (`hgvs`/`name`) says which allele it
+# is about; a record for another allele at the same residue is excluded and counted as excluded.
+
+_P_RE = re.compile(r"^p\.\(?(?P<ref>[A-Z][a-z]{2}|[A-Z])(?P<pos>\d+)(?P<alt>[A-Z][a-z]{2}|[A-Z*]|Ter|del|dup|fs.*|=)\)?$")
+_C_RE = re.compile(r"^(?:[A-Za-z0-9_.]+:)?c\.(?P<pos>[-*]?\d+(?:[+-]\d+)?(?:_[-*]?\d+(?:[+-]\d+)?)?)(?P<change>.+)$")
+_C_SUB_RE = re.compile(r"^([ACGT])>([ACGT])$", re.I)
+_SUBSTITUTION_ALTS = set(AA3.values()) | {"*"}
+
+
+def _p_key(text: Optional[str]) -> Optional[tuple]:
+    """(ref, pos, alt) in one-letter form, stops as '*', '=' as the reference residue, frameshifts as 'fs'."""
+    if not text:
+        return None
+    t = text.split(":", 1)[-1].strip()
+    m = _P_RE.match(t)
+    if not m:
+        return None
+    ref, alt = m.group("ref"), m.group("alt")
+    ref1 = AA3.get(ref, ref) if len(ref) == 3 else ref
+    if alt in ("Ter", "*", "X"):
+        alt1 = "*"
+    elif alt == "=":
+        alt1 = ref1  # p.Thr854= is p.T854T
+    elif alt.startswith("fs"):
+        alt1 = "fs"
+    elif len(alt) == 3 and alt in AA3:
+        alt1 = AA3[alt]
+    else:
+        alt1 = alt
+    return ref1, int(m.group("pos")), alt1
+
+
+def _c_key(text: Optional[str]) -> Optional[tuple]:
+    """(position, change) with the bases after del/dup dropped: c.5266dupC == c.5266dup."""
+    if not text or "c." not in text:
+        return None
+    m = _C_RE.match(text.split(":", 1)[-1].strip() if ":" in text and "c." in text.split(":", 1)[-1] else text.strip())
+    if not m:
+        return None
+    change = re.sub(r"^(del|dup)[ACGTN]+$", r"\1", m.group("change").strip(), flags=re.I)
+    return m.group("pos"), change.upper()
+
+
+def allele_match(record: Dict[str, Any], hgvs_p: Optional[str], hgvs_c: Optional[str]) -> str:
+    """'same', 'different' or 'unknown' for one LitVar record against this variant's p. and c. HGVS.
+
+    'different' only when both sides are SUBSTITUTIONS at the same position with another alternate
+    (c.1624G>A vs c.1624G>T; p.Gly542Arg vs p.G542X): the case of LitVar's rsID record merging
+    another allele. Spelling variants of the same change (c.5266dupC / c.5266dup, p.Thr854= / p.T854T)
+    are 'same'; anything else -- another position (possibly another transcript's numbering), an
+    indel against a substitution -- is 'unknown' and never excluded.
+    """
+    spelled = [s for s in (record.get("hgvs"), record.get("name")) if s]
+    ours_p = _p_key(hgvs_p)
+    ours_c = _c_key(hgvs_c)
+    verdict = "unknown"
+    for s in spelled:
+        k = _p_key(s)
+        if k and ours_p:
+            if k == ours_p:
+                return "same"
+            if k[:2] == ours_p[:2] and k[2] in _SUBSTITUTION_ALTS and ours_p[2] in _SUBSTITUTION_ALTS:
+                verdict = "different"
+            continue
+        ck = _c_key(s)
+        if ck and ours_c:
+            if ck == ours_c:
+                return "same"
+            if ck[0] == ours_c[0] and _C_SUB_RE.match(ck[1]) and _C_SUB_RE.match(ours_c[1]):
+                verdict = "different"
+    return verdict

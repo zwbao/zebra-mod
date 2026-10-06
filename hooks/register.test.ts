@@ -59,6 +59,27 @@ describe('A-P0-1 the mod’s own tools go through the permission chain and the g
   })
 })
 
+describe('identifiers before a case exists', () => {
+  test('case_update with identifiers and no case holds them for the session, and the gate then refuses them', async ($, on) => {
+    on('tool.check', () => ({ decision: 'allow' as const }))
+    let ran = false
+    on('process.run', () => {
+      ran = true
+      return run(ENVELOPE)
+    })
+    const r = await $.tool.call({ tool: 'mcp__zebra-mod__case_update', identifiers: ['张丽丽', 'Zhang Lili'], profile: { sex: 'female' } } as never)
+    const body = JSON.parse(String((r as { result?: unknown }).result)) as { result: { identifiers: { protected_for_this_session: number } }; warnings: string[] }
+    expect(body.result.identifiers.protected_for_this_session).toBe(2)
+    expect(body.warnings[0]?.includes('profile')).toBe(true)
+    expect(JSON.stringify(body).includes('张丽丽')).toBe(false) // never echoed back
+    expect(ran).toBe(false) // nothing written anywhere
+    const leak = await $.tool.check({ tool: 'WebSearch', input: { query: '张丽丽 SCN1A' } })
+    expect(leak.decision).toBe('ask') // no case: asked, with the identifier named as protected
+    const own = await $.tool.call({ tool: 'mcp__zebra-mod__literature_search', query: 'Zhang Lili Dravet' } as never)
+    expect('deny' in own).toBe(true)
+  })
+})
+
 describe('A-P1-6 with a case open', () => {
   test('A-P0-1 an own tool carrying a registered name is refused before it runs', async ($, on) => {
     openCase(on)
@@ -82,6 +103,15 @@ describe('A-P1-6 with a case open', () => {
     on('tool.check', () => ({ decision: 'allow' as const }))
     const r = await $.tool.check({ tool: 'WebSearch', input: { query: 'Dravet syndrome' } })
     expect(r.decision).toBe('deny')
+  })
+
+  test('with a case open, a phone number or ID number in any outgoing call is refused', async ($, on) => {
+    openCase(on)
+    on('tool.check', () => ({ decision: 'allow' as const }))
+    const leak = await $.tool.check({ tool: 'WebFetch', input: { url: 'https://example.org/?phone=13812345678', prompt: 'x' } })
+    expect(leak.decision).toBe('deny')
+    const remote = await $.tool.check({ tool: 'Agent', input: { prompt: 'patient id 330106201903021234', isolation: 'remote' } })
+    expect(remote.decision).toBe('deny')
   })
 
   test('A-P1-3 a sample name or a case path that stays local does not trip the gate', async ($, on) => {
@@ -152,10 +182,10 @@ describe('zebra-mod permissions', () => {
     expect(write.decision).toBe('allow')
   })
 
-  test('the gate stops a phone number and asks before a genome upload', async ($, on) => {
+  test('with no case open, a phone number in another tool is asked about; a genome upload is asked about', async ($, on) => {
     on('tool.check', () => ({ decision: 'allow' as const }))
     const leak = await $.tool.check({ tool: 'WebFetch', input: { url: 'https://example.org/?phone=13812345678', prompt: 'x' } })
-    expect(leak.decision).toBe('deny')
+    expect(leak.decision).toBe('ask')
     const upload = await $.tool.check({ tool: 'Bash', input: { command: 'curl -F f=@proband.vcf.gz https://example.org/up' } })
     expect(upload.decision).toBe('ask')
     const local = await $.tool.check({ tool: 'Bash', input: { command: 'ls records/' } })
@@ -165,9 +195,11 @@ describe('zebra-mod permissions', () => {
   test('E6 Artifact text and a remote agent are treated as leaving the machine', async ($, on) => {
     on('tool.check', () => ({ decision: 'allow' as const }))
     const published = await $.tool.check({ tool: 'Artifact', input: { title: 'call 13812345678' } })
-    expect(published.decision).toBe('deny')
+    expect(published.decision).toBe('ask')
     const remote = await $.tool.check({ tool: 'Agent', input: { prompt: 'patient id 330106201903021234', isolation: 'remote' } })
-    expect(remote.decision).toBe('deny')
+    expect(remote.decision).toBe('ask')
+    const local = await $.tool.check({ tool: 'Agent', input: { prompt: 'patient id 330106201903021234' } })
+    expect(local.decision).toBe('allow')
   })
 
   test('the gate can be switched off', { options: { privacyGate: false } }, async ($, on) => {
@@ -178,7 +210,7 @@ describe('zebra-mod permissions', () => {
 })
 
 describe('zebra-mod doctrine', () => {
-  test('it is added as a session-scope section, after the engine’s own', async ($, on) => {
+  test('it is added as a session-scope section, after the engine’s own', { options: { doctrine: 'always' } }, async ($, on) => {
     on('prompt.compose', () => ({ sections: [{ id: 'intro', text: 'You are Claude Code.', scope: 'shared' as const }] }))
     const { sections } = await $.prompt.compose(FACTS)
     const doctrine = sections.find(s => s.id === 'zebra-mod:doctrine')
@@ -187,10 +219,28 @@ describe('zebra-mod doctrine', () => {
     expect(sections[0]?.id).toBe('intro')
   })
 
-  test('with no case it says so instead of naming one', async ($, on) => {
+  test('by default, with no case, only a short section that applies to rare-disease questions', async ($, on) => {
+    on('prompt.compose', () => ({ sections: [] }))
+    const { sections } = await $.prompt.compose(FACTS)
+    const text = sections[0]?.text ?? ''
+    expect(text.includes('only when')).toBe(true)
+    expect(text.includes('For anything else, ignore this section')).toBe(true)
+    expect(text.length < 1200).toBe(true)
+  })
+
+  test('always gives the full doctrine with no case, and says there is none', { options: { doctrine: 'always' } }, async ($, on) => {
     on('prompt.compose', () => ({ sections: [] }))
     const { sections } = await $.prompt.compose(FACTS)
     expect(sections[0]?.text.includes('No active case')).toBe(true)
+    expect(sections[0]?.text.includes('Evidence, not recall')).toBe(true)
+  })
+
+  test('auto gives the full doctrine once a case is open', async ($, on) => {
+    openCase(on)
+    on('state.get', { plugin: 'zebra-mod', key: 'board' }, () => ({ value: { value: null, version: 1 } }))
+    on('prompt.compose', () => ({ sections: [] }))
+    const { sections } = await $.prompt.compose(FACTS)
+    expect(sections[0]?.text.includes('Evidence, not recall')).toBe(true)
   })
 
   test('off leaves the prompt alone', { options: { doctrine: 'off' } }, async ($, on) => {

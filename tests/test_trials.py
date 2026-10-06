@@ -35,7 +35,7 @@ def test_params_use_exact_country_filter_and_status():
 
 def test_country_aliases():
     assert ctgov.country_name("USA") == "United States"
-    assert ctgov.country_name("south korea") == "Korea, Republic of"
+    assert ctgov.country_name("south korea") == "South Korea"  # E-3: the spelling records now carry
     assert ctgov.country_name("中国") == "China"
     assert ctgov.country_name("Taiwan") == "Taiwan"
 
@@ -97,7 +97,7 @@ def test_cli_trials(monkeypatch, capsys):
     env = json.loads(capsys.readouterr().out)
     assert env["ok"] and env["result"]["country"] == "China" and env["result"]["status"] == "ANY"
     assert env["query"] == {"condition": "Duchenne muscular dystrophy", "term": None, "country": "China",
-                            "status": "ANY", "limit": 3, "full_eligibility": False}
+                            "status": "ANY", "limit": 3, "full_eligibility": False, "keep_unrelated": False}
     assert seen["filter.advanced"] == 'AREA[LocationCountry]"China"' and "filter.overallStatus" not in seen
     assert env["sources"][0]["db"] == "ClinicalTrials.gov" and env["sources"][0]["url"].startswith("https://clinicaltrials.gov/")
 
@@ -329,7 +329,9 @@ def test_F38_live_fields_are_accepted_by_the_api():
     """An unknown field name makes v2 answer 400, so a 200 here is the field list being valid."""
     out = ctgov.search("Dravet syndrome", status="ANY", limit=1)
     assert out.result["returned"] == 1
-    assert ctgov.FIELDS.endswith("StatusVerifiedDate")
+    assert "StatusVerifiedDate" in ctgov.FIELDS
+    # CP1-8: the relevance check reads these; a 200 above is the API accepting them
+    assert ctgov.FIELDS.endswith("OfficialTitle,Keyword,ConditionMeshTerm")
 
 
 @pytest.mark.live
@@ -381,3 +383,158 @@ def test_live_country_filter_is_exact():
     r = ctgov.search("Duchenne muscular dystrophy", country="China", status="ANY", limit=50).result
     assert r["total"] >= 10
     assert all("China" in s["countries"] and s["sites_in_country"] >= 1 for s in r["studies"])
+
+
+# ---------------------------------------------------------------- E-3: country spellings
+
+@pytest.mark.parametrize("a,b", [("Korea, Republic of", "South Korea"), ("korea", "South Korea"),
+                                 ("Iran, Islamic Republic of", "Iran"), ("Turkey", "Turkey (Türkiye)"),
+                                 ("Türkiye", "Turkey (Türkiye)"), ("Russian Federation", "Russia"),
+                                 ("Czech Republic", "Czechia"), ("Viet Nam", "Vietnam")])
+def test_e_3_country_spellings_compare_equal(a, b):
+    assert ctgov.country_key(a) == ctgov.country_key(b)
+    assert ctgov.country_key("China") != ctgov.country_key("Taiwan")
+
+
+@pytest.mark.parametrize("fixture,country", [("e_3_dmd_korea.json", "Korea"), ("e_3_dmd_korea.json", "South Korea"),
+                                             ("e_3_thal_iran.json", "Iran"), ("e_3_fmf_turkey.json", "Turkey"),
+                                             ("e_3_fmf_turkey.json", "Türkiye")])
+def test_e_3_sites_are_found_whatever_the_country_spelling(fixture, country, monkeypatch):
+    monkeypatch.setattr(ctgov, "get_json", lambda url, source, params=None, **kw: resp(fixture))
+    cond = {"e_3_dmd_korea.json": "Duchenne muscular dystrophy", "e_3_thal_iran.json": "thalassemia",
+            "e_3_fmf_turkey.json": "familial Mediterranean fever"}[fixture]
+    out = ctgov.search(cond, country=country, status="ANY", limit=4)
+    studies = out.result["studies"]
+    assert studies and all(s["sites_in_country"] >= 1 and s["sites"] for s in studies), \
+        [(s["nct_id"], s["countries"], s["sites_in_country"]) for s in studies]
+    assert not any("none of their sites reads as that country" in w for w in out.warnings)
+
+
+def test_e_3_a_site_mismatch_is_warned_not_silent(monkeypatch):
+    monkeypatch.setattr(ctgov, "get_json", lambda url, source, params=None, **kw: resp("e_3_thal_iran.json"))
+    out = ctgov.search("thalassemia", country="Mongolia", status="ANY", limit=4)
+    assert any("none of their sites reads as that country" in w for w in out.warnings)
+
+
+# ---------------------------------------------------------------- CP1-8: relevance
+
+def test_cp1_8_trials_that_do_not_name_the_condition_are_set_aside(monkeypatch, capsys):
+    seen = {}
+
+    def fake(url, source, params=None, **kw):
+        seen.update(params)
+        return resp("cp1_8_sma_china.json")
+
+    monkeypatch.setattr(ctgov, "get_json", fake)
+    out = ctgov.search("spinal muscular atrophy", country="China", status="ANY", limit=20)
+    kept = {s["nct_id"] for s in out.result["studies"]}
+    gone = {f["nct_id"] for f in out.result["filtered"]}
+    assert "NCT07190300" in gone and "NCT02348281" in gone and "NCT02294461" in gone and "NCT06628583" in gone
+    assert {"NCT04089566", "NCT05614531", "NCT06971094"} <= kept
+    assert "NCT05631418" in kept  # condition 'Recruitment', but its title and keywords name SMA
+    assert all(s.get("relevance") for s in out.result["studies"])
+    assert any("NCT07190300" in w and "set aside" in w for w in out.warnings)
+    assert seen["pageSize"] == 40  # asks for more so the page still fills
+    code = cli.main(["--json", "trials", "spinal muscular atrophy", "--country", "China", "--status", "ANY",
+                     "--keep-unrelated"])
+    env = json.loads(capsys.readouterr().out)
+    assert "NCT07190300" in {s["nct_id"] for s in env["result"]["studies"]} and "filtered" not in env["result"]
+
+
+def test_cp1_8_relevance_rules():
+    s = {"conditions": ["Duchenne Muscular Dystrophin (DMD)"], "title": "CRISPR in DMD Patients", "keywords": []}
+    assert ctgov.relevance(s, "Duchenne muscular dystrophy")  # spelling slip and initialism
+    s = {"conditions": ["Muscular Atrophy, Spinal"], "title": "x"}
+    assert ctgov.relevance(s, "spinal muscular atrophy")  # word order
+    s = {"conditions": ["Spinal Muscular Atrophies of Childhood"], "title": "x"}
+    assert ctgov.relevance(s, "spinal muscular atrophy")  # plural
+    s = {"conditions": ["Breast Cancer"], "keywords": ["androgen receptor"],
+         "condition_mesh": ["Bulbo-Spinal Atrophy, X-Linked"], "title": "Bicalutamide"}
+    assert ctgov.relevance(s, "spinal muscular atrophy") is None
+    s = {"conditions": ["Dravet Syndrome"], "title": "x"}
+    assert ctgov.relevance(s, "Dravet syndrome")
+
+
+def test_cp1_8_an_acronym_query_is_not_filtered(monkeypatch):
+    monkeypatch.setattr(ctgov, "get_json", lambda url, source, params=None, **kw: resp("cp1_8_sma_china.json"))
+    out = ctgov.search("SMA", country="China", status="ANY", limit=20)
+    assert "filtered" not in out.result and out.result["relevance_check"].startswith("not applied")
+
+
+def test_chictr_note_says_what_blocks_it(monkeypatch, capsys):
+    monkeypatch.setattr(ctgov, "get_json", lambda url, source, params=None, **kw: resp("dmd_china.json"))
+    cli.main(["trials", "Duchenne muscular dystrophy", "--country", "China"])
+    out = capsys.readouterr().out
+    assert "HTTP 405" in out and "WAF" in out and "https://www.chictr.org.cn/searchproj.html" in out
+
+
+@pytest.mark.live
+def test_live_e_3_korea_and_turkey_sites_are_listed():
+    for cond, country in (("Duchenne muscular dystrophy", "Korea"), ("familial Mediterranean fever", "Turkey")):
+        out = ctgov.search(cond, country=country, status="ANY", limit=5)
+        assert out.result["studies"] and all(s["sites_in_country"] >= 1 for s in out.result["studies"]), country
+
+
+@pytest.mark.live
+def test_live_cp1_8_sma_china_has_no_prostate_cancer_trial():
+    out = ctgov.search("spinal muscular atrophy", country="China", status="ANY", limit=40)
+    assert "NCT07190300" not in {s["nct_id"] for s in out.result["studies"]}
+
+
+# ---------------------------------------------------------------- adversarial review (W4 round), relevance
+
+def test_rev_p0_4_spelling_accents_and_subtypes():
+    s = {"conditions": ["Hemophilia A"], "title": "x"}
+    assert ctgov.relevance(s, "haemophilia A")
+    assert ctgov.relevance({"conditions": ["Haemophilia B"], "title": "x"}, "haemophilia A") is None
+    assert ctgov.relevance({"conditions": ["Sjogren's Syndrome"], "title": "x"}, "Sjögren syndrome")
+    assert ctgov.relevance({"conditions": ["Tumor"], "title": "x"}, "tumour")
+
+
+def test_rev_p0_4_full_lists_are_read_and_mesh_rescues(monkeypatch):
+    def study(nct, conds, mesh):
+        return {"protocolSection": {"identificationModule": {"nctId": nct, "briefTitle": "t"},
+                                    "conditionsModule": {"conditions": conds}},
+                "derivedSection": {"conditionBrowseModule": {"meshes": [{"term": m} for m in mesh]}}}
+
+    many = [f"C{i}" for i in range(7)]
+    data = {"totalCount": 4, "studies": [
+        study("NCT1", ["Hunter Syndrome"], ["Mucopolysaccharidosis II"]),
+        study("NCT2", ["Hunter syndrome"], ["Mucopolysaccharidosis II"]),
+        study("NCT3", ["MPS II"], ["Mucopolysaccharidosis II"]),             # rescued by the shared MeSH term
+        study("NCT4", many + ["Hunter syndrome"], []),                        # its 8th condition names it
+        study("NCT5", ["Breast Cancer"], ["Breast Neoplasms"])]}
+    monkeypatch.setattr(ctgov, "get_json", lambda url, source, params=None, **kw: resp(data))
+    out = ctgov.search("Hunter syndrome", status="ANY", limit=10)
+    kept = {s["nct_id"] for s in out.result["studies"]}
+    assert kept == {"NCT1", "NCT2", "NCT3", "NCT4"} and [f["nct_id"] for f in out.result["filtered"]] == ["NCT5"]
+    assert all("_relevance" not in s and "keywords" not in s for s in out.result["studies"])
+    assert any("possibly unrelated" in w and "may still be relevant" in w for w in out.warnings)
+
+
+def test_rev_p0_4_nothing_is_set_aside_when_most_records_word_it_otherwise(monkeypatch):
+    def study(nct, conds):
+        return {"protocolSection": {"identificationModule": {"nctId": nct, "briefTitle": "t"},
+                                    "conditionsModule": {"conditions": conds}}}
+
+    data = {"totalCount": 3, "studies": [study("NCT1", ["Amyotrophic Lateral Sclerosis"]),
+                                         study("NCT2", ["ALS"]), study("NCT3", ["Lou Gehrig's disease"])]}
+    monkeypatch.setattr(ctgov, "get_json", lambda url, source, params=None, **kw: resp(data))
+    out = ctgov.search("Lou Gehrig disease", status="ANY", limit=10)
+    assert out.result["returned"] == 3 and "filtered" not in out.result
+    assert out.result["relevance_check"].startswith("not applied: only 1 of 3")
+
+
+@pytest.mark.parametrize("cond", ["MPS II", "SMA type 1", "CDKL5 deficiency"])
+def test_rev_p0_4_a_query_with_an_acronym_is_not_filtered(cond, monkeypatch):
+    monkeypatch.setattr(ctgov, "get_json", lambda url, source, params=None, **kw: resp("cp1_8_sma_china.json"))
+    out = ctgov.search(cond, country="China", status="ANY", limit=20)
+    assert "filtered" not in out.result
+
+
+def test_rev_p2_query_syntax_is_neutralised_and_congo_macao_spellings():
+    p = ctgov._params('Duchenne "muscular" dystrophy AND (x)', 'a\\\\b', None, "ANY", 5)
+    assert '"' not in p["query.cond"] and " AND " not in p["query.cond"] and "\\\\" not in p["query.term"]
+    assert ctgov.country_key("Congo") == ctgov.country_key("Republic of the Congo")
+    assert ctgov.country_key("Congo") != ctgov.country_key("Congo, The Democratic Republic of the")
+    assert ctgov.country_key("Macao") == ctgov.country_key("Macau")

@@ -1,0 +1,127 @@
+{
+ "captured_by": "tests/fixtures/cnv/make_fixtures.py",
+ "files": {
+  "ClinGen_gene_curation_list_GRCh37.tsv.gz": {
+   "bytes": 248844,
+   "data_rows": 1534,
+   "file_header_date": "06 Oct,2026",
+   "retrieved_at": "2026-10-06T10:03:54+00:00",
+   "sha256": "ae8b42590897cf788711a66bccd421f0faedb8a0c61f4b7f170da842a4c423b4",
+   "url": "https://ftp.clinicalgenome.org/ClinGen_gene_curation_list_GRCh37.tsv"
+  },
+  "ClinGen_gene_curation_list_GRCh38.tsv.gz": {
+   "bytes": 248538,
+   "data_rows": 1532,
+   "file_header_date": "06 Oct,2026",
+   "retrieved_at": "2026-10-06T10:03:50+00:00",
+   "sha256": "95aead8e9695a10d2b127455e487054e4300861fc4dded7dfd7583c1e4e7b0ea",
+   "url": "https://ftp.clinicalgenome.org/ClinGen_gene_curation_list_GRCh38.tsv"
+  },
+  "ClinGen_region_curation_list_GRCh37.tsv.gz": {
+   "bytes": 99039,
+   "data_rows": 513,
+   "file_header_date": "28 Apr,2026",
+   "retrieved_at": "2026-10-06T10:04:01+00:00",
+   "sha256": "46119c7602a468a05b98cecf48b3ac4ae354ddc5127ad8d4d94642a065cff610",
+   "url": "https://ftp.clinicalgenome.org/ClinGen_region_curation_list_GRCh37.tsv"
+  },
+  "ClinGen_region_curation_list_GRCh38.tsv.gz": {
+   "bytes": 98881,
+   "data_rows": 513,
+   "file_header_date": "28 Apr,2026",
+   "retrieved_at": "2026-10-06T10:03:57+00:00",
+   "sha256": "06bd0333e2c94585c3f823a69be220e07e0c0e1e82dc47e6a325fa734ab8d454",
+   "url": "https://ftp.clinicalgenome.org/ClinGen_region_curation_list_GRCh38.tsv"
+  },
+  "lookups.json:GRCh37:DMD": {
+   "note": "canonical transcript only (28 transcripts in the response)",
+   "retrieved_at": "2026-10-06T10:04:31+00:00",
+   "sha256": "e0aa40514eea9906ec237a9e355bc6a02c22d581831c9a31240d745cbf28ad0b",
+   "url": "https://grch37.rest.ensembl.org/lookup/symbol/homo_sapiens/DMD?expand=1"
+  },
+  "lookups.json:GRCh38:DMD": {
+   "note": "canonical transcript only (95 transcripts in the response)",
+   "retrieved_at": "2026-10-06T10:04:25+00:00",
+   "sha256": "c60bd5b60bf091081fcd49726b7af973844619460a240c545d2f1f681489a89b",
+   "url": "https://rest.ensembl.org/lookup/symbol/homo_sapiens/DMD?expand=1"
+  },
+  "lookups.json:GRCh38:SMN1": {
+   "note": "canonical transcript only (23 transcripts in the response)",
+   "retrieved_at": "2026-10-06T10:05:03+00:00",
+   "sha256": "a321fad4282140e9c287330b17d933d2001a550856f144fcda836fef2a0fd514",
+   "url": "https://rest.ensembl.org/lookup/symbol/homo_sapiens/SMN1?expand=1"
+  },
+  "lookups.json:GRCh38:SMN2": {
+   "note": "canonical transcript only (23 transcripts in the response)",
+   "retrieved_at": "2026-10-06T10:05:13+00:00",
+   "sha256": "03e7bc6188f382a1703b78705fa5ffa6cd4014cbfa9ff5ff21ffb432ba651c84",
+   "url": "https://rest.ensembl.org/lookup/symbol/homo_sapiens/SMN2?expand=1"
+  },
+  "lookups.json:GRCh38:UBE3A": {
+   "note": "canonical transcript only (49 transcripts in the response)",
+   "retrieved_at": "2026-10-06T10:04:50+00:00",
+   "sha256": "cd900c503a4b411a22a596d84a1fe07290377469b9a86e1eba805045b1e672fc",
+   "url": "https://rest.ensembl.org/lookup/symbol/homo_sapiens/UBE3A?expand=1"
+  },
+  "overlap.json.gz:GRCh37:22:18648855-21800471": {
+   "genes": 159,
+   "retrieved_at": "2026-10-06T10:08:38+00:00",
+   "sha256": "32202ffeba42152ad7361ed2a32217d65bc5e172b42e3aecd7db58854c7e51cc",
+   "url": "https://grch37.rest.ensembl.org/overlap/region/human/22:18648855-21800471?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:13:55000000-56000000": {
+   "genes": 8,
+   "retrieved_at": "2026-10-06T10:08:34+00:00",
+   "sha256": "541d8c3211a81c6ee21da89ed42f7a9a83293ac02aadf69dc8e32e86a323f157",
+   "url": "https://rest.ensembl.org/overlap/region/human/13:55000000-56000000?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:15:23123715-27623714": {
+   "genes": 199,
+   "retrieved_at": "2026-10-06T10:07:06+00:00",
+   "sha256": "48bc42eb63064ed2216cc7e9d2ee5267a1d76961e413a988d88e0516b46be989",
+   "url": "https://rest.ensembl.org/overlap/region/human/15:23123715-27623714?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:15:27623715-28193120": {
+   "genes": 9,
+   "retrieved_at": "2026-10-06T10:07:42+00:00",
+   "sha256": "e5641a0af7992956968489895badbffb5895d17d7fdd4ccde79ebdcabe36371c",
+   "url": "https://rest.ensembl.org/overlap/region/human/15:27623715-28193120?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:16:29580020-30180020": {
+   "genes": 59,
+   "retrieved_at": "2026-10-06T10:08:10+00:00",
+   "sha256": "c68c0d5aff248c879b072868c08c4e17ab97ee99422bdd79cd8af30f246eb8d5",
+   "url": "https://rest.ensembl.org/overlap/region/human/16:29580020-30180020?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:17:16810000-20450000": {
+   "genes": 247,
+   "retrieved_at": "2026-10-06T10:07:51+00:00",
+   "sha256": "6ce7b933afc24db3c914b13c51dcdf24959cdf3dcc41ce39912c9fa6d38c612f",
+   "url": "https://rest.ensembl.org/overlap/region/human/17:16810000-20450000?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:1:5349466-6823542": {
+   "genes": 52,
+   "retrieved_at": "2026-10-06T10:06:20+00:00",
+   "sha256": "9620786ae829a64b6800abf285667ffe63aa724afd3cf73f4d284127972a63f1",
+   "url": "https://rest.ensembl.org/overlap/region/human/1:5349466-6823542?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:1:849466-5349465": {
+   "genes": 230,
+   "retrieved_at": "2026-10-06T10:06:15+00:00",
+   "sha256": "e4c4c3dc5ad8fb34e0d940764617c348c3186d8eaa654a26908ba247c9639cab",
+   "url": "https://rest.ensembl.org/overlap/region/human/1:849466-5349465?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:22:18648855-21800471": {
+   "genes": 237,
+   "retrieved_at": "2026-10-06T10:05:54+00:00",
+   "sha256": "c37fa1d39d5671714e45b254137c20e0ee48ba7e5d16ab0e31964a49b56c5d46",
+   "url": "https://rest.ensembl.org/overlap/region/human/22:18648855-21800471?feature=gene"
+  },
+  "overlap.json.gz:GRCh38:7:73330452-74778226": {
+   "genes": 47,
+   "retrieved_at": "2026-10-06T10:06:50+00:00",
+   "sha256": "ba0834200f3126c20675de5ec0f2a4ff76fee4b98554448ca71095960e7ce31e",
+   "url": "https://rest.ensembl.org/overlap/region/human/7:73330452-74778226?feature=gene"
+  }
+ }
+}

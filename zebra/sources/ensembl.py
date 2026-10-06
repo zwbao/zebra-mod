@@ -10,7 +10,7 @@ import re
 import urllib.parse
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from zebra.core import Outcome
+from zebra.core import Outcome, UsageError
 from zebra.http import SourceError, get_json, post_json, request
 from zebra.sources import record as source_record
 
@@ -32,6 +32,10 @@ GENE_HGVS_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.@-]*:[cp]\.\S+$")
 # Ensembl's message when a RefSeq accession carries a version the current
 # release does not hold (verified live: NM_001165963.1 fails, NM_001165963 works).
 NO_TRANSCRIPT_RE = re.compile(r"Could not get a Transcript object|Could not fetch a Transcript", re.I)
+# VEP's answer (HTTP 400) when the reference base written in an HGVS does not match the transcript,
+# e.g. "Reference allele extracted from DMD:c.6439 (G) does not match reference allele given by HGVS
+# notation DMD:c.6439C>T (C)". That is the caller's input, not a failing source (E-11).
+REF_MISMATCH_RE = re.compile(r"does not match reference allele", re.I)
 
 
 def host(assembly: str) -> str:
@@ -116,6 +120,12 @@ def vep(variant: str, assembly: str = "GRCh38") -> Outcome:
         try:
             resp = _vep_hgvs(base, text, params)
         except SourceError as err:
+            if err.status == 400 and REF_MISMATCH_RE.search(err.message or ""):
+                raise UsageError(
+                    f"{text}: the reference base in this HGVS is not the one on the transcript ({assembly}) — "
+                    f"VEP says: {err.message.strip()[:300]}. Check the c. position and the transcript (a gene-only "
+                    "HGVS is placed on the gene's canonical transcript, whose numbering can differ from the "
+                    "report's)") from None
             acc, sep, change = text.partition(":")
             bare = strip_version(acc)
             if not (sep and bare != acc and NO_TRANSCRIPT_RE.search(err.message or "")):
@@ -229,3 +239,42 @@ def lookup_symbol(symbol: str, assembly: str = "GRCh38", expand: bool = False) -
     resp = get_json(f"{host(assembly)}/lookup/symbol/homo_sapiens/{urllib.parse.quote(symbol, safe='')}", source="Ensembl lookup",
                     params={"expand": 1 if expand else 0}, cache_ttl=30 * 86400)
     return Outcome(resp.json(), sources=[source_record("Ensembl lookup", symbol, resp)])
+
+
+def map_assembly(chrom: str, start: int, end: int, source: str = "GRCh37", target: str = "GRCh38") -> Outcome:
+    """Ensembl assembly mapping of chrom:start-end between builds (CP1-2).
+
+    Returns {"chrom", "start", "end", "strand", "pieces"}; a region that maps to more than one
+    place, to a different length, or to the reverse strand is refused (ValueError), because a
+    variant cannot be carried over such a mapping base for base.
+    """
+    region = f"{chrom}:{int(start)}..{int(end)}:1"
+    resp = get_json(f"{host(source)}/map/human/{source}/{region}/{target}", source="Ensembl assembly map",
+                    cache_ttl=90 * 86400)
+    maps = (resp.json() or {}).get("mappings") or []
+    rec = source_record("Ensembl assembly map", f"{source} {region} -> {target}", resp)
+    if len(maps) != 1:
+        raise ValueError(f"{source} {region} maps to {len(maps)} pieces of {target}; not carried over")
+    m = maps[0]["mapped"]
+    if m.get("strand") != 1 or (m["end"] - m["start"]) != (int(end) - int(start)):
+        raise ValueError(f"{source} {region} maps to {m.get('seq_region_name')}:{m.get('start')}-{m.get('end')} "
+                         f"(strand {m.get('strand')}); not a base-for-base mapping")
+    return Outcome({"chrom": str(m["seq_region_name"]), "start": int(m["start"]), "end": int(m["end"]),
+                    "strand": m.get("strand"), "assembly": target}, sources=[rec])
+
+
+def transcript(transcript_id: str, assembly: str = "GRCh38") -> Outcome:
+    """One transcript with its exons and translation (Ensembl lookup/id, expand=1)."""
+    tid = transcript_id.split(".")[0]
+    resp = get_json(f"{host(assembly)}/lookup/id/{urllib.parse.quote(tid, safe='')}", source="Ensembl lookup",
+                    params={"expand": 1}, cache_ttl=30 * 86400)
+    d = resp.json()
+    if not isinstance(d, dict) or not d.get("Exon"):
+        raise ValueError(f"Ensembl lookup of {tid} returned no exon structure")
+    tl = d.get("Translation") or {}
+    out = {"id": d.get("id"), "version": d.get("version"), "gene_id": d.get("Parent"),
+           "chrom": d.get("seq_region_name"), "strand": d.get("strand"), "biotype": d.get("biotype"),
+           "exons": [{"start": e["start"], "end": e["end"], "id": e.get("id")} for e in d["Exon"]],
+           "translation": {"start": tl.get("start"), "end": tl.get("end"), "length": tl.get("length"),
+                           "id": tl.get("id")} if tl else None}
+    return Outcome(out, sources=[source_record("Ensembl lookup", f"{tid} ({assembly})", resp)])

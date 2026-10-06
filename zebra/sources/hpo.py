@@ -29,14 +29,12 @@ from zebra.http import SourceError, get_json
 from zebra.sources import record as source_record
 
 BASE = "https://ontology.jax.org/api"
-# `term()` answers are cached for a day, not 30 (B-P2-9). `zebra.http.request`
-# picks the TTL before it sees the status, so a 404 cannot be given its own
-# shorter life; the whole endpoint therefore takes the short one, because a
-# transient 404 that reads as "HPO has no such term" for a month is worse than
-# one extra small request a day. The term endpoint is keyless and paced at
-# 0.34 s per request in `zebra.http._HOST_INTERVAL`.
-# (A `not_found_ttl` argument in `zebra.http.request` would make this a 30-day
-# cache for hits and a 1-day cache for misses; that file is not owned here.)
+# `term()` answers: a found term is cached for 30 days, a 404 for one day (E-12),
+# because a transient 404 that reads as "HPO has no such term" for a month is worse
+# than one extra small request a day (B-P2-9). zebra.http.request now gives accepted
+# not-found statuses a one-day TTL by default; it is passed explicitly here so this
+# endpoint keeps it whatever that default becomes.
+TERM_TTL = 30 * 86400
 NOT_FOUND_TTL = 86400
 HPO_RE = re.compile(r"^HP:\d{7}$")
 
@@ -69,7 +67,7 @@ def term(hpo_id: str, prefer_local: bool = True) -> Outcome:
         return Outcome(result, sources=[source_record("HPO", hpo_id, url=f"https://hpo.jax.org/browse/term/{hpo_id}",
                                                       note=f"local release {idx.version}")])
     resp = get_json(f"{BASE}/hp/terms/{urllib.parse.quote(hpo_id, safe='')}", source="HPO",
-                    cache_ttl=NOT_FOUND_TTL, ok_statuses=(200, 404))
+                    cache_ttl=TERM_TTL, not_found_ttl=NOT_FOUND_TTL, ok_statuses=(200, 404))
     if resp.status == 404:
         return Outcome({"id": hpo_id, "name": None, "obsolete": None, "note": "not found in HPO"},
                        sources=[source_record("HPO", hpo_id, resp)])
@@ -193,14 +191,45 @@ def search(text: str, limit: int = 10) -> Outcome:
             backend = backend or "HPO API (ontology.jax.org), re-ranked"
         except (SourceError, ValueError, KeyError, TypeError, AttributeError) as err:
             warnings.append(f"HPO API search unavailable ({type(err).__name__}: {err})")
-    elif not hits:
+    non_ascii_unsearched = not hits and not text.isascii()
+    ranked = rank_hits(text, hits, limit)
+    # CP1-7: the curated lay phrases (抽风, 走路晚, 听力下降 ...) need no HPO files, so a fresh
+    # install still answers them; each id is verified against the HPO API before it is shown
+    lay_ids, lay_key = hpo_local.lay_lookup(text)
+    lay_rows: List[Dict[str, Any]] = []
+    for tid in lay_ids:
+        if any(h.get("id") == tid for h in lay_rows):
+            continue
+        try:
+            got = term(tid, prefer_local=False)
+        except (SourceError, ValueError, KeyError, TypeError, AttributeError) as err:
+            warnings.append(f"lay phrase {lay_key!r} maps to {tid}, which could not be verified online ({err}); "
+                            "not shown")
+            continue
+        sources.extend(got.sources)
+        info = got.result or {}
+        if not info.get("name") or info.get("obsolete"):
+            continue
+        lay_rows.append({"id": info.get("id") or tid, "label": info["name"], "synonyms": info.get("synonyms") or [],
+                         "matched": lay_key, "matched_on": "lay phrase"})
+    if non_ascii_unsearched and not lay_rows:
         warnings.append(f"'{text}' is not ASCII: the online HPO search covers English labels and synonyms only "
                         "(the JAX search endpoint rejects non-ASCII queries). Run `zebra hpo fetch` once to search "
                         "the Chinese HPO labels locally, or search the English term")
-    ranked = rank_hits(text, hits, limit)
+    if lay_rows:
+        # a lay phrase found inside the query yields to an official label/synonym that IS the query
+        lay_exact = _norm(str(lay_key)) == _norm(text) or str(lay_key).upper() == text.strip().upper()
+        exact = [] if lay_exact else [h for h in ranked if h.get("matched") and _norm(h["matched"]) == _norm(text)]
+        merged: List[Dict[str, Any]] = []
+        for h in exact + lay_rows + ranked:
+            if h.get("id") not in {m.get("id") for m in merged}:
+                merged.append(h)
+        ranked = merged[:limit]
+        if not hits:
+            backend = (backend + "; " if backend else "") + "curated lay phrases (zebra.hpo_local.LAY_TERMS), verified online"
     if not ranked:
         warnings.append(f"no HPO term matched '{text}' online; `zebra hpo fetch` adds the local release, which also "
-                        "searches Chinese labels and curated lay phrases")
+                        "searches the official Chinese labels")
     return Outcome({"query": text, "hits": ranked, "backend": backend, "candidates_considered": len(hits)},
                    sources=sources, warnings=warnings)
 

@@ -1,8 +1,15 @@
 """zebra phenotype rank: phenotype-driven differential from several independent rankers.
 
 Sources (each ranks on its own; scores are never added up across sources):
-  local          offline Resnik best-match average over the HPO release (zebra.hpo_local);
-                 honours excluded terms (penalty)
+  local          offline Resnik best-match average over the HPO release (zebra.hpo_local).
+                 Excluded terms are checked against the present ones and flagged on each
+                 candidate annotated with them (`excluded_hits`), but not scored by default:
+                 on the GA4GH phenopacket-store benchmark (docs/BENCHMARK.md) penalising them
+                 cost accuracy at every number of excluded terms, including on held-out cases
+                 whose own paper was not a source of the HPO annotations (top-10 there 14.6%
+                 -> 28.3%; all held-out 39.9% -> 69.6%, an upper bound inflated by that
+                 circularity). `--excluded-weight 1` restores the 0.1.0 penalty;
+                 `--local-method lr` is a likelihood-ratio alternative (not better there).
   monarch        Monarch semantic similarity search (diseases and genes); no excluded terms
   pubcasefinder  PubCaseFinder ranked lists (OMIM, Orphanet, genes); no excluded terms
 
@@ -25,6 +32,12 @@ from zebra import hpo_local
 from zebra.core import Outcome, UsageError, attempt
 
 SOURCES = ("local", "monarch", "pubcasefinder")
+# What `phenotype rank` and `hpo rank` use unless told otherwise: the configuration chosen on the
+# development half of the phenopacket-store benchmark and confirmed on the held-out half
+# (docs/BENCHMARK.md). hpo_local's own defaults stay at 0.1.0 (excluded weight 1), so library
+# callers such as zebra.vcf are unchanged; the benchmark choice lives here, in the commands.
+LOCAL_METHOD = "resnik"
+LOCAL_PARAMS: Dict[str, float] = {"excluded_weight": 0.0}
 HPO_RE = re.compile(r"^HP:\d{7}$")
 MAX_TOP = 50
 PCF_BUDGET_S = 75.0  # stop asking PubCaseFinder for more lists after this (the tool times out at 180 s)
@@ -42,7 +55,12 @@ def _split_ids(values: Optional[Sequence[str]]) -> List[str]:
     return out
 
 
-def gather_terms(args: argparse.Namespace) -> Tuple[List[str], List[str], Optional[str]]:
+def gather_terms(args: argparse.Namespace) -> Tuple[List[str], List[str], Optional[str], List[str]]:
+    """(present, excluded, case used, ids given as both present and excluded).
+
+    A term given as both is kept as present and dropped from the excluded list, and the
+    caller says so (D-P2-1): it used to vanish from the query without a word.
+    """
     present = _split_ids(getattr(args, "present", None)) + _split_ids(getattr(args, "hpo", None))
     excluded = _split_ids(getattr(args, "exclude", None))
     case_path = getattr(args, "case", None)
@@ -63,10 +81,11 @@ def gather_terms(args: argparse.Namespace) -> Tuple[List[str], List[str], Option
     if bad:
         raise UsageError(f"not HPO ids (HP:0000000): {', '.join(bad)}")
     present = list(dict.fromkeys(present))
+    both = [t for t in dict.fromkeys(excluded) if t in present]
     excluded = [t for t in dict.fromkeys(excluded) if t not in present]
     if not present:
         raise UsageError("give present phenotypes (--present HP:...), or --from-case with an active case that has some")
-    return present, excluded, used_case
+    return present, excluded, used_case, both
 
 
 def parse_sources(text: Optional[str]) -> List[str]:
@@ -82,10 +101,26 @@ def parse_sources(text: Optional[str]) -> List[str]:
 # ---------------------------------------------------------------- per-source runs
 
 
-def run_local(idx: Any, present: Sequence[str], excluded: Sequence[str], top: int) -> Outcome:
+def local_params(args: Optional[argparse.Namespace] = None) -> Dict[str, float]:
+    """The benchmark-chosen local parameters, with an explicit --excluded-weight taking precedence."""
+    params = dict(LOCAL_PARAMS)
+    weight = getattr(args, "excluded_weight", None) if args is not None else None
+    if weight is not None:
+        if not (0.0 <= float(weight) <= 10.0):
+            raise UsageError(f"--excluded-weight must be between 0 and 10, got {weight}")
+        params["excluded_weight"] = float(weight)
+    return params
+
+
+def run_local(idx: Any, present: Sequence[str], excluded: Sequence[str], top: int,
+              method: Optional[str] = None, params: Optional[Dict[str, float]] = None) -> Outcome:
     from zebra.sources import record as source_record
 
-    res = hpo_local.rank(idx, present, excluded, top=top, db=("OMIM", "ORPHA"))
+    method = method or LOCAL_METHOD
+    params = dict(LOCAL_PARAMS if params is None else params)
+    if method != "resnik":
+        params.pop("excluded_weight", None)  # a Resnik parameter; the lr method has its own
+    res = hpo_local.rank(idx, present, excluded, top=top, db=("OMIM", "ORPHA"), method=method, params=params)
     diseases = []
     for i, d in enumerate(res["diseases"], 1):
         diseases.append({
@@ -96,12 +131,19 @@ def run_local(idx: Any, present: Sequence[str], excluded: Sequence[str], top: in
         })
     real = [g for g in res["genes"] if g["gene"] not in ("-", "")]  # '-' = annotation without a gene
     genes = [{"rank": i, "symbol": g["gene"], "score": g["score"], "via": g["via"]} for i, g in enumerate(real[:top], 1)]
-    block = {"method": res["method"], "hpo_version": res["hpo_version"], "excluded_supported": True,
+    scored = method == "lr" or params.get("excluded_weight", 1.0) > 0
+    block = {"method": res["method"], "method_id": res.get("method_id"), "hpo_version": res["hpo_version"],
+             "excluded_supported": True, "excluded_scored": scored,
+             "excluded_handling": ("lower the score of candidates annotated with them" if scored else
+                                   "flagged per candidate in excluded_hits, not scored (docs/BENCHMARK.md)"),
+             "ties_at_top": res["ties"],
+             "benchmark": "docs/BENCHMARK.md (GA4GH phenopacket-store, held-out half)",
              "diseases": diseases, "genes": genes, "notes": res["notes"],
+             "contradictions": res.get("contradictions", []),
              "query_labels": {q["id"]: q["label"] for q in res["query"] + res["excluded"]}}
     return Outcome(block, sources=[source_record("HPO annotations (phenotype.hpoa)", res["hpo_version"],
                                                  url="https://hpo.jax.org/data/annotations",
-                                                 note="local Resnik ranking, zebra.hpo_local")])
+                                                 note=f"local {res.get('method_id', 'resnik')} ranking, zebra.hpo_local")])
 
 
 def _compact_matches(rows) -> Dict[str, Any]:
@@ -319,13 +361,21 @@ def link_ids(items: List[Dict[str, Any]], warnings: List[str]) -> Tuple[Dict[str
 
 
 def _rank(args: argparse.Namespace) -> Outcome:
-    present, excluded, used_case = gather_terms(args)
+    present, excluded, used_case, both = gather_terms(args)
     sources = parse_sources(args.sources)
     top = max(1, min(int(args.top), MAX_TOP))
+    method = getattr(args, "local_method", None) or LOCAL_METHOD
+    if method != "resnik" and getattr(args, "excluded_weight", None) is not None:
+        raise UsageError("--excluded-weight applies to the resnik method; the lr method scores excluded terms by "
+                         "their annotation frequency")
+    params = local_params(args)
     warnings: List[str] = []
     notes: List[str] = []
     if args.top > MAX_TOP:
         warnings.append(f"--top capped at {MAX_TOP}")
+    if both:
+        warnings.append(f"given as both present and excluded: {', '.join(both)}; kept as present and dropped from "
+                        "the excluded list — check which is right")
 
     idx = None
     try:
@@ -335,6 +385,7 @@ def _rank(args: argparse.Namespace) -> Outcome:
             warnings.append(f"local ranking skipped: {err}. Run `zebra hpo fetch` once (~80 MB) to enable it.")
     labels: Dict[str, Optional[str]] = {}
     remote_terms = list(present)
+    unresolved: List[str] = []  # ids that resolve to no current term (D-P2-2)
     if idx is not None:  # send current ids to the web services (alt/obsolete ids would match nothing)
         remote_terms = []
         for t in present:
@@ -365,6 +416,7 @@ def _rank(args: argparse.Namespace) -> Outcome:
                 continue
             outcome_note = (got.result or {}).get("note")
             if (got.result or {}).get("name") is None and outcome_note == "not found in HPO":
+                unresolved.append(t)
                 continue
             replacement = (got.result or {}).get("replaced_by")
             checked.append(replacement or t)
@@ -372,11 +424,16 @@ def _rank(args: argparse.Namespace) -> Outcome:
                 notes.append(f"{t} is obsolete in HPO; used {replacement} (HPO API)")
         remote_terms = list(dict.fromkeys(checked))
 
-    dropped = [t for t in present if t not in remote_terms]
-    if dropped:
+    remote_sources = [s for s in sources if s in ("monarch", "pubcasefinder")]
+    # D-P2-2: only ids that resolve to no current term were dropped (an alt id that resolved
+    # was sent as its primary), and only a requested web source can have missed them
+    if idx is not None:
+        dropped = [t for t in present if idx.primary(t)[0] is None]
+    else:  # only what the HPO API said does not exist; a replaced id was sent as its replacement
+        dropped = list(unresolved)
+    if dropped and remote_sources:
         warnings.append("not sent to the web sources, because this HPO release does not resolve them to a current "
                         f"term: {', '.join(dropped)}")
-    remote_sources = [s for s in sources if s in ("monarch", "pubcasefinder")]
     if remote_sources and not remote_terms:
         local_possible = "local" in sources and idx is not None
         raise UsageError(
@@ -398,9 +455,14 @@ def _rank(args: argparse.Namespace) -> Outcome:
         futures = {name: pool.submit(fn) for name, fn in jobs.items()}
         if "local" in sources and idx is not None:
             try:
-                got = run_local(idx, present, excluded, top)
+                got = run_local(idx, present, excluded, top, method, params)
                 per["local"] = got.result
                 outcome.add(got)
+                for c in got.result.get("contradictions") or []:
+                    warnings.append(f"excluded {c['excluded']} ({c['label']}) {c['why']}; the exclusion was dropped "
+                                    "— check which is right")
+                dropped_excl = {c["excluded"] for c in got.result.get("contradictions") or []}
+                excluded = [e for e in excluded if e not in dropped_excl and (idx.primary(e)[0] or e) not in dropped_excl]
             except ValueError as err:  # e.g. only onset/inheritance terms given
                 job_warn["local"].append(f"local ranking skipped: {err}")
         for name in ("monarch", "pubcasefinder"):
@@ -415,6 +477,10 @@ def _rank(args: argparse.Namespace) -> Outcome:
         for s in ("monarch", "pubcasefinder"):
             if s in per:
                 notes.append(f"{s} does not take excluded phenotypes; its list ignores {', '.join(excluded)}")
+        if per.get("local") and not per["local"].get("excluded_scored"):
+            notes.append("local: excluded phenotypes are checked and flagged on each candidate annotated with them "
+                         "(excluded_hits) but do not lower its score — on the phenopacket-store benchmark that "
+                         "penalty cost accuracy (docs/BENCHMARK.md); --excluded-weight 1 restores it")
     if not per:
         warnings.append("no source returned a ranking")
 
@@ -472,9 +538,11 @@ def render(r: Dict[str, Any]) -> str:
     if per.get("local"):
         b = per["local"]
         lines.append("")
-        lines.append(f"local (Resnik BMA over HPO {b['hpo_version']}; excluded terms penalised):")
+        lines.append(f"local ({b.get('method_id') or 'resnik'} over HPO {b['hpo_version']}; excluded terms "
+                     f"{'scored' if b.get('excluded_scored') else 'flagged, not scored'}; "
+                     f"{b.get('ties_at_top', 1)} tied at the top score):")
         for d in b["diseases"]:
-            pen = f" excl:{','.join(d['excluded_hits'])}" if d["excluded_hits"] else ""
+            pen = f" has excluded:{','.join(d['excluded_hits'])}" if d["excluded_hits"] else ""
             lines.append(f"{d['rank']:>2}. {d['id']:<13} {d['score']:.3f} ({(d['relative'] or 0):.0%}) {d['name']}  "
                          f"[{d['exact_matches']}/{d['of']} exact] {','.join(d['genes'][:5])}{pen}")
     if per.get("monarch"):
@@ -520,4 +588,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--from-case", action="store_true", help="add the present/excluded phenotypes of the active case")
     q.add_argument("--sources", default="local,monarch,pubcasefinder", help="comma list: local,monarch,pubcasefinder")
     q.add_argument("--top", type=int, default=15, help=f"results per source (max {MAX_TOP})")
+    q.add_argument("--local-method", choices=hpo_local.METHODS, default=None,
+                   help=f"scoring of the local ranker (default {LOCAL_METHOD}; see docs/BENCHMARK.md)")
+    q.add_argument("--excluded-weight", type=float, default=None,
+                   help="weight of the local excluded-term penalty (default 0: flagged, not scored; 1 = zebra 0.1.0)")
     q.set_defaults(func=_rank)

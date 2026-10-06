@@ -55,6 +55,21 @@ _HOST_INTERVAL = {
     "api.orphadata.com": 0.2,
     "ftp.ncbi.nlm.nih.gov": 0.34,
     "api-v3.monarchinitiative.org": 0.1,
+    "blast.ncbi.nlm.nih.gov": 10.0,  # NCBI BLAST URL API: one request per 10 s
+    "gtexportal.org": 0.2,
+    "api.mavedb.org": 0.3,  # one lookup can page through ~25 requests
+    "myvariant.info": 0.34,  # courtesy value: the docs give a 1,000-id batch cap, no rate
+    "www.mitomap.org": 1.0,
+    "mitomap.org": 1.0,
+    "api.fda.gov": 0.25,  # openFDA: 240 requests/minute without a key
+    "bigdata.ibp.ac.cn": 1.0,  # NyuWa
+    "wbbc.westlake.edu.cn": 1.0,
+    "taiwanview.twbiobank.org.tw": 1.0,
+}
+# Published limits beyond the gap between two requests: (window in seconds, requests allowed).
+# Counted across processes (each tool call is a new CLI process) in the cache directory.
+_HOST_WINDOWS: Dict[str, tuple] = {
+    "pubcasefinder.dbcls.jp": ((3600, 100), (86400, 1000)),
 }
 _last_call: Dict[str, float] = {}
 _pace_lock = threading.Lock()
@@ -152,7 +167,7 @@ def _pace(host: str, max_wait: Optional[float] = None) -> Optional[float]:
     named error instead of sleeping past its budget.
     """
     interval = _HOST_INTERVAL.get(host, 0.0)
-    if host.endswith("ncbi.nlm.nih.gov") and os.environ.get("NCBI_API_KEY"):
+    if host.endswith("ncbi.nlm.nih.gov") and host != "blast.ncbi.nlm.nih.gov" and os.environ.get("NCBI_API_KEY"):
         interval = 0.11
     if interval <= 0:
         return 0.0
@@ -280,6 +295,9 @@ def request(
             raise SourceError(source, url, status,
                               f"deadline reached while waiting out the {_HOST_INTERVAL.get(host, 0)} s courtesy "
                               f"interval for {host}: no request was sent") from None
+        over = _window_full(host)
+        if over:
+            raise SourceError(source, url, None, over) from None
         req = urllib.request.Request(url, data=data, headers=hdrs, method=method)
         try:
             with opener.open(req, timeout=attempt_timeout) as resp:
@@ -295,6 +313,10 @@ def request(
                 text = ""
             if status in ok_statuses:
                 pass
+            elif status == 500 and _graphql_errors(text):
+                # a GraphQL server's answer to this query (an unknown variant, a bad field):
+                # asking again gets the same document, so it is final, not transient
+                raise SourceError(source, url, status, _short(text)) from None
             elif status in (429, 500, 502, 503, 504) and attempt < retries:
                 # 4xx other than 429 is the server's final answer: never retried,
                 # whatever the body looks like
@@ -341,6 +363,59 @@ def request(
 
 
 NOT_FOUND_TTL = 86400.0
+
+
+def _window_full(host: str) -> Optional[str]:
+    """Why a request to `host` must not be sent now (a published hourly/daily limit is used up), or None.
+
+    The request is counted when it is allowed. The log lives in the cache directory under a file
+    lock, so parallel tool calls share it; without a usable lock or log the limit is not enforced
+    (the per-request gap still is)."""
+    windows = _HOST_WINDOWS.get(host)
+    if not windows:
+        return None
+    try:
+        import fcntl
+    except ImportError:  # Windows: no shared log
+        return None
+    folder = cache_dir() / "ratelog"
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        with open(folder / f"{host}.lock", "a+") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            log = folder / f"{host}.json"
+            now = time.time()
+            longest = max(w for w, _ in windows)
+            try:
+                stamps = [t for t in json.loads(log.read_text("utf-8")) if isinstance(t, (int, float)) and now - t < longest]
+            except (OSError, ValueError, TypeError):
+                stamps = []
+            for window, allowed in windows:
+                used = sum(1 for t in stamps if now - t < window)
+                if used >= allowed:
+                    wait = int(window - (now - min(t for t in stamps if now - t < window))) + 1
+                    span = "hour" if window == 3600 else "day" if window == 86400 else f"{window} s"
+                    return (f"{host} allows {allowed} requests per {span} and {used} were made on this machine; "
+                            f"not sent (try again in about {max(1, wait // 60)} min)")
+            stamps.append(now)
+            tmp = log.with_suffix(f".{os.getpid()}.tmp")
+            tmp.write_text(json.dumps(stamps), "utf-8")
+            os.replace(tmp, log)
+    except OSError:
+        return None
+    return None
+
+
+def _graphql_errors(text: str) -> bool:
+    """True when an error body is a GraphQL `errors` document rather than a server failure page."""
+    head = text.lstrip()[:1]
+    if head != "{":
+        return False
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return False
+    return isinstance(data, dict) and isinstance(data.get("errors"), list) and bool(data["errors"])
 
 
 def _body_problem(text: str, accept: str, validate: Optional[Callable[[str], Optional[str]]]) -> Optional[str]:

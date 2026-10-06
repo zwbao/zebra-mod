@@ -104,18 +104,22 @@ def condition(names: Iterable[str], omim_ids: Sequence[str] = ()) -> Outcome:
     cands = slug_candidates(names)
     if not cands:
         return Outcome(None, warnings=["MedlinePlus Genetics not searched: no disease name to build a page name from"])
-    sources: List[Dict[str, Any]] = []
+    # E-7: only the page that answered is evidence. A slug that answered 404 was a
+    # guess at a page name, not a source: it goes to `tried`, never to `sources`
+    # (under --case every source becomes a ledger row the model may cite).
     tried: List[str] = []
     for s in cands:
         resp = get_json(f"{BASE}/{urllib.parse.quote(s, safe='')}.json", source="MedlinePlus Genetics",
                         accept="application/json, */*", cache_ttl=30 * 86400, ok_statuses=(200, 404))
-        sources.append(source_record("MedlinePlus Genetics", s, resp, url=f"{PAGE}/{s}"))
         tried.append(s)
         if resp.status != 200:
             continue
         data = validated_json(resp, "MedlinePlus Genetics")
         if not isinstance(data, dict) or not data.get("name"):
             continue
+        sources = [source_record("MedlinePlus Genetics", s, resp, url=f"{PAGE}/{s}",
+                                 note=(f"page found after trying {', '.join(tried[:-1])} (HTTP 404)"
+                                       if len(tried) > 1 else None))]
         res = parse_condition(data, s, omim_ids)
         res["tried"] = tried
         warnings = []
@@ -124,6 +128,6 @@ def condition(names: Iterable[str], omim_ids: Sequence[str] = ()) -> Outcome:
                             f"numbers {', '.join(res['xrefs'].get('OMIM') or []) or '(none listed)'} do not overlap "
                             "the ids on this card: confirm it is the same condition before quoting it")
         return Outcome(res, sources=sources, warnings=warnings)
-    return Outcome(None, sources=sources,
+    return Outcome(None, sources=[],
                    warnings=[f"no MedlinePlus Genetics page found for this disease: tried the page names "
                              f"{', '.join(tried)} (MedlinePlus publishes no slug index to search)"])

@@ -13,7 +13,9 @@ You interpret rankings; you never re-rank by intuition. A disease the methods mi
 2. **Rank, three ways.** `mcp__zebra-mod__phenotype_rank` with `from_case: true`, `sources: ["local","monarch","pubcasefinder"]`, `top: 20`. Each source ranks on its own:
    - candidates high in two or three sources are the strongest signal;
    - read `matches`: which query terms the disease explains exactly, which only through a broad ancestor (weak), which not at all;
-   - an excluded-term penalty means the disease usually has a feature the patient lacks.
+   - `excluded_hits`: diseases that usually have a feature the patient is recorded as *not* having. The local score does not count them (on the benchmark that ranked better on average), so you must: a hallmark feature excluded (seen in most patients with the disease, at this age) argues strongly against that candidate and goes in your discriminating table; an occasional feature excluded argues little;
+   - `ties_at_top`: diseases with the same score are not ordered by the ranking — never present one of them as "first";
+   - how good the ranking is (docs/BENCHMARK.md, phenopacket-store): for new patients the correct disease was in the local top 10 about 28% of the time and the three sources together do better — the list is a set of hypotheses to test, not an answer.
 3. **Characterise the leading 5–10.** `mcp__zebra-mod__disease_card` for each: inheritance, onset, prevalence, genes, hallmark features. Inheritance and sex must fit the family (an X-linked recessive disease in a girl needs an explanation).
 4. **Discriminating table.** Rows = candidates; columns = features that separate them (present / absent / unknown in this patient, from the case and the disease cards). Unknown cells that separate the top candidates become questions for the care team (`case_update` → `questions`).
 5. **Which test finds each candidate.** Match the test to the usual mechanism:

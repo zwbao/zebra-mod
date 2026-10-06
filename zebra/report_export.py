@@ -230,6 +230,12 @@ def title_of(blocks: Sequence[Block], fallback: str) -> str:
 
 _RESIDENT_ID = re.compile(r"(?<!\d)\d{6}(?:18|19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx](?!\d)")
 _MOBILE = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
+_SCIENTIFIC_IDS = re.compile("|".join([
+    r"\b(?:hp|omim|mim|orpha|orphanet|mondo|doid|ncit|efo|uberon|go|hgnc|cl|chebi|mp)\s*[:_]\s*\d+",
+    r"\brs\d+", r"\b(?:nm|nr|np|nc|ng|nt|xm|xp|enst|ensg|ensp|ccds|lrg)_?\d+(?:\.\d+)?",
+    r"\bpmid\s*:?\s*\d+", r"\bpmc\d+", r"\bnct\d{8}\b", r"\bchictr-?\w+",
+    r"\b(?:chr)?(?:\d{1,2}|x|y|mt?)\s*[:-]\s*\d+(?:\s*[-_]\s*\d+)?", r"\b[cgpnmr]\.\S+", r"\b10\.\d{4,9}/\S+",
+]), re.I)
 _DATE = re.compile(r"^\s*(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?\s*$")
 
 
@@ -252,7 +258,8 @@ def identifier_hits(text: str, identifiers: Sequence[str]) -> Tuple[Optional[str
     warnings: List[str] = []
     lines = [_fold(line) for line in text.split("\n")]
     tight_lines = [re.sub(r"\s+", "", line) for line in lines]
-    digit_lines = [re.sub(r"\D", "", line) for line in lines]
+    # a record number hides in digits, but never in a scientific identifier's (HP:0012345, rs…, PMID …)
+    digit_lines = [re.sub(r"\D", "", _SCIENTIFIC_IDS.sub(" ", line)) for line in lines]
     for n, raw in enumerate(identifiers, 1):
         value = _fold(str(raw or "").strip())
         if len(value) < 2:

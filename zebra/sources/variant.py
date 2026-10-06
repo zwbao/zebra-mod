@@ -34,13 +34,14 @@ protein-coding. When several genes overlap, the others are listed in
 
 from __future__ import annotations
 
+import importlib
 import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from zebra.core import Outcome, UsageError
-from zebra.http import SourceError
-from zebra.sources import attempt, clinvar, ensembl, gnomad
+from zebra.http import SourceError, request
+from zebra.sources import attempt, clinvar, ensembl, gnomad, record, validated_text
 
 _COMP = str.maketrans("ACGTNacgtn", "TGCANtgcan")
 LEFT_PAD = 100
@@ -333,19 +334,45 @@ def _litvar(text: str, gene: Optional[str]) -> Outcome:
     return litvar.lookup(text, gene=gene)
 
 
-def _litvar_compact(res: Any, rsids: List[str]) -> Optional[Dict[str, Any]]:
-    """LitVar records for this variant: LitVar's first suggestion per spelling, and any with our rsID."""
+def _litvar_compact(res: Any, rsids: List[str], hgvs_p: Optional[str] = None,
+                    hgvs_c: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """LitVar records for this variant: LitVar's first suggestion per spelling, and any with our rsID.
+
+    CP1-9: a record whose own spelling names ANOTHER allele at the same residue or base (LitVar's
+    rsID-level record merges all alleles at an rsID) is excluded and reported as excluded, so a
+    VUS does not inherit the papers of a common pathogenic allele at the same position.
+    """
     if not isinstance(res, dict):
         return None
     matches = res.get("matches")
     if not isinstance(matches, list):
         return None
+    from zebra.sources import litvar  # owned by this work package; imported lazily like `_litvar`
+
     ours = [m for m in matches if isinstance(m, dict) and (m.get("top") or (m.get("rsid") and m.get("rsid") in rsids))]
-    recs = [{"litvar_id": m.get("litvar_id"), "rsid": m.get("rsid"), "name": m.get("name"), "hgvs": m.get("hgvs"),
-             "pmid_count": m.get("pmid_count")} for m in ours[:4]]
+    recs: List[Dict[str, Any]] = []
+    excluded: List[Dict[str, Any]] = []
+    for m in ours:
+        row = {"litvar_id": m.get("litvar_id"), "rsid": m.get("rsid"), "name": m.get("name"), "hgvs": m.get("hgvs"),
+               "pmid_count": m.get("pmid_count")}
+        verdict = litvar.allele_match(m, hgvs_p, hgvs_c)
+        if verdict == "different":
+            row["reason"] = (f"spelled {m.get('hgvs') or m.get('name')}: another allele at the same position"
+                             + (f" (LitVar merges every allele at {m.get('rsid')})" if m.get("rsid") else ""))
+            excluded.append(row)
+            continue
+        row["allele"] = "this allele" if verdict == "same" else "allele not verified from LitVar's spelling"
+        recs.append(row)
+    recs = recs[:4]
     counts = [r["pmid_count"] for r in recs if isinstance(r.get("pmid_count"), int)]
-    return {"records": recs, "pmid_count_max": max(counts) if counts else None,
-            "note": "LitVar keeps unlinked spellings as separate records; counts overlap, do not add them"}
+    out = {"records": recs, "pmid_count_max": max(counts) if counts else None,
+           "excluded": excluded[:4],
+           "pmids_excluded_max": max([e["pmid_count"] for e in excluded if isinstance(e.get("pmid_count"), int)] or [0]) or None,
+           "note": "LitVar keeps unlinked spellings as separate records; counts overlap, do not add them"}
+    if excluded:
+        out["note"] += (f". {len(excluded)} record(s) excluded because they are about another allele at the same "
+                        "position; their PMIDs are not this variant's literature")
+    return out
 
 
 OTHER_ASSEMBLY = {"GRCh38": "GRCh37", "GRCh37": "GRCh38"}
@@ -411,10 +438,226 @@ def verify_input_ref(chrom: str, pos: int, ref: str, assembly: str,
     raise RefMismatch(ref_mismatch_message(chrom, pos, ref.upper(), found.upper(), assembly, other))
 
 
-def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> Outcome:
-    text = variant.strip()
+# ------------------------------------------------------------ mtDNA: heteroplasmy, MITOMAP (CP1-4)
+
+HETEROPLASMY_RE = re.compile(
+    r"^(?P<variant>.+?)[\s,;]+(?:heteroplasmy[\s:=]*|het[\s:=]*|异质性[\s:=：]*)?(?P<level>\d+(?:\.\d+)?)\s*%$", re.I)
+
+
+def split_heteroplasmy(text: str) -> Tuple[str, Optional[float]]:
+    """`m.3243A>G 35%` -> (`m.3243A>G`, 0.35). Only an mtDNA variant takes a heteroplasmy level."""
+    m = HETEROPLASMY_RE.match(text.strip())
+    if not m:
+        return text.strip(), None
+    var = m.group("variant").strip()
+    parsed = ensembl.parse_vcf_like(var)
+    if parsed and parsed[0] != "MT":
+        # a nuclear coordinate is refused here; an rsID or an NC_012920.1 HGVS is checked once VEP has placed it
+        raise UsageError(f"{text!r}: a percentage is read as mtDNA heteroplasmy, and {var!r} is not a mitochondrial "
+                         "variant. For a nuclear variant give the variant alone (record a mosaic allele fraction "
+                         "in the case instead)")
+    level = float(m.group("level")) / 100.0
+    if not 0 < level <= 1:
+        raise UsageError(f"heteroplasmy {m.group('level')}% is outside 0-100%")
+    return var, level
+
+
+def heteroplasmy_note(level: float, gnomad_mt: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    out: Dict[str, Any] = {
+        "level": level, "percent": round(level * 100, 2),
+        "class": "homoplasmic (>= 95%)" if level >= 0.95 else ("heteroplasmic" if level >= 0.10 else
+                                                              "below gnomAD's 10% calling floor"),
+        "reading": ("Heteroplasmy is the fraction of mtDNA copies carrying the variant in the tissue tested. It "
+                    "differs between tissues and can change over time, so the tested tissue matters when this "
+                    "number is compared with thresholds; on its own it does not predict severity."),
+    }
+    if gnomad_mt and gnomad_mt.get("found") and gnomad_mt.get("max_heteroplasmy") is not None:
+        out["gnomad_max_heteroplasmy"] = gnomad_mt["max_heteroplasmy"]
+        out["gnomad_carriers"] = {"homoplasmic": gnomad_mt.get("ac_hom"), "heteroplasmic": gnomad_mt.get("ac_het"),
+                                  "samples": gnomad_mt.get("an")}
+    return out
+
+
+MITOMASTER = "https://mitomap.org/mitomaster/websrvc.cgi"
+MITOMAP_PAGE = "https://www.mitomap.org/foswiki/bin/view/MITOMAP/WebHome"
+_MM_BOUNDARY = "zebra-mod-mitomaster-boundary"
+
+
+def _multipart(fields: Dict[str, str], file_name: str, file_text: str) -> bytes:
+    parts = []
+    for k, v in fields.items():
+        parts.append(f"--{_MM_BOUNDARY}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n")
+    parts.append(f"--{_MM_BOUNDARY}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{file_name}\"\r\n"
+                 f"Content-Type: text/plain\r\n\r\n{file_text}\r\n--{_MM_BOUNDARY}--\r\n")
+    return "".join(parts).encode("utf-8")
+
+
+def mitomap(pos: int, ref: str, alt: str) -> Outcome:
+    """MITOMAP's disease and GenBank-frequency annotation for one mtDNA SNV, via the MITOMASTER web service.
+
+    MITOMAP's own pages sit behind a browser challenge (HTTP 403 to scripts, checked 2026-10-06); the
+    MITOMASTER service (`websrvc.cgi`, an SNV list in, a tab-separated table out) answers scripts.
+    It does not return MITOMAP's curation status (Reported / Cfrm), so the result says so.
+    """
+    if len(ref) != 1 or len(alt) != 1:
+        raise ValueError("MITOMASTER's SNV list takes single-base changes only")
+    body = _multipart({"fileType": "snvlist", "output": "detail"}, "zebra.txt", f"q\t{int(pos)}{alt.upper()}\n")
+    resp = request(MITOMASTER, source="MITOMAP (MITOMASTER)", method="POST", body=body,
+                   headers={"Content-Type": f"multipart/form-data; boundary={_MM_BOUNDARY}"},
+                   accept="text/plain,*/*", cache_ttl=30 * 86400, timeout=60,
+                   # an HTML challenge page or an error text is never cached as the answer
+                   validate=lambda t: None if "patientphenotype" in (t or "") else "not the MITOMASTER result table")
+    text = validated_text(resp, "MITOMAP (MITOMASTER)", must_contain="patientphenotype")
+    rows = [line.split("\t") for line in text.splitlines() if line.strip()]
+    header = rows[0]
+    data = [dict(zip(header, r)) for r in rows[1:]]
+    hit = next((d for d in data if d.get("tpos") == str(int(pos)) and d.get("qnt", "").upper() == alt.upper()), None)
+    rec = record("MITOMAP (MITOMASTER)", f"m.{int(pos)}{ref.upper()}>{alt.upper()}", resp, url=MITOMASTER,
+                 note=f"MITOMASTER web service (POST, SNV list); browse MITOMAP at {MITOMAP_PAGE}")
+    if hit is not None and hit.get("tnt") and hit["tnt"].upper() != ref.upper():
+        raise ValueError(f"MITOMASTER's reference base at m.{int(pos)} is {hit['tnt']}, not {ref.upper()}")
+    if hit is None:
+        return Outcome({"found": False, "note": "MITOMASTER returned no row for this change"}, sources=[rec])
+
+    def clean(s: Optional[str]) -> Optional[str]:
+        s = re.sub(r"<[^>]+>", " ", s or "").strip()
+        return " ".join(s.split()) or None
+
+    def flag(s: Optional[str]) -> Optional[bool]:
+        return {"true": True, "false": False}.get(str(s).strip().lower()) if s is not None else None
+
+    disease = clean(hit.get("patientphenotype"))
+    gb = _num(hit.get("gb_cnt"))
+    out = {
+        "found": True,
+        # MITOMASTER writes "-<br>L(UUA/G)" for a tRNA (no gene symbol, then the tRNA)
+        "locus": (clean(hit.get("calc_locus")) or "").lstrip("- ").strip() or None,
+        # calc_aachange: the amino-acid change for a protein gene, MITOMASTER's MitoTIP note for a tRNA
+        "change_note": clean(hit.get("calc_aachange")),
+        "disease_reported": disease,
+        "listed_as_disease_mutation": (None if flag(hit.get("is_mmut")) is None and flag(hit.get("is_rtmut")) is None
+                                       else bool(flag(hit.get("is_mmut")) or flag(hit.get("is_rtmut")))),
+        "listed_as_polymorphism": flag(hit.get("is_polymorphism")),
+        "genbank_sequences_with_variant": int(gb) if gb is not None else None,
+        "genbank_percent": _num(hit.get("gb_perc")),
+        "conservation": clean(hit.get("conservation")),
+        "status_note": ("MITOMASTER does not return MITOMAP's curation status (Reported vs Confirmed, 'Cfrm'); "
+                        "read it on the MITOMAP page before relying on the disease association"),
+    }
+    return Outcome(out, sources=[rec])
+
+
+# ------------------------------------------------------------ GRCh37 input: the GRCh38 view (CP1-2)
+
+def grch38_view(vcf37: Tuple[str, int, str, str], gene: Optional[str]) -> Outcome:
+    """Map a GRCh37 VCF allele to GRCh38 (Ensembl assembly map) and annotate it there.
+
+    GRCh37 VEP serves no AlphaMissense or SpliceAI and gnomAD has only v2 on GRCh37, although the
+    GRCh38 coordinates are computable. The REF is re-checked against the GRCh38 reference: a base
+    that changed between the builds is reported and the view is not used.
+    """
+    chrom, pos, ref, alt = vcf37
+    sources: List[Dict[str, Any]] = []
+    warnings: List[str] = []
+    m = ensembl.map_assembly(chrom, pos, pos + len(ref) - 1, "GRCh37", "GRCh38")
+    sources += m.sources
+    c38, p38 = m.result["chrom"], m.result["start"]
+    seq = ensembl.sequence(c38, p38, p38 + len(ref) - 1, "GRCh38")
+    sources += seq.sources
+    if seq.result.upper() != ref.upper():
+        raise ValueError(f"GRCh37 REF {ref} maps to {c38}:{p38}, where GRCh38 has {seq.result}: the reference "
+                         "changed between builds, so the allele is not carried over")
+    vid = f"{c38}-{p38}-{ref.upper()}-{alt.upper()}"
+    v = ensembl.vep(vid, "GRCh38")
+    sources += v.sources
+    warnings += v.warnings
+    rec = v.result
+    tcs = [t for t in rec.get("transcript_consequences") or [] if t.get("variant_allele") in (vep_alleles(rec)[1][0], None)] \
+        or rec.get("transcript_consequences") or []
+    tc = pick_transcript(tcs, gene, rec.get("most_severe_consequence"))
+    preds = predictors(tc)
+    out: Dict[str, Any] = {
+        "assembly": "GRCh38", "vcf": {"chrom": c38, "pos": p38, "ref": ref.upper(), "alt": alt.upper(), "id": vid},
+        "mapped_by": "Ensembl assembly map (GRCh37 -> GRCh38), REF re-checked on GRCh38",
+        "transcript": {"ensembl": (tc or {}).get("transcript_id"), "refseq": (tc or {}).get("mane_select"),
+                       "gene": (tc or {}).get("gene_symbol")} if tc else None,
+        "consequence_terms": (tc or {}).get("consequence_terms") or [],
+        "intron": (tc or {}).get("intron"), "exon": (tc or {}).get("exon"),
+        "hgvsc": (tc or {}).get("hgvsc"), "hgvsp": (tc or {}).get("hgvsp"),
+        "predictors": preds,
+    }
+    w: List[str] = []
+    gn = attempt("gnomAD v4 (GRCh38 view)", lambda: gnomad.variant(c38, p38, ref, alt, "GRCh38"), w)
+    warnings += w
+    if gn is not None:
+        sources += gn.sources
+        warnings += gn.warnings
+        out["population"] = gn.result
+    return Outcome(out, sources=sources, warnings=warnings)
+
+
+# ------------------------------------------------------------ contracts with other work packages
+
+def _optional_source(module: str, label: str, call: Callable[[Any], Outcome],
+                     warnings: List[str]) -> Optional[Outcome]:
+    """Call `zebra.sources.<module>` if this build has it; a missing module is a named gap, not silence."""
+    try:
+        mod = importlib.import_module(f"zebra.sources.{module}")
+    except ImportError:
+        warnings.append(f"{label}: not checked — zebra.sources.{module} is not available in this build")
+        return None
+    except Exception as err:  # noqa: BLE001 - another package's module failing at import must not sink the card
+        warnings.append(f"{label}: not checked — zebra.sources.{module} failed to load ({type(err).__name__}: {err})")
+        return None
+    try:
+        got = attempt(label, lambda: call(mod), warnings)
+    except Exception as err:  # noqa: BLE001 - incl. a UsageError the module raises for an input it cannot take
+        warnings.append(f"{label}: not checked — {type(err).__name__}: {str(err)[:300]}")
+        return None
+    if got is not None and not isinstance(got, Outcome):
+        warnings.append(f"{label}: not used — zebra.sources.{module} returned {type(got).__name__}, not an Outcome")
+        return None
+    return got
+
+
+def china_frequencies(vcf: Optional[Tuple[str, int, str, str]], warnings: List[str],
+                      assembly: str = "GRCh38") -> Optional[Outcome]:
+    """W4's `zebra.sources.china_freq.lookup(chrom, pos, ref, alt, assembly)` for this allele."""
+    if not vcf:
+        warnings.append("Chinese population frequencies: not checked — no VCF coordinates for this variant")
+        return None
+    c, p, r, a = vcf
+    return _optional_source("china_freq", "Chinese population frequencies",
+                            lambda mod: mod.lookup(c, p, r, a, assembly=assembly), warnings)
+
+
+def mavedb_scores(gene: Optional[str], hgvs_p: Optional[str], hgvs_c: Optional[str],
+                  warnings: List[str]) -> Optional[Outcome]:
+    if not gene or not (hgvs_p or hgvs_c):
+        return None
+    return _optional_source("mavedb", "MaveDB functional scores",
+                            lambda mod: mod.lookup(gene, hgvs_p=hgvs_p, hgvs_c=hgvs_c), warnings)
+
+
+def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None,
+         heteroplasmy: Optional[float] = None, contracts: bool = True) -> Outcome:
+    """The variant card. `heteroplasmy` (0-1) is an mtDNA level; `m.3243A>G 35%` carries it in the text.
+
+    `contracts=False` skips the Chinese-cohort frequencies and MaveDB scores (other packages' modules,
+    each a further 15-70 s cold): `acmg suggest` uses neither for a code and leaves them out.
+    """
+    text, het_text = split_heteroplasmy(variant)
+    if heteroplasmy is not None and het_text is not None and abs(heteroplasmy - het_text) > 1e-9:
+        raise UsageError(f"two heteroplasmy levels given ({het_text:.0%} in the variant text, {heteroplasmy:.0%} as a flag)")
+    het_level = heteroplasmy if heteroplasmy is not None else het_text
+    if het_level is not None and not 0 < het_level <= 1:
+        raise UsageError("heteroplasmy must be a fraction in (0, 1] (or a percentage after the variant: m.3243A>G 35%)")
     if assembly not in ("GRCh38", "GRCh37"):
         raise ValueError("assembly must be GRCh38 or GRCh37")
+    # A report often gives "SCN1A c.2134C>T" as a gene and a bare c. change: read it as GENE:c.…, which
+    # VEP places on the gene's canonical transcript, and the gene_hgvs warning below says which one
+    if gene and re.match(r"^\s*[cn]\.\S", text) and re.fullmatch(r"[A-Za-z0-9-]{2,20}", gene.strip()):
+        text = f"{gene.strip()}:{text.strip()}"
     kind = ensembl.classify_input(text)
     warnings: List[str] = []
     sources: List[Dict[str, Any]] = []
@@ -475,6 +718,14 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         else:
             warnings.append("could not build the VCF form of this indel (reference sequence unavailable): "
                             "gnomAD lookup skipped; ClinVar allele match unverified")
+
+    is_mt = gnomad.is_mito(chrom)
+    if is_mt and assembly == "GRCh37" and re.match(r"^chrM\b|^chrM[-:_]", text, re.I):
+        warnings.append("chrM on GRCh37: UCSC hg19's chrM is the Yoruba sequence (NC_001807), not the rCRS "
+                        "(NC_012920) that Ensembl GRCh37, gnomAD and MITOMAP use; positions can differ. This was "
+                        "read as rCRS — give the m. position from the report to be sure")
+    if het_level is not None and not is_mt:
+        raise UsageError(f"a heteroplasmy level applies to mtDNA variants only; {text} is on chromosome {chrom}")
 
     # transcript: overlap first, then MANE Select (P1e)
     most_severe = rec.get("most_severe_consequence")
@@ -574,8 +825,9 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         consequence["terms"] = [rec.get("most_severe_consequence")] if rec.get("most_severe_consequence") else []
     preds = predictors(tc)
     if assembly == "GRCh37":
-        warnings.append("GRCh37 VEP serves no AlphaMissense or SpliceAI scores; for splicing use `zebra s2f` "
-                        "(or annotate the GRCh38 coordinates)")
+        pass  # filled from the GRCh38 view below, or warned about there
+    elif is_mt:
+        pass  # SpliceAI is not computed for the mitochondrial genome
     elif tc and preds["spliceai"] is None:
         warnings.append("SpliceAI: no precomputed score from VEP for this variant (VEP serves SNVs and short indels); see `zebra s2f`")
     if preds["spliceai"] and preds["spliceai"].get("gene") and gene_symbol and preds["spliceai"]["gene"] != gene_symbol:
@@ -584,10 +836,14 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
     vcvs, rsid = _clinvar_candidates(rec)
     rsids = [cv.get("id") for cv in rec.get("colocated_variants") or [] if str(cv.get("id", "")).startswith("rs")]
 
-    # gnomAD, ClinVar, LitVar in parallel (different hosts)
+    # gnomAD, ClinVar, LitVar (and the GRCh38 view, MITOMAP, MaveDB) in parallel (different hosts)
     w_gn: List[str] = []
     w_cv: List[str] = []
     w_lv: List[str] = []
+    w_38: List[str] = []
+    w_mm: List[str] = []
+    w_mave: List[str] = []
+    w_cn: List[str] = []
 
     def do_gnomad():
         if not vcf:
@@ -621,10 +877,53 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
             w_lv.append(f"LitVar unavailable: {type(err).__name__}: {err}")
             return None
 
-    with ThreadPoolExecutor(max_workers=3) as pool:
+    def do_grch38():
+        if assembly != "GRCh37" or not vcf or is_mt:
+            return None
+        try:
+            return grch38_view(vcf, gene_symbol)
+        except SourceError as err:
+            w_38.append(f"GRCh38 view unavailable: {err.message} (HTTP {err.status or '-'})")
+        except ValueError as err:  # a refusal (REF changed between builds, split mapping): a decision
+            w_38.append(f"GRCh38 view not built: {err}")
+        except (KeyError, TypeError, IndexError, AttributeError) as err:
+            w_38.append(f"GRCh38 view: unexpected response shape ({type(err).__name__}: {err})")
+        return None
+
+    def do_mitomap():
+        if not (is_mt and vcf):
+            return None
+        if len(vcf[2]) != 1 or len(vcf[3]) != 1:
+            w_mm.append("MITOMAP: not checked — the MITOMASTER service takes single-base changes only")
+            return None
+        return attempt("MITOMAP (MITOMASTER)", lambda: mitomap(vcf[1], vcf[2], vcf[3]), w_mm)
+
+    def do_mavedb():
+        if not contracts:
+            return None
+        if is_mt:
+            w_mave.append("MaveDB functional scores: not checked for an mtDNA variant")
+            return None
+        if not (hgvs.get("p") or hgvs.get("c")):
+            return None
+        return mavedb_scores(gene_symbol, hgvs.get("p"), hgvs.get("c"), w_mave)
+
+    def do_china():
+        if not contracts:
+            return None
+        if is_mt:
+            w_cn.append("Chinese population frequencies: not checked for an mtDNA variant (the cohorts queried "
+                        "report nuclear genotypes)")
+            return None
+        return china_frequencies(vcf, w_cn, assembly)
+
+    with ThreadPoolExecutor(max_workers=7) as pool:
         f_gn, f_cv, f_lv = pool.submit(do_gnomad), pool.submit(do_clinvar), pool.submit(do_litvar)
+        f_38, f_mm, f_mave = pool.submit(do_grch38), pool.submit(do_mitomap), pool.submit(do_mavedb)
+        f_cn = pool.submit(do_china)
         gn, cv, lv = f_gn.result(), f_cv.result(), f_lv.result()
-    warnings += w_gn + w_cv + w_lv
+        v38, mm, mave, cn = f_38.result(), f_mm.result(), f_mave.result(), f_cn.result()
+    warnings += w_gn + w_cv + w_lv + w_38 + w_mm + w_mave + w_cn
 
     # population
     population: Optional[Dict[str, Any]] = None
@@ -633,7 +932,10 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         warnings += gn.warnings
         population = gn.result
     fallback = None
-    if population is None:
+    if population is None and is_mt:
+        warnings.append("no mtDNA population frequency available (gnomAD's mtDNA callset did not answer); "
+                        "an unanswered lookup is not absence")
+    elif population is None:
         fallback = vep_frequencies(rec, alt_raw)
         if fallback:
             warnings.append("gnomAD API unavailable: frequencies below come from VEP's colocated-variant data "
@@ -664,9 +966,28 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
             sources += list(getattr(lv, "sources", []) or [])
             warnings += list(getattr(lv, "warnings", []) or [])
             literature = {"query": f"{gene_symbol} {lit_text}" if gene_symbol and lit_text == hgvs.get("p") else lit_text,
-                          "litvar": _litvar_compact(getattr(lv, "result", lv), rsids)}
+                          "litvar": _litvar_compact(getattr(lv, "result", lv), rsids, hgvs.get("p"), hgvs.get("c"))}
         except Exception as err:  # noqa: BLE001
             warnings.append(f"LitVar result unreadable: {err}")
+
+    # GRCh38 view of a GRCh37 input (CP1-2): predictors VEP does not serve on GRCh37, gnomAD v4
+    view38: Optional[Dict[str, Any]] = None
+    if v38 is not None:
+        sources += v38.sources
+        warnings += v38.warnings
+        view38 = v38.result
+        p38 = view38.get("predictors") or {}
+        filled = []
+        for key in ("alphamissense", "spliceai", "revel", "cadd_phred"):
+            if preds.get(key) is None and p38.get(key) is not None:
+                preds[key] = p38[key]
+                filled.append(key)
+        if filled:
+            preds["filled_from_grch38"] = filled
+            preds["source"] += f"; {', '.join(filled)} from GRCh38 VEP on the mapped coordinates ({view38['vcf']['id']})"
+    elif assembly == "GRCh37" and not is_mt:
+        warnings.append("GRCh37 VEP serves no AlphaMissense or SpliceAI scores and the GRCh38 view could not be built "
+                        "(see the warning above); for splicing use `zebra s2f`")
 
     # ACMG inputs
     terms = consequence.get("terms") or []
@@ -681,27 +1002,79 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         sp_max = _num(insil.get("spliceai_ds_max"))
         if sp_max is not None:
             preds["spliceai_gnomad_max"] = sp_max
-    grp = (population or {}).get("grpmax") or {}
-    if population is not None:
-        if population.get("found"):
-            gac = (population.get("total") or {}).get("ac")
+    # Which population answer feeds the ACMG inputs: gnomAD v4 on the mapped GRCh38 coordinates
+    # when a GRCh37 input could be mapped (joint exome+genome FAF, 1.6 M alleles), else the input build's.
+    freq_pop = population
+    freq_note = None
+    pop38 = (view38 or {}).get("population")
+    if pop38 is not None and pop38.get("dataset") == "gnomad_r4":
+        freq_pop = pop38
+        freq_note = f"gnomAD v4 on the GRCh38 coordinates {view38['vcf']['id']} (mapped from GRCh37)"
+    grp = (freq_pop or {}).get("grpmax") or {}
+    site_covered: Optional[bool] = None
+    coverage_text: Optional[str] = None
+    mt_pop = population if (population or {}).get("mitochondrial") else None
+    if mt_pop is not None:
+        gac = None  # mtDNA: no nuclear allele count; homoplasmic/heteroplasmic counts below
+    elif freq_pop is not None:
+        site_covered = freq_pop.get("covered")
+        fr = ((freq_pop.get("coverage_detail") or {}).get("fraction_over_20") or {})
+        coverage_text = ", ".join(f"{k} {f:.0%} of samples at >=20x" for k, f in fr.items()) or None
+        if freq_pop.get("found"):
+            gac = (freq_pop.get("total") or {}).get("ac")
         else:
-            gac = 0 if population.get("covered") else None
-            if population.get("covered") is not True:
+            gac = 0 if freq_pop.get("covered") else None
+            if freq_pop.get("covered") is not True:
                 warnings.append("absent from gnomAD but site coverage is low or unknown: PM2 not supported by absence alone")
     else:
         gac = None
     acmg_inputs = {
         "revel": revel,
+        "alphamissense": (preds.get("alphamissense") or {}).get("score"),
         "spliceai_max": sp_max,
-        "grpmax_af": grp.get("af") if population else (fallback or {}).get("grpmax_af"),
-        "grpmax_an": grp.get("an") if population else None,
+        "spliceai_source": ("SpliceAI precomputed scores served by Ensembl VEP"
+                            + (" (GRCh38 coordinates mapped from GRCh37)" if "spliceai" in (preds.get("filled_from_grch38") or []) else "")
+                            if sp_max is not None and preds.get("spliceai") else
+                            ("SpliceAI DS max from gnomAD's in-silico table" if sp_max is not None else None)),
+        "grpmax_af": grp.get("af") if freq_pop and not mt_pop else (fallback or {}).get("grpmax_af"),
+        "grpmax_an": grp.get("an") if freq_pop and not mt_pop else None,
         "gnomad_ac": gac,
-        "faf95": ((population or {}).get("faf95") or {}).get("value"),
+        "faf95": None if mt_pop else ((freq_pop or {}).get("faf95") or {}).get("value"),
+        "site_covered": site_covered,
+        "coverage_text": coverage_text,
         "consequence": list(terms),
         "is_missense": any("missense" in t for t in terms),
-        "frequency_source": (population or {}).get("dataset") or ("VEP colocated gnomAD" if fallback else None),
+        "hgvs_c": hgvs.get("c"),
+        "frequency_source": freq_note or (freq_pop or {}).get("dataset") or ("VEP colocated gnomAD" if fallback else None),
     }
+    if is_mt:
+        # set from the chromosome, never from whether gnomAD answered: with gnomAD down, the nuclear
+        # frequency rules and PVS1 inputs must still stay away from an mtDNA variant
+        acmg_inputs.update({"mitochondrial": True, "mt_af_hom": (mt_pop or {}).get("af_hom"),
+                            "mt_af_het": (mt_pop or {}).get("af_het"),
+                            "mt_max_heteroplasmy": (mt_pop or {}).get("max_heteroplasmy"), "heteroplasmy": het_level,
+                            "gnomad_ac": None, "grpmax_af": None, "grpmax_an": None, "faf95": None})
+
+    # Chinese population frequencies (W4's contract), looked up in parallel above
+    china = None
+    if cn is not None:
+        sources += cn.sources
+        warnings += cn.warnings
+        china = cn.result
+    functional = None
+    if mave is not None:
+        sources += mave.sources
+        warnings += mave.warnings
+        functional = {"mavedb": mave.result,
+                      "note": ("MaveDB scores are raw assay readouts; their strength as PS3/BS3 evidence depends on "
+                               "the assay's calibration (Brnich et al. 2019), which is not done here")}
+    mito_part = None
+    if is_mt:
+        mito_part = {"heteroplasmy": heteroplasmy_note(het_level, mt_pop) if het_level is not None else None,
+                     "mitomap": mm.result if mm is not None else None}
+        if mm is not None:
+            sources += mm.sources
+            warnings += mm.warnings
 
     other_assembly = (population or {}).get("liftover")
     label_parts = [hgvs.get("c") or text]
@@ -733,7 +1106,167 @@ def card(variant: str, assembly: str = "GRCh38", gene: Optional[str] = None) -> 
         "literature": literature,
         "acmg_inputs": acmg_inputs,
     }
+    if view38 is not None:
+        result["grch38"] = view38
+        result["builds"] = {"GRCh37": result["vcf"], "GRCh38": dict(view38["vcf"], mapped_by=view38["mapped_by"])}
+    if china is not None:
+        result["population_china"] = china
+    if functional is not None:
+        result["functional_scores"] = functional
+    if mito_part is not None:
+        result["mitochondrial"] = mito_part
     if cv is not None and clin is None:
         result["clinvar_note"] = "no ClinVar record for this exact allele" + (
             f" ({len(others)} other record(s) at the locus)" if others else "")
     return Outcome(result, sources=sources, warnings=warnings)
+
+
+# ------------------------------------------------------------ PVS1 / PS1 / PM5 inputs (CP1-3)
+
+def _p_part(hgvsp: Optional[str]) -> Optional[str]:
+    return hgvsp.split(":", 1)[1] if hgvsp and ":" in hgvsp else hgvsp
+
+
+def judgement_inputs(r: Dict[str, Any]) -> Outcome:
+    """What the PVS1 decision tree and PS1/PM5 ask about, computed for one variant card.
+
+    Structure, never codes: for a null variant, where the premature stop falls on the exon structure
+    (NMD prediction), how much of the protein follows it, the canonical splice site's exon and its
+    frame, and the loss-of-function mechanism evidence (ClinGen HI score, gnomAD LOEUF/pLI); for a
+    missense variant, the ClinVar Pathogenic/Likely pathogenic records at the same codon (same change
+    -> PS1 input, different change -> PM5 input) with their review stars.
+    """
+    from zebra import acmg
+    from zebra.sources import clingen  # gene-level ClinGen dosage (HI score)
+
+    warnings: List[str] = []
+    sources: List[Dict[str, Any]] = []
+    terms = list((r.get("consequence") or {}).get("terms") or [])
+    gene = r.get("gene")
+    asm = r.get("assembly") or "GRCh38"
+    vcf = r.get("vcf") or {}
+    tx_id = (r.get("transcript") or {}).get("ensembl")
+    hgvsp = _p_part((r.get("hgvs") or {}).get("p"))
+    v38 = r.get("grch38")
+    intron = (r.get("consequence") or {}).get("intron")
+    if v38 and (v38.get("transcript") or {}).get("ensembl"):
+        # the GRCh38 (MANE) transcript is used as a whole: its exon structure, consequence terms,
+        # intron number and protein change; never one transcript's structure with another's numbering
+        asm, vcf, tx_id = "GRCh38", v38["vcf"], v38["transcript"]["ensembl"]
+        hgvsp = _p_part(v38.get("hgvsp"))
+        terms = list(v38.get("consequence_terms") or terms)
+        intron = v38.get("intron")
+    null = any(t in acmg.NULL_CONSEQUENCES for t in terms)
+    missense = any("missense" in t for t in terms)
+    out: Dict[str, Any] = {}
+    if (r.get("acmg_inputs") or {}).get("mitochondrial"):
+        return Outcome({"note": "PVS1/PS1/PM5 inputs are not computed for mtDNA variants (McCormick et al. 2020 "
+                                "specify their own rules)"})
+    if not (null or missense):
+        return Outcome({"note": f"no PVS1 or PS1/PM5 inputs for this variant class ({', '.join(terms) or '-'})"})
+
+    tasks: Dict[str, Tuple[str, Callable[[], Outcome]]] = {}
+    if null and tx_id:
+        tasks["structure"] = ("Ensembl transcript structure", lambda: ensembl.transcript(tx_id, asm))
+    if null and gene:
+        tasks["dosage"] = ("ClinGen dosage (HI score)", lambda: clingen.dosage(gene, "GRCh38"))
+        tasks["constraint"] = ("gnomAD constraint", lambda: gnomad.gene_constraint(gene, "GRCh38"))
+    if missense and vcf.get("pos"):
+        lo, hi = int(vcf["pos"]) - 2, int(vcf["pos"]) + 2
+        tasks["codon"] = ("ClinVar records at the codon",
+                          lambda: clinvar.at_positions(str(vcf["chrom"]), lo, hi, asm))
+    got: Dict[str, Any] = {}
+
+    def go(key: str):
+        w: List[str] = []
+        return key, attempt(tasks[key][0], tasks[key][1], w), w
+
+    with ThreadPoolExecutor(max_workers=max(1, len(tasks))) as pool:
+        for key, res, w in pool.map(go, list(tasks)):
+            warnings += w
+            if res is not None:
+                sources += res.sources
+                warnings += res.warnings
+                got[key] = res.result
+
+    if null:
+        pv: Dict[str, Any] = {"variant_class": [t for t in terms if t in acmg.NULL_CONSEQUENCES],
+                              "transcript": tx_id, "assembly": asm,
+                              "decision_tree": ("Abou Tayoun et al. 2018 (Hum Mutat 39:1517) PVS1 decision tree. "
+                                                "These are its inputs, not a PVS1 call: the strength (VeryStrong, "
+                                                "Strong, Moderate, Supporting or not applicable) is the skill's "
+                                                "judgement.")}
+        st = got.get("structure")
+        if st and st.get("translation") and st["translation"].get("start"):
+            strand = int(st["strand"])
+            exons = acmg.transcript_exons(st["exons"], strand)
+            tl = st["translation"]
+            cds_start_g = tl["start"] if strand == 1 else tl["end"]
+            cds_end_g = tl["end"] if strand == 1 else tl["start"]
+            cds = (acmg.cdna_position(exons, cds_start_g, strand), acmg.cdna_position(exons, cds_end_g, strand))
+            pv["exon_count"] = len(exons)
+            pv["protein_length"] = tl.get("length")
+            first, ptc, how = acmg.ptc_codon_from_hgvsp(hgvsp, terms)
+            pv["premature_stop"] = {"read_as": how, "first_altered_residue": first, "stop_codon": ptc}
+            if first and tl.get("length"):
+                pv["premature_stop"]["fraction_of_protein_from_first_altered_residue"] = round(
+                    max(0, tl["length"] - first + 1) / tl["length"], 3)
+            if ptc:
+                try:
+                    pv["nmd"] = acmg.nmd_inputs(exons, strand, cds_start_g, ptc, tl.get("length"))
+                except ValueError as err:
+                    warnings.append(f"NMD prediction not computed: {err}")
+            elif any(t in ("stop_gained", "frameshift_variant") for t in terms):
+                pv["nmd"] = {"nmd_predicted": None, "position": f"not computed: {how}", "rule": acmg.NMD_RULE}
+            splice = [t for t in terms if t in ("splice_donor_variant", "splice_acceptor_variant")]
+            if splice and intron and None not in cds:
+                try:
+                    n = int(str(intron).split("/")[0])
+                    k = n if splice[0] == "splice_donor_variant" else n + 1
+                    ex = exons[k - 1]
+                    coding = acmg.coding_overlap(ex, cds)  # type: ignore[arg-type]
+                    pv["canonical_splice_site"] = {
+                        "site": "donor" if splice[0] == "splice_donor_variant" else "acceptor",
+                        "intron": intron, "exon_affected": f"{k}/{len(exons)}", "exon_length": ex["length"],
+                        "exon_coding_length": coding,
+                        "skipping_keeps_frame": (coding % 3 == 0) if coding else None,
+                        "note": ("if the exon is skipped: an in-frame skip removes coding_length/3 residues; an "
+                                 "out-of-frame skip shifts the frame (NMD depends on where the new stop falls). "
+                                 "Cryptic sites nearby can rescue — see the SpliceAI/Pangolin result"),
+                    }
+                except (ValueError, IndexError) as err:
+                    warnings.append(f"canonical splice site inputs not computed: {err}")
+            if "start_lost" in terms:
+                pv["start_lost"] = ("PVS1 start-loss branch: an in-frame downstream methionine and pathogenic "
+                                    "variants upstream of it decide the strength (Abou Tayoun 2018); not computed here")
+        elif null:
+            pv["structure_note"] = "transcript exon structure unavailable: NMD and splice-site inputs not computed"
+        dos = got.get("dosage")
+        con = got.get("constraint")
+        hi = (dos or {}).get("haploinsufficiency") or {}
+        pv["lof_mechanism"] = {
+            "clingen_hi_score": hi.get("score") if dos else None,
+            "clingen_hi_description": hi.get("description") if dos else None,
+            "clingen_url": (dos or {}).get("url"),
+            "gnomad_loeuf": (con or {}).get("loeuf"), "gnomad_pli": (con or {}).get("pLI"),
+            "gnomad_version": (con or {}).get("version"),
+            "note": acmg.PVS1_MECHANISM_NOTE,
+        }
+        if "dosage" in tasks and dos is None and "dosage" in got:
+            pv["lof_mechanism"]["clingen_note"] = "no ClinGen dosage curation for this gene"
+        out["pvs1_inputs"] = pv
+    if missense:
+        recs = got.get("codon")
+        if recs is not None and hgvsp:
+            try:
+                own_spdi = None
+                if len(str(vcf.get("ref") or "")) == 1 and len(str(vcf.get("alt") or "")) == 1:
+                    own_spdi = f":{int(vcf['pos']) - 1}:{vcf['ref']}:{vcf['alt']}"  # SPDI is 0-based
+                cr = acmg.codon_records(recs, hgvsp, exclude_vcv=(r.get("clinvar") or {}).get("vcv"), gene=gene,
+                                        exclude_c=(r.get("hgvs") or {}).get("c"), exclude_spdi=own_spdi)
+                cr["searched"] = (f"ClinVar records within {vcf['chrom']}:{int(vcf['pos']) - 2}-{int(vcf['pos']) + 2} "
+                                  f"({asm}); a codon split by an intron is only partly covered")
+                out["ps1_pm5_inputs"] = cr
+            except ValueError as err:
+                warnings.append(f"PS1/PM5 inputs not computed: {err}")
+    return Outcome(out, sources=sources, warnings=warnings)

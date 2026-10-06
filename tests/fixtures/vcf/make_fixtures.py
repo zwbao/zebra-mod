@@ -3,6 +3,7 @@
     python tests/fixtures/vcf/make_fixtures.py            # write trio.vcf(.gz), family2.vcf(.gz), bad.vcf, genes.txt
     python tests/fixtures/vcf/make_fixtures.py --capture  # also refresh vep_trio.json, vep_family2.json,
                                                           # lookup_genes.json (network)
+    python tests/fixtures/vcf/make_fixtures.py --capture-myvariant  # refresh myvariant_families.json (network)
 
 Two families, each written once and never rewritten in place: `trio.vcf` is the
 original acceptance family, `family2.vcf` the second one added for the triage
@@ -275,6 +276,37 @@ def capture_cnv() -> None:
     print(f"captured {len(genes)} genes, {len(rows)} ClinGen dosage rows and {CNV_EXON_GENE}'s canonical transcript")
 
 
+def capture_myvariant() -> None:
+    """MyVariant.info answers for every allele of both families (hg38), for the --prefilter tests.
+
+    Stored as the raw POST bodies MyVariant returned, with the request's ids, the
+    retrieval time, the body's sha256 and the source versions MyVariant served.
+    """
+    import hashlib
+
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(HERE))))
+    from zebra.http import get_json, post_json
+    from zebra.sources import myvariant
+
+    keys = sorted(set(alleles() + alleles(RECORDS2)))
+    ids = [myvariant.hgvs_id(c, p, r, a) for c, p, r, a in keys if myvariant.hgvs_id(c, p, r, a)]
+    resp = post_json(f"{myvariant.BASE}/variant", {"ids": ids, "fields": myvariant.FIELDS, "assembly": "hg38"},
+                     source="MyVariant.info", cache_ttl=0, timeout=120)
+    meta = get_json(f"{myvariant.BASE}/metadata", source="MyVariant.info", params={"assembly": "hg38"},
+                    cache_ttl=0, timeout=60).json()
+    hits = resp.json()
+    out = {"_source": {"url": f"{myvariant.BASE}/variant (POST, assembly hg38)", "retrieved_at": resp.retrieved_at,
+                       "sha256": hashlib.sha256(resp.text.encode("utf-8")).hexdigest(), "ids": ids,
+                       "hits": len(hits), "not_found": sum(1 for h in hits if h.get("notfound")),
+                       "versions": {k: (meta.get("src", {}).get(k) or {}).get("version")
+                                    for k in ("gnomad", "dbnsfp", "clinvar", "dbsnp")},
+                       "build_date": meta.get("build_date")},
+           "response": hits}
+    with open(os.path.join(HERE, "myvariant_families.json"), "w") as fh:
+        json.dump(out, fh, indent=1)
+    print(f"captured MyVariant.info for {len(ids)} alleles ({out['_source']['not_found']} not found)")
+
+
 def main() -> None:
     with open(os.path.join(HERE, "trio.vcf"), "w") as fh:
         fh.write(vcf_text(chr_prefix=True))
@@ -291,6 +323,8 @@ def main() -> None:
         fh.write("# genes for the triage acceptance run\n" + "\n".join(GENES) + "\n")
     if "--capture" in sys.argv:
         capture()
+    if "--capture-myvariant" in sys.argv:
+        capture_myvariant()
 
 
 if __name__ == "__main__":

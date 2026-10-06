@@ -1,0 +1,13 @@
+{
+ "built_by": "tools/aso/fetch_fixtures.py",
+ "bytes": 500,
+ "characters": 500,
+ "method": "GET",
+ "name": "reference_gene_cftr_v26",
+ "request_body": null,
+ "retrieved_at": "2026-10-06T11:13:11+00:00",
+ "sha256": "af109f034f81961e4efbe064bd6ebf6c4c8ee2496fc9ab97e9c9a4b834cffd3e",
+ "status": 200,
+ "url": "https://gtexportal.org/api/v2/reference/gene?geneId=CFTR&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&itemsPerPage=50",
+ "written_at": "2026-10-06T11:13:11+00:00"
+}

@@ -3,6 +3,7 @@ responses), card assembly with sources replaced, and SCN1A / NGLY1 / DMD live (p
 
 import json
 import os
+import sys
 
 import pytest
 
@@ -164,6 +165,8 @@ def offline(monkeypatch):
     monkeypatch.setattr(gene.panelapp, "gene_panels", pa)
     monkeypatch.setattr(gene.uniprot, "entry", lambda acc: Outcome(uniprot.parse_entry(load("uniprot", "P35498.json"))))
     monkeypatch.setattr(gene.uniprot, "alphafold", lambda acc: Outcome(uniprot.parse_alphafold(load("uniprot", "alphafold_P35498.json"), acc)))
+    # GTEx (W7's module) calls the network: offline, a build without it
+    monkeypatch.setitem(sys.modules, "zebra.sources.gtex", None)
 
 
 def test_card_offline_scn1a(offline):
@@ -480,16 +483,19 @@ def test_F10_a_clingen_maintenance_page_is_rejected_and_refetched(monkeypatch):
     from zebra.http import SourceError
     from zebra.sources import clingen as cg
 
-    ttls = []
+    calls = []
 
     def fake_request(url, source, **kw):
-        ttls.append(kw.get("cache_ttl"))
-        return Response(url, 200, "<html>maintenance</html>", "2026-10-06T00:00:00+00:00", len(ttls) == 1)
+        calls.append(kw)
+        return Response(url, 200, "<html>maintenance</html>", "2026-10-06T00:00:00+00:00", len(calls) == 1)
 
     monkeypatch.setattr(cg, "request", fake_request)
     with pytest.raises(SourceError) as err:
         cg.validity(symbol="SCN1A")
-    assert len(ttls) == 2 and ttls[1] == 0
+    # the refetch skips the cache read (refresh=True) but keeps the normal TTL, so a good
+    # answer is written back over the bad entry instead of leaving it for the whole TTL (E-6)
+    assert len(calls) == 2 and calls[1].get("refresh") is True and calls[1].get("cache_ttl") == cg.CACHE_TTL
+    assert calls[0].get("refresh") in (None, False) and calls[0].get("validate") is not None
     assert "HTML page" in err.value.message  # not "header row 'GENE SYMBOL' not found"
 
 
@@ -504,3 +510,36 @@ def test_F10_an_empty_genereviews_map_is_rejected_not_parsed_to_nothing(monkeypa
     with pytest.raises(SourceError) as err:
         gr._fetch_maps()
     assert "empty body" in err.value.message
+
+
+
+# ===================================================================== v0.2 (W6)
+
+def test_contract_gtex_top_tissues_reaches_the_gene_card(offline, monkeypatch):
+    import types
+
+    calls = {}
+    gtex = types.ModuleType("zebra.sources.gtex")
+
+    def top_tissues(symbol, n=10):
+        calls["args"] = (symbol, n)
+        return Outcome({"gene": symbol, "gencode_id": "ENSG00000144285.15",
+                        "tissues": [{"tissue": "Brain - Cerebellum", "uberon": "UBERON:0002037", "median_tpm": 25.1},
+                                    {"tissue": "Whole Blood", "uberon": "UBERON:0013756", "median_tpm": 0.1}]},
+                       sources=[{"db": "GTEx"}])
+
+    gtex.top_tissues = top_tissues
+    monkeypatch.setitem(sys.modules, "zebra.sources.gtex", gtex)
+    out = gene.card("SCN1A")
+    assert calls["args"] == ("SCN1A", 10)
+    assert out.result["expression"]["tissues"][0]["uberon"] == "UBERON:0002037"
+    assert any(s.get("db") == "GTEx" for s in out.sources)
+    from zebra.commands.gene import render
+
+    assert "expression (GTEx median TPM): Brain - Cerebellum 25.1" in render(out.result)
+
+
+def test_contract_gtex_missing_is_a_named_gap(offline):
+    out = gene.card("SCN1A")
+    assert "expression" not in out.result
+    assert any(w.startswith("GTEx expression: not checked") for w in out.warnings)

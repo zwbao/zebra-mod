@@ -485,3 +485,68 @@ def test_render_states_the_service_terms(monkeypatch):
     monkeypatch.setattr(s2f, "s2f_bin", lambda: None)
     text = s2f.render(s2f.predict("17-7674291-C-T", models=["spliceai"]).result)
     assert "CC BY-NC" in text and "research use" in text
+
+
+# ===================================================================== v0.2 (W6)
+# C-P2-9: the deadline-sharing code had no test (mutants M6 and M7 survived), and a run cut by the
+# deadline told the caller to "raise --timeout".
+
+import time  # noqa: E402
+
+
+def _fake_s2f(tmp_path, seconds=30):
+    marker = tmp_path / "ran"
+    exe = tmp_path / "s2f"
+    exe.write_text(f"#!/bin/sh\ntouch '{marker}'\nsleep {seconds}\n")
+    exe.chmod(0o755)
+    return str(exe), marker
+
+
+def _deadline(monkeypatch, total):
+    start = time.monotonic()
+    monkeypatch.setattr(s2f, "deadline_seconds", lambda: total - (time.monotonic() - start))
+
+
+def test_c_p2_9_a_model_is_cut_to_what_is_left_of_the_deadline(monkeypatch, tmp_path):
+    exe, marker = _fake_s2f(tmp_path)
+    monkeypatch.setenv("S2F_BIN", exe)
+    monkeypatch.setenv("NVCF_RUN_KEY", "fake")
+    _deadline(monkeypatch, 5.0)
+    t0 = time.monotonic()
+    out = s2f.predict("2-166042334-G-A", models=["evo2"], timeout=240, workspace=str(tmp_path / "ws"))
+    wall = time.monotonic() - t0
+    row = out.result["models"][0]
+    assert marker.exists(), "the model must have started"
+    assert wall < 10, f"--timeout 240 must be cut to the deadline, took {wall:.1f}s"
+    assert row["status"] == "error" and "overall time budget" in row["reason"]
+    assert "raise --timeout" not in row["reason"]
+
+
+def test_c_p2_9_a_model_that_cannot_fit_is_not_started(monkeypatch, tmp_path):
+    exe, marker = _fake_s2f(tmp_path)
+    monkeypatch.setenv("S2F_BIN", exe)
+    monkeypatch.setenv("NVCF_RUN_KEY", "fake")
+    _deadline(monkeypatch, 3.0)
+    out = s2f.predict("2-166042334-G-A", models=["evo2"], timeout=240, workspace=str(tmp_path / "ws"))
+    row = out.result["models"][0]
+    assert row["status"] == "not_run" and "ran out before this model started" in row["reason"]
+    assert not marker.exists()
+
+
+def test_c_p2_9_a_plain_timeout_still_says_raise_timeout(monkeypatch, tmp_path):
+    exe, marker = _fake_s2f(tmp_path)
+    monkeypatch.setattr(s2f, "deadline_seconds", lambda: None)
+    call = s2f._s2f_call(exe, ["evo2"], tmp_path / "ws", 1.0)
+    assert call["timed_out"] is True and call["deadline_limited"] is False
+    row = s2f._from_receipt("evo2", call, tmp_path / "ws", 1.0)
+    assert "raise --timeout" in row["reason"]
+
+
+def test_review_b_deadline_label_follows_whether_the_deadline_cut_the_timeout(monkeypatch, tmp_path):
+    exe, marker = _fake_s2f(tmp_path)
+    # 2 s of deadline left after a run that --timeout (1 s) stopped: --timeout, not the deadline
+    monkeypatch.setattr(s2f, "deadline_seconds", lambda: 2.0)
+    call = s2f._s2f_call(exe, ["evo2"], tmp_path / "ws", 1.0)
+    assert call["deadline_limited"] is False
+    call = s2f._s2f_call(exe, ["evo2"], tmp_path / "ws", 1.0, deadline_cut=True)
+    assert call["deadline_limited"] is True

@@ -1,0 +1,13 @@
+{
+ "built_by": "tools/aso/fetch_fixtures.py",
+ "bytes": 98,
+ "characters": 98,
+ "method": "GET",
+ "name": "reference_gene_missing",
+ "request_body": null,
+ "retrieved_at": "2026-10-06T11:13:17+00:00",
+ "sha256": "106db749c19b109e9bc421323bb1586ba0f55804f045fbfa2678619068f0959a",
+ "status": 200,
+ "url": "https://gtexportal.org/api/v2/reference/gene?geneId=NOTAGENE123&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&itemsPerPage=50",
+ "written_at": "2026-10-06T11:13:17+00:00"
+}

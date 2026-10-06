@@ -202,6 +202,18 @@ def name_matches(disorder_row: Optional[Dict[str, Any]], name: str) -> bool:
 # ---------------------------------------------------------------- epidemiology / natural history / genes
 
 
+def _val_moy(v: Any) -> Any:
+    """Orphanet's mean value; 0 (written "0", "0.0" or as a number) means "no value given", not a prevalence of zero."""
+    if v is None:
+        return None
+    try:
+        if float(str(v).strip()) == 0.0:
+            return None
+    except ValueError:
+        pass
+    return v
+
+
 def parse_epidemiology(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     out = []
     for r in _results(data):
@@ -209,7 +221,7 @@ def parse_epidemiology(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             out.append({
                 "type": p.get("PrevalenceType"),
                 "class": p.get("PrevalenceClass"),
-                "value": p.get("ValMoy") if p.get("ValMoy") not in (None, "0.0", "0") else None,
+                "value": _val_moy(p.get("ValMoy")),
                 "qualification": p.get("PrevalenceQualification"),
                 "region": p.get("PrevalenceGeographic"),
                 "validation": p.get("PrevalenceValidationStatus"),

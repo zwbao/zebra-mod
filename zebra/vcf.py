@@ -1,8 +1,11 @@
-"""Local VCF reanalysis: read, inspect and triage a singleton, duo or trio VCF.
+"""Local VCF reanalysis: read, inspect and triage a singleton, duo or trio VCF (PED-aware).
 
 The VCF never leaves this machine. What goes out is only what annotation needs:
 gene symbols to Ensembl lookup (to find gene regions) and candidate variants as
-chrom-pos-ref-alt (no sample names, genotypes or depths) to Ensembl VEP.
+chrom-pos-ref-alt (no sample names, genotypes or depths) to Ensembl VEP; with
+`--prefilter myvariant` every quality-passing allele's key also goes to
+MyVariant.info (the whole-exome path), and with `--s2f-top N` up to N keys go
+to the Broad SpliceAI-lookup. `result.sent_off_machine` counts each.
 
 Reading: plain text or gzip/bgzip (bgzip is multi-member gzip, which the
 stdlib reads). Multi-allelic records are split per ALT; alleles are trimmed to
@@ -10,9 +13,12 @@ a minimal representation (no left-alignment: that needs the reference);
 `chr` prefixes are dropped and chrM becomes MT (Ensembl naming).
 
 Triage (see `triage`): quality -> inheritance class -> restriction to a gene
-set or a capped, prioritised subset BEFORE any web call -> VEP annotation and
-gnomAD frequency -> comp-het resolution -> score (phenotype fit, consequence /
-predictors, inheritance fit) -> ranked TSV.
+set, or the MyVariant.info frequency prefilter (whole exome), or a capped,
+prioritised subset -> VEP annotation and gnomAD frequency -> comp-het
+resolution -> sibling segregation (PED) -> score (phenotype fit, consequence /
+predictors, inheritance fit) -> SpliceAI/Pangolin on the best non-coding /
+splice-region / synonymous candidates -> ranked TSV, with every stage counted
+and timed (`result.counts`, `result.timings`).
 """
 
 from __future__ import annotations
@@ -115,6 +121,54 @@ def normalize_allele(pos: int, ref: str, alt: str) -> Tuple[int, str, str]:
 
 def is_symbolic(alt: str) -> bool:
     return alt in ("*", ".", "") or alt.startswith("<") or "[" in alt or "]" in alt
+
+
+GVCF_PLACEHOLDERS = ("<NON_REF>", "<*>", "<X>")  # gVCF "any other allele" placeholders, not variants
+
+
+def is_structural(alt: str) -> bool:
+    """A symbolic SV/CNV allele (<DEL>, <DUP:TANDEM>, <CNV>, a breakend) — not `*`, `.` or a gVCF <NON_REF>/<*>."""
+    if alt.upper() in GVCF_PLACEHOLDERS:
+        return False
+    return alt.startswith("<") or "[" in alt or "]" in alt
+
+
+def sv_type(alt: str, info: Dict[str, str]) -> str:
+    """SVTYPE from INFO when present, else read off the allele token (<DUP:TANDEM> → DUP, a breakend → BND)."""
+    declared = (info.get("SVTYPE") or "").strip()
+    if declared:
+        return declared.upper()
+    if "[" in alt or "]" in alt:
+        return "BND"
+    token = alt.strip("<>").split(":")[0].upper()
+    return token or "SV"
+
+
+def sv_call(rec: "Record", k: int, sample_index: Optional[int]) -> Dict[str, Any]:
+    """One symbolic allele as the `zebra cnv` command would take it, with the proband's genotype."""
+    info = rec.info()
+    alt = rec.alts[k - 1]
+    kind = sv_type(alt, info)
+    end = _int(info.get("END"))
+    if end is None and _int(info.get("SVLEN")) is not None:
+        end = rec.pos + abs(_int(info.get("SVLEN")) or 0)
+    gt = None
+    cn = _int(info.get("CN"))
+    if sample_index is not None and sample_index < len(rec.sample_fields) and rec.fmt:
+        fields = dict(zip(rec.fmt, rec.sample_fields[sample_index].split(":")))
+        gt = fields.get("GT")
+        if fields.get("CN") not in (None, "", "."):
+            cn = _int(fields.get("CN"))
+    direction = None
+    if kind.startswith("DEL") or (cn is not None and cn < 2 and kind in ("CNV", "DEL")):
+        direction = "loss"
+    elif kind.startswith("DUP") or (cn is not None and cn > 2 and kind in ("CNV", "DUP")):
+        direction = "gain"
+    out: Dict[str, Any] = {"chrom": rec.chrom, "pos": rec.pos, "end": end, "svtype": kind, "alt": alt, "gt": gt,
+                           "cn": cn, "filter": rec.filter}
+    if end is not None and direction and kind != "BND":
+        out["zebra_cnv"] = f'zebra cnv "chr{rec.chrom}:{rec.pos}-{end} {direction}"'
+    return out
 
 
 def compression(path: str) -> str:
@@ -598,10 +652,19 @@ def inspect(path: str, max_seconds: float = 20.0, max_records: int = 3_000_000, 
     naming: Counter = Counter()
     complete = True
     fmt_seen: Set[str] = set()
+    sv_types: Counter = Counter()
+    star = small = 0
     for rec in records:
         n += 1
         if len(rec.alts) > 1:
             multi += 1
+        for alt in rec.alts:
+            if is_structural(alt):
+                sv_types[sv_type(alt, rec.info())] += 1
+            elif alt == "*":
+                star += 1
+            elif not is_symbolic(alt):
+                small += 1
         filters[rec.filter] += 1
         chroms[rec.chrom] += 1
         naming["chr" if rec.chrom_raw.lower().startswith("chr") else "plain"] += 1
@@ -676,6 +739,8 @@ def inspect(path: str, max_seconds: float = 20.0, max_records: int = 3_000_000, 
         "annotations": header.annotations(),
         "per_sample": samples_out,
         "malformed_lines": records.malformed,
+        "symbolic_alleles": {"structural": sum(sv_types.values()), "types": dict(sv_types.most_common(10)),
+                             "spanning_deletion_star": star, "snv_indel_alleles": small},
         "seconds": round(time.monotonic() - t0, 2),
     }
     notes = []
@@ -686,6 +751,11 @@ def inspect(path: str, max_seconds: float = 20.0, max_records: int = 3_000_000, 
         notes.append(f"scan stopped after {n} records ({result['seconds']} s); the count is a lower bound")
     if build["guess"] is None:
         notes.append("genome build unknown: pass --assembly GRCh38|GRCh37 to triage (never mix builds)")
+    if sv_types:
+        n_sv = sum(sv_types.values())
+        notes.append(f"{n_sv} symbolic CNV/SV allele(s) ({', '.join(f'{k} {v}' for k, v in sv_types.most_common(6))})"
+                     + (": this is a CNV/SV VCF" if not small else "")
+                     + " — `vcf triage` reads SNVs/indels only; give each CNV/SV call to `zebra cnv`")
     if len(header.samples) > max_samples:
         notes.append(f"per-sample statistics for the first {max_samples} of {len(header.samples)} samples")
     result["notes"] = notes
@@ -918,7 +988,11 @@ def _phenotype(case_dir: Optional[str], hpo_terms: Optional[Sequence[str]], warn
         warnings.append(f"phenotype fit not scored: {err}")
         return None
     try:
-        res = hpo_local.rank(idx, present, excluded, top=1000)
+        # the same scoring as `zebra phenotype rank` (excluded terms flagged, not scored: docs/BENCHMARK.md);
+        # with the 0.1.0 penalty the true gene reached the top 10 in 21 of 60 benchmark cases, with this one 48
+        from zebra.commands.phenotype import LOCAL_PARAMS
+
+        res = hpo_local.rank(idx, present, excluded, top=1000, params=dict(LOCAL_PARAMS))
     except ValueError as err:
         if need:
             raise UsageError(f"--hpo-genes: {err}") from None
@@ -1075,24 +1149,30 @@ CLINVAR_PLP = ("pathogenic", "likely_pathogenic", "pathogenic/likely_pathogenic"
 CLINVAR_BENIGN = ("benign", "likely_benign", "benign/likely_benign")
 
 
-def clinvar_pathogenic(ann: Optional[Dict[str, Any]]) -> List[str]:
-    """The P/LP assertions VEP's colocated ClinVar record carries for this allele.
+def _sig(s: Any) -> str:
+    """A ClinVar significance in VEP's spelling: 'Pathogenic, low penetrance' -> 'pathogenic_low_penetrance'."""
+    return re.sub(r"[\s,]+", "_", str(s).strip().lower())
 
-    A record that also carries benign or likely benign (ClinVar's "conflicting
-    classifications") is not an assertion anyone can lean on, so it returns
+
+def clinvar_pathogenic(ann: Optional[Dict[str, Any]]) -> List[str]:
+    """The P/LP assertions VEP's colocated ClinVar record (or MyVariant's) carries for this allele.
+
+    A record that also carries benign or likely benign, or that ClinVar itself
+    calls conflicting ("Conflicting interpretations/classifications of
+    pathogenicity"), is not an assertion anyone can lean on, so it returns
     nothing: see `clinvar_conflicting`.
     """
-    sigs = [str(s).strip().lower().replace(" ", "_") for s in (ann or {}).get("clinvar") or []]
-    if any(s in CLINVAR_BENIGN for s in sigs):
+    sigs = [_sig(s) for s in (ann or {}).get("clinvar") or []]
+    if any(s in CLINVAR_BENIGN or s.startswith("conflicting") for s in sigs):
         return []
-    return [str(s) for s in (ann or {}).get("clinvar") or []
-            if str(s).strip().lower().replace(" ", "_") in CLINVAR_PLP]
+    return [str(s) for s in (ann or {}).get("clinvar") or [] if _sig(s) in CLINVAR_PLP]
 
 
 def clinvar_conflicting(ann: Optional[Dict[str, Any]]) -> bool:
-    """True when the ClinVar record carries both a pathogenic and a benign classification."""
-    sigs = [str(s).strip().lower().replace(" ", "_") for s in (ann or {}).get("clinvar") or []]
-    return any(s in CLINVAR_PLP for s in sigs) and any(s in CLINVAR_BENIGN for s in sigs)
+    """True when the ClinVar record carries a pathogenic and a benign classification, or ClinVar says conflicting."""
+    sigs = [_sig(s) for s in (ann or {}).get("clinvar") or []]
+    return (any(s in CLINVAR_PLP for s in sigs) and any(s in CLINVAR_BENIGN for s in sigs)) \
+        or any(s.startswith("conflicting") for s in sigs)
 
 
 def annotate_vep(rec: Dict[str, Any], prefer: Optional[Set[str]] = None) -> Dict[str, Any]:
@@ -1189,6 +1269,40 @@ def _vep_all(keys: List[Tuple[str, int, str, str]], assembly: str, warnings: Lis
 
 # ------------------------------------------------------------------ scoring
 
+REF_CHECK_N = 50  # positions compared with the reference (one POST /sequence/region takes up to 50)
+
+
+def ref_check(keys: Sequence[Tuple[str, int, str, str]], assembly: str, n: int = REF_CHECK_N) -> Outcome:
+    """Compare the VCF's REF with the reference genome at up to `n` positions spread over `keys`."""
+    pool = sorted({k for k in keys if 0 < len(k[2]) <= 20 and k[0] != "MT"}, key=lambda k: (_chrom_sort_key(k[0]), k[1]))
+    if not pool:
+        return Outcome({"checked": 0, "mismatch": 0, "examples": []})
+    step = max(1, len(pool) // n)
+    sample = pool[::step][:n]
+    regions = [f"{c}:{p}..{p + len(r) - 1}:1" for c, p, r, _ in sample]
+    resp = post_json(f"{ensembl.host(assembly)}/sequence/region/human", {"regions": regions},
+                     source="Ensembl sequence", cache_ttl=90 * 86400, timeout=60)
+    data = resp.json()
+    if not isinstance(data, list):
+        raise ValueError("Ensembl sequence/region returned no list")
+    got = {str(d.get("query")): str(d.get("seq") or "").upper() for d in data if isinstance(d, dict)}
+    checked = mismatch = 0
+    examples: List[str] = []
+    for (c, p, r, _), q in zip(sample, regions):
+        seq = got.get(q)
+        if not seq:
+            continue
+        checked += 1
+        if seq != r.upper():
+            mismatch += 1
+            if len(examples) < 5:
+                examples.append(f"{c}:{p} VCF {r} vs {assembly} {seq}")
+    rec = source_record("Ensembl sequence", f"{checked} REF positions", resp,
+                        note=f"{assembly}; REF check of positions only (no sample data)")
+    return Outcome({"checked": checked, "mismatch": mismatch, "examples": examples, "asked": len(sample)},
+                   sources=[rec])
+
+
 def predictor_support(a: Dict[str, Any], assembly: str) -> Tuple[float, List[str]]:
     """In-silico support as a level in [0, 0.9]; thresholds: REVEL (Pejaver 2022), SpliceAI (ClinGen SVI 2023),
     AlphaMissense class, CADD PHRED (Pejaver 2022)."""
@@ -1202,7 +1316,14 @@ def predictor_support(a: Dict[str, Any], assembly: str) -> Tuple[float, List[str
         elif revel >= 0.644:
             levels.append((0.65, f"REVEL {revel:.3f} ≥0.644 (supporting)"))
     sai = a.get("spliceai_max")
-    if sai is not None:
+    lookup = a.get("spliceai_lookup")
+    if lookup is not None and (sai is None or lookup > sai):
+        # the Broad lookup's raw score at ±500 nt (zebra s2f), used when it says more than VEP's precomputed one
+        if lookup >= 0.5:
+            levels.append((0.85, f"SpliceAI {lookup:.2f} ≥0.5 (Broad lookup, raw, ±500 nt)"))
+        elif lookup >= 0.2:
+            levels.append((0.65, f"SpliceAI {lookup:.2f} ≥0.2 (Broad lookup, raw, ±500 nt)"))
+    elif sai is not None:
         if sai >= 0.5:
             levels.append((0.85, f"SpliceAI {sai:.2f} ≥0.5"))
         elif sai >= 0.2:
@@ -1349,6 +1470,7 @@ def _classify(ctype: str, sex: Optional[str], pz: str, mother: Optional[Dict[str
             flags.append("hom-alt call on X outside the PARs with the proband's sex unknown: in a male this is a "
                          "hemizygous call (callers emit diploid X by default). Pass --sex, or let zebra infer it "
                          "from the X/Y genotypes")
+        carriers = 0
         for role, p in (("mother", mother), ("father", father)):
             if p is None:
                 continue
@@ -1358,13 +1480,20 @@ def _classify(ctype: str, sex: Optional[str], pz: str, mother: Optional[Dict[str
                 # for a female proband a hom-ref father IS a conflict (she has his X);
                 # a male proband never reaches here, he is classed x_hemizygous above
                 flags.append(f"Mendelian conflict: {role} is hom-ref (UPD, deletion in trans, or sample mix-up)")
-            elif p["z"] == "hom_alt":
+            elif p["z"] == "hom_alt" and not (ctype == "x_nonpar" and role == "father"):
+                carriers += 1
                 flags.append(f"{role} is also hom-alt")
+            elif p["z"] in ("het", "hemi", "hom_alt"):
+                # the expected carrier parent of a recessive homozygote (B-P1-7); on X a
+                # father's 1/1 is his hemizygous allele written diploid
+                carriers += 1
             elif p["z"] in ("missing", "other"):
                 flags.append(f"{role} genotype {p['z']}: carrier status unknown (not 'not carried')")
             else:
                 flags.append(f"{role} not adequately genotyped (" + "; ".join(p["why"]) + "): carrier status unknown")
-        return ("hom_recessive" if (has_m or has_f) else "hom"), None, flags
+        # with the sex unknown a male's X call reads as 1/1 here, and a hemizygote has one parent, not two
+        origin = "biparental" if (has_m and has_f and carriers == 2 and not x_unknown_sex) else None
+        return ("hom_recessive" if (has_m or has_f) else "hom"), origin, flags
     if not has_m and not has_f:
         return "het", None, flags
     mc, fc = carries(mother), carries(father)
@@ -1420,62 +1549,223 @@ def _parent(call: Optional[Call], k: int, min_dp: int, min_gq: int) -> Optional[
 
 
 SEX_X_ALT_MIN = 20  # X non-PAR ALT calls needed before a het fraction decides
-SEX_SCAN_MAX = 3_000_000  # records read before the pre-scan gives up
+SEX_SCAN_MAX = 3_000_000  # X/Y records read before the scan gives up (autosomal records do not count: B-P2-5)
+SEX_SCAN_SECONDS = 240.0  # wall-time cap on the sex scan, so a whole genome cannot stall a triage
 SEX_Y_ALT_MIN = 2  # Y non-PAR ALT calls needed before Y is read as evidence
 SEX_Y_FRACTION = 0.25  # ... and the share of called Y sites they must make up (noise is sparser)
+_XY_NAMES = frozenset(("X", "Y", "chrX", "chrY", "x", "y", "CHRX", "CHRY", "chrx", "chry"))
 
 
-def infer_sex(path: str, proband: str, assembly: Optional[str]) -> Dict[str, Any]:
-    """Infer the proband's sex from its own X non-PAR and Y genotypes.
+def tabix_starts(path: str) -> Optional[Dict[str, int]]:
+    """The first BGZF virtual offset of each sequence's records, read from `<vcf>.tbi`; None when unusable.
 
-    GATK HaplotypeCaller calls male X diploid unless the ploidy is set, so a
-    male hemizygous variant arrives as `1/1`. Without this, such a call reads
-    as a homozygote with a "Mendelian conflict" against both parents.
-
-    Evidence used: haploid X calls, ALT calls on Y outside the PARs, and the
-    heterozygous fraction of X non-PAR ALT calls. Returns the call and the
-    counts it rests on; `sex` is None when the evidence is not enough.
+    Format: SAMtools tabix specification (TBI\\1 magic, n_ref, 6 int32 fields, l_nm and the names, then per
+    reference its bins with their chunks and the linear index). The metadata pseudo-bin 37450 is skipped.
+    Any parsing problem returns None and the caller reads the file from the start instead.
     """
-    header, records = iter_records(path)
-    if proband not in header.samples:
-        records.close()
-        return {"sex": None, "basis": "the proband is not a sample in the VCF", "counts": {}}
-    i = header.samples.index(proband)
-    c: Counter = Counter()
-    n = 0
-    complete = True
+    import struct
+
+    tbi = os.path.expanduser(path) + ".tbi"
+    if not os.path.isfile(tbi) or compression(os.path.expanduser(path)) != "bgzip":
+        return None
     try:
-        for rec in records:
-            n += 1
-            if n > SEX_SCAN_MAX:
-                complete = False
-                break
-            if rec.chrom not in ("X", "Y") or not rec.fmt or "GT" not in rec.fmt or i >= len(rec.sample_fields):
-                continue
-            ctype = _ctype(rec.chrom, rec.pos, assembly)
-            if ctype not in ("x_nonpar", "y"):
-                continue
-            gt, _ = parse_gt(dict(zip(rec.fmt, rec.sample_fields[i].split(":"))).get("GT", "."))
-            if not gt or all(a is None for a in gt):
-                continue
-            called = [a for a in gt if a is not None]
-            has_alt = any(a > 0 for a in called)
-            if ctype == "y":
-                c["y_called"] += 1
-                if has_alt:
-                    c["y_alt"] += 1
-                continue
-            c["x_called"] += 1
-            if len(gt) == 1:
-                c["x_haploid"] += 1
-            if has_alt:
-                c["x_alt"] += 1
-                if len(set(called)) > 1:
-                    c["x_het"] += 1
+        with gzip.open(tbi, "rb") as fh:
+            data = fh.read(256 << 20)
+        if data[:4] != b"TBI\x01":
+            return None
+        n_ref, _fmt, _cs, _cb, _ce, _meta, _skip, l_nm = struct.unpack_from("<8i", data, 4)
+        if not 0 < n_ref < 100_000 or not 0 <= l_nm < len(data):
+            return None
+        names = data[36:36 + l_nm].split(b"\x00")[:n_ref]
+        off = 36 + l_nm
+        out: Dict[str, int] = {}
+        for r in range(n_ref):
+            (n_bin,) = struct.unpack_from("<i", data, off)
+            off += 4
+            best: Optional[int] = None
+            for _ in range(n_bin):
+                bin_id, n_chunk = struct.unpack_from("<Ii", data, off)
+                off += 8
+                for _ in range(n_chunk):
+                    beg, _end = struct.unpack_from("<QQ", data, off)
+                    off += 16
+                    if bin_id != 37450 and (best is None or beg < best):
+                        best = beg
+            (n_intv,) = struct.unpack_from("<i", data, off)
+            off += 4 + 8 * n_intv
+            if best is not None and r < len(names):
+                out[names[r].decode("utf-8", "replace")] = best
+        return out
+    except (OSError, EOFError, zlib.error, struct.error, ValueError):
+        return None
+
+
+def _lines_from(path: str, voffset: int) -> Iterator[str]:
+    """Text lines of a BGZF file starting at a virtual offset (compressed block start << 16 | offset within it)."""
+    raw = open(os.path.expanduser(path), "rb")
+    try:
+        raw.seek(voffset >> 16)
+        gz = gzip.GzipFile(fileobj=raw, mode="rb")
+        gz.read(voffset & 0xFFFF)
+        for line in io.TextIOWrapper(gz, encoding="utf-8", errors="replace"):
+            yield line
     finally:
-        records.close()
+        raw.close()
+
+
+def sex_counts(path: str, samples: Sequence[str], assembly: Optional[str], max_xy: Optional[int] = None,
+               max_seconds: Optional[float] = None) -> Tuple[Dict[str, Counter], Dict[str, Any]]:
+    """X non-PAR / Y genotype counts for each named sample, in one pass over the file.
+
+    Only X and Y records are parsed and only they count against `max_xy`
+    (B-P2-5): in a sorted whole-genome VCF chrX follows 4-5 million autosomal
+    records, and a cap that counted those stopped before X was reached. The
+    other lines are skipped on their CHROM field without being split. With a
+    usable tabix index (not older than the VCF, and pointing at lines of the
+    right chromosome) the scan jumps straight to X and Y; any doubt about the
+    index, or any read error through it, falls back to reading the file.
+    """
+    import time
+
+    max_xy = SEX_SCAN_MAX if max_xy is None else max_xy
+    max_seconds = SEX_SCAN_SECONDS if max_seconds is None else max_seconds
+    t0 = time.monotonic()
+    fh = open_text(path)
+    try:
+        try:
+            header, first = read_header(fh)
+        except (UnicodeDecodeError, EOFError, OSError, zlib.error) as err:
+            raise UsageError(f"{path} is not a readable VCF ({type(err).__name__}: {err})") from None
+        idx = {s: header.samples.index(s) for s in samples if s in header.samples}
+        n_samples = len(header.samples)
+
+        def count(lines: Iterator[str], meta: Dict[str, Any]) -> Dict[str, Counter]:
+            out: Dict[str, Counter] = {s: Counter() for s in samples}
+            for line in lines:
+                if not line or line[0] == "#":
+                    continue
+                meta["records_scanned"] += 1
+                tab = line.find("\t")
+                if line[:tab] not in _XY_NAMES:
+                    if meta["records_scanned"] % 200_000 == 0 and time.monotonic() - t0 > max_seconds:
+                        meta.update(scan_complete=False, stopped_by=f"the {max_seconds:g} s time cap")
+                        break
+                    continue
+                meta["xy_records"] += 1
+                if meta["xy_records"] > max_xy:
+                    meta.update(scan_complete=False, stopped_by=f"the cap of {max_xy} X/Y records")
+                    break
+                if meta["xy_records"] % 20_000 == 0 and time.monotonic() - t0 > max_seconds:
+                    meta.update(scan_complete=False, stopped_by=f"the {max_seconds:g} s time cap")
+                    break
+                rec, _ = parse_line_why(line, n_samples)
+                if rec is not None:
+                    sex_tally(rec, idx, out, assembly)
+            return out
+
+        def fresh_meta() -> Dict[str, Any]:
+            return {"records_scanned": 0, "xy_records": 0, "scan_complete": True, "stopped_by": None}
+
+        xy_starts = _usable_xy_index(path)
+        if xy_starts:
+            def indexed() -> Iterator[str]:
+                for name, off in sorted(xy_starts.items(), key=lambda kv: kv[1]):
+                    for line in _lines_from(path, off):
+                        if line[:line.find("\t")] != name:
+                            break
+                        yield line
+
+            meta = fresh_meta()
+            meta["indexed"] = True
+            try:
+                out = count(indexed(), meta)
+                meta["seconds"] = round(time.monotonic() - t0, 2)
+                return out, meta
+            except (EOFError, OSError, zlib.error, ValueError):
+                pass  # a stale or damaged index: read the file instead
+
+        def linear() -> Iterator[str]:
+            if first is not None:
+                yield first
+            while True:
+                try:
+                    line = next(fh)
+                except StopIteration:
+                    return
+                except (EOFError, OSError, zlib.error) as err:
+                    raise UsageError(f"{path} is truncated or corrupt ({type(err).__name__}: {err})") from None
+                yield line
+
+        meta = fresh_meta()
+        out = count(linear(), meta)
+    finally:
+        fh.close()
+    meta["seconds"] = round(time.monotonic() - t0, 2)
+    return out, meta
+
+
+def _usable_xy_index(path: str) -> Dict[str, int]:
+    """X/Y start offsets from the tabix index, only when the index is not older than the VCF and each offset
+    lands on a line of that chromosome; otherwise {} (read the file)."""
+    p = os.path.expanduser(path)
+    try:
+        if os.path.getmtime(p + ".tbi") < os.path.getmtime(p):
+            return {}
+    except OSError:
+        return {}
+    starts = tabix_starts(path) or {}
+    xy = {name: off for name, off in starts.items() if name in _XY_NAMES}
+    for name, off in xy.items():
+        gen = _lines_from(path, off)
+        try:
+            line = next(gen, "")
+        except (EOFError, OSError, zlib.error, ValueError):
+            return {}
+        finally:
+            gen.close()
+        if line[:line.find("\t")] != name:
+            return {}
+    return xy
+
+
+def sex_tally(rec: "Record", idx: Dict[str, int], out: Dict[str, Counter], assembly: Optional[str]) -> None:
+    """Add one X/Y record to each sample's sex counts (any FILTER, any allele type, as `infer_sex` always did)."""
+    if rec.chrom not in ("X", "Y") or not rec.fmt or "GT" not in rec.fmt:
+        return
+    ctype = _ctype(rec.chrom, rec.pos, assembly)
+    if ctype not in ("x_nonpar", "y"):
+        return
+    gi = rec.fmt.index("GT")
+    for s, i in idx.items():
+        if i >= len(rec.sample_fields):
+            continue
+        parts = rec.sample_fields[i].split(":")
+        gt, _ = parse_gt(parts[gi] if gi < len(parts) else ".")
+        if not gt or all(a is None for a in gt):
+            continue
+        c = out[s]
+        called = [a for a in gt if a is not None]
+        has_alt = any(a > 0 for a in called)
+        if ctype == "y":
+            c["y_called"] += 1
+            if has_alt:
+                c["y_alt"] += 1
+            continue
+        c["x_called"] += 1
+        if len(gt) == 1:
+            c["x_haploid"] += 1
+        if has_alt:
+            c["x_alt"] += 1
+            if len(set(called)) > 1:
+                c["x_het"] += 1
+
+
+def sex_from_counts(c: Counter, meta: Dict[str, Any]) -> Dict[str, Any]:
+    """The sex call one sample's X/Y counts support, with the counts it rests on; None when they are not enough."""
+    complete = meta.get("scan_complete", True)
     counts = dict(c)
-    counts["records_scanned"] = n
+    counts["records_scanned"] = meta.get("records_scanned", 0)
+    counts["xy_records"] = meta.get("xy_records", 0)
     counts["scan_complete"] = complete
     x_alt, x_het, y_alt, y_called = c["x_alt"], c["x_het"], c["y_alt"], c["y_called"]
     het_frac = (x_het / x_alt) if x_alt else None
@@ -1483,7 +1773,8 @@ def infer_sex(path: str, proband: str, assembly: Optional[str]) -> Dict[str, Any
     # the counts every answer rests on, so no basis can assert what was not measured
     seen = (f"X non-PAR: {x_alt} ALT call(s), {x_het} heterozygous, {c['x_haploid']} haploid; "
             f"Y non-PAR: {y_alt} ALT of {y_called} called"
-            + ("" if complete else f"; scan stopped after {n} records"))
+            + ("" if complete else f"; scan stopped by {meta.get('stopped_by')} after "
+                                   f"{meta.get('records_scanned')} records"))
     if c["x_haploid"] and c["x_haploid"] >= 0.5 * max(1, c["x_called"]):
         return {"sex": "male", "basis": f"{c['x_haploid']}/{c['x_called']} X non-PAR calls are haploid ({seen})",
                 "counts": counts}
@@ -1504,6 +1795,25 @@ def infer_sex(path: str, proband: str, assembly: Optional[str]) -> Dict[str, Any
     return {"sex": None, "basis": f"not enough consistent evidence ({seen})", "counts": counts}
 
 
+def infer_sex(path: str, proband: str, assembly: Optional[str]) -> Dict[str, Any]:
+    """Infer the proband's sex from its own X non-PAR and Y genotypes.
+
+    GATK HaplotypeCaller calls male X diploid unless the ploidy is set, so a
+    male hemizygous variant arrives as `1/1`. Without this, such a call reads
+    as a homozygote with a "Mendelian conflict" against both parents.
+
+    Evidence used: haploid X calls, ALT calls on Y outside the PARs, and the
+    heterozygous fraction of X non-PAR ALT calls. Returns the call and the
+    counts it rests on; `sex` is None when the evidence is not enough.
+    """
+    header, records = iter_records(path)
+    records.close()
+    if proband not in header.samples:
+        return {"sex": None, "basis": "the proband is not a sample in the VCF", "counts": {}}
+    counts, meta = sex_counts(path, [proband], assembly)
+    return sex_from_counts(counts[proband], meta)
+
+
 def _parent_ref_ok(mother: Optional[Dict[str, Any]], father: Optional[Dict[str, Any]]) -> bool:
     """True when a tested parent who does not carry the allele has an adequate hom-ref call.
 
@@ -1521,16 +1831,364 @@ def _parent_ref_ok(mother: Optional[Dict[str, Any]], father: Optional[Dict[str, 
     return True
 
 
-def triage(path: str, proband: str, mother: Optional[str] = None, father: Optional[str] = None,
+def _resolve_ped(ped: str, samples: Sequence[str], proband: Optional[str], mother: Optional[str],
+                 father: Optional[str], sex: Optional[str], notes: List[str]
+                 ) -> Tuple[str, Optional[str], Optional[str], Optional[str], Dict[str, Any], List[Tuple[str, Optional[bool], Optional[str]]]]:
+    """Proband, parents, sex and full siblings from a PED file; a flag given on the command line must agree with it."""
+    from zebra import qc as qc_mod
+
+    pedigree = qc_mod.read_ped(ped)
+    if proband is None:
+        affected = [p.iid for p in pedigree.people.values() if p.affected and p.iid in samples
+                    and ((p.mother in samples) or (p.father in samples))]
+        if len(affected) != 1:
+            raise UsageError("--proband not given and the PED does not name exactly one affected individual with a "
+                             f"parent in the VCF (affected with a parent here: {', '.join(affected) or 'none'}): "
+                             "pass --proband")
+        proband = affected[0]
+    person = pedigree.get(proband)
+    if person is None:
+        raise UsageError(f"--proband {proband!r} is not in the PED file ({pedigree.path})")
+    for role, given, stated in (("mother", mother, person.mother), ("father", father, person.father)):
+        if given and stated and given != stated:
+            raise UsageError(f"--{role} {given} contradicts the PED file, which names {stated} as {proband}'s {role}")
+    if mother is None and person.mother:
+        if person.mother in samples:
+            mother = person.mother
+        else:
+            notes.append(f"the PED names {person.mother} as the mother, but she is not a sample in the VCF")
+    if father is None and person.father:
+        if person.father in samples:
+            father = person.father
+        else:
+            notes.append(f"the PED names {person.father} as the father, but he is not a sample in the VCF")
+    if sex and person.sex and sex != person.sex:
+        raise UsageError(f"--sex {sex} contradicts the PED file, which gives {proband} sex {person.sex}")
+    sex = sex or person.sex
+    sibs = [(s, pedigree.get(s).affected, pedigree.get(s).sex)  # type: ignore[union-attr]
+            for s in pedigree.full_sibs(proband) if s in samples]
+    info = {"path": pedigree.path, "proband": proband, "mother": mother, "father": father, "sex": sex,
+            "affected": person.affected, "siblings": [{"id": s, "affected": a, "sex": x} for s, a, x in sibs]}
+    return proband, mother, father, sex, info, sibs
+
+
+# consequences the splice models are asked about (non-coding / splice-region / synonymous); canonical
+# donor/acceptor (HIGH, PVS1's domain) and missense (a protein question) are not
+S2F_ELIGIBLE = frozenset((
+    "splice_region_variant", "splice_donor_5th_base_variant", "splice_donor_region_variant",
+    "splice_polypyrimidine_tract_variant", "synonymous_variant", "intron_variant",
+    "non_coding_transcript_exon_variant", "start_retained_variant", "stop_retained_variant",
+    "coding_sequence_variant"))
+# where only a regulatory model (AlphaGenome, with the disease tissue) speaks
+REGULATORY_TERMS = frozenset((
+    "5_prime_UTR_variant", "3_prime_UTR_variant", "upstream_gene_variant", "downstream_gene_variant",
+    "regulatory_region_variant", "TF_binding_site_variant", "intergenic_variant"))
+
+
+def _s2f_rerank(final: List[Dict[str, Any]], assembly: str, top: int, max_seconds: float, warnings: List[str],
+                sources: List[Dict[str, Any]], progress: Optional[Any]) -> Dict[str, Any]:
+    """SpliceAI and Pangolin (zebra.s2f, Broad lookup) on the best-ranked non-coding/splice-region/synonymous
+    candidates; the SpliceAI delta is put where the ranking reads it (`spliceai_lookup`)."""
+    import time
+
+    from zebra import s2f as s2f_mod
+    from zebra.http import deadline_seconds
+
+    t0 = time.monotonic()
+    chosen = []
+    lof = {"splice_donor_variant", "splice_acceptor_variant", "stop_gained", "frameshift_variant", "start_lost"}
+    protein = {"missense_variant", "inframe_insertion", "inframe_deletion", "protein_altering_variant", "stop_lost"}
+    for v in final:
+        terms = set(((v.get("ann") or {}).get("consequence") or "").split(","))
+        splice_region = {t for t in terms if t.startswith("splice_")} - lof
+        # a LoF is PVS1's question and a plain missense a protein question; an exonic variant in the splice
+        # region (the last bases of an exon) is asked about splicing as well
+        if terms & S2F_ELIGIBLE and not (terms & lof) and (splice_region or not (terms & protein)):
+            # the lookup service knows the primary chromosomes only; a call on GL000220.1, a decoy or an
+            # HLA contig is left out here rather than failing the whole triage
+            if ensembl.parse_vcf_like(f"{v['chrom']}-{v['pos']}-{v['ref']}-{v['alt']}") is None:
+                continue
+            chosen.append(v)
+        if len(chosen) >= top:
+            break
+    ran: List[str] = []
+    skipped: List[str] = []
+    failed: List[str] = []
+    asked: List[str] = []
+    for n, v in enumerate(chosen):
+        left = deadline_seconds()
+        if (left is not None and left < 25) or time.monotonic() - t0 > max_seconds:
+            skipped = [w["variant"] for w in chosen[n:]]
+            why = "the call's time budget (ZEBRA_DEADLINE_MS)" if left is not None and left < 25 else \
+                f"the {max_seconds:g} s cap on this stage"
+            warnings.append(f"S2F: {len(skipped)} of {len(chosen)} selected candidate(s) not run within {why}: "
+                            + ", ".join(skipped) + " — run zebra s2f predict on them")
+            break
+        if progress:
+            progress(f"S2F {n + 1}/{len(chosen)}: {v['variant']}")
+        key = f"{v['chrom']}-{v['pos']}-{v['ref']}-{v['alt']}"
+        asked.append(v["variant"])
+        try:
+            out = attempt(f"S2F {key}", lambda: s2f_mod.predict(key, assembly=assembly,
+                                                                models=["spliceai", "pangolin"], distance=500),
+                          warnings)
+        except UsageError as err:  # one unreadable variant costs its own row, never the triage
+            warnings.append(f"S2F {key} not run: {err}")
+            out = None
+        if out is None:
+            failed.append(v["variant"])
+            continue
+        sources.extend(out.sources)
+        rows = {r.get("model"): r for r in (out.result or {}).get("models") or []}
+        got: Dict[str, Any] = {}
+        for model in ("spliceai", "pangolin"):
+            r = rows.get(model) or {}
+            if r.get("status") == "ran":
+                h = r.get("headline") or {}
+                got[model] = {"status": "ran", "score": h.get("score"), "value": h.get("value"),
+                              "position": h.get("position"), "transcript": h.get("refseq") or h.get("transcript")}
+            else:
+                got[model] = {"status": r.get("status") or "not_run", "reason": r.get("reason")}
+                warnings.append(f"S2F {key}: {model} {got[model]['status']} ({r.get('reason')})")
+        got["source"] = "zebra s2f predict (Broad SpliceAI-lookup, raw scores, distance ±500 nt, GENCODE basic)"
+        v["s2f"] = got
+        val = (got.get("spliceai") or {}).get("value")
+        if isinstance(val, (int, float)) and v.get("ann") is not None:
+            v["ann"]["spliceai_lookup"] = float(val)
+        ran.append(v["variant"])
+    return {"selected": [v["variant"] for v in chosen], "ran": ran, "not_run": skipped, "failed": failed,
+            "asked": asked, "seconds": round(time.monotonic() - t0, 2),
+            "rule": f"the {top} best-ranked candidates whose consequence is splice-region, synonymous, intronic or "
+                    "non-coding exon; SpliceAI's delta enters the variant score (Walker 2023 thresholds 0.2/0.5); "
+                    "Pangolin is shown, not scored (no calibrated thresholds)"}
+
+
+PREFILTER_TIERS = {0: "ClinVar P/LP or HIGH impact", 1: "MODERATE, splice-region, novel or phenotype gene",
+                   2: "LOW (synonymous and other low-impact)", 3: "MODIFIER only (intronic, UTR, non-coding)",
+                   4: "not looked up"}
+_SPLICE_EFFECTS = ("splice_region_variant", "splice_donor", "splice_acceptor", "splice_donor_5th_base_variant",
+                   "splice_donor_region_variant", "splice_polypyrimidine_tract_variant")
+
+
+STRONG_CLASSES = ("de_novo", "possible_de_novo", "hom_recessive", "hom", "x_hemizygous", "mitochondrial",
+                  "y_hemizygous")
+
+
+def _myvariant_prefilter(cands: List[Dict[str, Any]], assembly: str, max_af: float, max_prefilter: int,
+                         pheno_genes: Dict[str, Any], warnings: List[str], sources: List[Dict[str, Any]],
+                         progress: Optional[Any], dom_af: float = 0.0001
+                         ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """Drop alleles MyVariant.info shows to be common; order the rest for the VEP budget.
+
+    Frequency: the recessive threshold (`--max-af`) on max(gnomAD exome, genome, grpmax over afr/amr/eas/nfe/
+    sas) — the rule `af_summary` applies to VEP — with the ClinVar P/LP exemption up to BA1 (5%). The dominant
+    threshold is applied later, on VEP's gnomAD, after compound heterozygotes are paired.
+    Consequence (snpEff via MyVariant) only orders the VEP budget, it removes nothing: tier 0 ClinVar P/LP or
+    HIGH; 1 MODERATE, splice-region, not in MyVariant (novel) or in a gene that fits the phenotype; 2 LOW;
+    3 MODIFIER only. A variant MyVariant does not hold, or that a failed batch did not look up, passes.
+    VEP order: tier 0; then the strong inheritance classes (de novo, homozygous, hemizygous) at any tier;
+    then heterozygous classes tier 1, then 2-3; heterozygotes the dominant cut-off will remove (MyVariant
+    frequency above it, and no second candidate in the gene to pair with) after those; unchecked last.
+    """
+    from zebra.sources import myvariant
+
+    pool = cands[:max_prefilter]
+    unqueried = cands[max_prefilter:]
+    keys = [(v["chrom"], v["pos"], v["ref"], v["alt"]) for v in pool]
+    meta = attempt("MyVariant.info metadata", lambda: myvariant.metadata(assembly), warnings)
+    if meta is not None:
+        sources.extend(meta.sources)
+    got = attempt("MyVariant.info", lambda: myvariant.batch(keys, assembly, progress=progress), warnings)
+    if got is not None:
+        sources.extend(got.sources)
+        warnings.extend(got.warnings)
+        records = got.result["records"]
+        unanswered = set(got.result["unanswered"])
+    else:
+        records, unanswered = {}, set(keys)
+    kept: List[Tuple[int, int, int, Dict[str, Any]]] = []
+    dropped: List[Tuple[Dict[str, Any], float]] = []
+    exempt = 0
+    tiers: Counter = Counter()
+    order = {c: i for i, c in enumerate(PRIORITY)}
+    for n, v in enumerate(pool):
+        key = (v["chrom"], v["pos"], v["ref"], v["alt"])
+        info: Dict[str, Any] = {}
+        if key in unanswered:
+            tier, info["status"] = 4, "not looked up (batch failed or unanswered): not frequency-filtered"
+        elif key not in records or records[key] is None:
+            tier, info["status"] = 1, "not in MyVariant.info: no population frequency known (novel?)"
+        else:
+            rec = records[key]
+            af = af_summary(rec["groups"])
+            info.update(status="found", filter_af=af["filter_af"], af_source=af["source"], clinvar=rec["clinvar"],
+                        snpeff_impact=rec["impact"], effects=rec["effects"][:4], genes=rec["genes"][:3])
+            plp = clinvar_pathogenic(rec)
+            if af["filter_af"] is not None and af["filter_af"] > max_af:
+                if plp and af["filter_af"] <= BA1_AF and not clinvar_conflicting(rec):
+                    exempt += 1
+                    info["kept_because"] = f"ClinVar {'/'.join(plp)} (frequency {af['filter_af']:.3g} ≤ BA1 {BA1_AF:g})"
+                else:
+                    dropped.append((v, af["filter_af"]))
+                    continue
+            impact = rec["impact"]
+            in_pheno = any((pheno_genes.get(g) or {}).get("score", 0) > 0 for g in rec["genes"])
+            if plp or impact == "HIGH":
+                tier = 0
+            elif impact == "MODERATE" or impact is None or in_pheno \
+                    or any(e.startswith(_SPLICE_EFFECTS) for e in rec["effects"]):
+                tier = 1
+            elif impact == "LOW":
+                tier = 2
+            else:
+                tier = 3
+        info["tier"] = tier
+        v["prefilter"] = info
+        tiers[PREFILTER_TIERS[tier]] += 1
+        kept.append((tier, order.get(v["class"], 99), n, v))
+    for v in unqueried:
+        v["prefilter"] = {"tier": 4, "status": f"beyond --max-prefilter {max_prefilter}: not frequency-filtered"}
+        kept.append((4, order.get(v["class"], 99), len(kept), v))
+    # heterozygous candidates per snpEff gene: a dominant-class het above the dominant cut-off can still be
+    # half of a compound heterozygote, so it is only sent late when its gene has no second candidate
+    per_gene: Counter = Counter()
+    for _, _, _, v in kept:
+        if v["class"] in DOMINANT_CLASSES:
+            for g in (v["prefilter"].get("genes") or [])[:1]:
+                per_gene[g] += 1
+
+    def group(t: Tuple[int, int, int, Dict[str, Any]]) -> int:
+        tier, _, _, v = t
+        strong = v["class"] in STRONG_CLASSES
+        if tier == 0:
+            return 0
+        if tier == 4:
+            return 5 if strong else 6
+        if strong:
+            return 1
+        af = v["prefilter"].get("filter_af")
+        genes = (v["prefilter"].get("genes") or [])[:1]
+        doomed = af is not None and af > dom_af and not any(per_gene[g] >= 2 for g in genes)
+        if doomed:
+            v["prefilter"]["late"] = (f"frequency {af:.3g} is above the dominant cut-off {dom_af:g} and no second "
+                                      "candidate in the gene to pair with")
+            return 4
+        return 2 if tier == 1 else 3
+
+    kept.sort(key=lambda t: (group(t),) + t[:3])
+    survivors = [t[3] for t in kept]
+    res = got.result if got is not None else {"queried": 0, "batches": 0, "answered_batches": 0, "found": 0,
+                                               "not_found": 0, "unanswered": keys, "cached_batches": 0}
+    version = None
+    if meta is not None:
+        version = meta.result["versions"]
+    summary = {
+        "queried": res["queried"], "batches": res["batches"], "answered_batches": res["answered_batches"],
+        "cached_batches": res["cached_batches"], "found": res["found"], "not_in_myvariant": res["not_found"],
+        "not_looked_up": len(unanswered) + len(unqueried), "dropped_af_gt_max": len(dropped),
+        "kept_clinvar_exempt": exempt, "passed": len(survivors), "tiers": dict(tiers),
+        "beyond_max_prefilter": len(unqueried), "source_versions": version,
+        "answered_keys": res.get("answered_keys", res["queried"] - len(unanswered)),
+        # MyVariant's metadata names gnomAD 2.1.1 for both; on hg38 the genome AFs carry v3's ami/mid groups
+        "gnomad": (f"gnomAD v2.1.1 exomes (hg38 liftover) and v3 genomes via MyVariant.info"
+                   if assembly == "GRCh38" else "gnomAD v2.1.1 exomes and genomes via MyVariant.info")
+                  + (f" (metadata: gnomad {(version or {}).get('gnomad')})" if (version or {}).get("gnomad") else ""),
+        "rule": f"drop when max(gnomAD exome, genome, grpmax afr/amr/eas/nfe/sas) > --max-af {max_af:g}, unless "
+                f"ClinVar P/LP and ≤ {BA1_AF:g}; not found = kept; consequence only orders the VEP budget",
+        "sent": f"{res['queried']} variant keys (HGVS g., no sample data) to myvariant.info",
+    }
+    if dropped:
+        warnings.append(f"MyVariant prefilter: {len(dropped)} allele(s) removed as common ({summary['gnomad']}, "
+                        f"> --max-af {max_af:g}), e.g. "
+                        + ", ".join(f"{v['variant']} {af:.3g}" for v, af in dropped[:5]))
+    if len(unanswered) or unqueried:
+        warnings.append(f"MyVariant prefilter: {len(unanswered) + len(unqueried)} candidate(s) were NOT frequency-"
+                        f"checked ({len(unanswered)} in failed/unanswered batches, {len(unqueried)} beyond "
+                        f"--max-prefilter {max_prefilter}); they are kept, last in the VEP queue. Re-run the same "
+                        "command to resume: answered batches come from the on-disk cache")
+    return survivors, summary
+
+
+SIB_RECESSIVE = ("hom_recessive", "hom", "x_hemizygous")
+
+
+def _sibling_flags(cls: str, sibs: List[Dict[str, Any]], ctype: str = "auto") -> List[str]:
+    """Segregation in the proband's full siblings: an affected sib should share the genotype, an unaffected one not.
+
+    On X outside the PARs a sister and a brother are read differently: a brother's 1/1 is his one X (hemizygous),
+    and a heterozygous sister is a carrier, who may or may not be affected (X-inactivation), so neither her
+    being affected nor unaffected argues against an X-linked cause.
+    """
+    flags: List[str] = []
+    on_x = ctype == "x_nonpar"
+    for sb in sibs:
+        z, name, sex = sb["z"], sb["id"], sb.get("sex")
+        usable = z in CARRIER or sb.get("adequate_ref")
+        if not usable:
+            continue
+        if on_x and sex == "female" and z == "het" and cls in ("x_hemizygous", "hom_recessive", "hom"):
+            flags.append(f"{'affected' if sb['affected'] else 'unaffected' if sb['affected'] is False else ''} "
+                         f"sister {name} is a heterozygous carrier (on X a carrier sister may or may not be affected)"
+                         .replace("  ", " ").strip())
+            continue
+        if cls in SIB_RECESSIVE:
+            same = z in ("hom_alt", "hemi")
+            if sb["affected"] is True and not same:
+                flags.append(f"affected sibling {name} is {z.replace('_', '-')} here: does not share the genotype "
+                             "(against this variant as the cause, unless a phenocopy)")
+            elif sb["affected"] is False and same:
+                flags.append(f"unaffected sibling {name} has the same genotype ({z.replace('_', '-')}): against a "
+                             "fully penetrant cause")
+            elif sb["affected"] is True and same:
+                flags.append(f"shared with affected sibling {name}")
+        elif cls in DOMINANT_CLASSES:
+            carries = z in CARRIER
+            if sb["affected"] is True and not carries:
+                flags.append(f"affected sibling {name} does not carry it (adequate hom-ref call)")
+            elif sb["affected"] is True and carries:
+                flags.append(f"shared with affected sibling {name}"
+                             + (" — a de novo seen in two sibs points to parental germline mosaicism"
+                                if cls in ("de_novo", "possible_de_novo") else ""))
+            elif sb["affected"] is False and carries:
+                if on_x and sex == "male" and z in ("hemi", "hom_alt"):
+                    flags.append(f"unaffected brother {name} is hemizygous for it: against an X-linked cause with "
+                                 "full penetrance in males")
+                else:
+                    flags.append(f"unaffected sibling {name} also carries it (reduced penetrance, or not causal)")
+    return flags
+
+
+def triage(path: str, proband: Optional[str] = None, mother: Optional[str] = None, father: Optional[str] = None,
            sex: Optional[str] = None, max_af: float = 0.01, min_dp: int = 10, min_gq: int = 20,
            assembly: Optional[str] = None, genes: Optional[Sequence[str]] = None, hpo_genes: bool = False,
            case_dir: Optional[str] = None, max_annotate: int = 1500, out: Optional[str] = None,
            hpo_terms: Optional[Sequence[str]] = None, max_af_dominant: Optional[float] = None,
-           today: Optional[str] = None) -> Outcome:
+           today: Optional[str] = None, ped: Optional[str] = None, prefilter: str = "none",
+           max_prefilter: int = 50_000, s2f_top: int = 0, s2f_seconds: float = 180.0,
+           progress: Optional[Any] = None) -> Outcome:
     """Filter, annotate and rank the proband's variants. See module docstring and the zebra-reanalysis skill."""
+    import time
+
+    t_start = time.monotonic()
+    timings: "OrderedDict[str, float]" = OrderedDict()
+    t_mark = [t_start]
+
+    def lap(stage: str) -> None:
+        now = time.monotonic()
+        timings[stage] = round(now - t_mark[0], 2)
+        t_mark[0] = now
+        if progress:
+            progress(f"{stage}: {timings[stage]} s")
+
     warnings: List[str] = []
     sources: List[Dict[str, Any]] = []
     notes: List[str] = []
+    if prefilter not in ("none", "myvariant"):
+        raise UsageError("--prefilter must be none or myvariant")
+    if max_prefilter < 1:
+        raise UsageError("--max-prefilter must be at least 1")
+    if s2f_top < 0:
+        raise UsageError("--s2f-top must be >= 0")
     if sex not in (None, "male", "female"):
         raise UsageError("--sex must be male or female")
     if not 0 < max_af <= 1:
@@ -1546,6 +2204,13 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         _records.close()
     if not header.samples:
         raise UsageError("the VCF has no sample columns (no genotypes): triage needs at least the proband")
+    ped_info: Optional[Dict[str, Any]] = None
+    sibs: List[Tuple[str, Optional[bool], Optional[str]]] = []
+    if ped:
+        proband, mother, father, sex, ped_info, sibs = _resolve_ped(ped, header.samples, proband, mother, father,
+                                                                    sex, notes)
+    if not proband:
+        raise UsageError("--proband is required (or a --ped file naming one affected individual)")
     for role, s in (("proband", proband), ("mother", mother), ("father", father)):
         if s is not None and s not in header.samples:
             raise UsageError(f"{role} {s!r} is not a sample in the VCF (samples: {', '.join(header.samples[:20])})")
@@ -1569,6 +2234,17 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     if mode != "trio":
         notes.append(f"{mode} analysis: de novo variants cannot be called without both parents")
     sex_inference: Optional[Dict[str, Any]] = None
+    sex_check: Optional[Dict[str, Any]] = None
+    if sex is not None:
+        # B-P2-4: a given --sex is still checked against the genotypes; a disagreement
+        # usually means a sample-label or PED error, and every X call rests on it
+        sex_check = infer_sex(path, proband, assembly)
+        sex_check["given"] = sex
+        sex_check["agrees"] = None if sex_check["sex"] is None else sex_check["sex"] == sex
+        if sex_check["agrees"] is False:
+            warnings.append(f"--sex {sex} contradicts the proband's own genotypes, which look {sex_check['sex']} "
+                            f"({sex_check['basis']}): check the sample label, the PED file and the sex before "
+                            f"trusting any X call; X non-PAR calls were classed as {sex} because you said so")
     if sex is None:
         sex_inference = infer_sex(path, proband, assembly)
         if sex_inference["sex"]:
@@ -1618,6 +2294,9 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     pi, mi, fi = idx[proband], (idx[mother] if mother else None), (idx[father] if father else None)
     counts: "OrderedDict[str, int]" = OrderedDict((k, 0) for k in (
         "records", "alleles", "symbolic_skipped", "filter_pass", "proband_carries_alt", "quality_pass"))
+    sv_types: Counter = Counter()
+    sv_calls: List[Dict[str, Any]] = []
+    star_alleles = 0
     filtered_names: Counter = Counter()
     by_class_seen: Counter = Counter()
     stored: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
@@ -1628,9 +2307,23 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     no_gt = off_contig = 0
     chrom_lengths = CHROM_LENGTHS.get(assembly, {})
     de_novo_like = proband_hets_trio = 0
+    # in-memory bound per inheritance class while streaming (the VEP budget is applied later)
+    stream_cap = max_prefilter if prefilter == "myvariant" else max_annotate
+    weak_stored = 0
+    sib_idx = [(s, idx[s], aff, sx) for s, aff, sx in sibs]
+    from zebra import qc as qc_mod
+
     _, records = iter_records(path)
     for rec in records:
         counts["records"] += 1
+        if progress and counts["records"] % 200_000 == 0:
+            progress(f"read {counts['records']:,} records (chr{rec.chrom})")
+        for k, alt_raw in enumerate(rec.alts, 1):
+            if is_structural(alt_raw):
+                # B-P1-8: a CNV/SV allele is not an SNV/indel; it is named, never dropped silently
+                sv_types[sv_type(alt_raw, rec.info())] += 1
+                if len(sv_calls) < 50:
+                    sv_calls.append(sv_call(rec, k, pi))
         if not rec.fmt or "GT" not in rec.fmt:
             no_gt += 1
             continue
@@ -1640,6 +2333,8 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         for k, alt_raw in enumerate(rec.alts, 1):
             if is_symbolic(alt_raw):
                 counts["symbolic_skipped"] += 1
+                if alt_raw == "*":
+                    star_alleles += 1
                 continue
             counts["alleles"] += 1
             if rec.filter not in ("PASS", "."):
@@ -1695,16 +2390,36 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
             if dp is None:
                 flags.append("no depth in the proband call")
             ab = pcall.ab(k)
-            if pz == "het" and ab is not None and ab < 0.2:
+            mosaic = None
+            if pz == "het" and cls in ("de_novo", "possible_de_novo"):
+                ref_reads, alt_reads = pcall.reads(k)
+                mosaic = qc_mod.mosaic_assessment(ref_reads, alt_reads)
+                if mosaic and mosaic["possible_mosaic"]:
+                    flags.append(f"ALT fraction {mosaic['vaf']} (95% CI {mosaic['ci95'][0]}–{mosaic['ci95'][1]}, "
+                                 f"{mosaic['depth']} reads) is below a germline het: possible postzygotic mosaic "
+                                 "(or an artefact) — confirm in a second tissue")
+            if pz == "het" and ab is not None and ab < 0.2 and not (mosaic and mosaic["possible_mosaic"]):
                 flags.append(f"low allele balance {ab:.2f} (mosaic or artefact?)")
             by_class_seen[cls] += 1
             bucket = stored[cls]
-            if len(bucket) >= max_annotate:
-                # budget: never more than max_annotate per class are kept in
+            if len(bucket) >= stream_cap or (prefilter == "myvariant" and cls not in STRONG_CLASSES
+                                             and weak_stored >= max_prefilter):
+                # (with --prefilter, heterozygous classes beyond what MyVariant will be asked about are
+                # only counted: they would never be looked up, and they are what fills memory on a genome)
+                # budget: never more than this many per class are kept in
                 # memory, with or without a gene set (an exome-wide gene list
                 # over a WGS VCF would otherwise hold millions of dicts)
                 over_budget[cls] += 1
                 continue
+            if cls not in STRONG_CLASSES:
+                weak_stored += 1
+            sib_calls = []
+            for s_name, s_i, s_aff, s_sex in sib_idx:
+                scall = parse_call(rec.fmt, rec.sample_fields[s_i]) if s_i < len(rec.sample_fields) else None
+                sp = _parent(scall, k, min_dp, min_gq) or {"z": "missing", "adequate_ref": False, "why": []}
+                sib_calls.append({"id": s_name, "affected": s_aff, "sex": s_sex, "z": sp["z"],
+                                  "adequate_ref": sp["adequate_ref"],
+                                  "gt": _gt_text(scall, k)})
             bucket.append({
                 "chrom": rec.chrom, "pos": pos, "ref": ref, "alt": alt, "variant": f"{rec.chrom}-{pos}-{ref}-{alt}",
                 "vcf_id": rec.vid if rec.vid not in (".", "") else None, "class": cls, "origin": origin,
@@ -1716,6 +2431,7 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
                 "parent_ref_ok": _parent_ref_ok(mp, fp),
                 "gt": {"proband": _gt_text(pcall, k), "mother": _gt_text(mcall, k) if mother else None,
                        "father": _gt_text(fcall, k) if father else None},
+                "sibs": sib_calls, "mosaic": mosaic,
             })
     read_note = records.read_note()
     if read_note:
@@ -1727,6 +2443,21 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
                              "and complete (zebra vcf inspect reports the same count without refusing).")
         warnings.append(read_note)
     counts["malformed_lines"] = records.malformed
+    n_sv = sum(sv_types.values())
+    if n_sv:
+        counts["structural_alleles"] = n_sv
+        type_txt = ", ".join(f"{t} {n}" for t, n in sv_types.most_common())
+        examples = "; ".join(c["zebra_cnv"] for c in sv_calls if c.get("zebra_cnv"))[:600]
+        if counts["alleles"] == 0:
+            raise UsageError(
+                f"this is a CNV/SV VCF: all {n_sv} ALT allele(s) are symbolic ({type_txt}) and SNV/indel triage "
+                "cannot read them, so it would report 'no candidate' for a file it never assessed. Give each call "
+                "to `zebra cnv`" + (f", e.g. {examples}" if examples else " (chrom:start-end loss|gain)"))
+        warnings.append(f"{n_sv} symbolic CNV/SV allele(s) ({type_txt}) were NOT assessed: this triage reads SNVs "
+                        "and indels only. Give each call to `zebra cnv` (listed in result.structural_variants"
+                        + (f", e.g. {examples.split('; ')[0]}" if examples else "") + ")")
+    if star_alleles:
+        counts["spanning_deletion_alleles"] = star_alleles
     if no_gt:
         counts["records_without_gt"] = no_gt
         notes.append(f"{no_gt} record(s) carry no GT in FORMAT and were not genotyped (they are counted in "
@@ -1785,12 +2516,75 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         restriction["info_prefilter"] = {"dropped_af_gt_max": info_af_drop, "dropped_modifier_only": info_modifier_drop,
                                          "fields": annotations}
         restriction.setdefault("mode", "VCF INFO annotations")
-    if regions is None and not has_info_ann:
+    # B-P2-6 check runs before anything else leaves the machine (MyVariant, VEP)
+    ref_keys = [(v["chrom"], v["pos"], v["ref"], v["alt"]) for v in survivors_all]
+    ref_check_result: Optional[Dict[str, Any]] = None
+    if not build["guess"] and ref_keys:
+        # B-P2-6: VEP's region endpoint annotates whatever REF it is given, so a VCF read
+        # against the wrong build is annotated as if right. With no build in the header the
+        # given --assembly is checked against the reference bases before anything is scored.
+        refc = attempt(f"Ensembl reference check ({assembly})", lambda: ref_check(ref_keys, assembly), warnings)
+        if refc is None:
+            warnings.append(f"the build could not be verified (no build in the header and the reference check "
+                            f"failed): annotations assume --assembly {assembly}")
+        else:
+            sources.extend(refc.sources)
+            rc = refc.result
+            ref_check_result = rc
+            if rc["checked"] >= 5 and rc["mismatch"] / rc["checked"] >= 0.5:
+                raise UsageError(
+                    f"the VCF's REF bases do not match {assembly} at {rc['mismatch']} of {rc['checked']} sampled "
+                    f"positions (e.g. {'; '.join(rc['examples'][:3])}): the file is not on {assembly}. Pass the other "
+                    "--assembly (the header names no build), or check the file")
+            if rc["mismatch"]:
+                warnings.append(f"{rc['mismatch']} of {rc['checked']} sampled REF bases differ from {assembly} "
+                                f"({'; '.join(rc['examples'][:3])}): check the build and the file's normalisation")
+            if rc.get("asked") and rc["checked"] < rc["asked"] / 2:
+                warnings.append(f"Ensembl returned no reference base for {rc['asked'] - rc['checked']} of "
+                                f"{rc['asked']} sampled positions (past the end of a {assembly} chromosome, or an "
+                                "unknown contig): the build is not verified")
+    lap("read VCF, sex check, classify")
+    prefilter_info: Optional[Dict[str, Any]] = None
+    if prefilter == "myvariant":
+        survivors_all, prefilter_info = _myvariant_prefilter(
+            survivors_all, assembly, max_af, max_prefilter, (pheno or {}).get("genes") or {}, warnings, sources,
+            progress, dom_af=dom_af)
+        restriction["myvariant_prefilter"] = prefilter_info
+        restriction["mode"] = (restriction.get("mode", "whole file") + " + MyVariant.info frequency prefilter")
+        counts["myvariant_queried"] = prefilter_info["queried"]
+        counts["myvariant_pass"] = len(survivors_all)
+        lap("MyVariant prefilter")
+    elif regions is None and not has_info_ann:
         restriction["mode"] = "prioritised by inheritance class (no gene set, no INFO annotations)"
         warnings.append("no --genes/--hpo-genes and no annotations in the VCF: annotating at most "
-                        f"{max_annotate} variants, de novo / homozygous / hemizygous first")
+                        f"{max_annotate} variants, de novo / homozygous / hemizygous first. For a whole-exome "
+                        "reanalysis pass --prefilter myvariant (sends every quality-passing allele's chrom-pos-ref-"
+                        "alt, no sample data, to myvariant.info to drop common alleles first)")
     survivors = survivors_all
-    if len(survivors) > max_annotate or total_candidates > len(survivors_all):
+    if prefilter == "myvariant":
+        kept = survivors[:max_annotate]
+        cut = survivors[max_annotate:]
+        survivors = kept
+        counts["within_budget"] = len(kept)
+        never_read = sum(over_budget.values())
+        if cut:
+            by_tier = Counter(PREFILTER_TIERS[v["prefilter"]["tier"]] for v in cut)
+            by_cls = Counter(v["class"] for v in cut)
+            strong_cut = {k: n for k, n in by_cls.items() if k in STRONG_CLASSES}
+            restriction["skipped_over_budget"] = dict(by_cls)  # by class, as without --prefilter
+            restriction["skipped_over_budget_by_tier"] = dict(by_tier)
+            warnings.append(f"{len(cut)} rare candidate(s) that passed the MyVariant prefilter were NOT sent to VEP "
+                            f"(over --max-annotate {max_annotate}; the most plausible were sent first): "
+                            + ", ".join(f"{k} {n}" for k, n in by_tier.most_common())
+                            + (" — INCLUDING " + ", ".join(f"{k} {n}" for k, n in strong_cut.items())
+                               if strong_cut else "")
+                            + "; compound-heterozygous pairs among them can be missed; raise --max-annotate to "
+                              "annotate them too")
+        if never_read:
+            warnings.append(f"{never_read} candidate(s) beyond the in-memory cap of {stream_cap} per inheritance "
+                            "class were never looked at: " + ", ".join(f"{k} {n}" for k, n in over_budget.items())
+                            + " (a genome-scale VCF: restrict with --genes/--hpo-genes or use an annotated VCF)")
+    elif len(survivors) > max_annotate or total_candidates > len(survivors_all):
         kept = survivors[:max_annotate]
         skipped = total_candidates - len(kept)
         skipped_by = Counter()
@@ -1831,6 +2625,22 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     if unannotated:
         warnings.append(f"{unannotated} variants could not be annotated (VEP unavailable for them); they are kept, "
                         "unscored, at the end of the list")
+    # VEP's colocated record often cannot be matched to the allele (GRCh37 serves no clin_sig_allele, and an
+    # indel's rs record is written in another representation); MyVariant's ClinVar is keyed on the exact
+    # allele, so when VEP gives none it is used, and said so
+    mv_clinvar = 0
+    cv_version = (((prefilter_info or {}).get("source_versions") or {}).get("clinvar")) or "version not read"
+    for v in survivors:
+        a, pf = v.get("ann"), v.get("prefilter") or {}
+        if a is not None and not a.get("clinvar") and pf.get("clinvar"):
+            a["clinvar"] = list(pf["clinvar"])
+            a.setdefault("notes", []).append(f"ClinVar from MyVariant.info (allele-matched by HGVS g.; snapshot "
+                                             f"{cv_version}); VEP's colocated record did not name this allele")
+            mv_clinvar += 1
+    if mv_clinvar:
+        notes.append(f"{mv_clinvar} variant(s) carry ClinVar significance from MyVariant.info because VEP's "
+                     "colocated record could not be matched to the allele")
+    lap("VEP annotation")
 
     # ---- frequency: recessive threshold for everyone first (comp-het partners must survive it)
     def filt_af(v: Dict[str, Any]) -> Optional[float]:
@@ -2030,13 +2840,63 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
                         + (" …" if len(dom_dropped) > 8 else "")
                         + "; raise --max-af-dominant to keep them")
 
+    # ---- siblings (from the PED): segregation flags on the final class / pairing
+    if sibs:
+        by_variant = {v["variant"]: v for v in final}
+        for v in final:
+            if v.get("comphet") and v.get("partners"):
+                for sb in v.get("sibs") or []:
+                    if not (sb["z"] in CARRIER or sb.get("adequate_ref")):
+                        continue
+                    # the sibling's call at each partner, matched by sample id
+                    at_partners = [next((x for x in (by_variant.get(p_) or {}).get("sibs") or []
+                                         if x["id"] == sb["id"]), None) for p_ in v["partners"]]
+                    known = [x for x in at_partners if x and (x["z"] in CARRIER or x.get("adequate_ref"))]
+                    if sb["z"] not in CARRIER:
+                        both = False
+                    elif any(x["z"] in CARRIER for x in known):
+                        both = True
+                    elif len(known) < len(at_partners):
+                        v["flags"].append(f"sibling {sb['id']}: genotype at the partner allele unknown (missing or "
+                                          "below the depth/quality thresholds): segregation not assessed")
+                        continue
+                    else:
+                        both = False
+                    if sb["affected"] is False and both:
+                        v["flags"].append(f"unaffected sibling {sb['id']} carries this allele and its partner "
+                                          "(if in trans, against a fully penetrant recessive cause)")
+                    elif sb["affected"] is True and not both:
+                        v["flags"].append(f"affected sibling {sb['id']} does not carry both alleles of the pair")
+                    elif sb["affected"] is True and both:
+                        v["flags"].append(f"affected sibling {sb['id']} carries both alleles of the pair")
+            else:
+                v["flags"].extend(_sibling_flags(v["class"], v.get("sibs") or [], v.get("ctype", "auto")))
+
     # ---- scoring
     moi = gene_moi({v["gene"] for v in final if v.get("gene")})
     use_pheno = pheno is not None
     weights = dict(WEIGHTS) if use_pheno else {"variant": WEIGHTS["variant"] / (1 - WEIGHTS["phenotype"]),
                                                "inheritance": WEIGHTS["inheritance"] / (1 - WEIGHTS["phenotype"])}
-    for v in final:
+
+    def score(v: Dict[str, Any]) -> None:
         a = v.get("ann")
+        if a is None or a.get("impact") is None:
+            v["consequence_score"] = v["predictor_score"] = v["variant_score"] = None
+            v["support"] = []
+            v["score"] = None
+            return
+        sev = SEVERITY.get(a.get("impact"), 0.1)
+        pred, support = predictor_support(a, assembly)
+        v["consequence_score"] = sev
+        v["predictor_score"] = pred
+        v["support"] = support
+        v["variant_score"] = round(max(sev, pred), 3)
+        total = weights["variant"] * v["variant_score"] + weights["inheritance"] * v["inheritance_score"]
+        if use_pheno:
+            total += weights["phenotype"] * v["phenotype_score"]
+        v["score"] = round(total, 4)
+
+    for v in final:
         g = v.get("gene")
         v["moi"] = moi.get(g or "", [])
         # a variant paired with another in the same gene is scored as half of a
@@ -2056,23 +2916,31 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         else:
             v["phenotype_score"] = None
             v["phenotype_via"] = None
-        if a is None or a.get("impact") is None:
-            v["consequence_score"] = v["predictor_score"] = v["variant_score"] = None
-            v["support"] = []
-            v["score"] = None
-            continue
-        sev = SEVERITY.get(a.get("impact"), 0.1)
-        pred, support = predictor_support(a, assembly)
-        v["consequence_score"] = sev
-        v["predictor_score"] = pred
-        v["support"] = support
-        v["variant_score"] = round(max(sev, pred), 3)
-        total = weights["variant"] * v["variant_score"] + weights["inheritance"] * v["inheritance_score"]
-        if use_pheno:
-            total += weights["phenotype"] * v["phenotype_score"]
-        v["score"] = round(total, 4)
+        score(v)
     order = {c: i for i, c in enumerate(CLASS_ORDER)}
-    final.sort(key=lambda v: (v["score"] is None, -(v["score"] or 0), order.get(v["class"], 99), -(v.get("variant_score") or 0)))
+
+    def rank() -> None:
+        # the variant key breaks ties, so the ranking does not depend on the order candidates were annotated in
+        final.sort(key=lambda v: (v["score"] is None, -(v["score"] or 0), order.get(v["class"], 99),
+                                  -(v.get("variant_score") or 0), _chrom_sort_key(v["chrom"]), v["pos"], v["alt"]))
+
+    rank()
+    lap("frequency, compound heterozygotes, scoring")
+    s2f_info: Optional[Dict[str, Any]] = None
+    if s2f_top > 0 and final:
+        s2f_info = _s2f_rerank(final, assembly, s2f_top, s2f_seconds, warnings, sources, progress)
+        for v in final:
+            if v.get("s2f"):
+                score(v)
+        rank()
+        lap("S2F splice models (top candidates)")
+    for v in final[:TOP_RESULT]:
+        terms = set(((v.get("ann") or {}).get("consequence") or "").split(","))
+        reg = sorted(terms & REGULATORY_TERMS)
+        if reg:
+            v["flags"].append(f"non-coding regulatory candidate ({', '.join(reg)}): splice models do not cover this — "
+                              "run s2f_predict with --models alphagenome and the disease tissue (--ontology, the "
+                              "UBERON/CL term of the affected tissue); zebra does not choose a tissue")
     counts["ranked"] = len(final)
 
     # ---- outputs
@@ -2085,7 +2953,8 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
         "dominant_rule": ("as given (--max-af-dominant)" if dom_af_explicit else "min(--max-af, 0.0001)")
         + " for de_novo, possible_de_novo, inherited_het, het; --max-af for hom/comphet/hemizygous classes",
         "af_used": "max(gnomAD exome, gnomAD genome, grpmax-like over afr/amr/eas/nfe/sas) as served by Ensembl VEP;"
-                   " absent = passes",
+                   " absent = passes"
+                   + (f"; before VEP, the same rule at --max-af on {prefilter_info['gnomad']}" if prefilter_info else ""),
         "min_dp": min_dp, "min_gq": min_gq,
     }
     if tsv_path:
@@ -2098,12 +2967,36 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
     elif moi:
         sources.append(source_record("HPO annotations (local)", "genes_to_phenotype.txt", url="https://hpo.jax.org/data/annotations",
                                      note="gene inheritance modes"))
+    # what actually left the machine: keys in requests that were answered (and attempted, when different)
+    def _n(done: int, tried: int) -> str:
+        return f"{done}" + (f" (of {tried} attempted)" if tried != done else "")
+
+    sent = []
+    if ref_check_result:
+        sent.append(f"{ref_check_result.get('checked', 0)} positions (no alleles) to Ensembl /sequence/region")
+    if prefilter_info:
+        sent.append(f"{_n(prefilter_info['answered_keys'], prefilter_info['queried'])} quality-passing "
+                    "chrom-pos-ref-alt to MyVariant.info")
+    if counts.get("sent_to_vep"):
+        sent.append(f"{_n(counts.get('annotated', 0), counts['sent_to_vep'])} candidate chrom-pos-ref-alt to "
+                    "Ensembl VEP")
+    if s2f_info and s2f_info["asked"]:
+        sent.append(f"{_n(len(s2f_info['ran']), len(s2f_info['asked']))} to the Broad SpliceAI-lookup")
     sources.insert(0, source_record("local VCF", os.path.basename(path), url=None,
-                                    note="read on this machine; only candidate chrom-pos-ref-alt sent to VEP"))
+                                    note="read on this machine; sent: " + ("; ".join(sent) or "nothing")
+                                         + " (variant keys only: no sample names, genotypes or depths)"))
+    lap("outputs")
+    timings["total"] = round(time.monotonic() - t_start, 2)
     result = {
         "vcf": str(Path(os.path.expanduser(path)).resolve()),
         "proband": proband, "mother": mother, "father": father, "sex": sex, "mode": mode, "assembly": assembly,
         "sex_inferred": sex_inference if (sex_inference and sex_inference.get("sex")) else None,
+        "sex_check": ({k: sex_check[k] for k in ("given", "sex", "agrees", "basis")} if sex_check else None),
+        "ref_check": ref_check_result,
+        "pedigree": ped_info,
+        "sent_off_machine": sent,
+        "timings": dict(timings),
+        "s2f": s2f_info,
         "counts": dict(counts),
         "restriction": restriction,
         "thresholds": thresholds,
@@ -2113,17 +3006,26 @@ def triage(path: str, proband: str, mother: Optional[str] = None, father: Option
                     " against 0.5); phenotype = gene's relative Resnik score for the case's HPO profile"),
         "phenotype": ({k: pheno[k] for k in ("origin", "present", "excluded", "hpo_version", "method", "notes")}
                       if pheno else None),
-        "comphet_genes": comphet_genes,
+        # capped: the JSON envelope has a size budget and the TSV lists every pair
+        "comphet_genes": comphet_genes[:20],
+        "comphet_gene_count": len(comphet_genes),
         "candidates": [_row(v, i + 1) for i, v in enumerate(final[:TOP_RESULT])],
         "total_candidates": len(final),
         "tsv": str(Path(tsv_path).resolve()) if tsv_path else None,
         "notes": notes + ["SNV/indel VCF only: CNVs, repeat expansions, mtDNA (unless called), low-level mosaicism "
-                          "and poorly covered regions are not assessed"],
+                          "and poorly covered regions are not assessed"
+                          + (f" ({n_sv} symbolic CNV/SV allele(s) in this file were skipped: see "
+                             "structural_variants)" if n_sv else "")],
     }
+    if n_sv:
+        result["structural_variants"] = {"count": n_sv, "types": dict(sv_types), "calls": sv_calls[:20],
+                                         "listed": min(20, len(sv_calls)),
+                                         "next": "zebra cnv \"chrN:start-end loss|gain\" for each call"}
     text = _render(result, final)
     query = {"vcf": path, "proband": proband, "mother": mother, "father": father, "sex": sex, "max_af": max_af,
              "max_af_dominant": dom_af, "min_dp": min_dp, "min_gq": min_gq, "assembly": assembly,
-             "genes": len(genes or []), "hpo_genes": hpo_genes, "max_annotate": max_annotate, "out": tsv_path}
+             "genes": len(genes or []), "hpo_genes": hpo_genes, "max_annotate": max_annotate, "out": tsv_path,
+             "ped": ped, "prefilter": prefilter, "max_prefilter": max_prefilter, "s2f_top": s2f_top}
     return Outcome(result, sources=sources, warnings=warnings, text=text, query=query)
 
 
@@ -2131,29 +3033,43 @@ def _row(v: Dict[str, Any], rank: int) -> Dict[str, Any]:
     a = v.get("ann") or {}
     af = a.get("af") or {}
     hgvsc = a.get("hgvsc")
-    return {
+    row = {
         "rank": rank, "score": v.get("score"),
         "components": {"phenotype": v.get("phenotype_score"), "variant": v.get("variant_score"),
                        "consequence": v.get("consequence_score"), "predictors": v.get("predictor_score"),
-                       "inheritance": v.get("inheritance_score")},
+                       "inheritance": v.get("inheritance_score"),
+                       "splice_s2f": a.get("spliceai_lookup")},
         "variant": v["variant"], "gene": v.get("gene"), "transcript": a.get("transcript"), "mane": a.get("mane"),
         "hgvsc": hgvsc.split(":", 1)[1] if hgvsc and ":" in hgvsc else hgvsc,
         "hgvsp": (a.get("hgvsp") or "").split(":", 1)[-1].replace("%3D", "=") or None,
         "consequence": a.get("consequence"), "impact": a.get("impact"),
         "class": v["class"], "origin": v.get("origin"), "moi": v.get("moi"), "moi_fit": v.get("moi_fit"),
         "partners": v.get("partners"),
-        "gnomad": {"filter_af": af.get("filter_af"), "exome": af.get("exome"), "genome": af.get("genome"),
-                   "grpmax": af.get("grpmax"), "grpmax_group": af.get("grpmax_group"), "source": af.get("source"),
-                   "bound_af": af.get("bound_af"), "bound_basis": af.get("bound_basis"),
-                   "faf95": af.get("faf95"), "faf95_group": af.get("faf95_group")},
+        "gnomad": {k: x for k, x in (
+            ("filter_af", af.get("filter_af")), ("exome", af.get("exome")), ("genome", af.get("genome")),
+            ("grpmax", af.get("grpmax")), ("grpmax_group", af.get("grpmax_group")), ("source", af.get("source")),
+            ("bound_af", af.get("bound_af")), ("bound_basis", af.get("bound_basis")), ("faf95", af.get("faf95")),
+            ("faf95_group", af.get("faf95_group"))) if x is not None or k == "filter_af"},
         "af_exempt": v.get("af_exempt"), "comphet": v.get("comphet"),
         "phase": {k: x for k, x in (v.get("phase") or {}).items() if x not in (None, False)} or None,
-        "predictors": {"revel": a.get("revel"), "alphamissense": a.get("alphamissense"), "am_class": a.get("am_class"),
-                       "cadd": a.get("cadd"), "spliceai_max": a.get("spliceai_max")},
+        "predictors": {k: x for k, x in (("revel", a.get("revel")), ("alphamissense", a.get("alphamissense")),
+                                         ("am_class", a.get("am_class")), ("cadd", a.get("cadd")),
+                                         ("spliceai_max", a.get("spliceai_max"))) if x is not None},
         "support": v.get("support"), "clinvar": a.get("clinvar") or None, "rsid": a.get("rsid") or v.get("vcf_id"),
         "phenotype_via": v.get("phenotype_via"), "genotypes": {k: g for k, g in v["gt"].items() if g},
         "flags": v["flags"] + (a.get("notes") or []), "annotation": a.get("annotation"),
     }
+    # the v0.2 fields are present only when they say something (the envelope has a size budget)
+    extra = {
+        "s2f": v.get("s2f"),
+        "siblings": ({sb["id"]: f"{sb['gt'] or '.'} ({'affected' if sb['affected'] else 'unaffected' if sb['affected'] is False else 'status unknown'})"
+                      for sb in v.get("sibs") or []} or None),
+        "mosaic": v.get("mosaic") if (v.get("mosaic") or {}).get("possible_mosaic") else None,
+        "prefilter": ({k: x for k, x in (v.get("prefilter") or {}).items() if k in ("tier", "status", "filter_af",
+                                                                                  "kept_because", "late")} or None),
+    }
+    row.update({k: x for k, x in extra.items() if x is not None})
+    return row
 
 
 TSV_COLUMNS = ("rank", "score", "phenotype_score", "variant_score", "consequence_score", "predictor_score",
@@ -2161,7 +3077,8 @@ TSV_COLUMNS = ("rank", "score", "phenotype_score", "variant_score", "consequence
                "transcript", "mane", "hgvsc", "hgvsp", "gnomad_filter_af", "gnomad_exome_af", "gnomad_genome_af", "grpmax_af",
                "grpmax_group", "revel", "alphamissense", "am_class", "cadd", "spliceai_max", "support", "clinvar",
                "rsid", "proband_gt", "mother_gt", "father_gt", "allele_balance", "partners", "phenotype_via", "flags",
-               "annotation", "gnomad_bound_af", "gnomad_bound_basis", "gnomad_faf95", "af_exempt", "phase_set")
+               "annotation", "gnomad_bound_af", "gnomad_bound_basis", "gnomad_faf95", "af_exempt", "phase_set",
+               "spliceai_lookup", "pangolin_lookup", "siblings", "prefilter_tier")
 
 
 def _fmt(x: Any) -> str:
@@ -2186,7 +3103,7 @@ def _write_tsv(path: str, final: List[Dict[str, Any]], thresholds: Dict[str, Any
         fh.write("\t".join(TSV_COLUMNS) + "\n")
         for i, v in enumerate(final, 1):
             r = _row(v, i)
-            g, pr = r["gnomad"], r["predictors"]
+            g, pr = defaultdict(lambda: None, r["gnomad"]), defaultdict(lambda: None, r["predictors"])
             vals = [r["rank"], r["score"], r["components"]["phenotype"], r["components"]["variant"],
                     r["components"]["consequence"], r["components"]["predictors"], r["components"]["inheritance"],
                     r["variant"], r["gene"], r["class"], r["origin"], r["moi"], r["moi_fit"], r["consequence"],
@@ -2195,7 +3112,11 @@ def _write_tsv(path: str, final: List[Dict[str, Any]], thresholds: Dict[str, Any
                     pr["spliceai_max"], r["support"], r["clinvar"], r["rsid"], v["gt"].get("proband"),
                     v["gt"].get("mother"), v["gt"].get("father"), v.get("ab"), r["partners"], r["phenotype_via"],
                     r["flags"], r["annotation"], g["bound_af"], g["bound_basis"], g["faf95"], r["af_exempt"],
-                    (v.get("phase") or {}).get("ps")]
+                    (v.get("phase") or {}).get("ps"),
+                    ((v.get("s2f") or {}).get("spliceai") or {}).get("value"),
+                    ((v.get("s2f") or {}).get("pangolin") or {}).get("value"),
+                    [f"{k}={x}" for k, x in (r.get("siblings") or {}).items()],
+                    (v.get("prefilter") or {}).get("tier")]
             fh.write("\t".join(_fmt(x) for x in vals) + "\n")
 
 
@@ -2212,6 +3133,10 @@ def _render(result: Dict[str, Any], final: List[Dict[str, Any]]) -> str:
         steps.append(f"{c['in_gene_regions']} in {r.get('genes_placed')} gene regions ±{r.get('pad_bp')} bp")
     if "info_prefilter_pass" in c:
         steps.append(f"{c['info_prefilter_pass']} after INFO prefilter")
+    if "myvariant_pass" in c:
+        pf = result["restriction"].get("myvariant_prefilter") or {}
+        steps.append(f"{c['myvariant_queried']} looked up in MyVariant.info → {c['myvariant_pass']} rare or unknown"
+                     + (f" ({pf['gnomad'].split(' via ')[0]})" if pf.get("gnomad") else ""))
     if "within_budget" in c:
         steps.append(f"{c['within_budget']} within --max-annotate")
     steps += [f"{c['sent_to_vep']} sent to VEP", f"{c['annotated']} annotated",
@@ -2233,12 +3158,20 @@ def _render(result: Dict[str, Any], final: List[Dict[str, Any]]) -> str:
         hg = " ".join(x for x in (r["hgvsc"], r["hgvsp"]) if x)
         cls = r["class"] + (f"/{r['origin']}" if r["origin"] and r["origin"] != r["class"] else "")
         comp_txt = " | ".join(f"{lab} {comp[k]:.2f}" for k, lab in (("phenotype", "pheno"), ("variant", "var"),
-                                                                       ("inheritance", "inh")) if comp[k] is not None)
+                                                                       ("inheritance", "inh"), ("splice_s2f", "s2f"))
+                              if comp.get(k) is not None)
         score = f"{r['score']:.3f}" if r["score"] is not None else "  -  "
         lines.append(f"{r['rank']:>2}. {score} {r['gene'] or '-':<9} {r['variant']:<22} {hg[:48]:<48} "
                      f"{(r['consequence'] or '?').split(',')[0]} {r['impact'] or '?'}  {cls}  gnomAD {af_txt}  "
                      f"MOI {','.join(r['moi'] or []) or '?'} ({r['moi_fit']})  [{comp_txt}]")
         extra = list(r["support"] or [])
+        if r.get("s2f"):
+            sp, pg = r["s2f"].get("spliceai") or {}, r["s2f"].get("pangolin") or {}
+            extra.append("s2f: " + "; ".join(
+                f"{m} {x['score']} {x['value']:+.2f}" if x.get("status") == "ran" and isinstance(x.get("value"), (int, float))
+                else f"{m} {x.get('status')}" for m, x in (("SpliceAI", sp), ("Pangolin", pg)) if x))
+        if r.get("siblings"):
+            extra.append("sibs " + ", ".join(f"{k} {x}" for k, x in r["siblings"].items()))
         if r["clinvar"]:
             extra.append("ClinVar " + "/".join(r["clinvar"]))
         if r["partners"]:
@@ -2250,6 +3183,15 @@ def _render(result: Dict[str, Any], final: List[Dict[str, Any]]) -> str:
         lines.append(f"… {result['total_candidates'] - len(result['candidates'])} more in the TSV")
     if not result["candidates"]:
         lines.append("no candidate passed the filters (no candidate ≠ no genetic cause)")
+    sv = result.get("structural_variants")
+    if sv:
+        lines.append(f"CNV/SV: {sv['count']} symbolic allele(s) ({', '.join(f'{k} {v}' for k, v in sv['types'].items())}) "
+                     "NOT assessed by this triage — give each to `zebra cnv`:")
+        for c in sv["calls"][:5]:
+            lines.append(f"      {c['chrom']}:{c['pos']}-{c.get('end') or '?'} {c['svtype']} GT {c.get('gt') or '?'}"
+                         + (f"  → {c['zebra_cnv']}" if c.get("zebra_cnv") else ""))
     lines.append(f"TSV: {result['tsv'] or '(not written)'}")
+    if result.get("timings"):
+        lines.append("wall time: " + ", ".join(f"{k} {x:g} s" for k, x in result["timings"].items()))
     lines.extend(f"note: {n}" for n in result["notes"])
     return "\n".join(lines)

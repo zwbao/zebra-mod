@@ -253,6 +253,17 @@ def offline(monkeypatch):
     monkeypatch.setattr(clinvar, "search", search)
     monkeypatch.setattr(clinvar, "summaries", summaries)
     monkeypatch.setattr(V, "_litvar", no_litvar)
+    _no_contract_sources(monkeypatch)
+
+
+# The Chinese-frequency (W4) and MaveDB (W7) modules call the network; offline card tests replace
+# them, and the contract tests below put the real dispatchers back with fake modules behind them.
+_REAL_CHINA, _REAL_MAVE = getattr(V, "china_frequencies", None), getattr(V, "mavedb_scores", None)
+
+
+def _no_contract_sources(monkeypatch):
+    monkeypatch.setattr(V, "china_frequencies", lambda vcf, warnings, assembly="GRCh38": None, raising=False)
+    monkeypatch.setattr(V, "mavedb_scores", lambda gene, p, c, warnings: None, raising=False)
 
 
 def test_card_offline_scn1a(offline):
@@ -526,6 +537,7 @@ def test_F37_bare_gene_hgvs_warns_which_transcript_was_used(monkeypatch):
     monkeypatch.setattr(clinvar, "search", lambda *a, **k: Outcome({"term": "x", "count": 0, "ids": []}))
     monkeypatch.setattr(clinvar, "summaries", lambda uids: Outcome([]))
     monkeypatch.setattr(V, "_litvar", lambda text, gene: None)
+    _no_contract_sources(monkeypatch)  # the W4/W7 modules would go to the network
     out = V.card("SCN1A:c.2134C>T")
     assert any("you gave only a gene name" in w and "NM_001165963.4" in w and
                "c. numbering is transcript-specific" in w for w in out.warnings)
@@ -704,3 +716,603 @@ def test_live_E7_acmg_suggest_refuses_the_same_input(capsys):
     assert env["error"]["type"] == "UsageError"
     assert "does not match the GRCh38 reference" in env["error"]["message"]
     assert "traceback_tail" not in env["error"]
+
+
+# ===================================================================== v0.2 (W6)
+# One test per finding id in the v0.2 reviews; each was checked to fail on the unfixed code.
+
+import sys  # noqa: E402
+import types  # noqa: E402
+
+from zebra.core import UsageError  # noqa: E402
+
+
+def _text_fixture(*parts):
+    with open(os.path.join(FIX, *parts), encoding="utf-8") as fh:
+        return fh.read()
+
+
+# ---- E-5: MT variants went to the nuclear query as "MT" (HTTP 500 after ~25 s of retries)
+
+def test_e_5_mt_variant_is_sent_to_the_mitochondrial_query_as_M(monkeypatch):
+    seen = {}
+
+    def fake_graphql(query, variables, label):
+        seen["query"], seen["vars"] = query, variables
+        return Response("https://gnomad.broadinstitute.org/api", 200, "", "t", False), \
+            load("gnomad", "mito_m3243ag_r3.json")
+
+    monkeypatch.setattr(gnomad, "_graphql", fake_graphql)
+    out = gnomad.variant("MT", 3243, "A", "G", "GRCh38")
+    assert "mitochondrial_variant" in seen["query"] and "variant(variantId" not in seen["query"]
+    assert seen["vars"]["id"] == "M-3243-A-G"
+    r = out.result
+    assert r["mitochondrial"] is True and r["found"] is True
+    assert (r["ac_het"], r["ac_hom"], r["an"]) == (6, 0, 56383)
+    assert r["af_het"] == pytest.approx(6 / 56383) and r["max_heteroplasmy"] == pytest.approx(0.464)
+    assert "95-100%" in r["definitions"]
+    assert gnomad.variant_id("chrM", 3243, "a", "g") == "M-3243-A-G"
+
+
+def test_e_5_an_mt_allele_missing_from_the_callset_is_not_called_absent():
+    r = gnomad.parse_mito(None, "M-3243-A-C", "u")
+    assert r["found"] is False and r["absent"] is None and "not the same as AC = 0" in r["note"]
+
+
+@pytest.fixture
+def offline_mt(monkeypatch):
+    """card('m.3243A>G') with VEP, the reference, gnomAD mtDNA, MITOMASTER and ClinVar replayed."""
+    seq = "N" * 3300
+    seq = seq[:3242] + "A" + seq[3243:]
+
+    monkeypatch.setattr(ensembl, "vep", lambda text, assembly="GRCh38": Outcome(
+        load("vep", "mt_tl1_m3243ag_grch38.json"), sources=[{"db": "Ensembl VEP"}]))
+    monkeypatch.setattr(ensembl, "sequence", lambda c, s, e, a="GRCh38", strand=1: Outcome(
+        seq[s - 1:e], sources=[{"db": "Ensembl sequence"}]))
+    monkeypatch.setattr(gnomad, "_graphql", lambda q, v, l: (
+        Response("https://gnomad.broadinstitute.org/api", 200, "", "t", False), load("gnomad", "mito_m3243ag_r3.json")))
+    monkeypatch.setattr(clinvar, "search", lambda term, retmax=40: Outcome({"term": term, "count": 0, "ids": []}))
+    monkeypatch.setattr(clinvar, "summaries", lambda uids: Outcome([]))
+    monkeypatch.setattr(V, "_litvar", lambda text, gene: (_ for _ in ()).throw(ImportError("offline")))
+    monkeypatch.setattr(V, "request", lambda *a, **k: Response(V.MITOMASTER, 200,
+                                                                _text_fixture("mitomap", "mitomaster_3243G.tsv"), "t", False))
+    _no_contract_sources(monkeypatch)
+
+
+def test_e_5_mt_card_reports_mtdna_frequencies_and_no_pm2_inputs(offline_mt):
+    out = V.card("m.3243A>G")
+    r = out.result
+    assert r["gene"] == "MT-TL1"
+    pop = r["population"]
+    assert pop["mitochondrial"] is True and pop["ac_het"] == 6
+    a = r["acmg_inputs"]
+    assert a["mitochondrial"] is True and a["gnomad_ac"] is None and a["grpmax_af"] is None
+    assert a["mt_af_het"] == pytest.approx(6 / 56383)
+    assert not any("gnomAD unavailable" in w or "Invalid chromosome" in w for w in out.warnings)
+    assert "PM2_Supporting" not in [s["code"] for s in acmg.suggest(a, inheritance="AD")["suggested"]]
+
+
+# ---- CP1-4: heteroplasmy on input, MITOMAP
+
+def test_cp1_4_heteroplasmy_is_read_from_the_variant_text(offline_mt):
+    r = V.card("m.3243A>G 35%").result
+    h = r["mitochondrial"]["heteroplasmy"]
+    assert h["level"] == pytest.approx(0.35) and h["class"] == "heteroplasmic"
+    assert h["gnomad_max_heteroplasmy"] == pytest.approx(0.464)
+    assert r["acmg_inputs"]["heteroplasmy"] == pytest.approx(0.35)
+    assert V.card("m.3243A>G", heteroplasmy=0.35).result["mitochondrial"]["heteroplasmy"]["percent"] == 35.0
+
+
+def test_cp1_4_a_percentage_on_a_nuclear_variant_is_refused():
+    assert V.split_heteroplasmy("m.3243A>G heteroplasmy 35%") == ("m.3243A>G", pytest.approx(0.35))
+    with pytest.raises(UsageError, match="mtDNA heteroplasmy"):
+        V.split_heteroplasmy("7-117559590-ATCT-A 35%")
+    with pytest.raises(UsageError):
+        V.split_heteroplasmy("m.3243A>G 135%")
+
+
+def test_cp1_4_mitomap_row_is_parsed_with_its_status_caveat(offline_mt):
+    mm = V.card("m.3243A>G").result["mitochondrial"]["mitomap"]
+    assert mm["found"] is True and "MELAS" in mm["disease_reported"]
+    assert mm["listed_as_disease_mutation"] is True and mm["genbank_sequences_with_variant"] == 10
+    assert "Cfrm" in mm["status_note"]
+
+
+def test_cp1_4_mitomap_refuses_an_indel_without_a_request():
+    with pytest.raises(ValueError, match="single-base"):
+        V.mitomap(3243, "AT", "A")
+
+
+# ---- CP1-9: LitVar merged CFTR p.Gly542Arg (VUS) with p.Gly542Ter (842 PMIDs)
+
+def test_cp1_9_litvar_record_for_another_allele_is_excluded_and_counted(monkeypatch):
+    from zebra.sources import litvar
+
+    monkeypatch.setattr(litvar, "get_json", lambda url, source, params=None, **kw: Response(
+        url, 200, _text_fixture("litvar", "auto_cftr_g542r.json"), "t", False))
+    res = litvar.lookup("p.Gly542Arg", gene="CFTR").result
+    lit = V._litvar_compact(res, ["rs113993959"], "p.Gly542Arg", "NM_000492.4:c.1624G>A")
+    assert lit["records"] == [] and lit["pmid_count_max"] is None
+    assert lit["excluded"][0]["litvar_id"] == "litvar@rs113993959##"
+    assert lit["excluded"][0]["pmid_count"] == 842 and lit["pmids_excluded_max"] == 842
+    assert "another allele" in lit["excluded"][0]["reason"]
+    same = V._litvar_compact(res, ["rs113993959"], "p.Gly542Ter", None)
+    assert same["records"][0]["pmid_count"] == 842 and same["excluded"] == []
+
+
+# ---- probe P2: ClinVar review status as "n of 4 stars"
+
+def test_probe_clinvar_review_status_is_rendered_as_n_of_4_stars():
+    assert clinvar.stars_text(3).startswith("3 of 4 stars")
+    assert "4 = practice guideline" in clinvar.stars_text(3)
+    res = load("clinvar", "esummary_f508del_locus.json")["result"]
+    rec = next(clinvar.parse_summary(res[u]) for u in res["uids"] if res[u].get("accession") == "VCV000007105")
+    assert clinvar.compact(rec)["stars_text"].startswith("4 of 4 stars")
+
+
+# ---- E-13: survivors of the stream-E mutation run
+
+def test_e_13_clinvar_expert_panel_is_three_stars():
+    assert clinvar.stars("reviewed by expert panel") == 3
+
+
+def test_e_13_a_non_overlapping_mane_transcript_loses_without_most_severe():
+    tcs = [{"gene_symbol": "NEAR", "mane_select": "NM_1.1", "distance": 64,
+            "consequence_terms": ["upstream_gene_variant"], "biotype": "protein_coding"},
+           {"gene_symbol": "HERE", "consequence_terms": ["non_coding_transcript_exon_variant"], "biotype": "Mt_tRNA"}]
+    assert V.pick_transcript(tcs)["gene_symbol"] == "HERE"
+
+
+# ---- E-11: a wrong REF in a gene-only HGVS was reported as a source failure
+
+def test_e_11_vep_ref_mismatch_is_bad_input_not_a_source_failure(monkeypatch):
+    def boom(base, text, params):
+        raise SourceError("Ensembl VEP", "https://rest.ensembl.org/vep/human/hgvs/DMD:c.6439C>T", 400,
+                          '{"error":"Reference allele extracted from DMD:c.6439 (G) does not match reference allele '
+                          'given by HGVS notation DMD:c.6439C>T (C)"}')
+
+    monkeypatch.setattr(ensembl, "_vep_hgvs", boom)
+    with pytest.raises(UsageError, match="reference base in this HGVS"):
+        ensembl.vep("DMD:c.6439C>T")
+
+
+# ---- C-P2-8 / E-6: refetch paths never repaired the cache
+
+def test_c_p2_8_gnomad_refetch_writes_the_good_answer_back(monkeypatch):
+    calls = []
+
+    def fake_post(url, payload, source, **kw):
+        calls.append(kw)
+        if len(calls) == 1:
+            return Response(url, 200, json.dumps({"errors": [{"message": "Internal error"}]}), "t", True)
+        return Response(url, 200, json.dumps({"data": {}}), "t", False)
+
+    monkeypatch.setattr(gnomad, "post_json", fake_post)
+    gnomad._graphql("query {}", {}, "x")
+    assert calls[1].get("refresh") is True and calls[1].get("cache_ttl", 0) > 0
+
+
+def test_c_p2_8_clinvar_refresh_writes_the_good_answer_back(monkeypatch):
+    seen = {}
+
+    def fake_get(url, source, params=None, **kw):
+        seen.update(kw)
+        return Response(url, 200, "{}", "t", False)
+
+    monkeypatch.delenv("NCBI_API_KEY", raising=False)
+    monkeypatch.setattr(clinvar, "get_json", fake_get)
+    clinvar._eutils("esearch.fcgi", {"term": "x"}, refresh=True)
+    assert seen["refresh"] is True and seen["cache_ttl"] == clinvar.CACHE_TTL
+
+
+# ---- probe P2-3: suggest said "allele number not reported" for a site the card had called covered
+
+def test_sp_p2_3_pm2_basis_carries_the_card_coverage(offline):
+    a = V.card("NM_001165963.4:c.2134C>T").result["acmg_inputs"]
+    assert a["site_covered"] is True and "of samples at >=20x" in a["coverage_text"]
+    pm2 = next(s for s in acmg.suggest(a, inheritance="AD")["suggested"] if s["code"] == "PM2_Supporting")
+    assert "site covered" in pm2["basis"] and "allele number not reported" not in pm2["basis"]
+
+
+# ---- CP1-2: GRCh37 input annotated on the mapped GRCh38 coordinates too
+
+@pytest.fixture
+def offline_37(monkeypatch):
+    def vep(text, assembly="GRCh38"):
+        name = "scn1a_r712x_grch37" if assembly == "GRCh37" else "scn1a_r712x_grch38"
+        return Outcome(load("vep", f"{name}.json"), sources=[{"db": f"Ensembl VEP {assembly}"}])
+
+    def sequence(chrom, start, end, assembly="GRCh38", strand=1):
+        s = load("vep", f"scn1a_r712x_{assembly.lower()}.seq.json")
+        w = V.Window(s["chrom"], s["start"], s["seq"])
+        return Outcome(w.slice(max(start, w.start), min(end, w.end)), sources=[{"db": "Ensembl sequence"}])
+
+    def gvariant(chrom, pos, ref, alt, assembly="GRCh38"):
+        ds = "gnomad_r4" if assembly == "GRCh38" else "gnomad_r2_1"
+        body = load("gnomad", "scn1a_r712x_absent_r4.json")
+        return Outcome(gnomad.parse_variant(body["data"], ds, gnomad.variant_id(chrom, pos, ref, alt)),
+                       sources=[{"db": f"gnomAD {ds}"}])
+
+    monkeypatch.setattr(ensembl, "vep", vep)
+    monkeypatch.setattr(ensembl, "sequence", sequence)
+    monkeypatch.setattr(ensembl, "map_assembly", lambda c, s, e, a, b: Outcome(
+        {"chrom": "2", "start": s + (166042334 - 166898844), "end": e + (166042334 - 166898844), "strand": 1,
+         "assembly": b}, sources=[{"db": "Ensembl assembly map"}]))
+    monkeypatch.setattr(gnomad, "variant", gvariant)
+    monkeypatch.setattr(clinvar, "search", lambda term, retmax=40: Outcome({"term": term, "count": 0, "ids": []}))
+    monkeypatch.setattr(clinvar, "summaries", lambda uids: Outcome([]))
+    monkeypatch.setattr(V, "_litvar", lambda text, gene: (_ for _ in ()).throw(ImportError("offline")))
+    _no_contract_sources(monkeypatch)
+
+
+def test_cp1_2_grch37_input_is_also_annotated_on_grch38(offline_37):
+    out = V.card("NM_001165963.4:c.2134C>T", assembly="GRCh37")
+    r = out.result
+    assert r["builds"]["GRCh37"]["id"] == "2-166898844-G-A"
+    assert r["builds"]["GRCh38"]["id"] == "2-166042334-G-A"
+    assert r["grch38"]["population"]["dataset"] == "gnomad_r4"
+    assert r["acmg_inputs"]["frequency_source"].startswith("gnomAD v4 on the GRCh38 coordinates 2-166042334-G-A")
+    assert "spliceai" in (r["predictors"].get("filled_from_grch38") or [])
+    assert r["predictors"]["spliceai"] is not None
+    assert not any("GRCh37 VEP serves no AlphaMissense or SpliceAI" in w for w in out.warnings)
+
+
+def test_cp1_2_a_reference_that_changed_between_builds_is_not_carried_over(offline_37, monkeypatch):
+    real = ensembl.sequence
+
+    def seq(chrom, start, end, assembly="GRCh38", strand=1):
+        got = real(chrom, start, end, assembly, strand)
+        return Outcome("T" * len(got.result), sources=got.sources) if assembly == "GRCh38" else got
+
+    monkeypatch.setattr(ensembl, "sequence", seq)
+    out = V.card("NM_001165963.4:c.2134C>T", assembly="GRCh37")
+    assert "grch38" not in out.result
+    assert any("reference changed between builds" in w for w in out.warnings)
+    assert any("GRCh38 view could not be built" in w for w in out.warnings)
+
+
+# ---- contracts with W4 (Chinese frequencies) and W7 (MaveDB), behind guarded imports
+
+def _real_contracts(monkeypatch):
+    monkeypatch.setattr(V, "china_frequencies", _REAL_CHINA)
+    monkeypatch.setattr(V, "mavedb_scores", _REAL_MAVE)
+
+
+def test_contracts_missing_modules_are_named_gaps(offline, monkeypatch):
+    _real_contracts(monkeypatch)
+    # None in sys.modules makes `import` raise ImportError, as in a build without the module
+    monkeypatch.setitem(sys.modules, "zebra.sources.china_freq", None)
+    monkeypatch.setitem(sys.modules, "zebra.sources.mavedb", None)
+    out = V.card("NM_000492.4:c.1652G>A")
+    assert any(w.startswith("Chinese population frequencies: not checked") for w in out.warnings)
+    assert any(w.startswith("MaveDB functional scores: not checked") for w in out.warnings)
+    assert "population_china" not in out.result and "functional_scores" not in out.result
+
+
+def test_contracts_china_freq_and_mavedb_are_called_with_the_agreed_signatures(offline, monkeypatch):
+    calls = {}
+
+    china = types.ModuleType("zebra.sources.china_freq")
+
+    def lookup(chrom, pos, ref, alt, assembly="GRCh38"):
+        calls["china"] = (chrom, pos, ref, alt, assembly)
+        return Outcome({"datasets": [{"name": "ChinaMAP", "population": "Chinese", "af": 0.001, "ac": 20,
+                                      "an": 20000, "url": "https://example.invalid/chinamap"}],
+                        "checked": ["ChinaMAP", "NyuWa"]}, sources=[{"db": "ChinaMAP"}])
+
+    china.lookup = lookup
+    mave = types.ModuleType("zebra.sources.mavedb")
+
+    def mlookup(gene, hgvs_p=None, hgvs_c=None):
+        calls["mave"] = (gene, hgvs_p, hgvs_c)
+        return Outcome({"datasets": [{"urn": "urn:mavedb:00000001-a", "title": "CFTR DMS", "target": "CFTR"}],
+                        "scores": [{"urn": "urn:mavedb:00000001-a#1", "hgvs": "p.Gly551Asp", "score": -1.2,
+                                    "interpretation": "loss of function"}]}, sources=[{"db": "MaveDB"}])
+
+    mave.lookup = mlookup
+    _real_contracts(monkeypatch)
+    monkeypatch.setitem(sys.modules, "zebra.sources.china_freq", china)
+    monkeypatch.setitem(sys.modules, "zebra.sources.mavedb", mave)
+    out = V.card("NM_000492.4:c.1652G>A")
+    r = out.result
+    assert calls["china"] == ("7", 117587806, "G", "A", "GRCh38")
+    assert calls["mave"][0] == "CFTR" and calls["mave"][1] == "p.Gly551Asp"
+    assert r["population_china"]["datasets"][0]["name"] == "ChinaMAP"
+    assert r["functional_scores"]["mavedb"]["scores"][0]["score"] == -1.2
+    assert any(s.get("db") == "ChinaMAP" for s in out.sources) and any(s.get("db") == "MaveDB" for s in out.sources)
+    from zebra.commands.variant import render
+
+    text = render(r)
+    assert "Chinese cohorts: ChinaMAP" in text and "MaveDB: urn:mavedb:00000001-a#1" in text
+
+
+def test_contracts_a_failing_contract_module_is_a_warning_not_a_crash(offline, monkeypatch):
+    china = types.ModuleType("zebra.sources.china_freq")
+
+    def lookup(*a, **k):
+        raise SourceError("ChinaMAP", "https://example.invalid", 503, "down")
+
+    china.lookup = lookup
+    _real_contracts(monkeypatch)
+    monkeypatch.setitem(sys.modules, "zebra.sources.china_freq", china)
+    monkeypatch.setitem(sys.modules, "zebra.sources.mavedb", None)
+    out = V.card("NM_000492.4:c.1652G>A")
+    assert "population_china" not in out.result
+    assert any(w.startswith("Chinese population frequencies unavailable") for w in out.warnings)
+
+
+# ---- CP1-3: PVS1 / PS1 / PM5 inputs, end to end offline
+
+def test_cp1_3_judgement_inputs_for_scn1a_r712x(offline, monkeypatch):
+    from zebra.sources import clingen
+
+    t = load("ensembl", "transcript_ENST00000674923_scn1a.json")
+    monkeypatch.setattr(ensembl, "transcript", lambda tid, assembly="GRCh38": Outcome(
+        {"id": t["id"], "strand": t["strand"], "exons": [{"start": e["start"], "end": e["end"]} for e in t["Exon"]],
+         "translation": {"start": t["Translation"]["start"], "end": t["Translation"]["end"],
+                         "length": t["Translation"]["length"]}}, sources=[{"db": "Ensembl lookup"}]))
+    monkeypatch.setattr(clingen, "dosage", lambda s, assembly="GRCh38": Outcome(
+        {"haploinsufficiency": {"score": "3", "description": "Sufficient Evidence for Haploinsufficiency"},
+         "url": "https://example.invalid/scn1a"}))
+    monkeypatch.setattr(gnomad, "gene_constraint", lambda s, a="GRCh38", gene_id=None: Outcome(
+        gnomad.parse_constraint(load("gnomad", "constraint_scn1a.json")["data"]["gene"], "GRCh38")))
+    r = V.card("NM_001165963.4:c.2134C>T").result
+    ji = V.judgement_inputs(r).result
+    pv = ji["pvs1_inputs"]
+    assert pv["nmd"]["nmd_predicted"] is True and pv["nmd"]["ptc_exon"] == "15/29"
+    assert pv["lof_mechanism"]["clingen_hi_score"] == "3" and pv["lof_mechanism"]["gnomad_loeuf"] < 0.2
+    assert "not a PVS1 call" in pv["decision_tree"]
+    assert "ps1_pm5_inputs" not in ji
+
+
+def test_cp1_3_judgement_inputs_for_a_missense_list_the_codon_records(offline, monkeypatch):
+    res = load("clinvar", "esummary_cftr_codon551.json")["result"]
+    recs = [clinvar.parse_summary(res[u]) for u in res["uids"]]
+    seen = {}
+
+    def at_positions(chrom, start, end, assembly="GRCh38"):
+        seen["range"] = (chrom, start, end, assembly)
+        return Outcome(recs, sources=[{"db": "ClinVar"}])
+
+    monkeypatch.setattr(clinvar, "at_positions", at_positions)
+    r = V.card("NM_000492.4:c.1652G>A").result
+    ji = V.judgement_inputs(r).result
+    assert seen["range"] == ("7", 117587804, 117587808, "GRCh38")
+    cr = ji["ps1_pm5_inputs"]
+    # the card has no ClinVar match offline: G551D's own record is still not its own PS1 input
+    assert cr["ps1_inputs"] == []
+    assert "VCV000007142" in [x["vcv"] for x in cr["pm5_inputs"]]
+    assert "pvs1_inputs" not in ji
+
+
+# ---- live (v0.2)
+
+@pytest.mark.live
+def test_live_e_5_m3243ag_gets_mtdna_frequencies():
+    out = V.card("m.3243A>G 35%")
+    pop = out.result["population"]
+    assert pop["mitochondrial"] is True and pop["found"] is True and pop["ac_het"] >= 1 and pop["an"] > 50000
+    assert not any("Invalid chromosome" in w for w in out.warnings)
+    assert out.result["mitochondrial"]["heteroplasmy"]["level"] == pytest.approx(0.35)
+
+
+@pytest.mark.live
+def test_live_cp1_2_grch37_g542r_is_annotated_on_grch38():
+    r = V.card("7-117227832-G-A", assembly="GRCh37").result
+    assert r["builds"]["GRCh38"]["id"] == "7-117587778-G-A"
+    assert r["predictors"]["alphamissense"] is not None and r["grch38"]["population"]["dataset"] == "gnomad_r4"
+
+
+@pytest.mark.live
+def test_live_cp1_9_g542r_does_not_inherit_g542x_literature():
+    lit = V.card("NM_000492.4:c.1624G>A").result["literature"]["litvar"]
+    assert all(x.get("litvar_id") != "litvar@rs113993959##" for x in lit["records"])
+    assert any(x.get("litvar_id") == "litvar@rs113993959##" for x in lit["excluded"])
+
+
+# ---- adversarial review (round 1) findings on the code above
+
+def test_review_b_p1_2_mtdna_flags_hold_when_gnomad_does_not_answer(offline_mt, monkeypatch):
+    def down(q, v, l):
+        raise SourceError("gnomAD", "https://gnomad.broadinstitute.org/api", 503, "down")
+
+    monkeypatch.setattr(gnomad, "_graphql", down)
+    out = V.card("m.3243A>G 35%")
+    a = out.result["acmg_inputs"]
+    assert a["mitochondrial"] is True and a["heteroplasmy"] == pytest.approx(0.35) and a["gnomad_ac"] is None
+    s = acmg.suggest(a, inheritance="AD")
+    assert any("mtDNA" in n for n in s["not_assessed"]) and "PM2_Supporting" not in [x["code"] for x in s["suggested"]]
+    assert "not computed for mtDNA" in V.judgement_inputs(out.result).result["note"]
+    assert any("not absence" in w for w in out.warnings)
+
+
+def test_review_b_p1_3_an_rsid_query_is_not_gene_filtered(monkeypatch):
+    from zebra.sources import litvar
+
+    row = [{"_id": "litvar@rs199474657##", "rsid": "rs199474657", "gene": ["MT-ND1", "MT-ND2"], "hgvs": "p.A3243G",
+            "name": "p.A3243G", "pmids_count": 96}]
+    monkeypatch.setattr(litvar, "get_json", lambda url, source, params=None, **kw: Response(url, 200, json.dumps(row), "t", False))
+    res = litvar.lookup("rs199474657", gene="MT-TL1").result
+    assert [m["litvar_id"] for m in res["matches"]] == ["litvar@rs199474657##"]
+
+
+@pytest.mark.parametrize("behaviour", ["raise_runtime", "raise_usage", "return_tuple", "fail_import"])
+def test_review_b_p1_4_any_failure_of_a_contract_module_is_a_named_gap(offline, monkeypatch, behaviour):
+    _real_contracts(monkeypatch)
+    monkeypatch.setitem(sys.modules, "zebra.sources.mavedb", None)
+    if behaviour == "fail_import":
+        real_import_module = V.importlib.import_module
+
+        def import_module(name):
+            if name == "zebra.sources.china_freq":
+                raise RuntimeError("broken at import")
+            return real_import_module(name)
+
+        monkeypatch.setattr(V.importlib, "import_module", import_module)
+    else:
+        china = types.ModuleType("zebra.sources.china_freq")
+
+        def lookup(*a, **k):
+            if behaviour == "raise_runtime":
+                raise RuntimeError("boom")
+            if behaviour == "raise_usage":
+                raise UsageError("REF differs from the reference")
+            return ("not", "an outcome")
+
+        china.lookup = lookup
+        monkeypatch.setitem(sys.modules, "zebra.sources.china_freq", china)
+    out = V.card("NM_000492.4:c.1652G>A")
+    assert "population_china" not in out.result
+    assert any(w.startswith("Chinese population frequencies: not") for w in out.warnings), out.warnings
+
+
+def test_review_b_p1_4_gtex_failure_is_a_named_gap_in_the_gene_card(monkeypatch):
+    from zebra.sources import gene as gene_src
+
+    gtex = types.ModuleType("zebra.sources.gtex")
+    gtex.top_tissues = lambda symbol, n=10: (_ for _ in ()).throw(RuntimeError("GTEx parser broke"))
+    monkeypatch.setitem(sys.modules, "zebra.sources.gtex", gtex)
+    monkeypatch.setattr(gene_src, "hgnc", lambda s: Outcome({"symbol": "SCN1A", "hgnc_id": None}))
+    monkeypatch.setattr(gene_src, "_run", lambda tasks: {"gtex": (tasks["gtex"][1](), [])})
+    out = gene_src.card("SCN1A")
+    assert "expression" not in out.result
+    assert any("GTEx expression: not checked — RuntimeError" in w for w in out.warnings)
+
+
+def test_review_b_p1_5_grch37_judgement_inputs_use_one_transcript_throughout(monkeypatch):
+    seen = {}
+    t = load("ensembl", "transcript_ENST00000674923_scn1a.json")
+
+    def transcript(tid, assembly="GRCh38"):
+        seen["tid"], seen["asm"] = tid, assembly
+        return Outcome({"id": t["id"], "strand": t["strand"],
+                        "exons": [{"start": e["start"], "end": e["end"]} for e in t["Exon"]],
+                        "translation": {"start": t["Translation"]["start"], "end": t["Translation"]["end"],
+                                        "length": t["Translation"]["length"]}})
+
+    monkeypatch.setattr(ensembl, "transcript", transcript)
+    from zebra.sources import clingen
+    monkeypatch.setattr(clingen, "dosage", lambda s, assembly="GRCh38": Outcome(None))
+    monkeypatch.setattr(gnomad, "gene_constraint", lambda s, a="GRCh38", gene_id=None: Outcome(None))
+    r = {"assembly": "GRCh37", "gene": "SCN1A", "vcf": {"chrom": "2", "pos": 166898844, "ref": "G", "alt": "A"},
+         "transcript": {"ensembl": "ENST00000303395.4"}, "hgvs": {"p": "p.Arg712Ter"},
+         "consequence": {"terms": ["splice_donor_variant"], "intron": "12/25"}, "acmg_inputs": {},
+         "grch38": {"vcf": {"chrom": "2", "pos": 166042334, "ref": "G", "alt": "A"},
+                    "transcript": {"ensembl": "ENST00000674923"}, "consequence_terms": ["splice_donor_variant"],
+                    "intron": "15/28", "hgvsp": None}}
+    pv = V.judgement_inputs(r).result["pvs1_inputs"]
+    assert seen == {"tid": "ENST00000674923", "asm": "GRCh38"}
+    assert pv["canonical_splice_site"]["intron"] == "15/28" and pv["canonical_splice_site"]["exon_affected"] == "15/29"
+
+
+def test_review_b_p1_6_mavedb_interpretation_dict_is_rendered_not_dumped():
+    from zebra.commands.variant import render
+
+    r = {"input": "x", "assembly": "GRCh38", "consequence": {}, "predictors": {}, "acmg_inputs": {},
+         "functional_scores": {"mavedb": {"datasets": [{}] * 7, "datasets_searched": ["a"] * 6, "scores": [
+             {"urn": "urn:mavedb:1", "hgvs": "p.Gly551Asp", "score": -1.2,
+              "interpretation": {"label": "Functionally abnormal", "acmg_criterion": "PS3",
+                                 "acmg_evidence_strength": "STRONG", "source": "MaveDB primary score calibration"}}]}}}
+    text = render(r)
+    assert "(Functionally abnormal; calibration says PS3 STRONG)" in text and "{'" not in text
+    r["functional_scores"]["mavedb"]["scores"] = []
+    assert "in the 6 score set(s) searched" in render(r)
+
+
+def test_review_b_p2_heteroplasmy_on_an_rsid_or_mt_hgvs_is_deferred_to_the_card():
+    assert V.split_heteroplasmy("rs199474657 35%") == ("rs199474657", pytest.approx(0.35))
+    assert V.split_heteroplasmy("NC_012920.1:m.3243A>G 35%")[1] == pytest.approx(0.35)
+
+
+def test_review_b_p2_mitomap_checks_position_allele_and_reference(monkeypatch):
+    tsv = _text_fixture("mitomap", "mitomaster_3243G.tsv")
+    monkeypatch.setattr(V, "request", lambda *a, **k: Response(V.MITOMASTER, 200, tsv, "t", False))
+    assert V.mitomap(3243, "A", "G").result["found"] is True
+    assert V.mitomap(3243, "A", "C").result["found"] is False  # another allele: the row is not used
+    assert V.mitomap(3244, "A", "G").result["found"] is False  # another position
+    with pytest.raises(ValueError, match="reference base"):
+        V.mitomap(3243, "C", "G")
+    out = V.mitomap(3243, "A", "G")
+    assert out.sources[0]["url"] == V.MITOMASTER
+    header, row = tsv.splitlines()[0].split("\t"), tsv.splitlines()[1].split("\t")
+    drop = [i for i, h in enumerate(header) if h not in ("is_mmut", "is_rtmut")]
+    trimmed = "\t".join(header[i] for i in drop) + "\n" + "\t".join(row[i] for i in drop) + "\n"
+    monkeypatch.setattr(V, "request", lambda *a, **k: Response(V.MITOMASTER, 200, trimmed, "t", False))
+    assert V.mitomap(3243, "A", "G").result["listed_as_disease_mutation"] is None
+
+
+def test_review_b_p2_mtdna_skips_of_china_and_mavedb_are_named(offline_mt, monkeypatch):
+    _real_contracts(monkeypatch)
+    out = V.card("m.3243A>G")
+    assert any(w.startswith("Chinese population frequencies: not checked for an mtDNA variant") for w in out.warnings)
+    assert any(w.startswith("MaveDB functional scores: not checked for an mtDNA variant") for w in out.warnings)
+
+
+def test_review_b_p2_hg19_chrm_on_grch37_is_warned_about(offline_mt):
+    out = V.card("chrM-3243-A-G", assembly="GRCh37")
+    assert any("Yoruba" in w and "NC_012920" in w for w in out.warnings)
+
+
+def test_review_b_gaps_parse_mito_absent_flag_and_population_order():
+    v = load("gnomad", "mito_m3243ag_r3.json")["data"]["mitochondrial_variant"]
+    r = gnomad.parse_mito(v, "M-3243-A-G", "u")
+    assert r["absent"] is False and [p["id"] for p in r["populations"][:2]] == ["afr", "nfe"]
+    zero = dict(v, ac_het=0, ac_hom=0)
+    assert gnomad.parse_mito(zero, "M-3243-A-G", "u")["absent"] is True
+
+
+def test_review_b_gaps_map_assembly_refuses_split_reverse_and_resized_mappings(monkeypatch):
+    def answer(maps):
+        return lambda url, source, **kw: Response(url, 200, json.dumps({"mappings": maps}), "t", False)
+
+    one = {"original": {}, "mapped": {"seq_region_name": "7", "start": 100, "end": 100, "strand": 1}}
+    monkeypatch.setattr(ensembl, "get_json", answer([one]))
+    assert ensembl.map_assembly("7", 50, 50).result["start"] == 100
+    for maps in ([one, one], [dict(one, mapped=dict(one["mapped"], strand=-1))],
+                 [dict(one, mapped=dict(one["mapped"], end=105))]):
+        monkeypatch.setattr(ensembl, "get_json", answer(maps))
+        with pytest.raises(ValueError):
+            ensembl.map_assembly("7", 50, 50)
+
+
+def test_review_b_gaps_clinvar_range_search_uses_the_build_field(monkeypatch):
+    terms = []
+    monkeypatch.setattr(clinvar, "search", lambda term, retmax=40: (terms.append(term),
+                        Outcome({"term": term, "count": 0, "ids": []}))[1])
+    monkeypatch.setattr(clinvar, "summaries", lambda uids: Outcome([]))
+    clinvar.at_positions("7", 117227834, 117227830, "GRCh37")
+    clinvar.at_positions("7", 117587804, 117587808, "GRCh38")
+    assert terms == ["7[CHR] AND 117227830:117227834[C37]", "7[CHR] AND 117587804:117587808[CPOS]"]
+
+
+def test_review_b_gaps_ensembl_transcript_parses_the_real_lookup(monkeypatch):
+    text = _text_fixture("ensembl", "transcript_ENST00000674923_scn1a.json")
+    seen = {}
+
+    def get(url, source, params=None, **kw):
+        seen["url"], seen["params"] = url, params
+        return Response(url, 200, text, "t", False)
+
+    monkeypatch.setattr(ensembl, "get_json", get)
+    t = ensembl.transcript("ENST00000674923.1").result
+    assert seen["url"].endswith("/lookup/id/ENST00000674923") and seen["params"] == {"expand": 1}
+    assert t["strand"] == -1 and len(t["exons"]) == 29 and t["translation"]["length"] == 2009
+
+
+def test_eval_bare_c_change_with_a_gene_is_read_as_gene_hgvs(monkeypatch):
+    """A report's "SCN1A c.2134C>T" arrives as variant "c.2134C>T" plus gene "SCN1A": it is annotated, not refused."""
+    from zebra.sources import ensembl
+    from zebra.sources import variant as V
+
+    seen = []
+
+    def fake_vep(text, assembly):
+        seen.append(text)
+        raise RuntimeError("stop here")
+
+    monkeypatch.setattr(ensembl, "vep", fake_vep)
+    try:
+        V.card("c.2134C>T", gene="SCN1A")
+    except RuntimeError:
+        pass
+    assert seen == ["SCN1A:c.2134C>T"]

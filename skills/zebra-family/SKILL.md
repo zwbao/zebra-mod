@@ -28,10 +28,12 @@ Write a one-page list: what happened since last visit (from the case), the 3–5
 ## Support and care
 
 - Patient organisations and expert centres: from `disease_card` (Orphanet) and literature; give names and links as returned. Unknown → say how to find them (Orphanet, NORD, EURORDIS; in China the 国家罕见病诊疗协作网 hospitals).
-- China: `mcp__zebra-mod__china_rare` tells whether the disease is on the national rare disease lists (第一批 2018 / 第二批 2023), which matters for specialist access and policy; drug reimbursement and hospital lists not returned by a tool are "please check with the hospital / official sources".
+- China: `mcp__zebra-mod__china_rare` tells whether the disease is on the national rare disease lists (第一批 2018 / 第二批 2023) — `qualified` means only a subtype is listed, `possible` means "closest entries to check", not a match. `china_rare` with `query: "hospitals"` and the family's `province` lists the 国家罕见病诊疗协作网 hospitals there, lead hospitals first. `mcp__zebra-mod__access` gives a drug's approval in China (from official documents bundled with zebra) and its reimbursement (医保目录, with the restriction text verbatim). What no tool returned is "please check with the hospital / official sources".
 - Feelings are real: acknowledge the diagnostic odyssey; do not dismiss fear with statistics; suggest support (organisations, counselling) without pushing.
 
 Hazards (drugs, anaesthesia, procedures) and urgent red flags come from `zebra-safety`; put them in the visit-preparation page.
+
+Before a follow-up visit, `mcp__zebra-mod__case_recheck` says what changed since the last check (a reclassified variant, a new trial, new papers); a change goes into the visit page as a question for the doctors, never as news.
 
 ## Never
 

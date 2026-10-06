@@ -1,0 +1,13 @@
+{
+ "built_by": "tools/aso/fetch_fixtures.py",
+ "bytes": 31459,
+ "characters": 31459,
+ "method": "GET",
+ "name": "scores_brca1_sge_head",
+ "request_body": null,
+ "retrieved_at": "2026-10-06T11:13:24+00:00",
+ "sha256": "1ca5710eb83dc64c3b210b6e7fdd6281c71049c5f5076852179b14b94d1f5d60",
+ "status": 200,
+ "url": "https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000097-0-2/scores?start=0&limit=200",
+ "written_at": "2026-10-06T11:13:24+00:00"
+}
