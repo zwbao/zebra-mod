@@ -41,3 +41,26 @@ def test_a_p1_5_every_variant_kind_the_tool_offers_is_accepted_by_the_case(tmp_p
     assert set(kinds) == set(case_mod.VARIANT_KINDS)
     for alias, kind in case_mod.KIND_ALIASES.items():
         assert case_mod.check_variant(kind=alias, description="x")["kind"] == kind
+
+
+def test_a_p2_6_bash_zebra_runs_under_the_configured_python(tmp_path):
+    """`zebra` typed in Bash re-runs itself under ZEBRA_PYTHON, once, when that is another interpreter."""
+    import os
+    import subprocess
+    import sys
+
+    fake = tmp_path / "py"
+    fake.write_text("#!/bin/sh\necho REEXEC \"$ZEBRA_REEXEC\" \"$@\"\n")
+    fake.chmod(0o755)
+    zebra = str(Path(__file__).resolve().parent.parent / "bin" / "zebra")
+    env = {**os.environ, "ZEBRA_PYTHON": str(fake)}
+    env.pop("ZEBRA_REEXEC", None)
+    out = subprocess.run([sys.executable, zebra, "--version"], env=env, capture_output=True, text=True, timeout=60)
+    assert out.stdout.startswith("REEXEC 1 ") and out.stdout.rstrip().endswith("--version")
+    env["ZEBRA_REEXEC"] = "1"  # already re-run: never again
+    out = subprocess.run([sys.executable, zebra, "--version"], env=env, capture_output=True, text=True, timeout=60)
+    assert out.stdout.startswith("zebra ")
+    env = {**os.environ, "ZEBRA_PYTHON": str(tmp_path / "missing")}
+    env.pop("ZEBRA_REEXEC", None)
+    out = subprocess.run([sys.executable, zebra, "--version"], env=env, capture_output=True, text=True, timeout=60)
+    assert out.stdout.startswith("zebra ")

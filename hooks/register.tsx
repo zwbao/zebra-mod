@@ -73,12 +73,12 @@ export const register: Register = (on, options) => {
           : `zebra-mod: ${python} not found; set the plugin's python option (needs Python 3.9+)`)
       }
 
-      // A case is adopted only when this directory IS one, or lies inside the one
-      // remembered for it. A case is never inherited from another project or session.
+      // A case is adopted only when this directory is one or lies inside one, or when it was
+      // the case last used in this directory. A case is never inherited from another project.
       const held = await read($, casePath)
       let active: string | null = held
       if (active === null) {
-        const own = await caseAt($, e.cwd)
+        const own = (await caseAt($, e.cwd)) ?? (await enclosingCase($, e.cwd))
         if (own) active = own
         else {
           const remembered = await rememberedFor($, e.cwd)
@@ -416,6 +416,19 @@ async function caseAt($: EngineInterface, dir: string): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+/** The case folder this directory lies inside (a session started in <case>/records), up to four levels up. */
+async function enclosingCase($: EngineInterface, cwd: string): Promise<string | null> {
+  let dir = cwd.replace(/\/+$/, '')
+  for (let i = 0; i < 4; i++) {
+    const parent = dir.slice(0, dir.lastIndexOf('/'))
+    if (!parent || parent === dir) return null
+    const found = await caseAt($, parent)
+    if (found) return found
+    dir = parent
+  }
+  return null
 }
 
 /** The case last used in this working directory, if any. Cases are never shared between projects. */

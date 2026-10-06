@@ -40,13 +40,30 @@ function forms(text: string): { spaced: string; tight: string; digits: string } 
 
 const HAS_CJK = /[㐀-鿿豈-﫿]/
 
-/** Every string VALUE in the input, keys never: a key like "variant" must not match an identifier. */
+const MAX_DEPTH = 12
+const MAX_LEAVES = 5000
+
+/**
+ * Every string in the input: values, and the keys of free-form objects (another server's
+ * `{ data: { "Zhang Wei": 1 } }` carries the name in a key). A key is checked as a whole value,
+ * never joined to its neighbours, so a schema key such as "variant" matches nothing.
+ * Past MAX_DEPTH or MAX_LEAVES the input is too large to read in full: `TOO_DEEP` is returned
+ * among the leaves so the caller refuses instead of passing what it did not read.
+ */
+export const TOO_DEEP = '\u0000zebra:unread'
 function leaves(value: unknown, depth = 0, out: string[] = []): string[] {
-  if (depth > 8 || out.length > 2000) return out
+  if (depth > MAX_DEPTH || out.length > MAX_LEAVES) {
+    if (out[out.length - 1] !== TOO_DEEP) out.push(TOO_DEEP)
+    return out
+  }
   if (typeof value === 'string') out.push(value)
   else if (Array.isArray(value)) for (const v of value) leaves(v, depth + 1, out)
-  else if (value && typeof value === 'object') for (const v of Object.values(value)) leaves(v, depth + 1, out)
-  else if (typeof value === 'number' || typeof value === 'boolean') out.push(String(value))
+  else if (value && typeof value === 'object') {
+    for (const [k, v] of Object.entries(value)) {
+      if (!/^[a-z][a-z0-9_]*$/.test(k)) out.push(k) // a key that is not an identifier-shaped field name
+      leaves(v, depth + 1, out)
+    }
+  } else if (typeof value === 'number' || typeof value === 'boolean') out.push(String(value))
   return out
 }
 
@@ -55,18 +72,47 @@ const CN_RESIDENT_ID = /(?<![\d])[1-9]\d{5}(?:18|19|20)\d{2}(?:0[1-9]|1[0-2])(?:
 // Separators inside are allowed; a letter next to it is not, so rs13812345678 is a variant id
 const CN_MOBILE = /(?<![a-z0-9])(?:\+?0{0,2}86[\s-]?)?1[3-9]\d(?:[\s-]?\d){8}(?![\s-]?\d)(?![a-z0-9])/
 const EMAIL = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/
-// user@host in an ssh-family command or a git remote is not a person's address
-const HOST_LOGIN = /\b(?:ssh|scp|sftp|rsync|git|mosh|ansible|kubectl)\b|git@|@(?:github|gitlab|bitbucket)\.com\b/
 
-function dateRenderings(identifier: string): string[] {
-  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(identifier.trim())
-  if (!m) return []
-  const y = m[1] as string
-  const mo = m[2] as string
-  const d = m[3] as string
-  const mm = mo.padStart(2, '0')
-  const dd = d.padStart(2, '0')
-  return [`${y}${mm}${dd}`, `${y}-${mm}-${dd}`, `${y}/${mm}/${dd}`, `${y}.${mm}.${dd}`, `${y}年${mo}月${d}日`]
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
+  'november', 'december']
+
+/** [year, month, day] readings of a registered date; d/m/y and m/d/y are both kept when ambiguous. */
+function dateParts(identifier: string): Array<[string, number, number]> {
+  const t = identifier.trim()
+  const ymd = /^(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?$/.exec(t)
+  if (ymd) return [[ymd[1] as string, Number(ymd[2]), Number(ymd[3])]]
+  const xy = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(t)
+  if (!xy) return []
+  const a = Number(xy[1])
+  const b = Number(xy[2])
+  return [[xy[3] as string, b, a], [xy[3] as string, a, b]] // day-month-year, month-day-year
+}
+
+/**
+ * Patterns for a registered date in the ways people write one: 2019-03-02, 2019/3/2, 20190302,
+ * 2019年3月2日, 02/03/2019, 3/2/2019, March 2, 2019, 2 Mar 2019. Digit boundaries on both sides,
+ * so the same digits inside a coordinate or another date (12 March) never match.
+ */
+function dateMatchers(identifier: string): RegExp[] {
+  const out: RegExp[] = []
+  for (const [y, m, d] of dateParts(identifier)) {
+    if (m < 1 || m > 12 || d < 1 || d > 31) continue
+    const mo = `0?${m}`
+    const da = `0?${d}`
+    const sep = String.raw`\s*[-/.]\s*`
+    const month = MONTHS[m - 1] as string
+    const name = `(?:${month}|${month.slice(0, 3)}\\.?)`
+    const ord = '(?:st|nd|rd|th)?'
+    out.push(
+      new RegExp(String.raw`(?<!\d)${y}\s*[-/.年]\s*${mo}\s*[-/.月]\s*${da}(?!\d)`),
+      new RegExp(String.raw`(?<!\d)${y}${String(m).padStart(2, '0')}${String(d).padStart(2, '0')}(?!\d)`),
+      new RegExp(String.raw`(?<!\d)${da}${sep}${mo}${sep}${y}(?!\d)`),
+      new RegExp(String.raw`(?<!\d)${mo}${sep}${da}${sep}${y}(?!\d)`),
+      new RegExp(String.raw`(?<![a-z])${name}\s*${da}${ord}\s*,?\s*${y}(?!\d)`),
+      new RegExp(String.raw`(?<!\d)${da}${ord}\s*(?:of\s*)?${name}\s*,?\s*${y}(?!\d)`),
+    )
+  }
+  return out
 }
 
 function escapeRe(text: string): string {
@@ -78,7 +124,9 @@ function escapeRe(text: string): string {
  * `identifiers` are the case's registered strings (names, dates of birth, record numbers).
  */
 export function guardInput(input: unknown, identifiers: readonly string[]): string | undefined {
-  const values = leaves(input).filter(v => !isLocalPath(v))
+  const all = leaves(input)
+  if (all.includes(TOO_DEEP)) return 'more nested data than the gate can read in full'
+  const values = all.filter(v => !isLocalPath(v))
   if (values.length === 0) return undefined
   // Each value is folded on its own: digits or letters from two unrelated values
   // (an MRN and an HPO id next to it) must never join into a match.
@@ -92,14 +140,15 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
     // A short number (a year, a floor, an age) identifies nobody and would block
     // ordinary queries; a record number is longer. Dates are handled below.
     if (/^\d+$/.test(id.tight) && id.tight.length < 6) continue
-    const renderings = dateRenderings(raw).map(r => forms(r).tight).filter(Boolean)
+    const dates = dateMatchers(raw)
     const tokens = id.spaced.split(' ').filter(t => t.length >= 2)
 
     for (const f of folded) {
       // a date of birth, however it is written
-      if (renderings.some(r => f.tight.includes(r))) return label
+      if (dates.some(re => re.test(f.spaced))) return label
       // a record or ID number: digits only, so separators cannot hide it
-      if (LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return label
+      // (not for a date: its digits joined across a value's other numbers would match by accident)
+      if (dates.length === 0 && LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return label
       if (HAS_CJK.test(raw)) {
         // Chinese names: two characters identify, and spacing carries no meaning
         if (id.tight.length >= 2 && f.tight.includes(id.tight)) return label
@@ -118,9 +167,21 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
   for (const f of folded) {
     if (CN_RESIDENT_ID.test(f.tight) || CN_RESIDENT_ID.test(f.digits)) return 'what looks like a Chinese resident ID number'
     if (CN_MOBILE.test(f.spaced)) return 'what looks like a mobile phone number'
-    if (EMAIL.test(f.spaced) && !HOST_LOGIN.test(f.spaced)) return 'an email address'
+    if (emailIn(f.spaced)) return 'an email address'
   }
   return undefined
+}
+
+/** An email address in `text` that is not a host login (ssh user@host) or a git remote. */
+function emailIn(text: string): boolean {
+  for (const m of text.matchAll(new RegExp(EMAIL.source, 'g'))) {
+    const addr = m[0]
+    if (/^git@/.test(addr) || /@(?:github|gitlab|bitbucket)\.(?:com|org)$/.test(addr)) continue
+    const before = text.slice(0, m.index)
+    if (/\b(?:ssh|scp|sftp|rsync|mosh|ssh-copy-id|autossh)\b[^;|&]*$/.test(before)) continue
+    return true
+  }
+  return false
 }
 
 function wordIn(word: string, text: string): boolean {
@@ -137,12 +198,28 @@ export function isLocalPath(value: string): boolean {
 // ---------------------------------------------------------------- shell commands
 
 const NETWORK_TOOL =
-  /\b(?:curl|wget|nc|ncat|socat|telnet|scp|sftp|rsync|ssh|mosh|ftp|lftp|gh|glab|aws|gsutil|azcopy|rclone|mail|mailx|sendmail|osascript|dig|nslookup|host)\b|\bgit\s+(?:push|clone|fetch|pull|remote|ls-remote)\b|\bnpm\s+(?:publish|install)\b|\bnpx\b|\bpip3?\s+install\b|https?:\/\//
-const SCRIPT_RUN = /\bpython3?(?:\.\d+)?\b|\bnode\b|\bdeno\b|\bbun\b|\bruby\b|\bperl\b/
+  /\b(?:curl|wget|nc|ncat|socat|telnet|scp|sftp|rsync|ssh|mosh|ftp|lftp|gh|glab|aws|gsutil|azcopy|rclone|mail|mailx|sendmail|mutt|osascript|dig|nslookup|host|s2f|httpie|http|xh|aria2c)\b|\bgit\s+(?:push|clone|fetch|pull|remote|ls-remote)\b|\b(?:npm|pnpm|yarn)\s+(?:publish|install|i|add)\b|\bnpx\b|\bpip3?\s+install\b|https?:\/\/|\/dev\/(?:tcp|udp)\/|\bopen\b[^|;&]*\b(?:mailto|https?):|\bdocker\s+(?:run|push|exec)\b|\b(?:Invoke-WebRequest|Invoke-RestMethod|iwr|irm)\b/i
+const SCRIPT_RUN = /\bpython3?(?:\.\d+)?\b|\bnode\b|\bdeno\b|\bbun\b|\bruby\b|\bperl\b|\bphp\b|\blua\b|\bjulia\b|\bjava\b|\bRscript\b|\bR\s+(?:-e|--vanilla|-f)\b|\buvx?\b|\bpipx\s+run\b|\b(?:pwsh|powershell)\b/
 const ZEBRA_CLI = /(?:^|[\s;&|(/])zebra(?![\w-])/
 // `zebra case …` reads and writes the local case only (its HPO checks send ids, never text),
-// so it stays usable while the gate is closed and its arguments are not outbound content
-const ZEBRA_LOCAL = /(?:^|[\s;&|(/])zebra(?![\w-])(?:\s+--?(?:json|case)(?:[=\s]+\S+)?)*\s+case\b/
+// so it stays usable while the gate is closed and its arguments are not outbound content.
+// Only when those are the leading words of the segment, as the shell will read them.
+function isZebraLocal(segment: string): boolean {
+  const w = shellWords(segment)
+  let i = 0
+  while (i < w.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(w[i] as string)) i++ // VAR=value prefixes
+  if (/(?:^|\/)python3?(?:\.\d+)?$/.test(w[i] ?? '')) i++
+  if (!/(?:^|\/)zebra$/.test(w[i] ?? '')) return false
+  i++
+  while (i < w.length) {
+    const a = w[i] as string
+    if (a === '--json') i++
+    else if (a === '--case') i += 2
+    else if (a.startsWith('--case=')) i++
+    else break
+  }
+  return w[i] === 'case'
+}
 // flags whose values stay on this machine in any zebra command (sample names, file paths)
 const ZEBRA_LOCAL_FLAGS = new Set(['--case', '--proband', '--mother', '--father', '--sibling', '--out', '--genes',
   '--ped', '--csv', '--workspace', '--vcf'])
@@ -155,7 +232,13 @@ export function shellSegments(command: string): string[] {
   for (let i = 0; i < command.length; i++) {
     const c = command[i] as string
     const two = command.slice(i, i + 2)
-    if (two === '$(') {
+    if (c === '`') {
+      // a backtick substitution runs on its own
+      if (current.trim()) out.push(current)
+      current = ''
+      continue
+    }
+    if (two === '$(' || two === '<(' || two === '>(') {
       depth++
       i++
       if (current.trim()) out.push(current)
@@ -185,15 +268,30 @@ export function shellSegments(command: string): string[] {
   return out
 }
 
+/**
+ * A segment as the shell will read it: quotes removed and words rejoined, so `c'u'rl` and
+ * `"cu""rl"` read as curl, and the text of `bash -c "…"` or `eval "…"` is seen as the command it is.
+ */
+function asRun(segment: string): string {
+  return shellWords(segment).join(' ')
+}
+
+function outboundSegment(segment: string): boolean {
+  if (isZebraLocal(segment)) return false // the local case only
+  for (const text of [segment, asRun(segment)]) {
+    if (NETWORK_TOOL.test(text)) return true
+    if (ZEBRA_CLI.test(text)) return true // zebra's other commands query public databases
+    if (SCRIPT_RUN.test(text)) return true // a script can reach the network; its source is not read here
+  }
+  // `bash -c "…"`, `sh -c`, `eval`: judge the inner command the same way
+  const w = shellWords(segment)
+  const inner = /^(?:ba|z|da|k)?sh$|^eval$/.test(w[0] ?? '') ? w.slice(1).filter(a => a !== '-c').join(' ') : ''
+  return inner !== '' && inner !== segment && isOutboundShell(inner)
+}
+
 /** True when a shell command may send data off the machine. Judged per segment. */
 export function isOutboundShell(command: string): boolean {
-  for (const segment of shellSegments(command)) {
-    if (ZEBRA_LOCAL.test(segment)) continue // the local case only
-    if (NETWORK_TOOL.test(segment)) return true
-    if (ZEBRA_CLI.test(segment)) return true // zebra's other commands query public databases
-    if (SCRIPT_RUN.test(segment)) return true // a script can reach the network; its source is not read here
-  }
-  return false
+  return shellSegments(command).some(outboundSegment)
 }
 
 /**
@@ -204,8 +302,7 @@ export function isOutboundShell(command: string): boolean {
 export function outboundText(command: string): string {
   const kept: string[] = []
   for (const segment of shellSegments(command)) {
-    if (ZEBRA_LOCAL.test(segment)) continue
-    if (!NETWORK_TOOL.test(segment) && !ZEBRA_CLI.test(segment) && !SCRIPT_RUN.test(segment)) continue
+    if (!outboundSegment(segment)) continue
     const words = shellWords(segment)
     for (let i = 0; i < words.length; i++) {
       const w = words[i] as string
@@ -225,9 +322,18 @@ const GENOME_FILE = /\.(?:g?vcf(?:\.gz|\.bgz)?|bcf|bam|cram|sam|fastq(?:\.gz)?|f
 const UPLOADER =
   /\b(?:scp|sftp|rclone|gsutil|azcopy)\b|\baws\s+s3\b|\bgh\s+(?:gist|release)\s+\w+|\brsync\b[^|;&]*\S+:\S*|\bcurl\b[^|;&]*(?:\s-T\b|--upload-file|\s-F\b|--form|--data-binary|\s-d\s*@|--data(?:-raw|-urlencode)?\s*@)|\bwget\b[^|;&]*--post-file|\b(?:nc|ncat|socat)\b|\bssh\b[^|;&]*\bcat\s*>|\bmail(?:x)?\b|\bpython3?\s+-m\s+http\.server\b/i
 
+// folders a desktop client uploads on its own: copying a file there sends it
+const SYNC_FOLDER = /(?:^|[\s'"=])(?:~|\$HOME|\/Users\/[^/\s]+|\/home\/[^/\s]+)?\/?(?:Dropbox|Google Drive|GoogleDrive|My Drive|OneDrive[^/\s]*|Library\/Mobile Documents|Library\/CloudStorage|iCloud Drive|Nutstore[^/\s]*|坚果云[^/\s]*|BaiduNetdisk[^/\s]*|百度网盘[^/\s]*|WeDrive[^/\s]*|Box Sync|pCloud Drive|MEGA)(?:\/|['"\s]|$)/i
+const COPY_INTO = /\b(?:cp|mv|rsync|ditto|ln|install|tee)\b/
+
 /** True when a command looks like it sends a raw genome file to another machine. */
 export function uploadsGenome(command: string): boolean {
   if (GENOME_FILE.test(command) && UPLOADER.test(command)) return true
+  // copying genome data into a synced folder uploads it as surely as scp
+  if (GENOME_FILE.test(command) && COPY_INTO.test(command) && SYNC_FOLDER.test(command)) return true
+  // an archive that holds genome data, then sent: zip -r g.zip genome/ && curl -F f=@g.zip …
+  const archive = /\b(?:zip|7z|7za|tar|gzip|bgzip|xz|zstd)\b[^|;&]*?([\w.-]+\.(?:zip|7z|tar(?:\.gz|\.bz2|\.xz|\.zst)?|tgz|gz))\b/i.exec(command)
+  if (archive && (GENOME_FILE.test(command) || /\b(?:genome|exome|wes|wgs|vcf|bam|cram|fastq)s?\b/i.test(command)) && UPLOADER.test(command)) return true
   const segments = shellSegments(command)
   if (segments.some(s => GENOME_FILE.test(s)) && segments.some(s => UPLOADER.test(s))) return true
   // a whole directory going out (scp -r genome_dir host:, tar czf - dir | ssh)
@@ -250,6 +356,13 @@ const REMOTE_ARG = /^(?:[\w.-]+@)?[\w.-]+:(?!\/\/)|^(?:s3|gs|az|https?):\/\/|^[\
  */
 export function uploadedPaths(command: string): string[] {
   const found = new Set<string>()
+  // a file copied into a synced folder is uploaded by the desktop client
+  for (const segment of shellSegments(command)) {
+    const w = shellWords(segment)
+    if (COPY_INTO.test(w[0] ?? '') && w.length >= 3 && SYNC_FOLDER.test(` ${w[w.length - 1]}`)) {
+      for (const a of w.slice(1, -1)) if (!a.startsWith('-')) found.add(a)
+    }
+  }
   let cwd = ''
   const segments = shellSegments(command)
   const join = (p: string) => (cwd && !/^(?:\/|~|\$HOME)/.test(p) ? `${cwd.replace(/\/$/, '')}/${p}` : p)

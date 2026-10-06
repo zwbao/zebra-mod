@@ -39,7 +39,7 @@ describe('A-P0-1 the mod’s own tools go through the permission chain and the g
     on('tool.check', () => ({ decision: 'deny' as const, reason: 'the user said no' }))
     on('process.run', () => {
       ran = true
-      return { exitCode: 0, stdout: ENVELOPE, stderr: '', isStdoutTruncated: false, isStderrTruncated: false }
+      return run(ENVELOPE)
     })
     const r = await $.tool.call({ tool: 'mcp__zebra-mod__hpo_search', text: 'seizure' } as never)
     expect('deny' in r && r.deny).toBe('the user said no')
