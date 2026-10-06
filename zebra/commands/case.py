@@ -134,11 +134,12 @@ def _add_question(args: argparse.Namespace) -> Outcome:
 
 
 def _identifiers(args: argparse.Namespace) -> Outcome:
-    current = case_mod.load(_dir(args))["privacy"]["identifiers"]
-    if args.add or args.clear:
-        merged = [] if args.clear else list(current)
-        merged += args.add or []
-        current = case_mod.set_identifiers(_dir(args), merged)
+    if args.clear:
+        current = case_mod.set_identifiers(_dir(args), args.add or [])
+    elif args.add:
+        current = case_mod.add_identifiers(_dir(args), args.add)
+    else:
+        current = case_mod.load(_dir(args))["privacy"]["identifiers"]
     return Outcome({"count": len(current)}, text=f"{len(current)} protected identifiers (values are not printed)")
 
 

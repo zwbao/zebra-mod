@@ -3,8 +3,8 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Board, Ready } from '../types'
 import { DOCTRINE, renderDoctrine } from './doctrine'
-import { TOOLS, toolArgv, type ToolDef } from './tools'
-import { guardInput, isOutboundShell, shellWords, uploadedPaths, uploadsGenome } from './privacy'
+import { schemaArgs, TOOLS, toolArgv, type ToolDef } from './tools'
+import { guardInput, isOutboundShell, outboundText, shellWords, uploadedPaths, uploadsGenome } from './privacy'
 
 const PLUGIN = 'zebra-mod'
 const PANE = 'zebra-board'
@@ -62,14 +62,11 @@ export const register: Register = (on, options) => {
     await $.env.set('ZEBRA_PYTHON', python)
 
     void (async () => {
-      try {
-        const v = await $.process.run([python, `${$.plugin.root}/bin/zebra`, '--version'], { timeoutMs: 20_000 })
-        const version = v.exitCode === 0 ? v.stdout.trim() : null
-        await update($, ready, () => ({ python, version, error: version ? null : (v.stderr || 'zebra CLI failed').slice(0, 300) }))
-        if (!version) $.ui.toast(`zebra-mod: ${python} could not run the zebra CLI — run /zebra doctor`)
-      } catch (err) {
-        await update($, ready, () => ({ python: null, version: null, error: String(err).slice(0, 300) }))
-        $.ui.toast(`zebra-mod: ${python} not found; set the plugin's python option (needs Python 3.9+)`)
+      const r = await checkCli($, python)
+      if (!r.version) {
+        $.ui.toast(r.python
+          ? `zebra-mod: ${python} could not run the zebra CLI — run /zebra doctor`
+          : `zebra-mod: ${python} not found; set the plugin's python option (needs Python 3.9+)`)
       }
 
       // A case is adopted only when this directory IS one, or lies inside the one
@@ -135,6 +132,15 @@ export const register: Register = (on, options) => {
     const def = TOOLS.find(t => `${TOOL_PREFIX}${t.name}` === e.tool)
     if (!def) return next(e)
     const input = e as unknown as Record<string, unknown>
+    // A tool this plugin registers is answered here, and nothing beneath this hook runs
+    // the engine's permission chain for it. So the decision is asked for explicitly:
+    // the person's rules, the session's mode and the privacy gate apply to zebra's own
+    // tools exactly as they do to any other tool.
+    const verdict = await $.tool.check({ tool: e.tool, input: schemaArgs(def, input) })
+    if (verdict.decision === 'deny') return { deny: verdict.reason ?? `${def.name} was refused` }
+    if (verdict.decision === 'ask' && !(await approved($, def, verdict.reason))) {
+      return { deny: `${def.name} was not approved` }
+    }
     let argv: string[]
     try {
       argv = await toolArgv(def, input, await read($, casePath))
@@ -180,7 +186,13 @@ export const register: Register = (on, options) => {
           reason: `zebra-mod privacy gate: ${active}/case.json cannot be read, so the protected identifiers are unknown and the gate is closed. Fix or re-create the case file, or /zebra close to work without one.`,
         }
       }
-      const hit = guardInput(e.input, held.ids)
+      // Scan what actually leaves: a shell command's outbound segments without local paths
+      // or sample names; a published page's text below; anything else as given.
+      const scanned = e.tool === 'Bash' ? { command: outboundText(command) }
+        : e.tool === 'Artifact' ? artifactFields(e.input)
+        : own !== undefined ? schemaArgs(own, (e.input ?? {}) as Record<string, unknown>)
+        : e.input
+      const hit = guardInput(scanned, held.ids)
       if (hit) {
         return {
           decision: 'deny' as const,
@@ -190,7 +202,7 @@ export const register: Register = (on, options) => {
       // a file from the case folder about to be sent somewhere
       const paths = e.tool === 'Bash' ? uploadedPaths(command) : artifactPaths(e.input)
       if (paths.length > 0 && active) {
-        const inside = await firstInsideCase($, active, paths)
+        const inside = await firstInsideCase($, active, paths, (e.input as { root?: unknown })?.root)
         if (inside) {
           return {
             decision: 'ask' as const,
@@ -199,11 +211,17 @@ export const register: Register = (on, options) => {
         }
       }
       if (e.tool === 'Artifact') {
-        const leak = await artifactLeak($, e.input, held.ids)
-        if (leak) {
+        const scan = await artifactLeak($, e.input, held.ids)
+        if (scan.leak) {
           return {
             decision: 'deny' as const,
-            reason: `zebra-mod privacy gate: the page about to be published contains ${leak}. Publishing puts it on the web.`,
+            reason: `zebra-mod privacy gate: the page about to be published contains ${scan.leak}. Publishing puts it on the web.`,
+          }
+        }
+        if (scan.unread.length > 0) {
+          return {
+            decision: 'ask' as const,
+            reason: `zebra-mod: ${scan.unread.join(', ')} could not be read to check for names or record numbers before publishing — confirm only if you have checked it yourself.`,
           }
         }
       }
@@ -231,6 +249,7 @@ export const register: Register = (on, options) => {
     const verb = words[0] ?? ''
     const rest = words.slice(1)
     if (verb === '' || verb === 'help') {
+      if ((await read($, ready)) === null) await checkCli($, python)
       const r = await read($, ready)
       const active = await read($, casePath)
       if (active) await $.ui.open({ id: PANE, title: 'zebra · case board' })
@@ -338,6 +357,31 @@ async function runZebra($: EngineInterface, python: string, args: readonly strin
   }
 }
 
+/** Run the CLI's version check now and record the answer. */
+async function checkCli($: EngineInterface, python: string): Promise<Ready> {
+  let r: Ready
+  try {
+    const v = await $.process.run([python, `${$.plugin.root}/bin/zebra`, '--version'], { timeoutMs: 20_000 })
+    const version = v.exitCode === 0 ? v.stdout.trim() : null
+    r = { python, version, error: version ? null : (v.stderr || 'zebra CLI failed').slice(0, 300) }
+  } catch (err) {
+    r = { python: null, version: null, error: String(err).slice(0, 300) }
+  }
+  await update($, ready, () => r)
+  return r
+}
+
+/** Ask the person, in the engine's own dialog, whether a zebra tool may run; no one to ask means no. */
+async function approved($: EngineInterface, def: ToolDef, reason: string | undefined): Promise<boolean> {
+  try {
+    const why = reason ? `${reason.replace(/[?？]\s*$/, '')}. ` : ''
+    const answer = await $.ui.ask(`${why}Allow zebra-mod to run ${def.name}?`, ['Allow', 'Deny'])
+    return answer === 'Allow'
+  } catch {
+    return false // dismissed, or a headless run with nobody to ask
+  }
+}
+
 /** The case directory at `dir`, or null when it holds no zebra case. */
 async function caseAt($: EngineInterface, dir: string): Promise<string | null> {
   try {
@@ -414,12 +458,16 @@ async function setCase($: EngineInterface, python: string, path: string | null, 
 }
 
 /** The first of `paths` that lies inside the case folder, resolved through links. */
-async function firstInsideCase($: EngineInterface, active: string, paths: readonly string[]): Promise<string | undefined> {
-  const root = await $.fs.stat(active, { resolve: true }).catch(() => undefined)
-  const realRoot = root?.realPath
+async function firstInsideCase($: EngineInterface, active: string, paths: readonly string[], root?: unknown): Promise<string | undefined> {
+  const caseRoot = await $.fs.stat(active, { resolve: true }).catch(() => undefined)
+  const realRoot = caseRoot?.realPath
   if (realRoot === undefined) return undefined
+  const home = (await $.env.get('HOME')) ?? ''
+  const base = typeof root === 'string' && root ? root.replace(/\/$/, '') : ''
   for (const p of paths) {
-    const stat = await $.fs.stat(p, { resolve: true }).catch(() => undefined)
+    let q = p.replace(/^\$HOME(?=\/|$)/, home).replace(/^~(?=\/|$)/, home)
+    if (base && !q.startsWith('/')) q = `${base}/${q}`
+    const stat = await $.fs.stat(q, { resolve: true }).catch(() => undefined)
     const real = stat?.realPath
     if (real !== undefined && (real === realRoot || real.startsWith(`${realRoot}/`))) return p
   }
@@ -427,29 +475,54 @@ async function firstInsideCase($: EngineInterface, active: string, paths: readon
 }
 
 function artifactPaths(input: unknown): string[] {
-  const i = (input ?? {}) as { file_path?: unknown; file_paths?: unknown; files?: unknown }
+  const i = (input ?? {}) as { file_path?: unknown; file_paths?: unknown; files?: unknown; root?: unknown }
+  const root = typeof i.root === 'string' && i.root ? i.root.replace(/\/$/, '') : ''
+  const under = (p: string) => (root && !p.startsWith('/') ? `${root}/${p}` : p)
   const out: string[] = []
   if (typeof i.file_path === 'string') out.push(i.file_path)
   if (Array.isArray(i.file_paths)) for (const p of i.file_paths) if (typeof p === 'string') out.push(p)
-  if (i.files && typeof i.files === 'object') {
+  if (Array.isArray(i.files)) {
+    for (const f of i.files) {
+      if (typeof f === 'string') out.push(under(f))
+      else if (f && typeof f === 'object' && typeof (f as { path?: unknown }).path === 'string') out.push(under((f as { path: string }).path))
+    }
+  } else if (i.files && typeof i.files === 'object') {
     for (const v of Object.values(i.files as Record<string, unknown>)) {
-      if (typeof v === 'string') out.push(v)
-      else if (v && typeof v === 'object' && typeof (v as { from?: unknown }).from === 'string') out.push((v as { from: string }).from)
+      if (typeof v === 'string') out.push(under(v))
+      else if (v && typeof v === 'object' && typeof (v as { from?: unknown }).from === 'string') out.push(under((v as { from: string }).from))
     }
   }
   return out
 }
 
-/** What a page about to be published carries of the case's identifiers. */
-async function artifactLeak($: EngineInterface, input: unknown, ids: readonly string[]): Promise<string | undefined> {
-  if (ids.length === 0) return undefined
+/** The parts of an Artifact call that are published themselves (title, description), not paths. */
+function artifactFields(input: unknown): Record<string, unknown> {
+  const i = (input ?? {}) as Record<string, unknown>
+  const out: Record<string, unknown> = {}
+  for (const k of ['title', 'description', 'label']) if (typeof i[k] === 'string') out[k] = i[k]
+  return out
+}
+
+/**
+ * What a page about to be published carries: the case's identifiers and the ID/phone/email
+ * patterns, checked in every file it publishes. A file that cannot be read (missing, over the
+ * 4 MiB read limit) is reported as unread, so the caller asks instead of passing it unseen.
+ */
+async function artifactLeak($: EngineInterface, input: unknown, ids: readonly string[]): Promise<{ leak?: string; unread: string[] }> {
+  const unread: string[] = []
+  const root = (input as { root?: unknown })?.root
+  const base = typeof root === 'string' && root ? root.replace(/\/$/, '') : ''
   for (const p of artifactPaths(input)) {
-    const text = await $.fs.read(p).catch(() => undefined)
-    if (text === undefined) continue
-    const hit = guardInput(text.slice(0, MAX_ARTIFACT_SCAN), ids)
-    if (hit) return `${hit} (in ${p})`
+    const path = base && !p.startsWith('/') ? `${base}/${p}` : p
+    const text = await $.fs.read(path).catch(() => undefined)
+    if (text === undefined) {
+      unread.push(p)
+      continue
+    }
+    const hit = guardInput(text, ids)
+    if (hit) return { leak: `${hit} (in ${p})`, unread }
   }
-  return undefined
+  return { unread }
 }
 
 // ------------------------------------------------------------ text
@@ -510,7 +583,7 @@ function helpText(r: Ready | null, active: string | null): string {
     `   CLI: ${r?.version ?? `not ready (${r?.error ?? 'python not checked'})`}`,
     `   active case: ${active ?? 'none'}`,
     '',
-    '   /zebra new <dir> [title]   start a case folder (records stay on this machine)',
+    '   /zebra new <dir> [title]   start a case folder (files are written only on this machine)',
     '   /zebra case <dir>          switch to an existing case',
     '   /zebra board               open the case board',
     '   /zebra ledger              list the evidence the answers stand on',
@@ -555,9 +628,15 @@ function formatEnvelope(def: ToolDef, got: Envelope): string {
     return `zebra ${def.name} failed: ${got.error?.type ?? 'error'}: ${got.error?.message ?? 'no message'}`
   }
   const warnings = [...(got.warnings ?? [])]
+  // Pair each source with the evidence id the ledger gave it: one claim, one row to cite.
+  const ledger = got.ledger ?? []
+  const sources = (got.sources ?? []).map((src, i) =>
+    ledger.length === (got.sources ?? []).length && src && typeof src === 'object'
+      ? { eid: ledger[i], ...(src as Record<string, unknown>) }
+      : src)
   // warnings, ledger and sources first: they are what the answer must cite, so a
   // trim never costs them. The result is trimmed until the whole envelope fits.
-  let body = { warnings, ledger: got.ledger ?? [], sources: got.sources ?? [], result: got.result }
+  let body = { warnings, ledger, sources, result: got.result }
   let text = JSON.stringify(body)
   for (let i = 0; i < 12 && text.length > MAX_RESULT_CHARS; i++) {
     const trimmed = trimLongestList(body.result)

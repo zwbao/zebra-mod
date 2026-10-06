@@ -556,11 +556,24 @@ def set_profile(case_dir: str, **fields: Any) -> Dict[str, Any]:
         return apply_profile(data, **fields)
 
 
+def _clean_identifiers(values: List[str]) -> List[str]:
+    return sorted({s.strip() for s in values if isinstance(s, str) and len(s.strip()) >= 2})
+
+
 def set_identifiers(case_dir: str, identifiers: List[str]) -> List[str]:
-    clean = sorted({s.strip() for s in identifiers if s and len(s.strip()) >= 2})
+    """Replace the protected identifiers."""
+    clean = _clean_identifiers(identifiers)
     with editing(case_dir) as data:
         data["privacy"]["identifiers"] = clean
     return clean
+
+
+def add_identifiers(case_dir: str, identifiers: List[str]) -> List[str]:
+    """Add protected identifiers. Read and write under one lock, so parallel adds never lose one."""
+    with editing(case_dir) as data:
+        merged = _clean_identifiers(list(data["privacy"].get("identifiers") or []) + list(identifiers))
+        data["privacy"]["identifiers"] = merged
+    return merged
 
 
 REMOVE_KINDS = {"phenotype": "phenotypes", "variant": "variants", "hypothesis": "hypotheses",

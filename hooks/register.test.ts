@@ -1,9 +1,40 @@
 import { describe, expect, test } from 'claude-code/testing'
 
 const FACTS = { model: 'claude-test', promptModel: 'claude-test', surfaces: [], tools: [], outputStyle: null, traits: [] } as const
+const ENVELOPE = JSON.stringify({ ok: true, result: {}, sources: [], warnings: [], ledger: [] })
+
+// The mod's own tools are answered by its tool.call hook, beneath which nothing runs the engine's
+// permission chain. These tests prove the hook asks for the decision itself (A-P0-1). What happens
+// with a case open (identifiers from case.json) is verified in a real headless session, because the
+// test kit cannot hold the plugin's case state or run its CLI.
+describe('A-P0-1 the mod’s own tools go through the permission chain and the gate', () => {
+  test('a deny beneath stops an own tool before it runs', async ($, on) => {
+    let ran = false
+    on('tool.check', () => ({ decision: 'deny' as const, reason: 'the user said no' }))
+    on('process.run', () => {
+      ran = true
+      return { exitCode: 0, stdout: ENVELOPE, stderr: '', isStdoutTruncated: false, isStderrTruncated: false }
+    })
+    const r = await $.tool.call({ tool: 'mcp__zebra-mod__hpo_search', text: 'seizure' } as never)
+    expect('deny' in r && r.deny).toBe('the user said no')
+    expect(ran).toBe(false)
+  })
+
+  test('the gate stops an own tool carrying a phone number', async ($, on) => {
+    on('tool.check', () => ({ decision: 'allow' as const }))
+    const r = await $.tool.call({ tool: 'mcp__zebra-mod__literature_search', query: 'call 13812345678' } as never)
+    expect('deny' in r && String(r.deny).includes('mobile phone')).toBe(true)
+  })
+
+  test('an ask with nobody to answer it is a no', async ($, on) => {
+    on('tool.check', () => ({ decision: 'ask' as const }))
+    const r = await $.tool.call({ tool: 'mcp__zebra-mod__case_update', questions: ['x'] } as never)
+    expect('deny' in r && String(r.deny).includes('not approved')).toBe(true)
+  })
+})
 
 describe('zebra-mod permissions', () => {
-  test('F1 a read-only lookup is spared a prompt, and nothing else is overridden', async ($, on) => {
+  test('F1 a read-only lookup is spared a prompt', async ($, on) => {
     on('tool.check', () => ({ decision: 'ask' as const }))
     const lookup = await $.tool.check({ tool: 'mcp__zebra-mod__hpo_search', input: { text: 'seizure' } })
     expect(lookup.decision).toBe('allow')
@@ -25,14 +56,11 @@ describe('zebra-mod permissions', () => {
 
   test('F4 a local case write is not treated as leaving the machine', async ($, on) => {
     on('tool.check', () => ({ decision: 'allow' as const }))
-    const write = await $.tool.check({
-      tool: 'mcp__zebra-mod__case_update',
-      input: { questions: ['ask about 13812345678'] },
-    })
+    const write = await $.tool.check({ tool: 'mcp__zebra-mod__case_update', input: { questions: ['ask about 13812345678'] } })
     expect(write.decision).toBe('allow')
   })
 
-  test('the gate stops a phone number and a genome upload on the way out', async ($, on) => {
+  test('the gate stops a phone number and asks before a genome upload', async ($, on) => {
     on('tool.check', () => ({ decision: 'allow' as const }))
     const leak = await $.tool.check({ tool: 'WebFetch', input: { url: 'https://example.org/?phone=13812345678', prompt: 'x' } })
     expect(leak.decision).toBe('deny')
@@ -42,9 +70,9 @@ describe('zebra-mod permissions', () => {
     expect(local.decision).toBe('allow')
   })
 
-  test('E6 Artifact and a remote agent are treated as leaving the machine', async ($, on) => {
+  test('E6 Artifact text and a remote agent are treated as leaving the machine', async ($, on) => {
     on('tool.check', () => ({ decision: 'allow' as const }))
-    const published = await $.tool.check({ tool: 'Artifact', input: { file_path: '/tmp/x.html', description: 'call 13812345678' } })
+    const published = await $.tool.check({ tool: 'Artifact', input: { title: 'call 13812345678' } })
     expect(published.decision).toBe('deny')
     const remote = await $.tool.check({ tool: 'Agent', input: { prompt: 'patient id 330106201903021234', isolation: 'remote' } })
     expect(remote.decision).toBe('deny')

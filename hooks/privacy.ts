@@ -78,9 +78,11 @@ function escapeRe(text: string): string {
  * `identifiers` are the case's registered strings (names, dates of birth, record numbers).
  */
 export function guardInput(input: unknown, identifiers: readonly string[]): string | undefined {
-  const values = leaves(input)
+  const values = leaves(input).filter(v => !isLocalPath(v))
   if (values.length === 0) return undefined
-  const f = forms(values.join('\n'))
+  // Each value is folded on its own: digits or letters from two unrelated values
+  // (an MRN and an HPO id next to it) must never join into a match.
+  const folded = values.map(forms)
 
   for (let i = 0; i < identifiers.length; i++) {
     const raw = (identifiers[i] ?? '').trim()
@@ -90,36 +92,46 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
     // A short number (a year, a floor, an age) identifies nobody and would block
     // ordinary queries; a record number is longer. Dates are handled below.
     if (/^\d+$/.test(id.tight) && id.tight.length < 6) continue
+    const renderings = dateRenderings(raw).map(r => forms(r).tight).filter(Boolean)
+    const tokens = id.spaced.split(' ').filter(t => t.length >= 2)
 
-    // a date of birth, however it is written
-    for (const rendering of dateRenderings(raw)) {
-      const tight = forms(rendering).tight
-      if (tight && f.tight.includes(tight)) return label
-    }
-    // a record or ID number: compare digits only, so separators cannot hide it
-    if (LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return label
-
-    if (HAS_CJK.test(raw)) {
-      // Chinese names: two characters identify, and spacing carries no meaning
-      if (id.tight.length >= 2 && f.tight.includes(id.tight)) return label
-    } else {
-      const tokens = id.spaced.split(' ').filter(t => t.length >= 2)
-      // every token present as a whole word, in any order (so "Xiaoming Zhang" is caught too)
-      if (tokens.length > 1 && tokens.every(t => new RegExp(`(?:^|[^a-z0-9])${escapeRe(t)}(?:[^a-z0-9]|$)`).test(f.spaced))) {
-        return label
+    for (const f of folded) {
+      // a date of birth, however it is written
+      if (renderings.some(r => f.tight.includes(r))) return label
+      // a record or ID number: digits only, so separators cannot hide it
+      if (LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return label
+      if (HAS_CJK.test(raw)) {
+        // Chinese names: two characters identify, and spacing carries no meaning
+        if (id.tight.length >= 2 && f.tight.includes(id.tight)) return label
+        continue
       }
+      // every token present as a whole word, in any order ("Xiaoming Zhang" too)
+      if (tokens.length > 1 && tokens.every(t => wordIn(t, f.spaced))) return label
       if (id.tight.length >= 3) {
-        if (new RegExp(`(?:^|[^a-z0-9])${escapeRe(id.tight)}(?:[^a-z0-9]|$)`).test(f.spaced)) return label
+        if (wordIn(id.tight, f.spaced)) return label
         if (tokens.length <= 1 && id.tight.length >= 6 && f.tight.includes(id.tight)) return label
       }
     }
   }
 
-  // Patterns that identify a person even when no case is open.
-  if (CN_RESIDENT_ID.test(f.tight) || CN_RESIDENT_ID.test(f.digits)) return 'what looks like a Chinese resident ID number'
-  if (CN_MOBILE.test(f.spaced)) return 'what looks like a mobile phone number'
-  if (EMAIL.test(f.spaced) && !HOST_LOGIN.test(f.spaced)) return 'an email address'
+  // Patterns that identify a person even when no case is open, checked per value.
+  for (const f of folded) {
+    if (CN_RESIDENT_ID.test(f.tight) || CN_RESIDENT_ID.test(f.digits)) return 'what looks like a Chinese resident ID number'
+    if (CN_MOBILE.test(f.spaced)) return 'what looks like a mobile phone number'
+    if (EMAIL.test(f.spaced) && !HOST_LOGIN.test(f.spaced)) return 'an email address'
+  }
   return undefined
+}
+
+function wordIn(word: string, text: string): boolean {
+  return new RegExp(`(?:^|[^a-z0-9])${escapeRe(word)}(?:[^a-z0-9]|$)`).test(text)
+}
+
+/** A bare local path (a case folder, a records file): its text never leaves the machine by itself. */
+export function isLocalPath(value: string): boolean {
+  const v = value.trim()
+  if (!v || /\s/.test(v) || v.includes('://')) return false
+  return /^(?:~|\$HOME|\.{1,2})?\//.test(v) || /^[A-Za-z]:\\/.test(v)
 }
 
 // ---------------------------------------------------------------- shell commands
@@ -128,8 +140,12 @@ const NETWORK_TOOL =
   /\b(?:curl|wget|nc|ncat|socat|telnet|scp|sftp|rsync|ssh|mosh|ftp|lftp|gh|glab|aws|gsutil|azcopy|rclone|mail|mailx|sendmail|osascript|dig|nslookup|host)\b|\bgit\s+(?:push|clone|fetch|pull|remote|ls-remote)\b|\bnpm\s+(?:publish|install)\b|\bnpx\b|\bpip3?\s+install\b|https?:\/\//
 const SCRIPT_RUN = /\bpython3?(?:\.\d+)?\b|\bnode\b|\bdeno\b|\bbun\b|\bruby\b|\bperl\b/
 const ZEBRA_CLI = /(?:^|[\s;&|(/])zebra(?![\w-])/
-// the one zebra invocation that only writes locally, so it stays usable while the gate is closed
-const ZEBRA_IDENTIFIERS = /(?:^|[\s;&|(/])zebra(?![\w-])[^;&|]*\bcase\b[^;&|]*\bidentifiers\b/
+// `zebra case …` reads and writes the local case only (its HPO checks send ids, never text),
+// so it stays usable while the gate is closed and its arguments are not outbound content
+const ZEBRA_LOCAL = /(?:^|[\s;&|(/])zebra(?![\w-])(?:\s+--?(?:json|case)(?:[=\s]+\S+)?)*\s+case\b/
+// flags whose values stay on this machine in any zebra command (sample names, file paths)
+const ZEBRA_LOCAL_FLAGS = new Set(['--case', '--proband', '--mother', '--father', '--sibling', '--out', '--genes',
+  '--ped', '--csv', '--workspace', '--vcf'])
 
 /** Split a command into the pieces that run on their own, so one exempt piece cannot cover the rest. */
 export function shellSegments(command: string): string[] {
@@ -172,12 +188,37 @@ export function shellSegments(command: string): string[] {
 /** True when a shell command may send data off the machine. Judged per segment. */
 export function isOutboundShell(command: string): boolean {
   for (const segment of shellSegments(command)) {
-    if (ZEBRA_IDENTIFIERS.test(segment)) continue // writes identifiers into the local case
+    if (ZEBRA_LOCAL.test(segment)) continue // the local case only
     if (NETWORK_TOOL.test(segment)) return true
     if (ZEBRA_CLI.test(segment)) return true // zebra's other commands query public databases
     if (SCRIPT_RUN.test(segment)) return true // a script can reach the network; its source is not read here
   }
   return false
+}
+
+/**
+ * The text of a shell command that may reach the network: only its outbound segments, with local
+ * paths and the values of zebra's local-only flags removed — a sample name or a case path is not
+ * sent anywhere, so it must not trip the gate.
+ */
+export function outboundText(command: string): string {
+  const kept: string[] = []
+  for (const segment of shellSegments(command)) {
+    if (ZEBRA_LOCAL.test(segment)) continue
+    if (!NETWORK_TOOL.test(segment) && !ZEBRA_CLI.test(segment) && !SCRIPT_RUN.test(segment)) continue
+    const words = shellWords(segment)
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i] as string
+      if (ZEBRA_LOCAL_FLAGS.has(w)) {
+        i++
+        continue
+      }
+      if (/^--[\w-]+=/.test(w) && ZEBRA_LOCAL_FLAGS.has(w.split('=')[0] as string)) continue
+      if (isLocalPath(w)) continue
+      kept.push(w)
+    }
+  }
+  return kept.join(' ')
 }
 
 const GENOME_FILE = /\.(?:g?vcf(?:\.gz|\.bgz)?|bcf|bam|cram|sam|fastq(?:\.gz)?|fq(?:\.gz)?|bed(?:\.gz)?)(?![a-z0-9])/i
@@ -195,25 +236,53 @@ export function uploadsGenome(command: string): boolean {
 
 const FILE_ARGS: RegExp[] = [
   /--(?:upload-file|post-file)[=\s]+("[^"]+"|'[^']+'|\S+)/gi,
-  /\s-T\s+("[^"]+"|'[^']+'|\S+)/gi,
-  /(?:--data-binary|--data-urlencode|--data-raw|--data|-d|-F|--form)\s+(?:[^@\s]*@)("[^"]+"|'[^']+'|[^\s;|&]+)/gi,
-  /\bgh\s+gist\s+create\s+((?:"[^"]+"|'[^']+'|[^\s;|&-]\S*)(?:\s+(?:"[^"]+"|'[^']+'|[^\s;|&-]\S*))*)/gi,
+  /\s-T\s*("[^"]+"|'[^']+'|\S+)/gi,
+  /(?:--data-binary|--data-urlencode|--data-raw|--data|-d|-F|--form)\s*(?:[^@\s]*@)("[^"]+"|'[^']+'|[^\s;|&]+)/gi,
   /<\s*("[^"]+"|'[^']+'|[^\s;|&]+)/g,
 ]
+// commands whose non-option, non-remote arguments are local files being sent
+const COPY_TOOLS = /^(?:scp|sftp|rsync|rclone|gsutil|azcopy)$/
+const REMOTE_ARG = /^(?:[\w.-]+@)?[\w.-]+:(?!\/\/)|^(?:s3|gs|az|https?):\/\/|^[\w-]+:$/
 
-/** The file paths a command would send somewhere, so the caller can check where they live. */
+/**
+ * The local file paths a command would send somewhere, relative paths resolved against a
+ * preceding `cd` in the same command, so the caller can check whether they lie in the case folder.
+ */
 export function uploadedPaths(command: string): string[] {
   const found = new Set<string>()
-  for (const re of FILE_ARGS) {
-    re.lastIndex = 0
-    let m: RegExpExecArray | null
-    while ((m = re.exec(command)) !== null) {
-      const capture = m[1] ?? ''
-      // a quoted capture is one path, even with spaces in it
-      const parts = /^['"]/.test(capture) ? [capture] : capture.split(/\s+/)
-      for (const part of parts) {
-        const clean = part.replace(/^['"]|['"]$/g, '')
-        if (clean && clean !== '-' && !/^https?:/.test(clean)) found.add(clean)
+  let cwd = ''
+  const segments = shellSegments(command)
+  const join = (p: string) => (cwd && !/^(?:\/|~|\$HOME)/.test(p) ? `${cwd.replace(/\/$/, '')}/${p}` : p)
+  // files read on the left of a pipe that ends in an uploader reading stdin
+  const pipeReaders: string[] = []
+  for (const segment of segments) {
+    const words = shellWords(segment)
+    const head = words[0] ?? ''
+    if (head === 'cd' && words[1]) {
+      cwd = words[1]
+      continue
+    }
+    if (/^(?:cat|zcat|gzip|bgzip|tar|base64|xxd|head|tail)$/.test(head)) {
+      for (const w of words.slice(1)) if (!w.startsWith('-')) pipeReaders.push(join(w))
+    }
+    for (const re of FILE_ARGS) {
+      re.lastIndex = 0
+      let m: RegExpExecArray | null
+      while ((m = re.exec(segment)) !== null) {
+        const capture = m[1] ?? ''
+        const parts = /^['"]/.test(capture) ? [capture] : capture.split(/\s+/)
+        for (const part of parts) {
+          const clean = part.replace(/^['"]|['"]$/g, '')
+          if (clean === '-') pipeReaders.forEach(r => found.add(r))
+          else if (clean && !/^https?:/.test(clean)) found.add(join(clean))
+        }
+      }
+    }
+    if (COPY_TOOLS.test(head) || (head === 'aws' && words[1] === 's3') || (head === 'gh' && words[1] === 'gist')) {
+      const args = words.slice(head === 'aws' || head === 'gh' ? 3 : 1)
+      for (const w of args) {
+        if (w.startsWith('-') || REMOTE_ARG.test(w)) continue
+        found.add(join(w))
       }
     }
   }

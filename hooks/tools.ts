@@ -440,7 +440,7 @@ export const TOOLS: ToolDef[] = [
 ]
 
 /** The keys the tool's own schema declares: the event also carries `tool`, `tool_use_id` and more. */
-function declared(def: ToolDef, input: Record<string, unknown>): Record<string, unknown> {
+export function schemaArgs(def: ToolDef, input: Record<string, unknown>): Record<string, unknown> {
   const props = (def.inputSchema.properties ?? {}) as Record<string, unknown>
   const out: Record<string, unknown> = {}
   for (const key of Object.keys(props)) if (input[key] !== undefined) out[key] = input[key]
@@ -469,7 +469,7 @@ function flagShaped(value: unknown, path = ''): string | undefined {
 }
 
 export async function toolArgv(def: ToolDef, input: Record<string, unknown>, casePath: string | null): Promise<string[]> {
-  const clean = declared(def, input)
+  const clean = schemaArgs(def, input)
   // `case_update` carries the person's own prose (notes, questions), where a leading
   // dash is harmless: it is passed as one JSON argument, never as a command-line value.
   if (def.name !== 'case_update') {
