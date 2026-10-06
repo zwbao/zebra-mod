@@ -948,16 +948,16 @@ def test_c_p1_4_a_bad_cached_body_is_evicted_and_not_found_lives_a_day(tmp_path,
         pass
     assert not path.exists()
 
-    # an empty or HTML 200 body in the cache is never served
+    # an HTML 200 body in the cache is never served
     def no_network(*a, **k):
         raise http.SourceError("HGNC", url, None, "network error: offline")
 
     monkeypatch.setattr(http, "_opener", lambda: type("O", (), {"open": staticmethod(no_network)})())
     monkeypatch.setattr(http, "_wait_for_retry", lambda s: False)
-    store(200, "   ", 60)
+    store(200, "<html>maintenance</html>", 60)
     try:
         http.request(url, source="HGNC", cache_ttl=30 * 86400, retries=0)
-        raise AssertionError("an empty cached body was served")
+        raise AssertionError("an HTML cached body was served")
     except http.SourceError:
         pass
 

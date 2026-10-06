@@ -345,12 +345,9 @@ NOT_FOUND_TTL = 86400.0
 
 def _body_problem(text: str, accept: str, validate: Optional[Callable[[str], Optional[str]]]) -> Optional[str]:
     """Why a 200 body cannot be used, or None. Checked before a body is cached and when it is read back."""
-    if accept == "application/json":
-        head = text.lstrip()[:1]
-        if not head:
-            return "empty body where JSON was expected"
-        if head == "<":
-            return "HTML page where JSON was expected"
+    # an empty body is left to the caller: some services answer "no record" that way
+    if accept == "application/json" and text.lstrip()[:1] == "<":
+        return "HTML page where JSON was expected"
     return validate(text) if validate is not None else None
 
 
