@@ -1,6 +1,6 @@
 {
   "name": "zebra-mod",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Turns Claude Code into a rare-disease research workstation: phenotype-driven diagnosis, variant interpretation (ACMG), sequence-to-function models, genotype-to-therapy, classical statistics — every answer anchored to live public databases.",
   "author": {
     "name": "zwbao",
@@ -43,6 +43,17 @@
       "title": "Privacy gate",
       "description": "Refuse outgoing calls that carry the open case's protected identifiers or ID/phone/email patterns, and ask before files from the case folder or raw genome data leave the machine. With no case open, a pattern in another tool's call is asked about rather than refused.",
       "default": true
+    },
+    "interface": {
+      "type": "string",
+      "title": "Interface",
+      "description": "How much zebra-mod shows in Claude Code. full: its own rows for its tool calls, the databases being queried in the spinner, a galloping zebra above the prompt while it queries, a shield after the privacy gate refuses a call, a footer label and a one-line summary at the end of a turn. quiet: the same without the animation and the spinner text. off: Claude Code's own drawing only.",
+      "options": [
+        "full",
+        "quiet",
+        "off"
+      ],
+      "default": "full"
     }
   }
 }

@@ -99,7 +99,7 @@ else
   PY_OPT="python3"
   [ "$PY" = "python3" ] || PY_OPT="$PY_PATH"
   claude plugin install zebra-mod@zebra-mod --scope user --config "python=$PY_OPT" --config "doctrine=auto" \
-    --config "privacyGate=true" || die "could not install zebra-mod"
+    --config "privacyGate=true" --config "interface=full" || die "could not install zebra-mod"
 fi
 
 ROOT=$(claude plugin list --json 2>/dev/null | "$PY" -c 'import json, sys

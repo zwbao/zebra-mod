@@ -4,6 +4,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import type { Board, Ready } from '../types'
 import { DOCTRINE, DOCTRINE_BRIEF, renderDoctrine } from './doctrine'
 import { schemaArgs, TOOLS, toolArgv, type ToolDef } from './tools'
+import { registerUi } from './ui'
 import { guardInput, isOutboundShell, outboundText, sendsVariantList, shellWords, uploadedPaths, uploadsGenome } from './privacy'
 
 const PLUGIN = 'zebra-mod'
@@ -43,6 +44,8 @@ type Envelope = {
 }
 
 export const register: Register = (on, options) => {
+  // first, so its hooks wrap the ones below: what the person sees of zebra-mod at work
+  registerUi(on, options)
   const python = String(options.python ?? 'python3')
   const doctrineMode = String(options.doctrine ?? 'auto')
   const privacyOn = options.privacyGate !== false

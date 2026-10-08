@@ -43,6 +43,7 @@
 
 - **21 个工具**，模型可直接调用（`mcp__zebra-mod__*`）：`case_status`、`case_update`、`case_recheck`、`hpo_search`、`phenotype_rank`、`gene_card`、`variant_card`、`disease_card`、`acmg`、`cnv_interpret`、`s2f_predict`、`therapy_landscape`、`trials_search`、`literature_search`、`rare_stats`、`edit_check`、`china_rare`、`access`、`expression`、`aso_screen`、`report_export`。每次调用都经过你的权限规则与隐私闸门；只读查询默认无需确认（除非你的规则另有要求），写入病例遵循当前权限模式（可选择"本次会话内允许"）。
 - **研究守则**写入系统提示词（即上述原则），并附当前病例信息。
+- **看得见它在工作**（全部为增量挂载，与罕见病无关的工作照常显示）：它的工具调用有自己的行（`🦓 变异卡  NM_001165963.4:c.2134C>T`，随后 `⎿ 证据 15 条（E39–E53）· 来源 Ensembl VEP、gnomAD、ClinVar、LitVar2 · 3 条来自缓存`），取代原始 JSON；登记身份信息的 case_update 行只显示条数，不显示内容；等待动画写明正在查询哪些数据库；查询进行时，输入框上方有一匹奔跑的小斑马，隐私闸门拦下调用后，这里改为盾牌提示；底部状态区有 `🦓` 标签（打开病例时显示病例标题）；用到 zebra-mod 的一轮结束时，留下一行小结：调用次数、数据源、新增证据、被拦截的调用。中英文随病例语言或你的提问切换。选项 `interface`：`full`（默认）、`quiet`（无动画、不改等待动画文字）或 `off`。
 - **病例看板**面板（`/zebra board`）与状态栏：表型、变异及其研究级分类、诊断假设、治疗线索、待解决问题、证据条数，随病例更新实时刷新。
 - **`/zebra`** 命令：`new <目录> [标题]`、`case <目录>`、`board`、`ledger`、`doctor`、`close`。
 - **12 个技能**（由 `/zebra-mod:zebra-start` 统一分流）：`zebra-safety`（急症红旗与特定罕见病的用药、麻醉、操作禁忌）、`zebra-intake`、`zebra-diagnose`、`zebra-variant`、`zebra-reanalysis`、`zebra-s2f`、`zebra-therapy`、`zebra-stats`、`zebra-literature`、`zebra-family`、`zebra-report`。
@@ -80,7 +81,7 @@ python3 <安装目录>/bin/zebra hpo fetch     # 可选：离线表型排序与�
 
 可选的重型 S2F 模型：安装 [s2f-penguin](https://github.com/zwbao/s2f-penguin) 的 `s2f` 命令行（`uv tool install "git+https://github.com/zwbao/s2f-penguin"`），并设置 `ALPHAGENOME_API_KEY`（AlphaGenome：仅限非商业用途，不得用于临床决策）和/或 `NVCF_RUN_KEY`（NVIDIA 托管的 Evo 2）。可用 `/zebra doctor` 检查全部环境。
 
-插件选项（`/config` → zebra-mod，或 settings 中的 `pluginConfigs`）：`python`（解释器）、`doctrine`（默认 `auto`：打开病例时注入完整规则，否则只放一段仅对罕见病问题生效的简短说明，你在 Claude Code 里的其它工作不受影响；也可选 `always` | `case` | `off`）、`privacyGate`（默认开启；未打开病例时，其它工具调用中出现邮箱或手机号会先询问，而不直接拒绝）。
+插件选项（`/config` → zebra-mod，或 settings 中的 `pluginConfigs`）：`python`（解释器）、`doctrine`（默认 `auto`：打开病例时注入完整规则，否则只放一段仅对罕见病问题生效的简短说明，你在 Claude Code 里的其它工作不受影响；也可选 `always` | `case` | `off`）、`privacyGate`（默认开启；未打开病例时，其它工具调用中出现邮箱或手机号会先询问，而不直接拒绝）、`interface`（默认 `full`：工具专属行、等待动画文字、奔跑的斑马与每轮小结；`quiet` 不显示动画和等待动画文字；`off` 完全使用 Claude Code 自己的显示）。
 
 ## 快速上手
 

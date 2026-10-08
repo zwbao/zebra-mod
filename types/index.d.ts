@@ -34,6 +34,21 @@ export type Board = {
   identifiers: number
 }
 
+/** A zebra tool call in flight, for the spinner, the band and the row. */
+export type ZebraRun = { id: string; tool: string; queryZh: string; queryEn: string; sources: string[]; startedAt: number }
+
+/** What zebra-mod did in the current turn: the line left at its end. */
+export type ZebraTurn = {
+  calls: number
+  failed: number
+  blocked: number
+  sources: string[]
+  cached: number
+  evidence: number
+  firstEvidence: number | null
+  lastEvidence: number | null
+}
+
 export type Ready = { python: string | null; version: string | null; error: string | null }
 
 declare module 'claude-code' {
@@ -45,6 +60,11 @@ declare module 'claude-code' {
       ready: Ready | null
       trusted: string[]
       sessionIds: string[]
+      running: ZebraRun[]
+      turn: ZebraTurn
+      blockedAt: number | null
+      lang: string | null
+      blockedWhy: string
     }
   }
 }

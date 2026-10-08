@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 — 2026-10-08
+
+**You can see zebra-mod at work.** Until now the only signs were a status line and a pane opened on request; a person could not tell whether a reply used the mod. All of the below is additive and scoped to zebra-mod's own activity, so unrelated work in Claude Code draws exactly as before (`hooks/ui.tsx`, `hooks/ui-sprite.ts`, registered first in `register.tsx` so they wrap its hooks without changing them).
+- Each zebra tool call is its own row: `🦓`, what it is (变异卡 / Variant card …), what it is about (the databases being queried are named by the spinner and the band; the row adds them too where the engine draws the row while it runs). Its result is one line — evidence rows and their ledger range, the databases actually queried, how many answers came from the cache, notes — instead of the JSON envelope. A `case_update` row counts the identifiers it registers and never shows them (the engine's own row printed the input, names included).
+- The spinner says which databases are being queried (`🦓 正在查询 Europe PMC、PubTator3、LitVar2…`).
+- A 28 × 12 pixel zebra gallops in the band above the prompt while a query runs (a `Raster` of half blocks, four frames, repainted with `$.ui.blit` inside the call's own dispatch); after the privacy gate stops a call, the band shows a standing zebra and says why (an identifier in the call, or a case file it could not read) and that the call was not sent, until the next turn. Text only on surfaces without `Raster`; nothing while a survey holds the band.
+- A footer label, `🦓 zebra` or `🦓 <case title>` (`🛡` after a refusal), so it is always clear the mod is installed.
+- One line at the end of a turn that used the mod: calls, databases, new evidence rows, calls not run, calls the gate stopped (a notice: the model never reads it).
+- One toast at the first turn after installing: what the mod does and `/zebra`.
+- Chinese or English from the case's language, then from the prompts (any Chinese → Chinese), then from `LANG`.
+- New option `interface`: `full` (default), `quiet` (no animation, no spinner text; a toast instead of the band after a refusal) or `off`.
+- 19 new tests (`hooks/ui.test.tsx`): rows on the terminal and desktop surfaces, pass-through for other tools, identifiers never drawn, the result line, the spinner, the footer, the band with and without `Raster`, `interface: off`, and a whole turn (start → zebra call → complete) leaving its line; checked in a live interactive session as well.
+
 ## 0.2.1 — 2026-10-06
 
 Fixes from an independent adversarial review of 0.2.0 (3 P0, 10 P1 and the cheap P2s), each with a regression test that fails on 0.2.0, and from the first full runs of the eval suite.
