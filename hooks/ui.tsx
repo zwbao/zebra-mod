@@ -21,7 +21,7 @@ export type UiMode = 'full' | 'quiet' | 'off'
 
 const PREFIX = 'mcp__zebra-mod__'
 const LOCAL = 'local'
-const FRAME_MS = 110
+const FRAME_MS = 70 // eleven frames: one stride in about 0.8 s
 
 const EMPTY_TURN: ZebraTurn = { calls: 0, failed: 0, blocked: 0, sources: [], cached: 0, evidence: 0, firstEvidence: null, lastEvidence: null }
 
@@ -310,7 +310,7 @@ function startTicker($: EngineInterface, owner: string): void {
   try {
     timer = $.clock.every(FRAME_MS, () => {
     frame = (frame + 1) % FRAME_COUNT
-    scroll++
+    scroll += 2
     if (bandId === undefined) return
     void $.ui
       .blit({ requestId: bandId, key: 'zebra', cells: zebraCells(frame, scroll), columns: RASTER_COLUMNS, rows: RASTER_ROWS })

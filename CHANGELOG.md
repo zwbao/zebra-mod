@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2 — 2026-10-08
+
+**A zebra that looks like one.** The 0.3.0 sprite was 28 × 12 half-block pixels, hand-placed: one-pixel legs that read as dots, a dog's head, barcode stripes, a grey outline that cluttered dark backgrounds, and only the legs moving across four frames.
+- Now eleven positions of one gallop stride traced from Eadweard Muybridge's *The Horse in Motion* (1878, public domain): each silhouette cut from its panel, the rider removed along the line of the back, the frames aligned on the ground and the body's centre so the body rises and falls as a galloping horse's does.
+- Drawn in braille (2 × 4 dots to a cell: 44 × 24 dots in 22 × 6 cells, about twice the detail of the half blocks in the same band), with stripes one dot wide that lean back on the rump and forward on the neck, a mane, an eye, solid legs; one colour, the terminal's own text colour, so it reads on light and dark themes alike; the ground is a dim dotted line that runs backwards.
+- One stride in about 0.8 s (70 ms a frame). The still pose of the welcome card and the shield is the same zebra.
+- `tools/zebra_sprite/build.py` rebuilds the frames from the photograph (numpy, scipy, pillow; a build step, not a dependency of the mod). The sprite test checks every frame decodes to braille cells in the terminal's colour.
+
 ## 0.3.1 — 2026-10-08
 
 **Onboarding: after installing, a person knows what to do.** A person who installed 0.3.0 saw "installed" and nothing after it: the installer's last message was mostly the doctor report, the welcome toast waited for a first prompt, and nothing said that zebra-mod is used by asking in plain words, or offered something to try it on.

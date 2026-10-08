@@ -1,71 +1,140 @@
 // The galloping zebra drawn in the band above the prompt while zebra-mod queries a database.
-// Four frames of a 28 x 12 pixel sprite, drawn two pixels to a terminal cell with half blocks,
-// on a ground of dots that scrolls left. Pure functions of (frame, scroll): no state here.
+// Eleven positions of one gallop stride, traced from Eadweard Muybridge's "The Horse in Motion" (1878,
+// public domain): rider removed, frames aligned on the ground and the body's centre, given zebra
+// stripes, drawn in braille (2 x 4 dots to a terminal cell). Regenerate with
+// `python3 tools/zebra_sprite/build.py`. One colour, the terminal's own text colour, so the zebra reads
+// on light and dark themes alike; the ground is a dim dotted line that runs backwards.
+// Pure functions of (frame, scroll): no state here.
 
-// . empty  W body  K stripe and mane  E eye  N muzzle  O outline  L leg  H hoof  D dust
 const FRAMES: readonly (readonly string[])[] = [
   [
-    '.....................KKO....', '....................KWWWOOO.', '...................KWWEWWWWO', '...OO.OO.OO.OO.OO.KKWWWWWWNN',
-    '..OWWKWWKWWKWWKWWKWWKWOOOO..', '.OWWWKWWKWWKWWKWWWWWWO......', '.KWWWWKWWKWWKWWKWWWWWO......', 'K.OWWWKWWKWWKWWKWWWWO.......',
-    '....L..L........L..L........', '.D.K...K........K...K.......', 'D.L.....L......L.....L......', 'DH.......H....H.......H.....',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠠⣴⡶⣤⡀⠀⠀',
+    '⠀⠀⠀⠀⠀⢀⣀⡀⣤⣄⢀⣤⡄⣤⢌⣾⡿⠟⠛⠛⠁⠀',
+    '⠀⠰⣦⣶⠿⠋⡟⣼⣿⣿⢸⣿⡇⣿⣿⢟⠜⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⢰⡶⡾⠿⠃⠙⠚⠿⠷⣿⡿⠎⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠼⠃⠈⣆⠀⠀⠤⢄⣠⠏⠀⠀⠀⠀⠀⠀⠀⠀',
   ],
   [
-    '.....................KKO....', '....................KWWWOOO.', '...................KWWEWWWWO', '...OO.OO.OO.OO.OO.KKWWWWWWNN',
-    '..OWWKWWKWWKWWKWWKWWKWOOOO..', '.OWWWKWWKWWKWWKWWWWWWO......', '.KWWWWKWWKWWKWWKWWWWWO......', 'K.OWWWKWWKWWKWWKWWWWO.......',
-    '......L.L.......L.L.........', '.......K.K.....K.K..........', '........L.L...L..L..........', '.........HH..H..H...........',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡶⢦⣄⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⢀⣠⣀⢀⣀⡀⣤⣶⡟⣵⠟⠛⠻⠀⠀',
+    '⠀⢀⣄⣠⣶⠂⢻⡟⣼⣿⢸⣿⡇⣿⢏⣾⠟⠀⠀⠀⠀⠀',
+    '⠀⠀⠙⠉⠀⠀⢈⣸⣿⡟⠘⠿⠇⣧⣿⡟⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠈⠙⢻⠧⢤⡀⣠⠿⡬⠽⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠈⠈⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀',
   ],
   [
-    '.....................KKO....', '....................KWWWOOO.', '...................KWWEWWWWO', '...OO.OO.OO.OO.OO.KKWWWWWWNN',
-    '..OWWKWWKWWKWWKWWKWWKWOOOO..', '.OWWWKWWKWWKWWKWWWWWWO......', '.KWWWWKWWKWWKWWKWWWWWO......', 'K.OWWWKWWKWWKWWKWWWWO.......',
-    '.....L.L.........L.L........', '.....KK...........K.K.......', '...DL.L............L.L......', '..D.HH..............H.H.....',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡐⡴⣦⣄⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⢀⡄⣤⣤⢠⣤⡄⣼⢎⣾⡿⠉⠛⠃⠀⠀',
+    '⠀⢠⣠⡶⠻⠏⠟⣼⣿⣿⢸⣿⡇⣣⣿⢟⠀⠀⠀⠀⠀⠀',
+    '⠀⠈⠁⠀⠀⠀⠀⢩⣿⣿⠚⠻⠷⣿⠿⠮⣄⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠳⠦⣤⠇⠰⠖⠁⠀⠀⠀⠀⠀',
   ],
   [
-    '.....................KKO....', '....................KWWWOOO.', '...................KWWEWWWWO', '...OO.OO.OO.OO.OO.KKWWWWWWNN',
-    '..OWWKWWKWWKWWKWWKWWKWOOOO..', '.OWWWKWWKWWKWWKWWWWWWO......', '.KWWWWKWWKWWKWWKWWWWWO......', 'K.OWWWKWWKWWKWWKWWWWO.......',
-    '.....L.L.........L.L........', '.....K..K........K.K........', '.....L..L........L..L.......', '......H.H.........H..H......',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢄⣤⡿⣟⣶⣄⠀⠀',
+    '⠀⠀⠀⣀⣀⣀⢠⣴⣶⣶⢰⣶⡆⣯⣾⡟⡵⠉⠉⠙⠁⠀',
+    '⠀⣤⡾⠛⠉⠁⠹⡟⣼⣿⢸⣿⡇⣿⢏⣾⠇⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠈⠹⣿⣈⠛⠃⢃⠻⢿⡈⢹⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣌⠉⠙⠂⠉⠉⠀⠘⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠽⠆⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  ],
+  [
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⢠⡴⡶⣦⡀⠀⠀',
+    '⠀⠀⠀⢀⣀⣀⢀⣤⡔⣤⢠⣤⡄⣶⣾⡟⣵⠋⠙⠻⠂⠀',
+    '⠀⢀⣾⠟⠙⠁⢾⡟⣼⣿⢸⣿⡇⣿⢏⣾⡇⠀⠀⠀⠀⠀',
+    '⠀⠈⠁⠀⠀⠀⠈⣸⡟⢻⡘⠛⠃⠛⠛⠛⢸⠿⠦⡀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠰⡏⠀⠀⠉⠒⠤⡄⠀⠘⠉⠀⠀⠘⠂⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠙⠒⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  ],
+  [
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡰⣰⢦⡀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⢀⣠⡄⣄⢀⣀⡄⣤⣾⡟⣵⠟⠻⢿⡆⠀',
+    '⠀⣰⠾⠛⠛⢡⣿⡟⣼⣿⢸⣿⡇⣿⢏⣾⡏⠀⠀⠀⠀⠀',
+    '⠀⠃⠀⠀⠀⣸⡟⠼⣿⠛⠘⠿⠇⠿⠿⠛⠼⣿⡆⠀⠀⠀',
+    '⠀⠀⠀⠀⡞⠉⠀⠀⢿⡀⠀⠀⠀⠀⠀⠀⠀⠸⠛⠢⢤⠀',
+    '⠀⠀⠀⠘⣦⠀⠀⠀⠀⠳⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  ],
+  [
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡰⣠⣤⡀⠀⠀',
+    '⠀⠀⠀⠀⠀⣀⢀⣀⣀⣀⢀⣀⡄⣤⣾⡟⣵⡟⠺⢿⡦⠀',
+    '⢠⠴⠾⠛⠋⢡⣿⡟⣼⣿⢸⣿⡇⣿⢏⣾⡏⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⢀⡤⢾⡟⠌⠉⠙⠘⠻⠇⠿⠟⢟⡜⠲⠦⣀⠀⠀',
+    '⢀⡤⠔⠉⢰⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢆⠀⠈⠑⠀',
+    '⠀⠀⠀⠀⠸⠦⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣄⡈⢳⡄⠀⠀',
+  ],
+  [
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⡠⣢⣤⣄⠀⠀',
+    '⠀⠀⠀⠀⠀⣀⢠⣤⡄⣀⢀⣀⡄⣤⣶⡟⣵⡿⠛⠾⣦⠀',
+    '⠰⠾⠿⠟⠋⢡⣿⡟⣼⣿⢸⣿⡇⣿⣏⣾⡿⠁⠀⠀⠀⠀',
+    '⠀⠀⢀⣠⢦⣾⠟⠈⠉⠙⠘⠿⠇⠿⠿⣟⠸⠦⣀⡀⠀⠀',
+    '⠘⠉⠁⡠⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠉⠓⠒',
+    '⠀⠀⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠀⠀⠀⠀⠀⠀',
+  ],
+  [
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡼⣣⣟⣷⡀⠀',
+    '⠠⣄⣄⣀⣤⠶⢢⣶⣶⣶⢠⣶⡆⣿⣾⡟⣵⡿⠉⠙⠛⠂',
+    '⠀⠈⠉⠉⣁⢀⣿⡟⡼⢿⢸⣿⡇⣿⢏⣾⡿⠀⠀⠀⠀⠀',
+    '⠀⣀⣠⡼⠇⠋⠉⠈⠀⠀⠈⠉⠁⣻⠟⠉⠘⢦⡀⠀⠀⠀',
+    '⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⡰⠁⠀⠀⠀⠀⠙⢦⣀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  ],
+  [
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣄⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⢀⣀⡀⣀⣀⢀⣀⡀⣄⢔⣾⡿⡷⠿⢷⡆⠀',
+    '⠀⠈⢷⡶⠿⠋⡟⣼⣿⣿⢸⣿⡇⣿⣿⢟⡜⠁⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⡴⢶⠾⠿⠓⠛⠺⠿⠷⣿⣿⠞⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠐⠚⠀⢨⠇⠀⠀⠀⠀⠀⣰⠋⣿⠀⠀⠀⠀⠀⠀⠀',
+  ],
+  [
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡔⣵⣯⣿⣶⡄⠀',
+    '⠀⠀⣤⣤⣦⣤⢶⡞⣼⣿⢰⣿⡇⣿⢏⣾⡿⠁⠀⠀⠀⠀',
+    '⠀⠀⠙⠋⠉⢀⣘⣼⣿⡿⣸⣿⣇⣿⣿⣟⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠹⡿⢯⣀⠀⠀⣩⣿⡿⠁⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⠀⠀⠃⠀⠘⢀⡔⠉⠉⠉⠀⠀⠀⠀⠀⠀⠀',
   ],
 ]
 
-// colors read on a light and on a dark terminal alike: the outline carries the shape on white
-const PALETTE: Record<string, number> = {
-  W: 0xf2efe8, K: 0x222222, E: 0x0a0a0a, N: 0x373737, O: 0x787876, L: 0xc4c0b8, H: 0x3c3c3c, D: 0xa09687, G: 0x6e6c64,
-}
-const DEFAULT = 0x01000000
-const SPRITE_W = 28
-const SPRITE_H = 12
+const DEFAULT = 0x01000000 // the terminal's own colour
+const GROUND = 0x6e6c64
+const SPRITE_COLS = 22
+const STANDING = 5 // the pose shown still (the welcome card, the shield)
 
 /** Columns and rows of the zebra's Raster: the sprite with a little ground before and behind it. */
-export const RASTER_COLUMNS = 36
-export const RASTER_ROWS = SPRITE_H / 2
+export const RASTER_COLUMNS = 28
+export const RASTER_ROWS = 6
 export const FRAME_COUNT = FRAMES.length
-const OFFSET_X = 3
+const OFFSET = 3
 
-/** The pixel at (x, y) of `frame` scrolled by `scroll`: a color, or undefined where nothing is drawn. */
-function pixel(frame: number, scroll: number, x: number, y: number, isStanding: boolean): number | undefined {
-  const rows = FRAMES[isStanding ? 3 : frame % FRAMES.length] as readonly string[]
-  const sx = x - OFFSET_X
-  const code = sx >= 0 && sx < SPRITE_W ? (rows[y] as string)[sx] : '.'
-  if (code !== undefined && code !== '.' && !(isStanding && code === 'D')) return PALETTE[code]
-  // the ground: a dotted line under the hooves that moves backwards while the zebra runs
-  if (y === SPRITE_H - 1 && (x + (isStanding ? 0 : scroll)) % 5 === 0) return PALETTE.G
-  return undefined
+/** The braille dot bits of the cell at (col, row): the zebra's, then the ground's in the lowest dot row. */
+function cell(frame: number, scroll: number, col: number, row: number, isStanding: boolean): { horse: number; ground: number } {
+  const rows = FRAMES[isStanding ? STANDING : frame % FRAMES.length] as readonly string[]
+  const sc = col - OFFSET
+  const ch = sc >= 0 && sc < SPRITE_COLS ? (rows[row] as string).codePointAt(sc) ?? 0x2800 : 0x2800
+  const horse = ch - 0x2800
+  let ground = 0
+  if (row === RASTER_ROWS - 1) {
+    // dot 7 (left column, bottom) and dot 8 (right column, bottom), one in every six dots
+    const s = isStanding ? 0 : scroll
+    if ((col * 2 + s) % 6 === 0) ground |= 0x40
+    if ((col * 2 + 1 + s) % 6 === 0) ground |= 0x80
+  }
+  return { horse, ground }
 }
 
-/** The Raster `cells` of one frame: each cell an upper half block, top pixel as foreground, bottom as background. */
+/** The Raster `cells` of one frame: braille dots in the terminal's colour, the ground dimmed. */
 export function zebraCells(frame: number, scroll: number, isStanding = false): string {
   const words = new Uint32Array(RASTER_COLUMNS * RASTER_ROWS * 3)
   let i = 0
   for (let row = 0; row < RASTER_ROWS; row++) {
     for (let col = 0; col < RASTER_COLUMNS; col++) {
-      const top = pixel(frame, scroll, col, row * 2, isStanding)
-      const bottom = pixel(frame, scroll, col, row * 2 + 1, isStanding)
-      if (top === undefined && bottom === undefined) {
-        words[i++] = 0x20; words[i++] = DEFAULT; words[i++] = DEFAULT
-      } else if (top === undefined) {
-        words[i++] = 0x2584; words[i++] = bottom as number; words[i++] = DEFAULT // ▄
-      } else {
-        words[i++] = 0x2580; words[i++] = top; words[i++] = bottom ?? DEFAULT // ▀
-      }
+      const { horse, ground } = cell(frame, scroll, col, row, isStanding)
+      const bits = horse | ground
+      words[i++] = bits ? 0x2800 + bits : 0x20
+      words[i++] = horse ? DEFAULT : ground ? GROUND : DEFAULT
+      words[i++] = DEFAULT
     }
   }
   return base64(new Uint8Array(words.buffer))

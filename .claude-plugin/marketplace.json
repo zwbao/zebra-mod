@@ -12,7 +12,7 @@
       "name": "zebra-mod",
       "source": "./",
       "description": "Rare-disease research workstation: phenotype-driven diagnosis, ACMG variant interpretation, sequence-to-function models, genotype-to-therapy, classical statistics — every answer anchored to live public databases.",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "category": "science"
     }
   ]

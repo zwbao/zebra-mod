@@ -145,4 +145,6 @@ zebra-mod produces research-grade analyses to help people ask better questions. 
 
 zebra-mod's sequence-to-function (S2F) layer builds on [s2f-penguin](https://github.com/zwbao/s2f-penguin): sequence-to-function models with run receipts, claim ceilings, and triangulation by logic rather than arithmetic. zebra-mod calls its `s2f` CLI for the heavy models.
 
+The galloping zebra above the prompt is traced from Eadweard Muybridge's *The Horse in Motion* (1878, public domain): eleven positions of one stride, the rider removed, drawn in braille (`tools/zebra_sprite/build.py` rebuilds it).
+
 MIT licence © 2026 zwbao.

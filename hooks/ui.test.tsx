@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 
-import { base64, RASTER_COLUMNS, RASTER_ROWS, zebraCells } from './ui-sprite'
+import { base64, FRAME_COUNT, RASTER_COLUMNS, RASTER_ROWS, zebraCells } from './ui-sprite'
 import { envelopeOf, gateRefusals, queryOf, recordCall, shieldLines, sourceName, summaryLine, turnLine } from './ui'
 
 const P = 'mcp__zebra-mod__'
@@ -113,13 +113,30 @@ describe('words', () => {
 })
 
 describe('the galloping zebra', () => {
-  test('every frame is a whole Raster of half blocks', async () => {
+  test('every frame is a whole Raster of braille cells in the terminal’s colour', async () => {
     const bytes = RASTER_COLUMNS * RASTER_ROWS * 12
-    for (let f = 0; f < 4; f++) {
-      const cells = zebraCells(f, f * 3)
-      expect(cells.length).toBe(Math.ceil(bytes / 3) * 4)
+    const decode = (b64: string): Uint32Array => {
+      const bin = atob(b64)
+      const u8 = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i)
+      return new Uint32Array(u8.buffer)
     }
+    for (let f = 0; f < FRAME_COUNT; f++) {
+      const cells = zebraCells(f, f * 2)
+      expect(cells.length).toBe(Math.ceil(bytes / 3) * 4)
+      const words = decode(cells)
+      let horse = 0
+      for (let i = 0; i < words.length; i += 3) {
+        const cp = words[i] as number
+        expect(cp === 0x20 || (cp >= 0x2800 && cp <= 0x28ff)).toBe(true)
+        expect(words[i + 2]).toBe(0x01000000) // background left to the terminal
+        if (words[i + 1] === 0x01000000 && cp !== 0x20) horse++
+      }
+      expect(horse > 40).toBe(true)
+    }
+    expect(FRAME_COUNT).toBe(11)
     expect(zebraCells(0, 0)).not.toBe(zebraCells(1, 0))
+    expect(zebraCells(0, 0)).not.toBe(zebraCells(0, 2)) // the ground runs
     expect(zebraCells(0, 0, true)).toBe(zebraCells(2, 7, true))
   })
 
