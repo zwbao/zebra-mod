@@ -1,0 +1,13 @@
+[Demo case · synthetic data, not a real patient]
+
+Paediatric neurology clinic note (excerpt)
+Name: Lily Chen    Sex: female    Age: 2 y 3 m    MRN: 20240518007
+Date of birth: 2022-02-14
+Phone: 415-555-0134
+Presenting complaint: recurrent seizures with fever for over a year.
+History: from 6 months of age, generalised seizures with fever lasting 10-20 minutes, recurring;
+some seizures involve one side of the body only. Seizures without fever since 1 year of age.
+Walked late (independent walking at 20 months); speaks few words ("mama", "dada").
+Examination: normal muscle tone.
+Investigations: brain MRI normal; EEG at 1 year: normal background.
+Family history: no similar illness.

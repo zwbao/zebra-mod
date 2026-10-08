@@ -1,0 +1,17 @@
+[Demo case · synthetic data, not a real patient]
+
+Trio exome sequencing report (excerpt)
+Patient: Lily Chen    Sex: female    Date of birth: 14 Feb 2022
+Lab accession: GT-2024-0613-0021    Referring MRN: 20240518007
+Method: proband-parents trio exome sequencing, reference genome GRCh38
+
+Result:
+Gene: SCN1A
+Transcript: NM_001165963.4
+Nucleotide change: c.2134C>T
+Protein change: p.Arg712Ter (p.R712*)
+Zygosity: heterozygous
+Inheritance: de novo (both parents wild type at this position; parentage confirmed)
+Laboratory classification: Pathogenic
+
+This report is for clinical reference only.

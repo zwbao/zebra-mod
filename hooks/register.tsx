@@ -12,6 +12,10 @@ const PANE = 'zebra-board'
 const TOOL_PREFIX = `mcp__${PLUGIN}__`
 const MAX_RESULT_CHARS = 60_000
 const MAX_ARTIFACT_SCAN = 200_000
+// The case summary is pinned as a status line only when the mod's own drawing is off: Claude Code
+// draws pinned lines as notices (with a warning sign), and ui.tsx carries the summary in the footer.
+// A case that cannot be read is still pinned: that one is a warning.
+let pinCaseStatus = false
 
 // Tools that never reach the network: they read and write the local case only.
 const LOCAL_TOOLS = new Set(['case_status', 'case_update', 'report_export'])
@@ -46,6 +50,7 @@ type Envelope = {
 export const register: Register = (on, options) => {
   // first, so its hooks wrap the ones below: what the person sees of zebra-mod at work
   registerUi(on, options)
+  pinCaseStatus = options.interface === 'off'
   const python = String(options.python ?? 'python3')
   const doctrineMode = String(options.doctrine ?? 'auto')
   const privacyOn = options.privacyGate !== false
@@ -61,8 +66,8 @@ export const register: Register = (on, options) => {
     }
     await $.command.register({
       name: 'zebra',
-      description: 'zebra-mod: rare-disease workspace — /zebra [board|case <dir>|new <dir> [title]|close|doctor|ledger]',
-      argumentHint: '[board|case <dir>|new <dir> [title]|close|doctor|ledger]',
+      description: 'zebra-mod: what it does and how to start — /zebra [demo|new <dir> [title]|case <dir>|board|ledger|doctor|close]',
+      argumentHint: '[demo|new <dir> [title]|case <dir>|board|ledger|doctor|close]',
     })
 
     // bin/ on PATH, and the interpreter the tools use, so `zebra` in Bash is the same CLI
@@ -114,7 +119,7 @@ export const register: Register = (on, options) => {
           // the case folder moved or was deleted: leave the board as it was
         }
       })
-    })()
+    })().catch(() => undefined) // background work: a failure here must not surface as an unhandled rejection
 
     return started
   })
@@ -283,12 +288,26 @@ export const register: Register = (on, options) => {
     const words = shellWords(e.args.trim())
     const verb = words[0] ?? ''
     const rest = words.slice(1)
-    if (verb === '' || verb === 'help') {
+    if (verb === '' || verb === 'help' || verb === 'zh' || verb === 'en') {
       if ((await read($, ready)) === null) await checkCli($, python)
       const r = await read($, ready)
       const active = await read($, casePath)
       if (active) await $.ui.open({ id: PANE, title: 'zebra · case board' })
-      return { text: helpText(r, active) }
+      return { text: helpText(r, active, await guideIsZh($, verb === 'zh' || verb === 'en' ? verb : rest[0])) }
+    }
+    if (verb === 'demo') {
+      // the bundled synthetic case: created (or reopened), made active, the first question put in the prompt box
+      const zh = await guideIsZh($, rest[0])
+      const dirArg = rest.find(w => w !== 'zh' && w !== 'en')
+      const made = await runZebra($, python, [
+        'case', 'demo', ...(dirArg ? [await absolute($, dirArg)] : []), '--lang', zh ? 'zh' : 'en',
+      ])
+      if (!made.ok) return { text: `${zh ? '示例病例没能准备好：' : 'Could not prepare the demo case: '}${made.error?.message ?? 'unknown error'}` }
+      const demo = made.result as DemoResult
+      await setCase($, python, demo.path, e.origin.kind === 'composer')
+      await $.ui.open({ id: PANE, title: 'zebra · case board' })
+      const filled = await $.prompt.fill({ text: demo.first_prompt, mode: 'replace' })
+      return { text: demoText(demo, zh, filled.isFilled) }
     }
     if (verb === 'board') {
       const active = await read($, casePath)
@@ -478,7 +497,7 @@ async function refreshBoard($: EngineInterface, python: string): Promise<void> {
   if (got.ok && got.result) {
     const b = got.result as Board
     await update($, board, () => b)
-    $.ui.status(statusLine(b))
+    $.ui.status(pinCaseStatus ? statusLine(b) : undefined)
   } else {
     $.ui.status(`zebra: case ${active} unreadable`)
   }
@@ -709,22 +728,112 @@ function boardMarkdown(b: Board): string {
   return lines.join('\n')
 }
 
-function helpText(r: Ready | null, active: string | null): string {
+type DemoResult = {
+  path: string
+  reused: boolean
+  title: string
+  records: string[]
+  identifiers: number
+  first_prompt: string
+  next_prompts: string[]
+}
+
+/** The language of the guide: an explicit `zh`/`en`, else the open case's, else LANG. */
+async function guideIsZh($: EngineInterface, asked: string | undefined): Promise<boolean> {
+  if (asked === 'zh') return true
+  if (asked === 'en') return false
+  const b = await read($, board)
+  if (b?.language) return b.language.toLowerCase().startsWith('zh')
+  const env = (await $.env.get('LC_ALL')) || (await $.env.get('LANG')) || ''
+  return env.toLowerCase().startsWith('zh')
+}
+
+function demoText(d: DemoResult, zh: boolean, isFilled: boolean): string {
+  const next = d.next_prompts.map(q => `- ${q}`).join('\n')
+  if (zh) {
+    return [
+      `🦓 **已打开示例病例**「${d.title}」`,
+      `\`${d.path}\``,
+      '',
+      `- records/ 里有两份合成资料：${d.records.join('、')}。`,
+      `- 其中的姓名、出生日期、电话和病历号已登记为受保护身份信息（${d.identifiers} 项），隐私闸门会拦住带有它们的外发查询。`,
+      isFilled
+        ? '- **第一个问题已经放进输入框，按回车就开始。** 它会整理病历、做鉴别诊断、解读变异；过程中能看到工具行、奔跑的斑马和右侧病例看板的变化。'
+        : `- 把这个问题发给 Claude 就开始：\n\n  ${d.first_prompt}`,
+      '',
+      '之后可以接着问：',
+      next,
+      '',
+      '用你自己的资料：`/zebra new ~/cases/<名字>`，把病历、化验单、基因报告放进它的 records/，再直接提问。',
+    ].join('\n')
+  }
   return [
-    '🦓 zebra-mod — rare-disease research workstation',
-    `   CLI: ${r?.version ?? `not ready (${r?.error ?? 'python not checked'})`}`,
-    `   active case: ${active ?? 'none'}`,
+    `🦓 **Demo case open:** ${d.title}`,
+    `\`${d.path}\``,
     '',
-    '   /zebra new <dir> [title]   start a case folder (files are written only on this machine)',
-    '   /zebra case <dir>          switch to an existing case',
-    '   /zebra board               open the case board',
-    '   /zebra ledger              list the evidence the answers stand on',
-    '   /zebra doctor              check Python, data files, API reachability and keys',
-    '   /zebra close               no active case',
+    `- records/ holds two synthetic files: ${d.records.join(', ')}.`,
+    `- The name, date of birth, phone and record numbers in them are registered as protected identifiers (${d.identifiers}); the privacy gate keeps them out of every outgoing query.`,
+    isFilled
+      ? '- **The first question is in the prompt box: press Enter.** It reads the records, ranks a differential and interprets the variant; you will see its tool rows, the galloping zebra and the case board on the right fill in.'
+      : `- Send Claude this to begin:\n\n  ${d.first_prompt}`,
     '',
-    '   Skills: /zebra-mod:zebra-start (start here), zebra-safety (urgent red flags, drug and',
-    '   anaesthesia hazards), zebra-intake, zebra-diagnose, zebra-variant, zebra-reanalysis,',
-    '   zebra-s2f, zebra-therapy, zebra-stats, zebra-literature, zebra-family, zebra-report',
+    'Then try:',
+    next,
+    '',
+    'Your own records: `/zebra new ~/cases/<name>`, put reports, lab sheets and the genetic report in its records/, and ask.',
+  ].join('\n')
+}
+
+/** `/zebra`: what the mod does and how to start, in the person's language. */
+function helpText(r: Ready | null, active: string | null, zh: boolean): string {
+  const version = r?.version ?? (zh ? `未就绪（${r?.error ?? '尚未检查 Python'}）` : `not ready (${r?.error ?? 'python not checked'})`)
+  if (zh) {
+    return [
+      `🦓 **zebra-mod** · 罕见病研究工作台 · ${version} · 当前病例：${active ?? '无'}`,
+      '',
+      '**怎么用：直接提问。** 用中文或英文描述症状，贴检查结果或基因报告，Claude 会自己调用 zebra-mod 去查公开数据库、做计算，每个结论都标出处。不需要记命令。例如：',
+      '- 孩子 6 个月开始发热抽搐，基因报告说 SCN1A c.2134C>T，这是什么意思？',
+      '- 这些表现可能是什么病：头围小、听力下降、走路晚，肌张力正常',
+      '- Dravet 综合征现在有哪些获批的药和在招募的临床试验？我们在中国',
+      '',
+      '**先试一下：`/zebra demo`** 打开一个合成示例病例，第一个问题会放进输入框，按回车即可。',
+      '',
+      '**能做什么**',
+      '- 鉴别诊断：病历 → 标准表型（HPO）→ 三个来源分别排序 → 该做哪种基因检测',
+      '- 变异解读：ClinVar、gnomAD、预测分数 → ACMG 证据，分数由程序计算',
+      '- 拷贝数变异、外显子缺失、SMN1 拷贝数、重复扩增；剪接与非编码变异的序列功能预测',
+      '- 治疗与试验：获批药物（含中国获批与医保）、在招募的试验（含中国中心）、反义寡核苷酸与碱基编辑可行性',
+      '- 统计：共分离、再发风险、携带频率；文献检索；在本机重分析 VCF',
+      '- 给家属的说明信、就诊准备单，导出 Word / PDF；隔几个月复查有无新进展',
+      '',
+      '**病例命令**（病例文件只保存在本机）',
+      '`/zebra demo` 示例病例 · `/zebra new <目录> [标题]` 新建 · `/zebra case <目录>` 切换 · `/zebra board` 病例看板 · `/zebra ledger` 证据台账 · `/zebra doctor` 环境自检 · `/zebra close` 关闭病例',
+      '',
+      '隐私：Claude 读到的病历会照常发给模型服务商；zebra-mod 只保证已登记的姓名、证件号、病历号不会出现在它对外的数据库查询里。研究用途，不能代替医生。',
+    ].join('\n')
+  }
+  return [
+    `🦓 **zebra-mod** · rare-disease research workstation · ${version} · active case: ${active ?? 'none'}`,
+    '',
+    '**How to use it: just ask.** Describe symptoms, paste test results or a genetic report, in English or Chinese; Claude calls zebra-mod to query public databases and compute, and cites a source for every claim. No commands to learn. For example:',
+    '- My daughter has had seizures with fever since 6 months; her report says SCN1A c.2134C>T. What does it mean?',
+    '- What could this be: small head, hearing loss, walked late, normal muscle tone',
+    '- Which treatments are approved for Dravet syndrome, and are any trials recruiting?',
+    '',
+    '**Try it first: `/zebra demo`** opens a synthetic demo case and puts the first question in the prompt box; press Enter.',
+    '',
+    '**What it does**',
+    '- Differential diagnosis: records → HPO phenotypes → three rankings kept apart → which test finds each candidate',
+    '- Variant interpretation: ClinVar, gnomAD, predictors → ACMG evidence, points computed by code',
+    '- CNVs, exon deletions, SMN1 copy number, repeat expansions; sequence-to-function for splicing and non-coding variants',
+    '- Therapy and trials: approved drugs (incl. China approval and reimbursement), recruiting trials, antisense and base-editing feasibility',
+    '- Statistics: segregation, recurrence risk, carrier frequency; literature; VCF reanalysis on this machine',
+    '- A family letter and a visit-preparation sheet, exported to Word / PDF; rechecks months later',
+    '',
+    '**Case commands** (case files stay on this machine)',
+    '`/zebra demo` · `/zebra new <dir> [title]` · `/zebra case <dir>` · `/zebra board` · `/zebra ledger` · `/zebra doctor` · `/zebra close`',
+    '',
+    'Privacy: records Claude reads reach the model provider as in any session; zebra-mod keeps registered names and record numbers out of its outgoing database queries. Research-grade, not a substitute for a clinician.',
   ].join('\n')
 }
 

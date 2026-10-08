@@ -7,6 +7,10 @@ description: Start here for anything about a rare disease — unexplained sympto
 
 zebra-mod gives you live-database tools (`mcp__zebra-mod__*`), a local case workspace with an evidence ledger, and these skills. Route, then follow the skill.
 
+## 0. "What can zebra-mod do?" / "How do I start?"
+
+Answer from this, in their language, without calling tools: it is used by asking in their own words (symptoms, test results, a genetic report, a variant, a disease, a treatment or a trial), and Claude calls its tools; `/zebra demo` opens a synthetic demo case with the first question ready in the prompt box; `/zebra new <folder>` starts a case for their own records (files go in `records/`); `/zebra` shows the full guide. Then list what it does in one line each: differential diagnosis, variant interpretation (ACMG points computed by code), CNVs and splicing, treatments and trials (with China's approvals, reimbursement and trial sites), recurrence risk and other statistics, a family letter and visit-preparation sheet exported to Word/PDF.
+
 ## 1. Who is asking
 
 Read it from the message; ask only when it changes what you do.

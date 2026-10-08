@@ -117,14 +117,30 @@ fi
 step "zebra doctor"
 "$PY" "$ROOT/bin/zebra" doctor || say "(some checks did not pass: the lines above say which and why)"
 
+step "demo case (synthetic records to try it on)"
+DEMO_LANG="en"
+case "${LC_ALL:-${LANG:-}}" in zh*) DEMO_LANG="zh" ;; esac
+"$PY" "$ROOT/bin/zebra" case demo --lang "$DEMO_LANG" || say "(the demo case was not created: /zebra demo creates it later)"
+
 cat <<EOF
 
-zebra-mod is installed. Start a new Claude Code session (run: claude) — or type /reload-plugins in
-one that is open — then:
-  /zebra-mod:zebra-start            what it can do, and where to begin
-  /zebra new ~/cases/<name>         start a case folder for a patient's records
+zebra-mod is installed. It takes effect in a new Claude Code session (run: claude), or in an open
+one after /reload-plugins.
 
-zebra-mod 已安装。请重新打开 Claude Code（运行 claude），或在已打开的会话中输入 /reload-plugins，然后输入
-  /zebra-mod:zebra-start            了解能做什么、从哪里开始
-  /zebra new ~/cases/<名字>          为一位患者的资料建一个病例文件夹
+How to use it: just ask. Describe symptoms, paste test results or a genetic report, or ask about a
+variant, a disease, a treatment or a trial, in your own words; Claude calls zebra-mod by itself.
+  e.g. "My daughter has had seizures with fever since 6 months; her report says SCN1A c.2134C>T.
+        What does it mean?"
+Try it now:   /zebra demo                  opens a synthetic demo case, the first question ready
+Your records: /zebra new ~/cases/<name>    then put the files in its records/ folder and ask
+Everything:   /zebra
+
+zebra-mod 已安装，在新的 Claude Code 会话（运行 claude）或已打开会话中输入 /reload-plugins 后生效。
+
+怎么用：直接提问。用自己的话描述症状、贴检查结果或基因报告，或者问某个变异、疾病、药物、临床试验，
+Claude 会自己调用 zebra-mod。
+  例如：「孩子 6 个月开始发热抽搐，基因报告说 SCN1A c.2134C>T，这是什么意思？」
+先试一下：/zebra demo                 打开一个合成示例病例，第一个问题已放进输入框
+你自己的资料：/zebra new ~/cases/<名字>  把病历放进它的 records/ 文件夹再提问
+全部功能：/zebra
 EOF

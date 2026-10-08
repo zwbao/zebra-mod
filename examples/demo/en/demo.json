@@ -1,0 +1,19 @@
+{
+  "folder": "demo-lily",
+  "title": "Demo: Lily — seizures since 6 months (synthetic)",
+  "role": "family",
+  "language": "en",
+  "identifiers": [
+    "Lily Chen",
+    "2022-02-14",
+    "20240518007",
+    "415-555-0134",
+    "GT-2024-0613-0021"
+  ],
+  "first_prompt": "I've put my daughter's clinic note and genetic report in this case's records folder. She has had seizures with fever since 6 months, now also without fever, and she walked late. What could this be, what does the variant in the report mean, and what should we ask her doctors next?",
+  "next_prompts": [
+    "Which treatments are approved for Dravet syndrome, and are any trials recruiting?",
+    "We would like another child: what is the recurrence risk?",
+    "Write a plain-language letter for the family and export it to Word."
+  ]
+}

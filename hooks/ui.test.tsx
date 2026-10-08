@@ -204,7 +204,7 @@ describe('drawing', () => {
     let modes: readonly string[] = []
     engineDraws(on, 'SessionMode', 'modes', e => { modes = e.props.modes })
     const a = await $.ui.mount({ plugin: 'zebra-mod', surface: 'terminal', component: 'SessionMode', props: { modes: ['focus'] } })
-    expect(modes).toEqual(['focus', '🦓 Lily — seizures sin…'])
+    expect(modes).toEqual(['focus', '🦓 Lily — seizures sin… · HPO 0 · E0'])
     await a.unmount()
     at = 1
     const b = await $.ui.mount({ plugin: 'zebra-mod', surface: 'terminal', component: 'SessionMode', props: { modes: [] } })

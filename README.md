@@ -45,8 +45,8 @@ Measured, not claimed — [docs/BENCHMARK.md](docs/BENCHMARK.md) has the method,
 - **21 tools** the model calls directly (`mcp__zebra-mod__*`): `case_status`, `case_update`, `case_recheck`, `hpo_search`, `phenotype_rank`, `gene_card`, `variant_card`, `disease_card`, `acmg`, `cnv_interpret`, `s2f_predict`, `therapy_landscape`, `trials_search`, `literature_search`, `rare_stats`, `edit_check`, `china_rare`, `access`, `expression`, `aso_screen`, `report_export`. Every call goes through your permission rules and the privacy gate; read-only lookups skip the prompt unless a rule of yours says otherwise, and case writes follow your permission mode (with an "allow for this session" choice).
 - **A research doctrine** in the system prompt (the rules above), with the active case.
 - **You can see it at work** (all additive; unrelated work draws as before): its tool calls get their own rows (`🦓 Variant card  NM_001165963.4:c.2134C>T`, then `⎿ 15 evidence rows (E39–E53) · from Ensembl VEP, gnomAD, ClinVar, LitVar2 · 3 cached`) instead of a JSON envelope, and a case_update row never shows the identifiers it registers; the spinner names the databases being queried; a small galloping zebra above the prompt while a query runs, a shield there after the privacy gate stops a call; a `🦓` label in the footer (with the open case's title); and one line at the end of a turn that used it — calls, databases, evidence rows, calls stopped. Chinese or English, from the case's language or your prompts. Option `interface`: `full` (default), `quiet` (no animation, no spinner text) or `off`.
-- **A case board** pane (`/zebra board`) and a status line: phenotypes, variants and their research class, hypotheses, therapy leads, open questions, evidence count — live as the case changes.
-- **`/zebra`** command: `new <dir> [title]`, `case <dir>`, `board`, `ledger`, `doctor`, `close`.
+- **A case board** pane (`/zebra board`) and the case in the footer label (a pinned status line when `interface` is `off`): phenotypes, variants and their research class, hypotheses, therapy leads, open questions, evidence count — live as the case changes.
+- **`/zebra`** command: with no argument, the guide (how to use it, what it does); `demo` (the synthetic demo case, first question ready), `new <dir> [title]`, `case <dir>`, `board`, `ledger`, `doctor`, `close`.
 - **12 skills** (`/zebra-mod:zebra-start` routes): `zebra-safety` (urgent red flags and disease-specific drug, anaesthesia and procedure hazards), `zebra-intake`, `zebra-diagnose`, `zebra-variant`, `zebra-reanalysis`, `zebra-s2f`, `zebra-therapy`, `zebra-stats`, `zebra-literature`, `zebra-family`, `zebra-report`.
 - **6 subagents**: `phenotype-curator`, `variant-curator`, `s2f-analyst`, `therapy-scout`, `literature-scout`, `evidence-auditor`.
 - **The `zebra` CLI** (Python standard library only, Python ≥ 3.9): the single implementation behind every tool, usable from any shell, notebook or other agent.
@@ -85,6 +85,12 @@ Optional heavy S2F models: install the `s2f` CLI from [s2f-penguin](https://gith
 Options (`/config` → zebra-mod, or `pluginConfigs` in settings): `python` (interpreter), `doctrine` (`auto` by default: the full rules while a case is open, otherwise a short section that only applies to rare-disease questions, so the rest of your work in Claude Code is untouched; or `always` | `case` | `off`), `privacyGate` (on by default; with no case open, an email or phone number in another tool's call is asked about rather than refused), `interface` (`full` by default: its own tool rows, the spinner text, the galloping zebra and the end-of-turn line; `quiet` without the animation and spinner text; `off` for Claude Code's own drawing only).
 
 ## Quick start
+
+**Just ask.** Describe symptoms, paste test results or a genetic report, or ask about a variant, a disease, a treatment or a trial, in English or Chinese: Claude calls zebra-mod's tools by itself. There are no commands to learn; `/zebra` shows what it does.
+
+**Try it first:** `/zebra demo` opens a synthetic demo case (a clinic note and a genetic report, identifiers already registered; the installer creates it at `~/zebra-cases/demo-lily` or `demo-xiaoyu`) and puts the first question in the prompt box. Press Enter and watch it read the records, rank a differential and interpret the variant.
+
+With your own records:
 
 ```text
 /zebra new ~/cases/lily "Lily — seizures since 6 months"

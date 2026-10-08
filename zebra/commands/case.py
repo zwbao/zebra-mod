@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
+import shutil
+from pathlib import Path
 from typing import Any, Dict, List
 
 from zebra import case as case_mod
@@ -151,6 +155,49 @@ def _identifiers(args: argparse.Namespace) -> Outcome:
     else:
         current = case_mod.load(_dir(args))["privacy"]["identifiers"]
     return Outcome({"count": len(current)}, text=f"{len(current)} protected identifiers (values are not printed)")
+
+
+# The demo case shipped with zebra-mod: synthetic records a person can try the whole flow on.
+DEMO_ROOT = Path(__file__).resolve().parents[2] / "examples" / "demo"
+DEMO_MARK = ".zebra-demo"
+
+
+def _demo(args: argparse.Namespace) -> Outcome:
+    lang = args.lang if args.lang in ("zh", "en") else "zh"
+    src = DEMO_ROOT / lang
+    meta = json.loads((src / "demo.json").read_text("utf-8"))
+    target = Path(os.path.expanduser(args.dir or f"~/zebra-cases/{meta['folder']}")).resolve()
+    reused = (target / "case.json").exists()
+    if reused and not (target / DEMO_MARK).exists():
+        raise UsageError(f"{target} holds a case that is not the demo; give another folder")
+    if not reused:
+        case_mod.init(str(target), title=meta["title"], role=meta["role"], language=lang)
+        case_mod.set_identifiers(str(target), meta["identifiers"])
+        (target / DEMO_MARK).write_text("zebra-mod demo case (synthetic data)\n", "utf-8")
+    # records are copied (never linked), and put back if someone deleted them
+    restored: List[str] = []
+    for f in sorted((src / "records").iterdir()):
+        dest = target / "records" / f.name
+        if not dest.exists():
+            shutil.copyfile(f, dest)
+            restored.append(f.name)
+    records = sorted(p.name for p in (src / "records").iterdir())
+    ids = len(case_mod.load(str(target))["privacy"]["identifiers"])
+    result = {
+        "path": str(target), "reused": reused, "language": lang, "title": meta["title"], "records": records,
+        "identifiers": ids, "first_prompt": meta["first_prompt"], "next_prompts": meta.get("next_prompts", []),
+    }
+    if lang == "zh":
+        text = (f"示例病例{'已存在，直接使用' if reused else '已创建'}：{target}\n"
+                f"  records/：{'、'.join(records)}（合成数据）\n"
+                f"  已登记 {ids} 项受保护身份信息（隐私闸门会拦住带有它们的外发查询）\n"
+                f"在 Claude Code 里输入 /zebra demo（或 /zebra case {target}），然后提问：\n  {meta['first_prompt']}")
+    else:
+        text = (f"Demo case {'already there, reused' if reused else 'created'}: {target}\n"
+                f"  records/: {', '.join(records)} (synthetic)\n"
+                f"  {ids} protected identifiers registered (the privacy gate keeps them out of outgoing queries)\n"
+                f"In Claude Code type /zebra demo (or /zebra case {target}), then ask:\n  {meta['first_prompt']}")
+    return Outcome(result, text=text)
 
 
 def _remove(args: argparse.Namespace) -> Outcome:
@@ -586,6 +633,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--title")
     q.add_argument("--role", choices=case_mod.ROLES, default="family")
     q.add_argument("--lang", default="zh", help="report language: zh or en")
+    q = add("demo", _demo, "create (or reopen) the bundled synthetic demo case to try zebra-mod on")
+    q.add_argument("--lang", choices=("zh", "en"), default="zh", help="demo in Chinese (zh) or English (en)")
     add("show", _show, "print case.json")
     add("summary", _summary, "one-screen summary (what the case board shows)")
 

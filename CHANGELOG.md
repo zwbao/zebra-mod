@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.1 — 2026-10-08
+
+**Onboarding: after installing, a person knows what to do.** A person who installed 0.3.0 saw "installed" and nothing after it: the installer's last message was mostly the doctor report, the welcome toast waited for a first prompt, and nothing said that zebra-mod is used by asking in plain words, or offered something to try it on.
+- `/zebra demo` (and `zebra case demo [dir] --lang zh|en`): a bundled synthetic demo case — a clinic note and a trio exome report (SCN1A c.2134C>T, de novo), Chinese (`~/zebra-cases/demo-xiaoyu`) or English (`demo-lily`) — created or reopened, its identifiers registered so the privacy gate is armed from the first prompt, made the active case with its board open, and its first question put in the prompt box: press Enter and the whole flow runs. Records are copied, never linked, and put back if deleted; a folder holding another case is refused.
+- The installer creates the demo case (INSTALL.md step 7, `install.sh`) and ends with a guide written for the person: just ask, with example questions; try `/zebra demo`; what it can do; `/zebra new` for their own records; the privacy line. The doctor report shrinks to one or two lines.
+- The first interactive session after installing or updating shows a toast at once (not after the first prompt any more) and a card in the band above the prompt — standing zebra, "just describe symptoms or test results", `/zebra demo`, `/zebra` — until the first prompt or until a case is open.
+- The open case moves from a pinned status line to the footer label (`🦓 <title> · HPO n · E n`): Claude Code draws pinned lines as notices with a warning sign, which read as an alarm on a family's case. With `interface: off` it is pinned as before; a case that cannot be read is still pinned (that one is a warning).
+- `/zebra` is the guide: how to use it (just ask, three examples), the demo, what it does, the case commands, privacy; Chinese or English from the case or `LANG` (`/zebra zh`, `/zebra en`).
+- The router skill answers "what can zebra-mod do / how do I start" the same way.
+- Other: the background work `session.start` starts (CLI check, adopting a remembered case, the board's poll) no longer surfaces a failure as an unhandled rejection; it was already best effort.
+- Tests: 9 for the mod (`hooks/onboarding.test.tsx`: the demo verb, the guide in both languages, the toast and card at session start and their end) and 4 for the CLI (`tests/test_case_demo.py`: created, copied not linked, identifiers registered and never printed, reused and repaired, another case refused, the home default); checked in a live interactive session: the card at start, `/zebra demo` opening the case and board with the question in the prompt box.
+
 ## 0.3.0 — 2026-10-08
 
 **You can see zebra-mod at work.** Until now the only signs were a status line and a pane opened on request; a person could not tell whether a reply used the mod. All of the below is additive and scoped to zebra-mod's own activity, so unrelated work in Claude Code draws exactly as before (`hooks/ui.tsx`, `hooks/ui-sprite.ts`, registered first in `register.tsx` so they wrap its hooks without changing them).

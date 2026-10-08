@@ -31,6 +31,8 @@ const turnStats = atom({ plugin: 'zebra-mod', key: 'turn' } as const, EMPTY_TURN
 const blockedAt = atom({ plugin: 'zebra-mod', key: 'blockedAt' } as const, null as number | null)
 const lang = atom({ plugin: 'zebra-mod', key: 'lang' } as const, null as string | null)
 // why the gate refused: an identifier in the call, or a case file it could not read (the gate closed)
+// true from the first interactive session after installing until the person's first prompt
+const onboarding = atom({ plugin: 'zebra-mod', key: 'onboarding' } as const, false as boolean)
 const blockedWhy = atom({ plugin: 'zebra-mod', key: 'blockedWhy' } as const, 'identifier' as string)
 
 // ------------------------------------------------------------ words
@@ -375,14 +377,22 @@ async function noteRefusals($: EngineInterface, content: unknown, mode: UiMode):
   }
 }
 
-async function welcomeOnce($: EngineInterface): Promise<void> {
-  if ((await $.store.get('uiWelcomed')) === true) return
-  await $.store.set('uiWelcomed', true)
+/** The first interactive session after installing (or updating to this version): say what to do. */
+async function startOnboarding($: EngineInterface): Promise<void> {
+  if ((await $.store.get('onboarded')) === true) return
+  await update($, onboarding, () => true)
   $.ui.toast(
     (await isZh($))
-      ? '🦓 zebra-mod 已启用：遇到罕见病问题时会调用它的研究工具。输入 /zebra 查看用法。'
-      : '🦓 zebra-mod is on: rare-disease questions get its research tools. Type /zebra for help.',
+      ? '🦓 zebra-mod 已就绪：直接用中文描述病情或检查结果即可。输入 /zebra demo 打开示例病例试试，/zebra 查看全部功能。'
+      : '🦓 zebra-mod is ready: just describe symptoms or test results. Type /zebra demo to try a demo case, /zebra for everything it does.',
   )
+}
+
+/** The first prompt ends the onboarding card, for good. */
+async function endOnboarding($: EngineInterface): Promise<void> {
+  if (!(await read($, onboarding))) return
+  await update($, onboarding, () => false)
+  await $.store.set('onboarded', true)
 }
 
 async function closeTurn($: EngineInterface): Promise<void> {
@@ -401,8 +411,14 @@ export function registerUi(on: On, options: Options): void {
     await update($, blockedAt, () => null)
     await update($, running, () => []) // nothing of a previous turn is still running
     if (/[㐀-鿿]/.test(e.text)) await update($, lang, () => 'zh')
-    await welcomeOnce($)
+    await endOnboarding($)
     return next(e)
+  })
+
+  on('session.start', { isInteractive: true }, async ($, e, next) => {
+    const started = await next(e)
+    await startOnboarding($)
+    return started
   })
 
   on('turn.complete', async ($, e, next) => {
@@ -473,7 +489,7 @@ export function registerUi(on: On, options: Options): void {
   on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
     const b = await read($, board)
     const at = await read($, blockedAt)
-    const label = `${at !== null ? '🛡' : '🦓'} ${b ? clip(b.title, 20) : 'zebra'}`
+    const label = `${at !== null ? '🛡' : '🦓'} ${b ? caseLabel(b) : 'zebra'}`
     return next({ ...e, props: { ...e.props, modes: [...e.props.modes, label] } })
   })
 
@@ -483,11 +499,13 @@ export function registerUi(on: On, options: Options): void {
     if (mode !== 'full' || e.props.hasSurvey) return next(e)
     const runs = (await read($, running)).filter(r => r.sources.some(s => s !== LOCAL))
     const at = await read($, blockedAt)
-    if (!runs.length && at === null) return next(e)
+    // the welcome card until the first prompt, and not once a case is open (the demo, a new case)
+    const isWelcome = !runs.length && at === null && (await read($, onboarding)) && (await read($, board)) === null
+    if (!runs.length && at === null && !isWelcome) return next(e)
     const zh = await isZh($)
     bandId = e.requestId
-    const lines = runs.length ? runningLines(runs, zh) : shieldLines(zh, (await read($, blockedWhy)) === 'closed')
-    const tone = runs.length ? 'claude' : 'success'
+    const lines = runs.length ? runningLines(runs, zh) : isWelcome ? welcomeLines(zh) : shieldLines(zh, (await read($, blockedWhy)) === 'closed')
+    const tone = runs.length || isWelcome ? 'claude' : 'success'
     if (e.surface === 'terminal' && e.props.bodyColumns >= RASTER_COLUMNS + 30) {
       const { Box, Text, Raster } = $.ui.resolve(e)
       return (
@@ -512,6 +530,12 @@ export function registerUi(on: On, options: Options): void {
   })
 }
 
+/** The open case in the footer: its title, phenotypes present, evidence rows. */
+export function caseLabel(b: Board): string {
+  const present = (b.phenotypes ?? []).filter(p => p.status === 'present').length
+  return `${clip(b.title, 20)} · HPO ${present} · E${b.evidence_count ?? 0}`
+}
+
 /** The band's three lines while queries run. */
 export function runningLines(runs: readonly ZebraRun[], zh: boolean): [string, string, string] {
   const first = runs[0] as ZebraRun
@@ -524,6 +548,21 @@ export function runningLines(runs: readonly ZebraRun[], zh: boolean): [string, s
     what,
     `${zh ? '数据源：' : 'sources: '}${sourceNames(runs.flatMap(r => r.sources), zh).join(' · ')}`,
   ]
+}
+
+/** The band's three lines in the first session after installing, until the first prompt. */
+export function welcomeLines(zh: boolean): [string, string, string] {
+  return zh
+    ? [
+        '🦓 zebra-mod 已就绪 · 罕见病研究工作台',
+        '直接用中文描述症状、检查结果或基因报告，Claude 会调用它查证、计算并标出处。',
+        '先试一下：/zebra demo 打开示例病例 · /zebra 查看全部功能',
+      ]
+    : [
+        '🦓 zebra-mod is ready · rare-disease research workstation',
+        'Just describe symptoms, test results or a genetic report; Claude calls it to look things up, compute and cite.',
+        'Try it: /zebra demo opens a demo case · /zebra shows everything it does',
+      ]
 }
 
 /** The band's three lines after the privacy gate refused a call. */

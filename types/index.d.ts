@@ -65,6 +65,7 @@ declare module 'claude-code' {
       blockedAt: number | null
       lang: string | null
       blockedWhy: string
+      onboarding: boolean
     }
   }
 }
