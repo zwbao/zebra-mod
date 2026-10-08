@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3 — 2026-10-08
+
+- The galloping zebra no longer jumps up and down. 0.3.2 aligned the eleven frames on each panel's ground line, but Muybridge's photographs come from eleven cameras, each framed and lined a little differently: the back jumped by up to 6 dots (a cell and a half) from one frame to the next, in no rhythm a horse has. The frames are now aligned on the horse itself, the line of the back from the croup to the withers: the body stays level (0 dots of movement), the legs and the head move, and in the gathered frames the hooves leave the ground as they do in a gallop.
+
 ## 0.3.2 — 2026-10-08
 
 **A zebra that looks like one.** The 0.3.0 sprite was 28 × 12 half-block pixels, hand-placed: one-pixel legs that read as dots, a dog's head, barcode stripes, a grey outline that cluttered dark backgrounds, and only the legs moving across four frames.

@@ -140,6 +140,42 @@ describe('the galloping zebra', () => {
     expect(zebraCells(0, 0, true)).toBe(zebraCells(2, 7, true))
   })
 
+  test('the body stays level from frame to frame: only the legs and head move', async () => {
+    const decode = (b64: string): Uint32Array => {
+      const bin = atob(b64)
+      const u8 = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i)
+      return new Uint32Array(u8.buffer)
+    }
+    const BITS: Array<[number, number, number]> = [[0, 0, 0x01], [0, 1, 0x02], [0, 2, 0x04], [1, 0, 0x08], [1, 1, 0x10], [1, 2, 0x20], [0, 3, 0x40], [1, 3, 0x80]]
+    const backs: number[] = []
+    for (let f = 0; f < FRAME_COUNT; f++) {
+      const w = decode(zebraCells(f, 0))
+      const W = RASTER_COLUMNS * 2
+      const H = RASTER_ROWS * 4
+      const dot = Array.from({ length: H }, () => new Array<boolean>(W).fill(false))
+      for (let r = 0; r < RASTER_ROWS; r++) {
+        for (let c = 0; c < RASTER_COLUMNS; c++) {
+          const i = (r * RASTER_COLUMNS + c) * 3
+          if (w[i + 1] !== 0x01000000 || (w[i] as number) < 0x2800) continue // the zebra, not the ground
+          const b = (w[i] as number) - 0x2800
+          for (const [dx, dy, bit] of BITS) if (b & bit) dot[r * 4 + dy]![c * 2 + dx] = true
+        }
+      }
+      const cols = [...Array(W).keys()].filter(x => dot.some(row => row[x]))
+      const xa = cols[0]!
+      const span = cols[cols.length - 1]! - xa + 1
+      const tops: number[] = []
+      for (let x = xa + Math.floor(span * 0.35); x < xa + Math.floor(span * 0.6); x++) {
+        const y = dot.findIndex(row => row[x])
+        if (y >= 0) tops.push(y)
+      }
+      tops.sort((a, b) => a - b)
+      backs.push(tops[Math.floor(tops.length / 2)]!)
+    }
+    expect(Math.max(...backs) - Math.min(...backs)).toBe(0)
+  })
+
   test('base64 matches the standard alphabet and padding', async () => {
     const enc = (s: string) => base64(new TextEncoder().encode(s))
     expect(enc('')).toBe('')

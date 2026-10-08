@@ -2,8 +2,9 @@
 
 Source: Eadweard Muybridge, "The Horse in Motion" (1878), public domain — eleven consecutive
 positions of one gallop stride. Each silhouette is cut from its panel, the rider removed (the hump
-above the back is cut along a line from the croup to the withers), the frames aligned on the ground
-line and the body's centre, reduced to braille dots (2 x 4 per terminal cell) and given zebra
+above the back is cut along a line from the croup to the withers), the frames aligned on the back
+(croup to withers) so the body stays level while the legs move — not on each panel's ground line, which
+differs from camera to camera — reduced to braille dots (2 x 4 per terminal cell) and given zebra
 stripes. The sprite is one colour (the terminal's own text colour), so it reads on light and dark
 themes alike.
 
@@ -94,31 +95,34 @@ def silhouettes(image: np.ndarray) -> list:
         low[max(0, ys.max() - 25):ys.max() + 1] = True
         flat = ndi.binary_opening(keep, structure=np.ones((1, 45))) & low & ~ndi.binary_opening(keep, structure=np.ones((9, 9)))
         keep = largest(keep & ~ndi.binary_dilation(flat, structure=np.ones((5, 3))))
-        ys, xs = np.where(keep)
-        body = keep[ys.min():ys.min() + int((gy - ys.min()) * 0.55)]
-        _, bx = np.where(body)
-        out.append({"mask": keep, "gy": gy, "cx": float(bx.mean())})
+        # anchor on the horse itself, not on the panel's ground line: the eleven photographs come from
+        # eleven cameras, framed and lined differently, so the ground jitters from frame to frame.
+        # The back between the croup (xl) and the withers (xrr) is the steady part of a galloping body.
+        back = [int(np.argmax(keep[:, x])) for x in range(xl, xrr + 1) if keep[:, x].any()]
+        out.append({"mask": keep, "bx": (xl + xrr) / 2.0, "by": float(np.median(back))})
     return out
 
 
 def dots(frames: list, rows: int) -> list:
     hd = rows * 4
-    cx, gy = 2000, 1200
+    cx, cy = 2000, 1200     # every frame's back is put here: the body stays level, the legs move
     boxes = []
     for f in frames:
         ys, xs = np.where(f["mask"])
-        boxes.append((xs.min() + cx - f["cx"], ys.min() + gy - f["gy"], xs.max() + cx - f["cx"]))
+        dx, dy = cx - f["bx"], cy - f["by"]
+        boxes.append((xs.min() + dx, ys.min() + dy, xs.max() + dx, ys.max() + dy))
     x0 = min(b[0] for b in boxes)
     y0 = min(b[1] for b in boxes)
     x1 = max(b[2] for b in boxes)
-    wd = int(round((x1 - x0) * hd / (gy - y0)))
+    y1 = max(b[3] for b in boxes)
+    wd = int(round((x1 - x0) * hd / (y1 - y0)))
     wd += wd % 2
     out = []
     for f in frames:
-        canvas = np.zeros((int(gy - y0) + 1, int(x1 - x0) + 1), np.float32)
+        canvas = np.zeros((int(y1 - y0) + 1, int(x1 - x0) + 1), np.float32)
         ys, xs = np.where(f["mask"])
-        yy = ys + int(round(gy - f["gy"] - y0))
-        xx = xs + int(round(cx - f["cx"] - x0))
+        yy = ys + int(round(cy - f["by"] - y0))
+        xx = xs + int(round(cx - f["bx"] - x0))
         ok = (yy >= 0) & (yy < canvas.shape[0]) & (xx >= 0) & (xx < canvas.shape[1])
         canvas[yy[ok], xx[ok]] = 1
         small = Image.fromarray((canvas * 255).astype(np.uint8)).resize((wd, hd), Image.BOX)
