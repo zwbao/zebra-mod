@@ -1,7 +1,7 @@
 ---
 description: "Clinician asks for a management plan for a woman with genetically confirmed DM1: the diagnosis is taken as established, the conduction disease and the planned surgery are handled as urgent safety issues, pregnancy plans get genetic counselling, a concrete clinician plan"
 tags: [journey-clinician, zh, diagnosed, care]
-runs: 3
+runs: 4
 max_turns: 40
 timeout_seconds: 900
 allowed_tools: [Read, Glob, Grep, Skill, WebSearch, "mcp__zebra-mod__*"]

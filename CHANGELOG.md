@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.6 — 2026-10-11
+
+**Targets from the documented tier; rubrics that judge substance.**
+- `zebra-care`: a guideline target is taken from the tier the records document, not the strictest one (with the default tier when deciding facts are unknown, and what would move the patient); a recommendation class (IIa, Class I) only with its source, otherwise "consider"; closing offers in words, never `/zebra` commands.
+- Evals: both diagnosed rubrics rewritten from an itemised re-grade of 0.3.5 — the judge writes a verdict and a quote per item before its verdict; diagnosis wording, D4Z4 units, urate tiers, NIV thresholds, DM1 conduction criteria (QRS ≥120 ms; PR 236 is first-degree block below 240), anaesthesia and GGT spelled out; a new FSHD item and regex grader for the AFP germ-cell work-up; 4 runs per arm.
+- Ablation (Opus 5.5, judge Sonnet 5.5, 4 runs per arm, $11.70): FSHD 0.83 with the mod vs 0.61 without (pass 2/4 vs 0/4; the AFP work-up 4/4 vs 2/4); DM1 0.70 vs 0.55 (pass 2/4 vs 1/4). With the mod every run called `repeat_size` and loaded `zebra-care`; no run leaked internal names. The mod's runs cost about 2.7× and take about 1.7× as long.
+
 ## 0.3.5 — 2026-10-11
 
 **Numbers by rule, not by recall.** In the 0.3.4 ablation both arms made the same recall errors: an EcoRI fragment of 17 kb read as 4 D4Z4 units (it is 3: the 3 kb flank belongs to the EcoRI/BlnI digest), a uric-acid target too strict for asymptomatic hyperuricaemia, and the mod's replies leaked its own tool names into a clinician's plan.

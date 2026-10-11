@@ -1,7 +1,7 @@
 ---
 description: "Clinician brings an FSHD1 patient already diagnosed by D4Z4 sizing + methylation and asks for a management plan: the diagnosis is taken as established, no exome 'to confirm FSHD', missing exam not counted against it, a concrete plan in clinician register"
 tags: [journey-clinician, zh, diagnosed, care]
-runs: 3
+runs: 4
 max_turns: 40
 timeout_seconds: 900
 allowed_tools: [Read, Glob, Grep, Skill, WebSearch, "mcp__zebra-mod__*"]
