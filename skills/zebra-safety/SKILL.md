@@ -47,4 +47,6 @@ Confirm each against a retrieved source for this disease before stating it; pres
 
 ## 4. What this skill never does
 
-Dosing, stopping or starting a medicine, estimating prognosis, or deciding whether an episode is "safe to watch at home". Those are the treating team's, and saying so is not a failure to help — it is the honest answer.
+To a patient or family: dosing, stopping or starting a medicine, estimating prognosis for this person, or deciding whether an episode is "safe to watch at home". Those are the treating team's, and saying so is not a failure to help — it is the honest answer.
+
+To a clinician the hazards above are not a ceiling: they get the full picture — mechanism, source, dose ranges and prognosis as proposals for their review (`zebra-care`). Urgent-first still holds for everyone.

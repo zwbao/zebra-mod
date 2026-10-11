@@ -18,26 +18,36 @@ import os
 import re
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Set
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 from zebra.http import now_iso
 
 SCHEMA = "zebra.case/1"
 HPO_RE = re.compile(r"^HP:\d{7}$")
-ROLES = ("family", "patient", "clinician", "researcher")
+# "unspecified": a new case before the person has said who they are (the doctrine tells the model
+# to treat the operator as a clinician/researcher until then, and to ask once if it matters)
+ROLES = ("family", "patient", "clinician", "researcher", "unspecified")
 PHENO_STATUS = ("present", "excluded")
 HYP_STATUS = ("leading", "considered", "excluded", "confirmed")
 LEAD_KINDS = ("approved", "trial", "repurposing", "n-of-1", "supportive", "other")
 EVIDENCE_RE = re.compile(r"^E\d+$")
+# what a hypothesis may cite besides ledger rows: a case item — a genetic finding (v3),
+# a test already done (x2) or a family member (f1) — which is how a laboratory's own
+# result supports a diagnosis without a web lookup
+ITEM_REF_RE = re.compile(r"^[vxf]\d+$")
+REF_PREFIX = {"v": "variants", "x": "tests"}
+MAX_REASON = 400
 _EID_IN_TEXT = re.compile(r'"eid"\s*:\s*"E(\d+)"')
 
 # Variant kinds. "small" (SNV/indel, the only kind schema zebra.case/1 could
 # hold) stays the default, so a case.json written before these existed reads
 # unchanged; the report forms Chinese families usually hold get their own kinds.
-VARIANT_KINDS = ("small", "cnv", "exon_cnv", "copy_number", "repeat_expansion")
+VARIANT_KINDS = ("small", "cnv", "exon_cnv", "copy_number", "repeat_expansion", "repeat_contraction", "methylation")
 # what a model or a person may write for a kind, and what it means (A-P1-5)
 KIND_ALIASES = {"sequence": "small", "snv": "small", "indel": "small", "repeat": "repeat_expansion",
-                "str": "repeat_expansion", "exon": "exon_cnv", "dosage": "copy_number", "sv": "cnv"}
+                "str": "repeat_expansion", "exon": "exon_cnv", "dosage": "copy_number", "sv": "cnv",
+                "contraction": "repeat_contraction", "d4z4": "repeat_contraction", "methyl": "methylation",
+                "methylation_pct": "methylation", "imprinting": "methylation"}
 CNV_TYPES = ("gain", "loss", "duplication", "deletion", "amplification", "unknown")
 
 # Identifier shapes, so an id that cannot exist is refused at the door. Values
@@ -168,6 +178,41 @@ def _eid_num(eid: str) -> int:
         return 0
 
 
+def _ref_key(ref: str) -> Tuple[str, int]:
+    """Ledger rows first (E…), then case items, each in number order."""
+    ref = str(ref)
+    return ("" if ref.startswith("E") else ref[:1], _eid_num(ref))
+
+
+def split_evidence(value: Any, field: str, known: Optional[Set[str]] = None) -> Tuple[List[str], List[str]]:
+    """What a hypothesis cites: ledger ids (E7, checked against `known`), case item ids (v1, x2, f1 —
+    checked when applied) and reasons in words. Returns (ids, reasons). A reason is not an id: it is
+    kept as text, so a model that writes "hallmark X documented absent" is recorded, not refused."""
+    ids: List[str] = []
+    reasons: List[str] = []
+    for item in str_list(value, field):
+        if EVIDENCE_RE.match(item):
+            ids.extend(check_evidence_ids([item], field, known))
+        elif ITEM_REF_RE.match(item):
+            ids.append(item)
+        elif len(item) > MAX_REASON:
+            raise CaseError(f"{field}: a reason is at most {MAX_REASON} characters; put the detail in note")
+        else:
+            reasons.append(item)
+    return ids, reasons
+
+
+def check_item_refs(data: Dict[str, Any], refs: List[str], field: str) -> None:
+    """A cited case item must exist in this case."""
+    family = (data.get("family") or {}).get("members") or [] if isinstance(data.get("family"), dict) else []
+    for ref in refs:
+        if not ITEM_REF_RE.match(ref):
+            continue
+        pool = family if ref.startswith("f") else data.get(REF_PREFIX[ref[0]], [])
+        if not any(isinstance(i, dict) and i.get("id") == ref for i in pool):
+            raise CaseError(f"{field}: {ref} is not an item of this case (variants are v1…, tests x1…, family f1…)")
+
+
 def _path(case_dir: str) -> Path:
     return Path(os.path.expanduser(case_dir)).resolve()
 
@@ -176,7 +221,7 @@ def case_file(case_dir: str) -> Path:
     return _path(case_dir) / "case.json"
 
 
-def init(case_dir: str, title: str = "", role: str = "family", language: str = "zh") -> Dict[str, Any]:
+def init(case_dir: str, title: str = "", role: str = "unspecified", language: str = "zh") -> Dict[str, Any]:
     root = _path(case_dir)
     if (root / "case.json").exists():
         raise CaseError(f"{root} already holds a case")
@@ -393,10 +438,13 @@ _VARIANT_IDENTITY = {
     "exon_cnv": ("exons", "hgvs_c", "description"),
     "copy_number": ("copy_number", "description"),
     "repeat_expansion": ("repeat_count", "description"),
+    "repeat_contraction": ("fragment_kb", "repeat_count", "description", "lab_interpretation"),
+    "methylation": ("methylation_pct", "description", "lab_interpretation"),
 }
 VARIANT_FIELDS = ("gene", "hgvs_c", "hgvs_g", "hgvs_p", "vcf", "assembly", "zygosity", "inheritance",
                   "classification_lab", "source", "description", "kind", "region", "iscn", "cnv_type",
-                  "copy_number", "exons", "genes", "motif", "repeat_count", "method", "note")
+                  "copy_number", "exons", "genes", "motif", "repeat_count", "method", "note",
+                  "locus", "fragment_kb", "haplotype", "methylation_pct", "lab_interpretation")
 
 
 def check_variant(**fields: Any) -> Dict[str, Any]:
@@ -423,9 +471,18 @@ def check_variant(**fields: Any) -> Dict[str, Any]:
             raise CaseError("copy_number cannot be negative")
     if fields.get("repeat_count") is not None and not isinstance(fields["repeat_count"], (int, float, str)):
         raise CaseError("repeat_count must be a number or the range as the report writes it")
+    for key, low, high in (("fragment_kb", 0, 1000), ("methylation_pct", 0, 100)):
+        if fields.get(key) is not None:
+            try:
+                fields[key] = float(fields[key])
+            except (TypeError, ValueError):
+                raise CaseError(f"{key} must be a number, got {fields[key]!r}") from None
+            if not low <= fields[key] <= high:
+                raise CaseError(f"{key} must be between {low} and {high}, got {fields[key]}")
     if fields.get("genes") is not None:
         fields["genes"] = str_list(fields["genes"], "genes")
-    for key in ("region", "iscn", "exons", "motif", "method", "note", "source", "description", "gene"):
+    for key in ("region", "iscn", "exons", "motif", "method", "note", "source", "description", "gene",
+                "locus", "haplotype", "lab_interpretation"):
         if fields.get(key) is not None and not isinstance(fields[key], str):
             raise CaseError(f"{key} must be a string, not {type(fields[key]).__name__}")
     if fields.get("region"):
@@ -452,8 +509,12 @@ def add_variant(case_dir: str, **fields: Any) -> Dict[str, Any]:
 
 def apply_hypothesis(data: Dict[str, Any], disease: str, status: Optional[str] = None,
                      ids: Optional[Dict[str, str]] = None, support: Optional[List[str]] = None,
-                     against: Optional[List[str]] = None, note: Optional[str] = None) -> Dict[str, Any]:
-    """Add or update a hypothesis. `status=None` keeps the status an existing hypothesis already has."""
+                     against: Optional[List[str]] = None, note: Optional[str] = None,
+                     support_reasons: Optional[List[str]] = None,
+                     against_reasons: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Add or update a hypothesis. `status=None` keeps the status an existing hypothesis already has.
+    support/against hold ledger ids and case item ids; *_reasons hold reasons in words."""
+    check_item_refs(data, list(support or []) + list(against or []), f"hypotheses[{disease}]")
     if status is not None and status not in HYP_STATUS:
         raise CaseError(f"status must be one of {', '.join(HYP_STATUS)}")
     if not isinstance(disease, str) or not disease.strip():
@@ -467,23 +528,34 @@ def apply_hypothesis(data: Dict[str, Any], disease: str, status: Optional[str] =
         if ids:
             existing.setdefault("ids", {}).update(ids)
         if support:
-            existing["support"] = sorted(set(existing.get("support") or []) | set(support), key=_eid_num)
+            existing["support"] = sorted(set(existing.get("support") or []) | set(support), key=_ref_key)
         if against:
-            existing["against"] = sorted(set(existing.get("against") or []) | set(against), key=_eid_num)
+            existing["against"] = sorted(set(existing.get("against") or []) | set(against), key=_ref_key)
+        for key, new in (("support_reasons", support_reasons), ("against_reasons", against_reasons)):
+            if new:
+                old = existing.get(key) or []
+                existing[key] = old + [r for r in new if r not in old]
         if note:
             existing["note"] = note
         return existing
     entry = {"id": _next_id(data, "hypotheses", "h"), "disease": disease, "status": status or "considered",
-             "ids": ids or {}, "support": support or [], "against": against or [], "note": note}
+             "ids": ids or {}, "support": sorted(support or [], key=_ref_key),
+             "against": sorted(against or [], key=_ref_key), "note": note}
+    if support_reasons:
+        entry["support_reasons"] = list(support_reasons)
+    if against_reasons:
+        entry["against_reasons"] = list(against_reasons)
     data["hypotheses"].append(entry)
     return entry
 
 
 def add_hypothesis(case_dir: str, disease: str, status: Optional[str] = None, ids: Optional[Dict[str, str]] = None,
                    support: Optional[List[str]] = None, against: Optional[List[str]] = None,
-                   note: Optional[str] = None) -> Dict[str, Any]:
+                   note: Optional[str] = None, support_reasons: Optional[List[str]] = None,
+                   against_reasons: Optional[List[str]] = None) -> Dict[str, Any]:
     with editing(case_dir) as data:
-        return apply_hypothesis(data, disease, status=status, ids=ids, support=support, against=against, note=note)
+        return apply_hypothesis(data, disease, status=status, ids=ids, support=support, against=against, note=note,
+                                support_reasons=support_reasons, against_reasons=against_reasons)
 
 
 def apply_lead(data: Dict[str, Any], name: str, kind: str, status: Optional[str] = None,
@@ -760,6 +832,16 @@ def summary(case_dir: str) -> Dict[str, Any]:
         if kind == "repeat_expansion":
             return " ".join(str(x) for x in (v.get("gene"), v.get("motif"),
                                              f"{v.get('repeat_count')} repeats") if x)
+        if kind == "repeat_contraction":
+            parts = [v.get("locus") or v.get("gene"), "contraction",
+                     f"{v['fragment_kb']:g} kb" if v.get("fragment_kb") is not None else None,
+                     f"{v['repeat_count']} units" if v.get("repeat_count") is not None else None,
+                     v.get("haplotype")]
+            return " ".join(str(p) for p in parts if p) or v.get("description")
+        if kind == "methylation":
+            parts = [v.get("locus") or v.get("gene"), "methylation",
+                     f"{v['methylation_pct']:g}%" if v.get("methylation_pct") is not None else None]
+            return " ".join(str(p) for p in parts if p) or v.get("description")
         return v.get("hgvs_c") or v.get("hgvs_g") or v.get("vcf") or v.get("hgvs_p") or v.get("description")
     return {
         "path": str(_path(case_dir)),
@@ -784,7 +866,8 @@ def summary(case_dir: str) -> Dict[str, Any]:
         ],
         "hypotheses": [
             {"id": h.get("id"), "disease": str(h.get("disease", "")), "status": h.get("status", "considered"),
-             "support": len(h.get("support") or []), "against": len(h.get("against") or []),
+             "support": len(h.get("support") or []) + len(h.get("support_reasons") or []),
+             "against": len(h.get("against") or []) + len(h.get("against_reasons") or []),
              "ids": dict(h.get("ids") or {})}
             for h in hyps
         ],

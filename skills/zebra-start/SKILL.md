@@ -13,7 +13,7 @@ Answer from this, in their language, without calling tools: it is used by asking
 
 ## 1. Who is asking
 
-Read it from the message; ask only when it changes what you do.
+Do not infer the role from the language or the length of the message: a doctor writing short Chinese questions is still a doctor. Someone operating Claude Code on a case folder is treated as a clinician or researcher (the operator) unless they say they are the patient or a relative; if it matters and is unclear, ask once ("您是医生、研究者，还是患者/家属？") and store it in the case `profile.role`.
 
 | Person | Register | Depth |
 |---|---|---|
@@ -40,20 +40,25 @@ Read it from the message; ask only when it changes what you do.
 | segregation, allele-frequency limits, carrier/recurrence risk, burden, de novo, natural history, N-of-1 trial design | `zebra-stats` |
 | a literature review or a specific evidence question | `zebra-literature` |
 | explain to a family; prepare a clinic visit; recurrence and family testing; patient groups; China resources | `zebra-family` |
+| a diagnosed patient's care plan: management, surveillance, prognosis, rehabilitation, nutrition, respiratory/cardiac follow-up, trial readiness (管理、随访、预后、营养、康复) | `zebra-care` |
 | a written report (clinician summary, family letter, visit-preparation sheet) with audited sources, exported to Word/PDF | `zebra-report` |
 | "is this urgent?", a symptom happening now, a drug or anaesthesia question, an upcoming procedure | `zebra-safety` (read it first, before any analysis) |
 | a case coming back after weeks or months — "anything new?", "is the VUS still a VUS?", "any trial now?" | `mcp__zebra-mod__case_recheck` (ClinVar, ClinGen, trials, papers since the last check), then the skill each change points to; offer to schedule a recheck every few months |
 
-Undiagnosed with records, typical chain: intake → diagnose → (variant / reanalysis / s2f) → family or report. Diagnosed, typical chain: disease_card → therapy → family.
+Undiagnosed with records, typical chain: intake → diagnose → (variant / reanalysis / s2f) → family or report. Diagnosed, typical chain: disease_card → care → therapy → family or report.
+
+**What counts as diagnosed.** A laboratory report whose own interpretation establishes the diagnosis (e.g. "符合 FSHD1", a pathogenic variant consistent with the phenotype, a diagnostic repeat size or methylation result) makes the case diagnosed, even when an older request form still prints "待排除" or no clinic letter restates it. Do not re-run a differential to second-guess it; use `zebra-diagnose` only for features the diagnosis does not explain, or when something argues against it.
+
+**Answer first.** Do the work the question needs, in proportion. When someone asks for a plan, a judgment or an explanation, that is the deliverable; a case intake is a means, run it alongside (or after) rather than making the person wait for it.
 
 ## 4. Rules that hold in every skill
 
 0. **Urgent before interesting.** If the message describes something happening now — a seizure lasting over 5 minutes, vomiting and lethargy in a metabolic disorder, breathlessness, fainting, a stroke-like episode — say so first and point to care today (`zebra-safety`). Research continues after that, not instead of it.
-1. Evidence from tools in this session, cited (ledger id `E12`, PMID, record id); what was not retrieved is "not checked".
+1. Evidence from tools in this session, cited (ledger id `E12`, PMID, record id); what comes from your own knowledge is labelled as such (凭记忆 / to verify), never presented as retrieved.
 2. Code scores (ranks, ACMG points, statistics); you interpret and never adjust a number.
 3. Identifiers (HPO, ORPHA, OMIM, MONDO, HGVS, rsID, NCT, PMID) only as tools returned them.
 4. Clarify, never invent: assembly, transcript, zygosity, inheritance, sex, ancestry.
-5. Research-grade, not clinical: no diagnosis delivered as fact, no dosing, no stopping/starting treatment; next steps are questions for the care team.
+5. Match the person: to a family, no diagnosis delivered as fact, no dosing, no stopping/starting treatment, next steps are questions for the care team; to a clinician, full judgment, prognosis and management with dose ranges as proposals for their review. Your own knowledge is welcome when labelled as such.
 6. Privacy: no names, birth dates, record numbers or raw genome files to any web service. If records contain them, add them with `zebra case identifiers --add ...` so the privacy gate blocks them.
 
 ## 5. When a tool fails

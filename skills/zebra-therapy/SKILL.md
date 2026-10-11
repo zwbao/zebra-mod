@@ -5,7 +5,7 @@ description: Genotype-to-therapy for a rare disease — start from the disease m
 
 # zebra-therapy — mechanism → leads → tiers
 
-A lead enters only with retrieved evidence and passes the mechanism check. No dosing, no advice to start or stop anything.
+A lead is presented as established only with retrieved evidence, and every lead passes the mechanism check. To a family: no dosing, no advice to start or stop anything. To a clinician: dose ranges and an explicit recommendation are allowed as proposals for their review, with the evidence tier beside each. Repurposing ideas from your own knowledge are welcome as hypotheses, labelled as such, then checked with the tools.
 
 Before any lead: read `zebra-safety` for this disease's drug, anaesthesia and procedure hazards, and raise them as questions for the care team.
 

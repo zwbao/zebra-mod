@@ -236,9 +236,10 @@ def test_f34_evidence_ids_must_exist_in_the_ledger(case_dir):
     env, code = zebra("case", "apply", case_dir,
                       "--ops", json.dumps({"hypotheses": [{"disease": "Dravet", "against": ["E2"]}]}))
     assert code == 2 and "E2 is not in this case" in env["error"]["message"]
+    # a reason in words is recorded as a reason, not refused (0.3.4)
     env, code = zebra("case", "apply", case_dir,
                       "--ops", json.dumps({"hypotheses": [{"disease": "Dravet", "support": ["seven"]}]}))
-    assert code == 2 and "is not an evidence id" in env["error"]["message"]
+    assert code == 0 and env["result"]["applied"]["hypotheses"][0]["support_reasons"] == ["seven"]
     # the same check on the single-op commands
     env, code = zebra("case", "add-hypothesis", "--case", case_dir, "Dravet", "--support", "E9")
     assert code == 2 and "E9 is not in this case" in env["error"]["message"]
@@ -1088,3 +1089,45 @@ def test_review_p2_12_defaults_are_never_shared_between_cases(tmp_path):
         case_mod.apply_family(data, [{"relation": "mother"}])
     assert case_mod.load(str(tmp_path / "y"))["family"]["members"] == []
     assert case_mod._DICT_KEYS["family"]["members"] == []
+
+
+def test_0_3_4_non_sequence_findings_and_what_a_hypothesis_may_cite(tmp_path):
+    """FSHD1-shaped report: a D4Z4 contraction and a methylation result are recorded as findings, and the
+    diagnosis they establish cites them by case id, with reasons in words; a missing id is refused."""
+    case_dir = str(tmp_path / "fshd")
+    C.init(case_dir, title="fshd", role="clinician")
+    ops = {
+        "variants": [
+            {"kind": "d4z4", "locus": "4q35 D4Z4", "fragment_kb": 17.0, "haplotype": "4qA",
+             "method": "PFGE/Southern", "lab_interpretation": "符合 FSHD1 的诊断"},
+            {"kind": "methylation", "locus": "D4Z4/PAS", "methylation_pct": 16.2, "note": "reference >69.5%",
+             "method": "bisulfite sequencing"},
+        ],
+    }
+    env, code = zebra("case", "apply", case_dir, "--ops", json.dumps(ops))
+    assert code == 0, env
+    v = C.load(case_dir)["variants"]
+    assert [x["kind"] for x in v] == ["repeat_contraction", "methylation"]
+    assert v[0]["fragment_kb"] == 17.0 and v[1]["methylation_pct"] == 16.2
+    labels = [x["label"] for x in C.summary(case_dir)["variants"]]
+    assert labels[0] == "4q35 D4Z4 contraction 17 kb 4qA" and labels[1] == "D4Z4/PAS methylation 16.2%"
+
+    hyp = {"hypotheses": [{"disease": "FSHD1", "status": "confirmed", "support": ["v1", "v2"],
+                           "against": ["no hallmark documented absent"]}]}
+    env, code = zebra("case", "apply", case_dir, "--ops", json.dumps(hyp))
+    assert code == 0, env
+    h = C.load(case_dir)["hypotheses"][0]
+    assert h["status"] == "confirmed" and h["support"] == ["v1", "v2"]
+    assert h["against"] == [] and h["against_reasons"] == ["no hallmark documented absent"]
+    assert C.summary(case_dir)["hypotheses"][0]["support"] == 2
+
+    env, code = zebra("case", "apply", case_dir,
+                      "--ops", json.dumps({"hypotheses": [{"disease": "FSHD1", "support": ["v9"]}]}))
+    assert code == 2 and "v9 is not an item of this case" in env["error"]["message"]
+
+    with pytest.raises(C.CaseError):
+        C.check_variant(kind="methylation", methylation_pct=140)
+    with pytest.raises(C.CaseError):
+        C.check_variant(kind="repeat_contraction", fragment_kb="seventeen")
+    with pytest.raises(C.CaseError):
+        C.check_variant(kind="repeat_contraction", haplotype="4qA")  # nothing that identifies it

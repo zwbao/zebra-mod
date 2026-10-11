@@ -26,10 +26,11 @@
 
 ## Principles (enforced, not just written)
 
-1. **Evidence, not recall.** Every answer cites a ledger id, PMID or database record retrieved in the session. Each case keeps an append-only **evidence ledger** (`E1, E2, …`) of every source used.
-2. **Code scores, the model interprets.** Rankings, ACMG points and statistics are computed by the `zebra` engine; the model never writes or adjusts a number.
+0. **The mod adds, it never subtracts.** Its tools, data and case workspace exist to make Claude's answer better than it would be without them — never narrower, slower or more timid. A rule that would leave the person with a worse answer is being misapplied.
+1. **Evidence, not recall passed off as retrieved.** Tool results and sources fetched in the session are preferred and cited (ledger id, PMID, database record); Claude's own knowledge is welcome when labelled as such. Each case keeps an append-only **evidence ledger** (`E1, E2, …`) of every source used.
+2. **Code scores, the model interprets.** Rankings, ACMG points and statistics are computed by the `zebra` engine; the model never writes or adjusts a number — but a ranking is one input, and evidence the ranker cannot see (a diagnostic repeat or methylation result) overrides it openly.
 3. **Clarify, never invent.** Assembly, transcript, zygosity, inheritance, sex — missing and material means ask, or conclude conditionally.
-4. **Research-grade, not clinical.** No diagnosis delivered as fact, no dosing; next steps are questions for the care team.
+4. **Matched to the person.** With a clinician or researcher: diagnostic judgment, prognosis and a management plan, with dose ranges as proposals for their review. With a patient or family: no diagnosis delivered as fact, no dosing; next steps are questions for the care team. The role comes from what the person says, never from the language they write in.
 5. **Privacy, stated exactly.** Case files are written only on your machine, and zebra's own database queries carry biology (HPO ids, genes, variants, disease names), never a name, a date of birth or a record number: a **privacy gate** in the mod refuses an outgoing call that carries the case's registered identifiers or an ID-number/phone/email pattern, asks before a file from the case folder or a raw genome file (VCF/BAM/CRAM/FASTQ) leaves the machine, and closes (refusing outgoing calls) if it cannot read the case's identifier list. **What the gate cannot do:** every record you ask Claude to read — every PDF, photo and report — is sent to the model provider as part of the conversation, like any other file you open in Claude Code; the gate inspects tool calls, not the conversation. Register identifiers early (the model does it with `case_update` → `identifiers` when records name the patient), and redact before sharing if that matters to you. Exports to Word/PDF refuse a report that still holds a registered identifier or an ID number. Matching is best effort over encodings and spellings, not a guarantee.
 
 ## How good is it
@@ -38,7 +39,7 @@ Measured, not claimed — [docs/BENCHMARK.md](docs/BENCHMARK.md) has the method,
 
 - **Phenotype ranking** on GA4GH phenopacket-store 0.1.27 (10,374 published cases, 780 diseases), split by disease into development and held-out halves. On held-out cases whose own paper is **not** one of the HPO annotation sources — the fair test for a new patient — the correct disease is in the local top 10 for **28%** (0.1.0: 15%) and the causal gene for 40%. Across all held-out cases it is 70%, an upper bound: for most published cases the disease's annotations were curated from that very paper. On a 100-case web sample, local + Monarch + PubCaseFinder together put the correct disease in the top 10 for 75%. A ranking is a list of hypotheses to test.
 - One honest cost: the PRD's own example (febrile, focal and tonic-clonic seizures, developmental delay; hypotonia excluded) now ranks Dravet syndrome 16th locally (6th in 0.1.0), because excluded terms are flagged rather than scored — the choice that measured better on the held-out half.
-- `evals/` holds 10 end-to-end cases for `claude plugin eval` (a Chinese parent's records, urgent symptoms first, a VUS, a CNV, mtDNA, therapy and trials, privacy, an out-of-scope request).
+- `evals/` holds 11 end-to-end cases for `claude plugin eval` (a Chinese parent's records, urgent symptoms first, a VUS, a CNV, mtDNA, therapy and trials, privacy, an out-of-scope request, and a clinician's management plan for an FSHD1 patient already diagnosed by D4Z4 sizing).
 
 ## What the mod adds to Claude Code
 
@@ -47,7 +48,7 @@ Measured, not claimed — [docs/BENCHMARK.md](docs/BENCHMARK.md) has the method,
 - **You can see it at work** (all additive; unrelated work draws as before): its tool calls get their own rows (`🦓 Variant card  NM_001165963.4:c.2134C>T`, then `⎿ 15 evidence rows (E39–E53) · from Ensembl VEP, gnomAD, ClinVar, LitVar2 · 3 cached`) instead of a JSON envelope, and a case_update row never shows the identifiers it registers; the spinner names the databases being queried; a small galloping zebra above the prompt while a query runs, a shield there after the privacy gate stops a call; a `🦓` label in the footer (with the open case's title); and one line at the end of a turn that used it — calls, databases, evidence rows, calls stopped. Chinese or English, from the case's language or your prompts. Option `interface`: `full` (default), `quiet` (no animation, no spinner text) or `off`.
 - **A case board** pane (`/zebra board`) and the case in the footer label (a pinned status line when `interface` is `off`): phenotypes, variants and their research class, hypotheses, therapy leads, open questions, evidence count — live as the case changes.
 - **`/zebra`** command: with no argument, the guide (how to use it, what it does); `demo` (the synthetic demo case, first question ready), `new <dir> [title]`, `case <dir>`, `board`, `ledger`, `doctor`, `close`.
-- **12 skills** (`/zebra-mod:zebra-start` routes): `zebra-safety` (urgent red flags and disease-specific drug, anaesthesia and procedure hazards), `zebra-intake`, `zebra-diagnose`, `zebra-variant`, `zebra-reanalysis`, `zebra-s2f`, `zebra-therapy`, `zebra-stats`, `zebra-literature`, `zebra-family`, `zebra-report`.
+- **13 skills** (`/zebra-mod:zebra-start` routes): `zebra-safety` (urgent red flags and disease-specific drug, anaesthesia and procedure hazards), `zebra-intake`, `zebra-diagnose`, `zebra-variant`, `zebra-reanalysis`, `zebra-s2f`, `zebra-therapy`, `zebra-care` (a diagnosed patient's care plan: surveillance, prognosis, rehabilitation, nutrition, trial readiness), `zebra-stats`, `zebra-literature`, `zebra-family`, `zebra-report`.
 - **6 subagents**: `phenotype-curator`, `variant-curator`, `s2f-analyst`, `therapy-scout`, `literature-scout`, `evidence-auditor`.
 - **The `zebra` CLI** (Python standard library only, Python ≥ 3.9): the single implementation behind every tool, usable from any shell, notebook or other agent.
 
@@ -139,7 +140,7 @@ zebra-mod queries public resources live and keeps their provenance; each keeps i
 
 ## Not a medical device
 
-zebra-mod produces research-grade analyses to help people ask better questions. It does not diagnose, prescribe, or replace a clinician or genetic counsellor.
+zebra-mod produces research-grade analyses and drafts for a clinician's review. It does not diagnose or prescribe on its own authority, and does not replace a clinician or genetic counsellor.
 
 ## Lineage
 

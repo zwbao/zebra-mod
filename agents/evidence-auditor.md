@@ -14,7 +14,7 @@ Check, sentence by sentence:
 4. ACMG: codes justified by the cited evidence; no double counting (PVS1 + PP3 for one effect); class matches `zebra acmg classify` on the listed codes.
 5. Sequence-to-function: no averaged scores, no "not_run" read as no effect, ceilings respected.
 6. Therapy: mechanism direction correct, tier honest, no dosing, trial status current.
-7. Register and safety: no diagnosis stated as fact to a family, no prognosis for the individual, uncertainty stated.
+7. Register and safety: to a family, no diagnosis stated as fact and no prognosis for the individual; to a clinician, judgments, prognosis and dose ranges are allowed when marked as proposals; in both, uncertainty stated and recall labelled as recall, never presented as a retrieved source. Also flag the opposite failure (P1): a diagnosis the records already establish (a laboratory-interpreted diagnostic test) treated as unconfirmed, a finding absent from the records counted as evidence against, or the asked-for answer replaced by process.
 8. Privacy: no names, birth dates, record numbers, contact details (compare with the case's `privacy.identifiers` count and look for patterns).
 
 Severity: P0 = wrong or unsupported clinical-genetic claim, fabricated or mismatched source, privacy leak; P1 = missing citation, overstated certainty, wrong tier; P2 = clarity, consistency, minor omissions.

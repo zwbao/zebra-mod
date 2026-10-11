@@ -51,7 +51,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'case_update',
     description:
-      'Record findings in the active case. identifiers FIRST when records name the patient: the name (every spelling: 汉字, pinyin), date of birth, record/ID numbers — the privacy gate then keeps them out of every outgoing call; they are never echoed back. profile: role (family/patient/clinician/researcher), language, proband sex/age, consanguinity. phenotypes: HPO terms present or excluded (labels are verified against HPO; never invent an id — find it with hpo_search). variants, hypotheses (with ORPHA/OMIM/MONDO ids and ledger evidence ids for and against), ACMG readings of recorded variants (codes in, class computed by zebra), therapy leads, tests already done (CMA, panel, exome…, with result), family members (relation, affected, genotype — never names), timeline events, questions for the care team, and removals. Several at once.',
+      'Record findings in the active case. identifiers FIRST when records name the patient: the name (every spelling: 汉字, pinyin), date of birth, record/ID numbers — the privacy gate then keeps them out of every outgoing call; they are never echoed back. profile: role (family/patient/clinician/researcher), language, proband sex/age, consanguinity. phenotypes: HPO terms present or excluded (labels are verified against HPO; never invent an id — find it with hpo_search). variants of every kind (sequence, CNV, repeat expansion or contraction, methylation — with the laboratory interpretation verbatim), hypotheses (with ORPHA/OMIM/MONDO ids; support/against as ledger ids, case item ids such as v1, or reasons in words; status confirmed when a lab result establishes it), ACMG readings of recorded variants (codes in, class computed by zebra), therapy leads, tests already done (CMA, panel, exome…, with result), family members (relation, affected, genotype — never names), timeline events, questions for the care team, and removals. Several at once.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -60,7 +60,7 @@ export const TOOLS: ToolDef[] = [
           description: 'who the case is for and how to write to them; proband basics (no names or birth dates)',
           properties: {
             title: { type: 'string' },
-            role: { type: 'string', enum: ['family', 'patient', 'clinician', 'researcher'] },
+            role: { type: 'string', enum: ['family', 'patient', 'clinician', 'researcher'], description: 'from what the person says about themselves, never from their language; someone operating Claude Code on a case is clinician/researcher unless they say otherwise' },
             language: { type: 'string', description: 'zh or en' },
             sex: { type: 'string', enum: ['female', 'male', 'unknown'] },
             age: { type: 'string', description: 'age or age band, e.g. "2y11m"' },
@@ -100,8 +100,8 @@ export const TOOLS: ToolDef[] = [
               description: { type: 'string' },
               kind: {
                 type: 'string',
-                enum: ['small', 'cnv', 'exon_cnv', 'copy_number', 'repeat_expansion'],
-                description: 'small (default) for an SNV/indel; cnv for a CMA/CNV-seq result; exon_cnv for an exon-level deletion or duplication; copy_number for SMN1-type dosage; repeat_expansion for a repeat expansion',
+                enum: ['small', 'cnv', 'exon_cnv', 'copy_number', 'repeat_expansion', 'repeat_contraction', 'methylation'],
+                description: 'small (default) for an SNV/indel; cnv for a CMA/CNV-seq result; exon_cnv for an exon-level deletion or duplication; copy_number for SMN1-type dosage; repeat_expansion for a repeat expansion; repeat_contraction for a contraction such as FSHD1 D4Z4 (fragment_kb, haplotype); methylation for a methylation result (methylation_pct, locus). A report that sizes a fragment or measures methylation is a finding to record, never "no variant".',
               },
               region: { type: 'string', description: 'cnv: chr15:23123715-28193120' },
               iscn: { type: 'string', description: 'cnv: the ISCN string as reported, e.g. arr[GRCh38] 22q11.21(18648855_21800471)x1' },
@@ -111,7 +111,12 @@ export const TOOLS: ToolDef[] = [
               genes: { type: 'array', items: { type: 'string' }, description: 'genes the finding covers, as a tool returned them' },
               motif: { type: 'string', description: 'repeat: the repeat unit, e.g. CGG' },
               repeat_count: { type: 'number', description: 'repeat: the number of units reported' },
-              method: { type: 'string', description: 'how it was measured: CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR …' },
+              method: { type: 'string', description: 'how it was measured: CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR, PFGE/Southern, optical mapping, bisulfite sequencing …' },
+              locus: { type: 'string', description: 'a named locus when there are no coordinates: 4q35 D4Z4, D4Z4/PAS, an imprinting centre' },
+              fragment_kb: { type: 'number', description: 'repeat_contraction: fragment size in kb as reported (e.g. EcoRI/p13E-11 17.0)' },
+              haplotype: { type: 'string', description: 'repeat_contraction: haplotype as reported, e.g. 4qA' },
+              methylation_pct: { type: 'number', description: 'methylation: the percentage reported (reference range in note)' },
+              lab_interpretation: { type: 'string', description: "the laboratory's own conclusion, verbatim (e.g. 符合 FSHD1 的诊断). When it establishes a diagnosis, also record a hypothesis citing this finding's id." },
             },
           },
         },
@@ -123,8 +128,8 @@ export const TOOLS: ToolDef[] = [
               disease: { type: 'string' },
               status: { type: 'string', enum: ['leading', 'considered', 'excluded', 'confirmed'] },
               ids: { type: 'array', items: { type: 'string' }, description: 'ORPHA:33069, OMIM:607208, MONDO:0100135 as tools returned them' },
-              support: { type: 'array', items: { type: 'string' }, description: 'ledger ids, e.g. E4' },
-              against: { type: 'array', items: { type: 'string' } },
+              support: { type: 'array', items: { type: 'string' }, description: 'ledger ids (E4), case item ids (v1 a genetic finding, x2 a test, f1 a relative), or short reasons in words' },
+              against: { type: 'array', items: { type: 'string' }, description: 'the same kinds; only what argues against (a documented absent hallmark, incompatible inheritance, a negative decisive test) — never "not documented"' },
               note: { type: 'string' },
             },
             required: ['disease'],

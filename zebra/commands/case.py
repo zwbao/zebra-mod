@@ -33,7 +33,16 @@ def _wrap(fn):
 def _init(args: argparse.Namespace) -> Outcome:
     data = case_mod.init(_dir(args), title=args.title or "", role=args.role, language=args.lang)
     path = case_mod.case_file(_dir(args)).parent
-    return Outcome({"path": str(path), "case": data}, text=f"case created at {path}\n  case.json, evidence/, records/, reports/")
+    warnings = []
+    from zebra import hpo_local
+    missing = hpo_local.missing_files()
+    if missing:
+        warnings.append(f"local HPO files missing ({', '.join(missing)}): phenotype_rank will skip its local ranker "
+                        "until `zebra hpo fetch` is run once (~80 MB)")
+    text = f"case created at {path}\n  case.json, evidence/, records/, reports/"
+    if warnings:
+        text += "\n  note: " + warnings[0]
+    return Outcome({"path": str(path), "case": data}, warnings=warnings, text=text)
 
 
 def _show(args: argparse.Namespace) -> Outcome:
@@ -123,10 +132,11 @@ def _add_hypothesis(args: argparse.Namespace) -> Outcome:
     for pair in args.ids or []:
         prefix, value = case_mod.check_id(pair).split(":", 1)
         ids[prefix] = value
-    support = case_mod.check_evidence_ids(args.support, "--support", known)
-    against = case_mod.check_evidence_ids(args.against, "--against", known)
+    support, support_reasons = case_mod.split_evidence(args.support, "--support", known)
+    against, against_reasons = case_mod.split_evidence(args.against, "--against", known)
     entry = case_mod.add_hypothesis(target, args.disease, status=args.status, ids=ids, support=support,
-                                    against=against, note=args.note)
+                                    against=against, note=args.note, support_reasons=support_reasons,
+                                    against_reasons=against_reasons)
     return Outcome(entry, text=f"{entry['id']} [{entry['status']}] {entry['disease']}")
 
 
@@ -237,7 +247,7 @@ OPS_KEYS = ("profile", "phenotypes", "variants", "hypotheses", "leads", "acmg", 
 # otherwise be dropped in silence while the envelope reported success
 ITEM_FIELDS = {
     "phenotypes": ("id", "status", "onset", "source", "note"),
-    "hypotheses": ("disease", "status", "ids", "support", "against", "note"),
+    "hypotheses": ("disease", "status", "ids", "support", "against", "note", "support_reasons", "against_reasons"),
     "leads": ("name", "kind", "status", "evidence", "ids", "note"),
     "acmg": ("variant_id", "codes", "note"),
     "remove": ("kind", "id"),
@@ -362,8 +372,11 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
                                          f"not {type(h['note']).__name__}")
             h["_ids"] = _ids_map(h.get("ids"), f"hypotheses[{h['disease']}].ids")
             for field in ("support", "against"):
-                h[f"_{field}"] = case_mod.check_evidence_ids(h.get(field), f"hypotheses[{h['disease']}].{field}",
-                                                             known_evidence)
+                refs, reasons = case_mod.split_evidence(h.get(field), f"hypotheses[{h['disease']}].{field}",
+                                                        known_evidence)
+                more = case_mod.split_evidence(h.get(f"{field}_reasons"), f"hypotheses[{h['disease']}].{field}_reasons")
+                h[f"_{field}"] = refs + more[0]
+                h[f"_{field}_reasons"] = reasons + more[1]
         for t in clean.get("leads", []):
             if not isinstance(t.get("name"), str) or not t["name"].strip():
                 raise case_mod.CaseError(f"leads: name must be a non-empty string, got {t.get('name')!r}")
@@ -470,7 +483,8 @@ def _apply(args: argparse.Namespace) -> Outcome:
         for h in ops.get("hypotheses", []):
             done.setdefault("hypotheses", []).append(case_mod.apply_hypothesis(
                 data, h["disease"], status=h.get("status"), ids=h["_ids"],
-                support=h["_support"], against=h["_against"], note=h.get("note")))
+                support=h["_support"], against=h["_against"], note=h.get("note"),
+                support_reasons=h["_support_reasons"], against_reasons=h["_against_reasons"]))
         for t in ops.get("leads", []):
             done.setdefault("leads", []).append(case_mod.apply_lead(
                 data, t["name"], t["kind"], status=t.get("status"), evidence=t["_evidence"],
@@ -631,7 +645,7 @@ def register(sub: argparse._SubParsersAction) -> None:
 
     q = add("init", _init, "create a case folder")
     q.add_argument("--title")
-    q.add_argument("--role", choices=case_mod.ROLES, default="family")
+    q.add_argument("--role", choices=case_mod.ROLES, default="unspecified")
     q.add_argument("--lang", default="zh", help="report language: zh or en")
     q = add("demo", _demo, "create (or reopen) the bundled synthetic demo case to try zebra-mod on")
     q.add_argument("--lang", choices=("zh", "en"), default="zh", help="demo in Chinese (zh) or English (en)")
