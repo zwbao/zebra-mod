@@ -49,6 +49,7 @@ const LABELS: Record<string, [string, string]> = {
   disease_card: ['疾病卡', 'Disease card'],
   acmg: ['ACMG 计分', 'ACMG points'],
   cnv_interpret: ['拷贝数变异解读', 'CNV reading'],
+  repeat_size: ['重复序列换算', 'Repeat size'],
   s2f_predict: ['序列功能预测', 'Sequence-to-function'],
   therapy_landscape: ['治疗全景', 'Therapy landscape'],
   trials_search: ['临床试验检索', 'Trial search'],
@@ -64,7 +65,7 @@ const LABELS: Record<string, [string, string]> = {
 
 // What each tool is expected to query, shown while it runs; the row afterwards names what it did query.
 const EXPECTED: Record<string, string[]> = {
-  case_status: [LOCAL], case_update: [LOCAL], report_export: [LOCAL], rare_stats: [LOCAL],
+  case_status: [LOCAL], case_update: [LOCAL], report_export: [LOCAL], rare_stats: [LOCAL], repeat_size: [LOCAL],
   case_recheck: ['ClinVar', 'ClinGen', 'ClinicalTrials.gov', 'Europe PMC'],
   hpo_search: ['HPO'],
   phenotype_rank: ['HPO', 'Monarch', 'PubCaseFinder'],
@@ -179,6 +180,8 @@ export function queryOf(tool: string, input: unknown, zh: boolean): string {
       return s('method')
     case 'cnv_interpret':
       return s('result')
+    case 'repeat_size':
+      return i.locus === 'dmpk' ? `DMPK CTG ${String(i.ctg ?? '')}` : `D4Z4 ${String(i.fragment_kb ?? '')} kb`
     case 'report_export':
       return s('report')
     default: {

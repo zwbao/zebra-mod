@@ -29,7 +29,7 @@ Output: an updated case (via `mcp__zebra-mod__case_update`) and a short summary 
    It returns the genes covered, dosage sensitivity and the ACMG/ClinGen CNV evidence inputs — never a classification; that judgement belongs to `zebra-variant` and the laboratory.
 
    Some diagnostic results are neither sequence variants nor CNVs, and must still be recorded as genetic findings (`variants`), not dropped as "no variant":
-   - a **repeat contraction** (`kind: repeat_contraction`): FSHD1's D4Z4 — locus, fragment size in kb (`fragment_kb`), repeat units if given, haplotype (4qA/4qB), method (PFGE/Southern, optical mapping);
+   - a **repeat contraction** (`kind: repeat_contraction`): FSHD1's D4Z4 — locus, fragment size in kb (`fragment_kb`), repeat units if the lab gives them (otherwise `mcp__zebra-mod__repeat_size` with the digest, never by hand), haplotype (4qA/4qB), method (PFGE/Southern, optical mapping);
    - a **methylation** result (`kind: methylation`): locus (D4Z4/PAS, an imprinting centre), `methylation_pct` and the reference range in `note`, method (bisulfite sequencing, MS-MLPA);
    - always copy the laboratory's own conclusion into `lab_interpretation` ("符合 FSHD1 的诊断"). When that conclusion establishes a diagnosis, also record a hypothesis with status `confirmed` (or `leading` if the lab hedges), `support` citing the finding's id (e.g. `v1`).
 7. **Family, tests, timeline.** `case_update`:

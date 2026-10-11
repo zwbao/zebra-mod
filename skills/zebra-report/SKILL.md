@@ -7,7 +7,7 @@ description: Write the case up and export it to Word/PDF — a clinician summary
 
 ## Steps
 
-1. **Gather**: `mcp__zebra-mod__case_status`; `zebra case ledger --case <case>` (Bash) for the evidence rows; re-run a tool if a needed fact is missing — never fill from memory.
+1. **Gather**: `mcp__zebra-mod__case_status`; `zebra case ledger --case <case>` (Bash) for the evidence rows; re-run a tool if a needed fact is missing; anything still from memory is labelled as such, never passed off as retrieved.
 2. **Draft** to `<case>/reports/<kind>-<YYYY-MM-DD>.md`:
 
    **Clinician summary** (language per case; terminology exact)
@@ -25,8 +25,9 @@ description: Write the case up and export it to Word/PDF — a clinician summary
    Every factual sentence ends with its evidence (`[E12]`, `[PMID 12345678]`).
 3. **Audit**: dispatch `zebra-mod:evidence-auditor` with the draft path and the case path. It works independently and returns P0/P1/P2 findings.
 4. **Fix** every P0 and P1 (re-query, correct, or remove the claim); note P2s you leave and why. Re-audit if P0s were found.
-5. **Export** what goes to people outside the terminal: `mcp__zebra-mod__report_export` with the report path (Word and PDF by default, `formats: ["html"]` for a page to open in a browser). It refuses a report that still holds a protected identifier — remove it, never pass around the check. A missing PDF engine is reported; Word is still made.
-6. **Deliver**: final path(s) of the .md and the exported files, what changed after audit, what remains uncertain.
+5. **Clean** before export: no zebra skill or tool names, `/zebra` commands or bare ledger ids (E12) in the text — replace each with the source it stands for (PMID, NCT, database record).
+6. **Export** what goes to people outside the terminal: `mcp__zebra-mod__report_export` with the report path (Word and PDF by default, `formats: ["html"]` for a page to open in a browser). It refuses a report that still holds a protected identifier — remove it, never pass around the check. A missing PDF engine is reported; Word is still made.
+7. **Deliver**: final path(s) of the .md and the exported files, what changed after audit, what remains uncertain.
 
 ## For a family (代操作)
 

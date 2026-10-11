@@ -23,6 +23,12 @@ describe('tool → CLI argv', () => {
     }
   })
 
+  test('repeat_size', async () => {
+    expect(await toolArgv(def('repeat_size'), { locus: 'd4z4', fragment_kb: 17, digest: 'EcoRI', haplotype: '4qA', methylation_pct: 16.2 }, null))
+      .toEqual(['repeat', 'd4z4', '--fragment-kb', '17', '--digest', 'EcoRI', '--haplotype', '4qA', '--methylation-pct', '16.2'])
+    expect(await toolArgv(def('repeat_size'), { locus: 'dmpk', ctg: 600 }, null)).toEqual(['repeat', 'dmpk', '--ctg', '600'])
+  })
+
   test('phenotype_rank', async () => {
     const argv = await toolArgv(def('phenotype_rank'), { present: ['HP:0001250', 'HP:0001263'], excluded: ['HP:0001252'], sources: ['local', 'monarch'], top: 10 }, null)
     expect(argv).toEqual(['phenotype', 'rank', '--present', 'HP:0001250', 'HP:0001263', '--exclude', 'HP:0001252', '--sources', 'local,monarch', '--top', '10'])

@@ -484,6 +484,28 @@ export const TOOLS: ToolDef[] = [
     deferred: true,
   },
   {
+    name: 'repeat_size',
+    description:
+      'Read a repeat size by rule, never by memory. d4z4: D4Z4 units from the contracted 4q35 fragment a laboratory reports (EcoRI, EcoRI/BlnI or EcoRI/HindIII — the flank differs by digest), with the sizing-error range and the FSHD1 band (1-3 short, 4-6, 7-10, 11+). dmpk: the DM1 class of a DMPK CTG count. Offline; cite its sources. Use it whenever a reply states repeat units or a repeat class.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        locus: { type: 'string', enum: ['d4z4', 'dmpk'] },
+        fragment_kb: { type: 'number', description: 'd4z4: contracted fragment size in kb' },
+        digest: { type: 'string', enum: ['EcoRI', 'EcoRI/BlnI', 'EcoRI/HindIII'], description: 'd4z4: the digest the size refers to (default EcoRI)' },
+        haplotype: { type: 'string', description: 'd4z4: 4qA or 4qB as reported' },
+        methylation_pct: { type: 'number', description: 'd4z4: D4Z4 methylation % as reported' },
+        ctg: { type: 'number', description: 'dmpk: CTG repeat count (larger allele)' },
+      },
+      required: ['locus'],
+    },
+    argv: i => {
+      if (i.locus === 'dmpk') return ['repeat', 'dmpk', '--ctg', num(i.ctg) ?? '']
+      return ['repeat', 'd4z4', '--fragment-kb', num(i.fragment_kb) ?? '', ...flag('--digest', str(i.digest)),
+        ...flag('--haplotype', str(i.haplotype)), ...flag('--methylation-pct', num(i.methylation_pct))]
+    },
+  },
+  {
     name: 'cnv_interpret',
     description:
       'Read the report forms that are not a single sequence variant. A CNV or microarray result (region or ISCN, with build, mosaicism such as x1~2 or 30%, de novo/maternal/paternal) → the genes it spans, every one checked against ClinGen gene dosage, and the ClinGen curated regions it overlaps (22q11.2, 1p36, Williams, PWS/AS, 16p11.2 …) with HI/TS scores, coverage and the ACMG/ClinGen 2020 section-2 row they point to; section 3 by gene count for losses and gains separately — inputs, never a classification (sections 4-5 need the case). An exon-level deletion or duplication (DMD exon 45-50 deletion, NM_004006.3:c.6439-?_7309+?del, intronic breakpoints) → exons, coding bases, whether the frame is kept, and — only when it is not — which additional exon skip restores it. SMN1/SMN2 copy number (clinical exon numbering 1, 2a, 2b, 3-8) read with the SMN2 count, framed as population data, not a prognosis. Repeat expansions (FMR1, HTT, DMPK, FXN, C9orf72) placed in their published size bands with sex-specific wording and what else is needed (methylation, AGG interruptions, the other allele) — a referenced reading, not a classification. Coordinates from Ensembl.',

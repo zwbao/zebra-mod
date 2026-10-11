@@ -17,6 +17,8 @@ Read `zebra-safety` first: anything urgent in the records comes before the plan.
 - what is **not** in the records and would change the plan (examination, onset, family history, symptoms) — these become a fill-in list, not reasons to withhold the plan;
 - which values you read from a photo or OCR and which you checked against the original image — mark the former "待核对".
 
+Genotype numbers by rule: repeat units, repeat classes and risks come from `mcp__zebra-mod__repeat_size` / `rare_stats`, never from mental arithmetic (an EcoRI fragment of 17 kb is 3 D4Z4 units, not 4 — the flank depends on the digest).
+
 ## 2. Disease knowledge, checked
 
 `mcp__zebra-mod__disease_card` for the disease (inheritance, natural history, hallmark complications); `mcp__zebra-mod__literature_search` for the current guideline or consensus statement and anything decision-relevant you are unsure of (surveillance intervals, screening triggers, exercise evidence). Guideline content you know but did not retrieve is fine to use — label it.
@@ -28,9 +30,9 @@ Order by what matters for this patient; drop sections that do not apply; put a o
 1. **Severity and prognosis.** Factors pointing to a more and a less severe course, from genotype, age at involvement, organs involved and trend. Give prognosis as ranges and as the objective measures to track (lung function, timed walks, strength scores, quantitative muscle MRI, biomarkers), not a single percentage.
 2. **Respiratory.** What to measure (sitting/supine FVC — with a mask when facial weakness spoils the mouthpiece seal — MIP/MEP, peak cough flow, overnight oximetry/capnography), thresholds for non-invasive ventilation and cough assistance, vaccines, smoking.
 3. **Cardiac.** Baseline and interval ECG/echo/Holter for the disease; any abnormal marker gets its own differential (a raised troponin T in a myopathy may be skeletal — check cardiac troponin I).
-4. **Exercise and rehabilitation.** A concrete prescription (type, frequency, duration, intensity — heart-rate zone from the person's own resting rate if a wearable export exists), what to avoid, orthoses, surgery criteria and their contraindications, falls, pain, fatigue.
-5. **Nutrition and metabolism.** Energy and protein targets in grams, vitamin D/calcium, weight and body composition, and a plan for each abnormal metabolic result (uric acid, homocysteine, glucose, lipids). Supplements with their evidence level, including "not worth paying for".
-6. **Findings the diagnosis does not explain.** Each gets its own row: what it could be, the next step, the urgency. Never fold an unexplained finding (a spinal cord signal, a tumour marker) into the main diagnosis.
+4. **Exercise and rehabilitation.** Gate it on any open cardiac question (start low until it is answered). A concrete prescription (type, frequency, duration, intensity — heart-rate zone from the person's own resting rate if a wearable export exists), what to avoid, orthoses, surgery criteria and their contraindications, falls, pain, fatigue.
+5. **Nutrition and metabolism.** Energy and protein targets in grams, vitamin D/calcium, weight and body composition, and a plan for each abnormal metabolic result (uric acid, homocysteine, glucose, lipids). Every target names its guideline and the population it is for (a treatment target for gout differs from one for asymptomatic hyperuricaemia; when unsure, say so and give the range rather than a single wrong number). Supplements with their evidence level, including "not worth paying for".
+6. **Findings the diagnosis does not explain.** Each gets its own row: what it could be, the next step, the urgency. Never fold an unexplained finding (a spinal cord signal, a tumour marker) into the main diagnosis. Think of the common and the treatable before the exotic, and of the dangerous before the benign: a cord signal with raised homocysteine → B12 deficiency and nitrous-oxide (笑气) use; a raised AFP in a young man → testicular examination, β-hCG and LDH for a germ-cell tumour; a raised troponin T in a myopathy → cardiac troponin I before calling it skeletal.
 7. **Screening the genotype calls for** (eyes, hearing, others the guideline names) and why.
 8. **Medicines and procedures.** Anaesthesia hazards, drugs to avoid or use with care, an emergency card.
 9. **Genetics and family.** Inheritance and recurrence (`zebra-stats` for numbers), testing of relatives and what it would change, reproductive options.
@@ -40,6 +42,8 @@ Order by what matters for this patient; drop sections that do not apply; put a o
 13. **Fill-in list.** What the patient or clinician should supply (examination, history, originals of photographed reports), at the end.
 
 ## 4. Deliver
+
+The deliverable cites what the clinician can check — PMIDs, NCT numbers, GeneReviews, guideline names — and never zebra's machinery (skill or tool names, `/zebra` commands, ledger ids like E12): those mean nothing outside this terminal.
 
 - Clinician: the plan as written, technical, editable. Offer `zebra-report` to export it (Word/PDF/HTML); for a page the clinician will edit, HTML with the uncertain values highlighted works well.
 - Patient page: one page of plain-language actions (what to do, what to watch for, when to call), in their language.

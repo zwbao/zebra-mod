@@ -38,11 +38,11 @@
 
 - **表型排序**：在 GA4GH phenopacket-store 0.1.27（10,374 个已发表病例、780 种疾病）上按疾病划分开发集与留出集。对留出集中"病例本身的论文不是 HPO 注释来源"的病例（最接近新患者的公平测试），正确疾病进入本地排序前 10 的比例为 **28%**（0.1.0 为 15%），致病基因为 40%。全部留出病例为 70%，只能视为上限：多数已发表病例的疾病注释正是从该论文整理而来。在 100 例联网抽样中，本地 + Monarch + PubCaseFinder 合并后前 10 命中 75%。排序结果是待检验的假设清单，不是答案。
 - 一项如实披露的代价：PRD 中的示例查询（热性惊厥、局灶性与强直阵挛发作、发育落后；排除肌张力低下）在本地排序中，Dravet 综合征现排第 16（0.1.0 为第 6），原因是排除表型改为标注而不计分——这一选择在留出集上测得更好。
-- `evals/` 收录 11 个端到端评测用例，供 `claude plugin eval` 使用（中文家长病历、急症优先、VUS、CNV、线粒体变异、治疗与试验、隐私、超出范围的请求，以及医生为一位已由 D4Z4 片段检测确诊的 FSHD1 患者要管理方案）。
+- `evals/` 收录 12 个端到端评测用例，供 `claude plugin eval` 使用（中文家长病历、急症优先、VUS、CNV、线粒体变异、治疗与试验、隐私、超出范围的请求，以及医生为两位已确诊患者要管理方案：由 D4Z4 片段检测确诊的 FSHD1，和合并传导阻滞、即将手术并计划怀孕的 DM1）。
 
 ## mod 为 Claude Code 增加的能力
 
-- **21 个工具**，模型可直接调用（`mcp__zebra-mod__*`）：`case_status`、`case_update`、`case_recheck`、`hpo_search`、`phenotype_rank`、`gene_card`、`variant_card`、`disease_card`、`acmg`、`cnv_interpret`、`s2f_predict`、`therapy_landscape`、`trials_search`、`literature_search`、`rare_stats`、`edit_check`、`china_rare`、`access`、`expression`、`aso_screen`、`report_export`。每次调用都经过你的权限规则与隐私闸门；只读查询默认无需确认（除非你的规则另有要求），写入病例遵循当前权限模式（可选择"本次会话内允许"）。
+- **22 个工具**，模型可直接调用（`mcp__zebra-mod__*`）：`case_status`、`case_update`、`case_recheck`、`hpo_search`、`phenotype_rank`、`gene_card`、`variant_card`、`disease_card`、`acmg`、`cnv_interpret`、`repeat_size`（按公式把 D4Z4 片段换算成重复单位、给出 DMPK CTG 分级，不靠记忆）、`s2f_predict`、`therapy_landscape`、`trials_search`、`literature_search`、`rare_stats`、`edit_check`、`china_rare`、`access`、`expression`、`aso_screen`、`report_export`。每次调用都经过你的权限规则与隐私闸门；只读查询默认无需确认（除非你的规则另有要求），写入病例遵循当前权限模式（可选择"本次会话内允许"）。
 - **研究守则**写入系统提示词（即上述原则），并附当前病例信息。
 - **看得见它在工作**（全部为增量挂载，与罕见病无关的工作照常显示）：它的工具调用有自己的行（`🦓 变异卡  NM_001165963.4:c.2134C>T`，随后 `⎿ 证据 15 条（E39–E53）· 来源 Ensembl VEP、gnomAD、ClinVar、LitVar2 · 3 条来自缓存`），取代原始 JSON；登记身份信息的 case_update 行只显示条数，不显示内容；等待动画写明正在查询哪些数据库；查询进行时，输入框上方有一匹奔跑的小斑马，隐私闸门拦下调用后，这里改为盾牌提示；底部状态区有 `🦓` 标签（打开病例时显示病例标题）；用到 zebra-mod 的一轮结束时，留下一行小结：调用次数、数据源、新增证据、被拦截的调用。中英文随病例语言或你的提问切换。选项 `interface`：`full`（默认）、`quiet`（无动画、不改等待动画文字）或 `off`。
 - **病例看板**面板（`/zebra board`），底部标签显示当前病例（`interface` 为 `off` 时改用固定状态行）：表型、变异及其研究级分类、诊断假设、治疗线索、待解决问题、证据条数，随病例更新实时刷新。
