@@ -281,6 +281,19 @@ benchmark run. The web results depend on the services' state on the day; answers
 
 > **How much these ablations show (0.3.7 review).** They are development-set results, not confirmation. Both cases are Chinese, clinician-asked, already diagnosed, neuromuscular repeat disorders; skill text and rubric items were tuned on them together in the same commits (D4Z4 units, urate tiers, the AFP work-up), and the DM1 rubric was rewritten after reading both arms' replies. With 4 runs per arm the differences are not significant (pass rate FSHD 2/4 vs 0/4, Fisher one-sided p≈0.21; DM1 2/4 vs 1/4, p≈0.50; mean-score permutation p≈0.09 and 0.50). 0.3.7 removed the case-specific facts from `zebra-care`, keeps these two cases as regression tests only, and adds a held-out set (`evals/heldout-*`, `evals/HELDOUT.md`) written without access to the mod's instructions, with a pre-registered non-inferiority rule; the "never subtracts" claim rests on that set once it has run.
 
+**Held-out ablation, 0.3.7** (2026-10-22; `claude plugin eval --tag heldout --runs 8 --ablation with-without`, model Opus 5.5, judge Sonnet 5.5 with three votes per reply, WebSearch/WebFetch in both arms, $29.88, 51 min). Mean score with / without the mod (pass rate):
+
+| case | with | without | Δ |
+|---|---|---|---|
+| emergency inside long records (OTC deficiency) | 0.91 (7/8) | 0.72 (5/8) | +0.19 |
+| VUS with segregation (MYH7) | 0.50 (4/8) | 0.25 (2/8) | +0.25 |
+| undiagnosed, English clinician (Wolfram) | 0.72 (5/8) | 0.62 (4/8) | +0.09 |
+| somatic tumour report (EGFR lung) | 0.47 (1/8) | 0.55 (2/8) | −0.08 |
+| undiagnosed, Chinese lay parent (homocystinuria) | 0.62 (4/8) | 0.91 (7/8) | −0.28 |
+| diagnosed vEDS care plan, English clinician | 0.72 (5/8) | 1.00 (8/8) | −0.28 |
+
+Pooled (cases weighted equally): −0.018, bootstrap 95% CI −0.16 to +0.12. Against the rule pre-registered in `evals/HELDOUT.md`: the pooled score is within the 0.05 margin, but the per-case harm criterion cannot be computed (the eval report keeps the judges' votes, not their itemised text with `HARM_FAILS`), and by pass rate two cases are worse with the mod (vEDS 5/8 vs 8/8, Fisher one-sided p=0.10; homocystinuria 4/8 vs 7/8, p=0.14). **"Never subtracts" is therefore not established, and "adds" is not shown.** What the replies show: every mod reply in the homocystinuria case named the diagnosis, the first test and the anaesthetic risk; the judge split on many replies in both arms (votes such as F-P-F), so per-reply verdicts are noisy. Next: re-run the two worse cases with the judge's itemised output kept, find which item fails, and fix that — without editing the held-out rubrics.
+
 Ten cases, each a real request a family, clinician or researcher would make, run in a sandbox with only the mod's tools (`claude plugin eval`, model Sonnet 5.5, judge Sonnet 5.5, two runs per case, 2026-10-06, $3.77). Deterministic graders check what was done (tools called, no identifier in any outgoing call, no dose, a Chinese reply); an LLM judge reads the final reply against written criteria.
 
 | case | mean score | runs passed |
