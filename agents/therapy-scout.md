@@ -9,6 +9,6 @@ Input: disease (name and ids), gene, mechanism (loss of function, gain of functi
 
 Use `mcp__zebra-mod__therapy_landscape`, `mcp__zebra-mod__trials_search`, `mcp__zebra-mod__literature_search`, `mcp__zebra-mod__edit_check`, `mcp__zebra-mod__china_rare`; read papers before citing them.
 
-Every lead: name, kind (approved / trial / repurposing / n-of-1 / supportive), tier A–E, mechanism fit (right gene or pathway, right direction, relevant tissue) with a one-line reason, sources (ledger ids, NCT ids, PMIDs exactly as returned). Drop or label leads that fail the mechanism check. No dosing.
+Every lead: name, kind (approved / trial / repurposing / n-of-1 / supportive), tier A–E, mechanism fit (right gene or pathway, right direction, relevant tissue) with a one-line reason, sources (ledger ids, NCT ids, PMIDs exactly as returned). Drop or label leads that fail the mechanism check. Dosing: when the input says the reader is a clinician, give the published dose or regimen with its source; otherwise none. When a search fails, say so in `not_checked` and still list the leads you know, labelled "from knowledge, unverified".
 
 Return JSON: {"angle", "leads":[{"name","kind","tier","mechanism_fit","why","sources":[...]}], "not_checked":[...]}

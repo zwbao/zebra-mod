@@ -146,15 +146,56 @@ function escapeRe(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// Words that put a two-character string in a person's place: 患者张力, 张力先生, 姓名：张力.
+const NAME_BEFORE = /(?:患者|患儿|病人|病儿|姓名|名字|名叫|叫做|先证者|宝宝|孩子|儿子|女儿|同学|小朋友|家长|母亲|父亲|妈妈|爸爸|之子|之女)$/
+const NAME_AFTER = /^(?:[男女](?![性子人])|先生|女士|同学|小朋友|小姐|老师|医生|患者|患儿|宝宝|之子|之女|的(?:父亲|母亲|妈妈|爸爸|家长))/
+const CJK_CHAR = /[㐀-鿿豈-﫿]/
+
+/**
+ * A two-character Chinese name in `text`: 'name' where it stands as a name (bounded by anything
+ * that is not a Chinese character, or by a word that puts a person there: 患者张力，男), 'embedded'
+ * where it occurs only inside a longer Chinese run (肌张力减退 for a patient called 张力), else null.
+ * Spaces, dots and hyphens between Chinese characters are dropped first, so 张 力 and 张·力 are 张力.
+ */
+function shortCjkName(name: string, spaced: string): 'name' | 'embedded' | null {
+  const text = spaced.replace(/(?<=[㐀-鿿豈-﫿])[\s\-_.·]+(?=[㐀-鿿豈-﫿])/g, '')
+  let found: 'embedded' | null = null
+  for (let at = text.indexOf(name); at >= 0; at = text.indexOf(name, at + 1)) {
+    const before = text.slice(0, at)
+    const after = text.slice(at + name.length)
+    const openLeft = !CJK_CHAR.test(before.slice(-1)) || NAME_BEFORE.test(before)
+    const openRight = !CJK_CHAR.test(after.slice(0, 1)) || NAME_AFTER.test(after)
+    if (openLeft && openRight) return 'name'
+    found = 'embedded'
+  }
+  return found
+}
+
+/** What the gate found: `deny` must not leave; `ask` may be an ordinary word and needs a person to say. */
+export type GuardHit = { level: 'deny' | 'ask'; what: string }
+
 /**
  * What in `input` must not leave the machine, described without repeating it.
  * `identifiers` are the case's registered strings (names, dates of birth, record numbers).
+ * Only the hits that must be refused; `guardCheck` also returns the ones to ask about.
  */
 export function guardInput(input: unknown, identifiers: readonly string[]): string | undefined {
+  const hit = guardCheck(input, identifiers)
+  return hit?.level === 'deny' ? hit.what : undefined
+}
+
+/**
+ * Like `guardInput`, with one more answer: a registered two-character Chinese name found only
+ * inside a longer Chinese word (张力 in 肌张力, 王海 in 王海燕) is `ask`, not `deny` — the same two
+ * characters are often a medical term. Two such hits from different identifiers, or one beside any
+ * refused identifier, are `deny`.
+ */
+export function guardCheck(input: unknown, identifiers: readonly string[]): GuardHit | undefined {
   const all = leaves(input)
-  if (all.includes(TOO_DEEP)) return 'more nested data than the gate can read in full'
+  if (all.includes(TOO_DEEP)) return { level: 'deny', what: 'more nested data than the gate can read in full' }
   const values = all.filter(v => !isLocalPath(v))
   if (values.length === 0) return undefined
+  const embedded: string[] = []
   // Each value is folded on its own: digits or letters from two unrelated values
   // (an MRN and an HPO id next to it) must never join into a match.
   const folded = values.map(forms)
@@ -172,32 +213,41 @@ export function guardInput(input: unknown, identifiers: readonly string[]): stri
 
     for (const f of folded) {
       // a date of birth, however it is written
-      if (dates.some(re => re.test(f.scrubbed))) return label
+      if (dates.some(re => re.test(f.scrubbed))) return { level: 'deny', what: label }
       // a record or ID number: digits only, so separators cannot hide it
       // (not for a date: its digits joined across a value's other numbers would match by accident)
-      if (dates.length === 0 && LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return label
+      if (dates.length === 0 && LONG_DIGITS.test(id.digits) && f.digits.includes(id.digits)) return { level: 'deny', what: label }
       // a number-only identifier is matched by its digits alone (a PMID or rsID with the same digits is not it)
       if (/^\d+$/.test(id.tight)) continue
       if (HAS_CJK.test(raw)) {
-        // Chinese names: two characters identify, and spacing carries no meaning
-        if (id.tight.length >= 2 && f.tight.includes(id.tight)) return label
+        // Chinese names: spacing carries no meaning. Three characters or more identify anywhere;
+        // two identify where they stand as a name, and are asked about inside a longer word.
+        if (id.tight.length >= 3 && f.tight.includes(id.tight)) return { level: 'deny', what: label }
+        if (id.tight.length === 2 && [...id.tight].every(c => CJK_CHAR.test(c))) {
+          const seen = shortCjkName(id.tight, f.spaced)
+          if (seen === 'name') return { level: 'deny', what: label }
+          if (seen === 'embedded' && !embedded.includes(label)) embedded.push(label)
+        } else if (id.tight.length >= 2 && f.tight.includes(id.tight)) return { level: 'deny', what: label }
         continue
       }
       // every token present as a whole word, in any order ("Xiaoming Zhang" too)
-      if (tokens.length > 1 && tokens.every(t => wordIn(t, f.spaced))) return label
+      if (tokens.length > 1 && tokens.every(t => wordIn(t, f.spaced))) return { level: 'deny', what: label }
       if (id.tight.length >= 3) {
-        if (wordIn(id.tight, f.spaced)) return label
-        if (tokens.length <= 1 && id.tight.length >= 6 && f.tight.includes(id.tight)) return label
+        if (wordIn(id.tight, f.spaced)) return { level: 'deny', what: label }
+        if (tokens.length <= 1 && id.tight.length >= 6 && f.tight.includes(id.tight)) return { level: 'deny', what: label }
       }
     }
   }
 
   // Patterns that identify a person even when no case is open, checked per value.
   for (const f of folded) {
-    if (CN_RESIDENT_ID.test(f.scrubbed)) return 'what looks like a Chinese resident ID number'
-    if (CN_MOBILE.test(f.scrubbed)) return 'what looks like a mobile phone number'
-    if (emailIn(f.spaced)) return 'an email address'
+    if (CN_RESIDENT_ID.test(f.scrubbed)) return { level: 'deny', what: 'what looks like a Chinese resident ID number' }
+    if (CN_MOBILE.test(f.scrubbed)) return { level: 'deny', what: 'what looks like a mobile phone number' }
+    if (emailIn(f.spaced)) return { level: 'deny', what: 'an email address' }
   }
+  // two registered names each inside a word (a name and its other spelling, two relatives) point to a person
+  if (embedded.length >= 2) return { level: 'deny', what: embedded.join(' and ') }
+  if (embedded.length === 1) return { level: 'ask', what: `${embedded[0]} (two Chinese characters, here inside a longer word)` }
   return undefined
 }
 
@@ -348,6 +398,11 @@ function outboundSegment(segment: string): boolean {
   const w = shellWords(segment)
   const inner = /^(?:ba|z|da|k)?sh$|^eval$/.test(w[0] ?? '') ? w.slice(1).filter(a => a !== '-c').join(' ') : ''
   return inner !== '' && inner !== segment && isOutboundShell(inner)
+}
+
+/** True when a shell command runs the zebra CLI anywhere in it (which reads the active case). */
+export function invokesZebra(command: string): boolean {
+  return shellSegments(command).some(seg => ZEBRA_CLI.test(seg) || ZEBRA_CLI.test(asRun(seg)))
 }
 
 /** True when a shell command may send data off the machine. Judged per segment. */

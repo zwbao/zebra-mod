@@ -5,7 +5,7 @@ import type { Board, Ready } from '../types'
 import { DOCTRINE, DOCTRINE_BRIEF, renderDoctrine } from './doctrine'
 import { schemaArgs, TOOLS, toolArgv, type ToolDef } from './tools'
 import { registerUi } from './ui'
-import { guardInput, isOutboundShell, outboundText, sendsVariantList, shellWords, uploadedPaths, uploadsGenome } from './privacy'
+import { guardCheck, invokesZebra, isOutboundShell, outboundText, sendsVariantList, shellWords, uploadedPaths, uploadsGenome } from './privacy'
 
 const PLUGIN = 'zebra-mod'
 const PANE = 'zebra-board'
@@ -37,6 +37,8 @@ const trusted = atom({ plugin: 'zebra-mod', key: 'trusted' } as const, [] as str
 // identifiers registered while no case was open: protected for this session, kept only in memory,
 // and added to the next case that is opened or created
 const sessionIds = atom({ plugin: 'zebra-mod', key: 'sessionIds' } as const, [] as string[])
+// 'zh' once the person has written a Chinese prompt (set by ui.tsx at each turn's start)
+const lang = atom({ plugin: 'zebra-mod', key: 'lang' } as const, null as string | null)
 
 type Envelope = {
   ok: boolean
@@ -195,16 +197,24 @@ export const register: Register = (on, options) => {
       (e.tool.startsWith('mcp__') && own === undefined) ||
       (e.tool === 'Bash' && isOutboundShell(command))
 
+    let closedAsk: string | null = null
+    let nameAsk: string | null = null
     if (privacyOn && outbound) {
       const active = await read($, casePath)
       const now = await identifiersNow($, active)
       // a copy: the session list comes from engine state, which must not be mutated in place
       const held = { isClosed: now.isClosed, ids: [...now.ids, ...(e.tool === 'Bash' ? await namedCaseIdentifiers($, command, active) : [])] }
+      // An unreadable case.json: the identifiers are unknown. zebra's own tools, the zebra CLI and
+      // anything that touches the case folder are refused; other outbound calls (a WebSearch about
+      // something else) are asked about, after the identifiers last read are still checked below.
       if (held.isClosed) {
-        return {
-          decision: 'deny' as const,
-          reason: `zebra-mod privacy gate: ${active}/case.json cannot be read, so the protected identifiers are unknown and the gate is closed. Fix or re-create the case file, or /zebra close to work without one.`,
+        if (own !== undefined || (e.tool === 'Bash' && invokesZebra(command)) || (await touchesCase($, active, e.tool, command, e.input))) {
+          return {
+            decision: 'deny' as const,
+            reason: `zebra-mod privacy gate: ${active}/case.json cannot be read, so the protected identifiers are unknown and the gate is closed. Fix or re-create the case file, or /zebra close to work without one.`,
+          }
         }
+        closedAsk = String(active)
       }
       // Scan what actually leaves: a shell command's outbound segments without local paths
       // or sample names; a published page's text below; anything else as given.
@@ -212,7 +222,13 @@ export const register: Register = (on, options) => {
         : e.tool === 'Artifact' ? artifactFields(e.input)
         : own !== undefined ? schemaArgs(own, (e.input ?? {}) as Record<string, unknown>)
         : e.input
-      const hit = guardInput(scanned, held.ids)
+      const found = guardCheck(scanned, held.ids)
+      if (found?.level === 'ask') {
+        // a registered two-character Chinese name inside a longer word: often a medical term (张力 in 肌张力);
+        // asked about once the checks below that can refuse have run
+        nameAsk = `zebra-mod privacy gate: this call contains ${found.what}. If it is an ordinary word, confirm; if it names the patient, do not send it.`
+      }
+      const hit = found?.level === 'deny' ? found.what : undefined
       if (hit && !hit.startsWith('protected identifier') && !active && own === undefined) {
         // No case is open, so this is not known to be patient work: an email or a phone number
         // in an ordinary call (a PR body, an API request) is asked about, never refused outright.
@@ -240,6 +256,12 @@ export const register: Register = (on, options) => {
       }
       if (e.tool === 'Artifact') {
         const scan = await artifactLeak($, e.input, held.ids)
+        if (scan.ask && !scan.leak) {
+          return {
+            decision: 'ask' as const,
+            reason: `zebra-mod privacy gate: the page about to be published contains ${scan.ask}. If it is an ordinary word, confirm; if it names the patient, do not publish it.`,
+          }
+        }
         if (scan.leak) {
           return {
             decision: 'deny' as const,
@@ -264,6 +286,14 @@ export const register: Register = (on, options) => {
           decision: 'ask' as const,
           reason: 'zebra-mod: --prefilter myvariant sends every quality-passing variant position in this VCF (often tens of thousands) to myvariant.info. Taken together they are the person\'s genome — confirm, or run triage without the prefilter (only the candidates that survive local filtering go out).',
         }
+      }
+    }
+
+    if (nameAsk !== null) return { decision: 'ask' as const, reason: nameAsk }
+    if (closedAsk !== null) {
+      return {
+        decision: 'ask' as const,
+        reason: `zebra-mod privacy gate: ${closedAsk}/case.json cannot be read, so this call could not be checked against the case's current protected identifiers (it does not touch the case). If it carries nothing about the patient, confirm. Fix the case file, or /zebra close, to stop this question.`,
       }
     }
 
@@ -330,7 +360,8 @@ export const register: Register = (on, options) => {
       const title = rest.slice(1).join(' ')
       if (!dirArg) return { text: 'Usage: /zebra new <dir> [title]   (quote a path or title that contains spaces)' }
       const dir = await absolute($, dirArg)
-      const made = await runZebra($, python, ['case', 'init', dir, ...(title ? ['--title', title] : [])])
+      const lang = (await guideIsZh($, undefined)) ? 'zh' : 'en'
+      const made = await runZebra($, python, ['case', 'init', dir, ...(title ? ['--title', title] : []), '--lang', lang])
       if (!made.ok) return { text: `Could not create the case: ${made.error?.message ?? 'unknown error'}` }
       await setCase($, python, dir, e.origin.kind === 'composer')
       await $.ui.open({ id: PANE, title: 'zebra · case board' })
@@ -378,7 +409,7 @@ export const register: Register = (on, options) => {
       <Box flexDirection="column">
         <Text bold>🦓 {b.title}</Text>
         <Text dimColor>
-          {b.role} · {b.evidence_count} evidence rows · {b.identifiers} protected identifiers
+          {b.role || 'unspecified'}{b.role_confirmed === false ? ' (not confirmed)' : ''} · {b.evidence_count} evidence rows · {b.identifiers} protected identifiers
         </Text>
         <Markdown key="body" text={boardMarkdown(b)} />
         <Box flexDirection="row" gap={1}>
@@ -572,6 +603,24 @@ async function setCase($: EngineInterface, python: string, path: string | null, 
   await refreshBoard($, python)
 }
 
+/**
+ * Whether an outbound call touches the case folder: names its path, or sends a file from it.
+ * Used when case.json cannot be read, to keep the refusal to what concerns the case.
+ */
+async function touchesCase($: EngineInterface, active: string | null, tool: string, command: string, input: unknown): Promise<boolean> {
+  if (!active) return false
+  const root = active.replace(/\/+$/, '')
+  let text = ''
+  try {
+    text = tool === 'Bash' ? command : JSON.stringify(input ?? {})
+  } catch {
+    return true
+  }
+  if (text.includes(root) || text.includes(root.replace(/^\/Users\/[^/]+|^\/home\/[^/]+/, '~'))) return true
+  const paths = tool === 'Bash' ? uploadedPaths(command) : artifactPaths(input)
+  return paths.length > 0 && (await firstInsideCase($, active, paths, (input as { root?: unknown })?.root)) !== undefined
+}
+
 /** The first of `paths` that lies inside the case folder, resolved through links. */
 async function firstInsideCase($: EngineInterface, active: string, paths: readonly string[], root?: unknown): Promise<string | undefined> {
   const caseRoot = await $.fs.stat(active, { resolve: true }).catch(() => undefined)
@@ -655,8 +704,9 @@ async function namedCaseIdentifiers($: EngineInterface, command: string, active:
  * patterns, checked in every file it publishes. A file that cannot be read (missing, over the
  * 4 MiB read limit) is reported as unread, so the caller asks instead of passing it unseen.
  */
-async function artifactLeak($: EngineInterface, input: unknown, ids: readonly string[]): Promise<{ leak?: string; unread: string[] }> {
+async function artifactLeak($: EngineInterface, input: unknown, ids: readonly string[]): Promise<{ leak?: string; ask?: string; unread: string[] }> {
   const unread: string[] = []
+  let ask: string | undefined
   const root = (input as { root?: unknown })?.root
   const base = typeof root === 'string' && root ? root.replace(/\/$/, '') : ''
   for (const p of artifactPaths(input)) {
@@ -670,10 +720,11 @@ async function artifactLeak($: EngineInterface, input: unknown, ids: readonly st
     // over a page must never join into a record number, but a name split by a line break still counts
     const chunks = text.split(/\n\s*\n|<\/(?:p|div|li|tr|td|th|h[1-6]|section|table)>|<br\s*\/?>/i)
       .map(c => c.replace(/\s*\n\s*/g, ' '))
-    const hit = guardInput(chunks, ids)
-    if (hit) return { leak: `${hit} (in ${p})`, unread }
+    const hit = guardCheck(chunks, ids)
+    if (hit?.level === 'deny') return { leak: `${hit.what} (in ${p})`, unread }
+    if (hit && ask === undefined) ask = `${hit.what} (in ${p})`
   }
-  return { unread }
+  return { ask, unread }
 }
 
 // ------------------------------------------------------------ text
@@ -738,12 +789,14 @@ type DemoResult = {
   next_prompts: string[]
 }
 
-/** The language of the guide: an explicit `zh`/`en`, else the open case's, else LANG. */
+/** The session's language: an explicit `zh`/`en`, else the open case's, else the prompts', else LANG. */
 async function guideIsZh($: EngineInterface, asked: string | undefined): Promise<boolean> {
   if (asked === 'zh') return true
   if (asked === 'en') return false
   const b = await read($, board)
   if (b?.language) return b.language.toLowerCase().startsWith('zh')
+  const l = await read($, lang)
+  if (l) return l === 'zh'
   const env = (await $.env.get('LC_ALL')) || (await $.env.get('LANG')) || ''
   return env.toLowerCase().startsWith('zh')
 }

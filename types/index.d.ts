@@ -21,6 +21,8 @@ export type Board = {
   id: string
   title: string
   role: string
+  /** false when the role was a default, never set by the person (cases from 0.3.3 and earlier) */
+  role_confirmed?: boolean
   language: string | null
   updated_at: string
   phenotypes: BoardPhenotype[]

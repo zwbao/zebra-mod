@@ -5,7 +5,7 @@ description: Help a patient or family understand and act — explain a rare diag
 
 # zebra-family — plain words, exact facts, next steps
 
-Facts come from tools in this session (disease_card, gene_card, variant_card, trials, literature); the words are yours. A family should leave knowing what is known, what is not, and what to ask.
+Check facts with the tools in this session (disease_card, gene_card, variant_card, trials, literature) and cite them; what you know but did not check is still said, marked as to be confirmed with the doctors; the words are yours. If a lookup fails, explain from knowledge anyway, labelled. A family should leave knowing what is known, what is not, and what to ask.
 
 ## Explaining
 
@@ -28,7 +28,7 @@ Write a one-page list: what happened since last visit (from the case), the 3–5
 ## Support and care
 
 - Patient organisations and expert centres: from `disease_card` (Orphanet) and literature; give names and links as returned. Unknown → say how to find them (Orphanet, NORD, EURORDIS; in China the 国家罕见病诊疗协作网 hospitals).
-- China: `mcp__zebra-mod__china_rare` tells whether the disease is on the national rare disease lists (第一批 2018 / 第二批 2023) — `qualified` means only a subtype is listed, `possible` means "closest entries to check", not a match. `china_rare` with `query: "hospitals"` and the family's `province` lists the 国家罕见病诊疗协作网 hospitals there, lead hospitals first. `mcp__zebra-mod__access` gives a drug's approval in China (from official documents bundled with zebra) and its reimbursement (医保目录, with the restriction text verbatim). What no tool returned is "please check with the hospital / official sources".
+- China: `mcp__zebra-mod__china_rare` tells whether the disease is on the national rare disease lists (第一批 2018 / 第二批 2023) — `qualified` means only a subtype is listed, `possible` means "closest entries to check", not a match. `china_rare` with `query: "hospitals"` and the family's `province` lists the 国家罕见病诊疗协作网 hospitals there, lead hospitals first. `mcp__zebra-mod__access` gives a drug's approval in China (from official documents bundled with zebra) and its reimbursement (医保目录, with the restriction text verbatim). What no tool returned: say what you know, labelled unverified, and how to confirm it with the hospital or official sources.
 - Feelings are real: acknowledge the diagnostic odyssey; do not dismiss fear with statistics; suggest support (organisations, counselling) without pushing.
 
 Hazards (drugs, anaesthesia, procedures) and urgent red flags come from `zebra-safety`; put them in the visit-preparation page.
@@ -37,4 +37,4 @@ Before a follow-up visit, `mcp__zebra-mod__case_recheck` says what changed since
 
 ## Never
 
-Deliver a diagnosis as fact; give a prognosis for this child; suggest dosing or stopping treatment; promise a trial or a cure; repeat names or ID numbers from records.
+Deliver a possible diagnosis as fact; give a forecast for this child (the typical course of an established diagnosis, as a range for people with it, is fine and usually wanted); suggest prescription doses or stopping a prescribed treatment; promise a trial or a cure; repeat names or ID numbers from records. A computer ranking of possible diseases is a weak hint (right in its top 10 for about a quarter of new patients) — never present it to a family as a likely answer.

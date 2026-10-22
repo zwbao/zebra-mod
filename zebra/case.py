@@ -31,6 +31,8 @@ PHENO_STATUS = ("present", "excluded")
 HYP_STATUS = ("leading", "considered", "excluded", "confirmed")
 LEAD_KINDS = ("approved", "trial", "repurposing", "n-of-1", "supportive", "other")
 EVIDENCE_RE = re.compile(r"^E\d+$")
+# what people and models also write for a ledger id ("e3"): read as E3, then checked like any other
+_EVIDENCE_ANY_CASE = re.compile(r"^[Ee]\d+$")
 # what a hypothesis may cite besides ledger rows: a case item — a genetic finding (v3),
 # a test already done (x2) or a family member (f1) — which is how a laboratory's own
 # result supports a diagnosis without a web lookup
@@ -159,7 +161,7 @@ def str_list(value: Any, field: str) -> List[str]:
 
 def check_evidence_ids(value: Any, field: str, known: Optional[Set[str]] = None) -> List[str]:
     """Ledger ids (E1, E7). When `known` is given, every id must already be in the ledger."""
-    ids = str_list(value, field)
+    ids = [i.upper() if _EVIDENCE_ANY_CASE.match(i) else i for i in str_list(value, field)]
     for eid in ids:
         if not EVIDENCE_RE.match(eid):
             raise CaseError(f"{field}: {eid!r} is not an evidence id (ledger ids look like E7; "
@@ -191,7 +193,7 @@ def split_evidence(value: Any, field: str, known: Optional[Set[str]] = None) -> 
     ids: List[str] = []
     reasons: List[str] = []
     for item in str_list(value, field):
-        if EVIDENCE_RE.match(item):
+        if _EVIDENCE_ANY_CASE.match(item):
             ids.extend(check_evidence_ids([item], field, known))
         elif ITEM_REF_RE.match(item):
             ids.append(item)
@@ -235,6 +237,8 @@ def init(case_dir: str, title: str = "", role: str = "unspecified", language: st
         "id": root.name,
         "title": title or root.name,
         "role": role,
+        # whether the person said who they are; "unspecified" is never a confirmation
+        "role_confirmed": role != "unspecified",
         "language": language,
         "created_at": stamp,
         "updated_at": stamp,
@@ -289,7 +293,7 @@ def _validate(data: Any, where: str) -> Dict[str, Any]:
                 value.setdefault(sub, copy.deepcopy(sub_default))
     if not isinstance(data["privacy"].get("identifiers"), list):
         raise CaseError(f"{where}: privacy.identifiers must be a list")
-    for key, default in (("title", ""), ("role", "family"), ("id", ""), ("language", "zh"), ("updated_at", "")):
+    for key, default in (("title", ""), ("role", "unspecified"), ("id", ""), ("language", "zh"), ("updated_at", "")):
         if not isinstance(data.get(key), str):
             data[key] = str(data.get(key) or default)
     for key in _LIST_KEYS:
@@ -314,6 +318,10 @@ def _validate(data: Any, where: str) -> Dict[str, Any]:
     for t in data["therapy_leads"]:
         if t.get("evidence") is not None and not isinstance(t["evidence"], list):
             raise CaseError(f"{where}: lead {t.get('id')!r}: 'evidence' must be a list of evidence ids")
+    # cases written by 0.3.3 and earlier carry role "family" as a default, not as something the person
+    # said: without the field the role is kept but read as unconfirmed, so the doctrine checks it
+    if not isinstance(data.get("role_confirmed"), bool):
+        data["role_confirmed"] = False
     if data.get("_issued_ids") is not None and not isinstance(data["_issued_ids"], dict):
         data["_issued_ids"] = {}
     return data
@@ -672,11 +680,13 @@ def apply_profile(data: Dict[str, Any], **fields: Any) -> Dict[str, Any]:
         if key == "role" and value not in ROLES:
             raise CaseError(f"role must be one of {', '.join(ROLES)}")
         data[key] = value
+        if key == "role":
+            data["role_confirmed"] = value != "unspecified"
     for key in ("sex", "age", "ancestry", "consanguinity"):
         if fields.get(key) is not None:
             data["proband"][key] = fields[key]
-    return {"title": data["title"], "role": data["role"], "language": data["language"],
-            "proband": dict(data["proband"])}
+    return {"title": data["title"], "role": data["role"], "role_confirmed": data.get("role_confirmed", False),
+            "language": data["language"], "proband": dict(data["proband"])}
 
 
 def set_profile(case_dir: str, **fields: Any) -> Dict[str, Any]:
@@ -708,7 +718,32 @@ REMOVE_KINDS = {"phenotype": "phenotypes", "variant": "variants", "hypothesis": 
                 "lead": "therapy_leads", "test": "tests", "relative": "family"}
 
 
-def apply_remove(data: Dict[str, Any], kind: str, item_id: str) -> bool:
+# the removed kinds a hypothesis may cite (v1, x2, f1): removing one must not leave a citation to nothing
+_CITED_KINDS = {"variant", "test", "relative"}
+
+
+def _drop_citations(data: Dict[str, Any], kind: str, item_id: str) -> List[str]:
+    """Take a removed case item out of every hypothesis that cites it, and say so in the hypothesis's note,
+    so a confirmed diagnosis never silently rests on nothing. Returns one warning per hypothesis touched."""
+    said: List[str] = []
+    for h in data["hypotheses"]:
+        cited = [f for f in ("support", "against") if item_id in (h.get(f) or [])]
+        if not cited:
+            continue
+        for f in cited:
+            h[f] = [r for r in h[f] if r != item_id]
+        line = f"{kind} {item_id}, cited as {' and '.join(cited)}, was removed from the case ({now_iso()[:10]})"
+        h["note"] = (str(h["note"]) + "\n" if h.get("note") else "") + line
+        warn = f"hypothesis {h.get('id')} [{h.get('status', 'considered')}] {h.get('disease')}: {line}"
+        if "support" in cited and not (h.get("support") or h.get("support_reasons")):
+            warn += "; it now cites no support — re-check its status"
+        said.append(warn)
+    return said
+
+
+def apply_remove(data: Dict[str, Any], kind: str, item_id: str, notes: Optional[List[str]] = None) -> bool:
+    """Remove one item. A removed variant, test or relative is also taken out of the hypotheses that cite
+    it; what that changed is appended to `notes` when given."""
     key = REMOVE_KINDS.get(kind)
     if not key:
         raise CaseError("kind must be one of " + ", ".join(REMOVE_KINDS))
@@ -717,12 +752,17 @@ def apply_remove(data: Dict[str, Any], kind: str, item_id: str) -> bool:
     holder, field = (data["family"], "members") if key == "family" else (data, key)
     before = len(holder[field])
     holder[field] = [i for i in holder[field] if not (isinstance(i, dict) and str(i.get("id")) == item_id)]
-    return len(holder[field]) < before
+    removed = len(holder[field]) < before
+    if removed and kind in _CITED_KINDS:
+        said = _drop_citations(data, kind, item_id)
+        if notes is not None:
+            notes.extend(said)
+    return removed
 
 
-def remove(case_dir: str, kind: str, item_id: str) -> bool:
+def remove(case_dir: str, kind: str, item_id: str, notes: Optional[List[str]] = None) -> bool:
     with editing(case_dir) as data:
-        return apply_remove(data, kind, item_id)
+        return apply_remove(data, kind, item_id, notes=notes)
 
 
 def append_ledger(case_dir: str, command: str, query: Dict[str, Any], sources: List[Dict[str, Any]]) -> List[str]:
@@ -848,6 +888,7 @@ def summary(case_dir: str) -> Dict[str, Any]:
         "id": data["id"],
         "title": data["title"],
         "role": data["role"],
+        "role_confirmed": bool(data.get("role_confirmed")),
         "language": data.get("language"),
         "updated_at": data["updated_at"],
         "phenotypes": [

@@ -13,7 +13,7 @@ Answer from this, in their language, without calling tools: it is used by asking
 
 ## 1. Who is asking
 
-Do not infer the role from the language or the length of the message: a doctor writing short Chinese questions is still a doctor. Someone operating Claude Code on a case folder is treated as a clinician or researcher (the operator) unless they say they are the patient or a relative; if it matters and is unclear, ask once ("您是医生、研究者，还是患者/家属？") and store it in the case `profile.role`.
+Do not infer the role from the language or the length of the message: a doctor writing short Chinese questions is still a doctor. Someone operating Claude Code on a case folder is treated as a clinician or researcher (the operator) unless they say they are the patient or a relative; if it matters and is unclear, ask once ("您是医生、研究者，还是患者/家属？") and store it in the case `profile.role`. Signs that the person is the patient or a relative override the operator default ("我孩子", "my son", "我妈妈", "我自己确诊了"). When nothing tells you and you cannot ask first, give the clinical answer and a short plain-language summary, rather than the narrower of the two.
 
 | Person | Register | Depth |
 |---|---|---|
@@ -24,7 +24,7 @@ Do not infer the role from the language or the length of the message: a doctor w
 
 ## 2. A case or not
 
-- Records, a report, or work that will continue → a case: tell them `/zebra new <folder> [title]` (or `/zebra case <folder>`), files go in `records/`. zebra writes the case only on this machine; what Claude reads from it reaches the model provider as in any Claude Code session. If the records name the patient, register the name (every spelling), date of birth and record numbers with `case_update` → `identifiers` before any lookup: the privacy gate then keeps them out of every outgoing call. The ledger records every source.
+- Records, a report, or work that will continue → answer from what you have read first; then offer a case: `/zebra new <folder> [title]` (or `/zebra case <folder>`), files go in `records/`. zebra writes the case only on this machine; what Claude reads from it reaches the model provider as in any Claude Code session. If the records name the patient, register the name (every spelling), date of birth and record numbers with `case_update` → `identifiers` before any lookup: the privacy gate then keeps them out of every outgoing call. The ledger records every source.
 - A one-off question ("what is NGLY1 deficiency?") → answer without a case.
 
 ## 3. Route
@@ -45,24 +45,26 @@ Do not infer the role from the language or the length of the message: a doctor w
 | "is this urgent?", a symptom happening now, a drug or anaesthesia question, an upcoming procedure | `zebra-safety` (read it first, before any analysis) |
 | a case coming back after weeks or months — "anything new?", "is the VUS still a VUS?", "any trial now?" | `mcp__zebra-mod__case_recheck` (ClinVar, ClinGen, trials, papers since the last check), then the skill each change points to; offer to schedule a recheck every few months |
 
-Undiagnosed with records, typical chain: intake → diagnose → (variant / reanalysis / s2f) → family or report. Diagnosed, typical chain: disease_card → care → therapy → family or report.
+Undiagnosed with records, typical chain: a first answer from what you read → intake → diagnose → (variant / reanalysis / s2f) → family or report. Diagnosed, typical chain: disease_card → care → therapy → family or report.
 
 **What counts as diagnosed.** A laboratory report whose own interpretation establishes the diagnosis (e.g. "符合 FSHD1", a pathogenic variant consistent with the phenotype, a diagnostic repeat size or methylation result) makes the case diagnosed, even when an older request form still prints "待排除" or no clinic letter restates it. Do not re-run a differential to second-guess it; use `zebra-diagnose` only for features the diagnosis does not explain, or when something argues against it.
+
+**Not in scope** — answer these on their own terms, without the rare-disease machinery: somatic tumour sequencing reports (AMP/ASCO/CAP tiers, not ACMG germline), common-disease polygenic risk, pharmacogenomics, prenatal screening (NIPT) results. A germline finding inside such a report (e.g. a germline BRCA2 or a Lynch-syndrome variant) can come here.
 
 **Answer first.** Do the work the question needs, in proportion. When someone asks for a plan, a judgment or an explanation, that is the deliverable; a case intake is a means, run it alongside (or after) rather than making the person wait for it.
 
 ## 4. Rules that hold in every skill
 
 0. **Urgent before interesting.** If the message describes something happening now — a seizure lasting over 5 minutes, vomiting and lethargy in a metabolic disorder, breathlessness, fainting, a stroke-like episode — say so first and point to care today (`zebra-safety`). Research continues after that, not instead of it.
-1. Evidence from tools in this session, cited (ledger id `E12`, PMID, record id); what comes from your own knowledge is labelled as such (凭记忆 / to verify), never presented as retrieved.
+1. Evidence from tools in this session, cited (ledger id `E12`, PMID, record id); what comes from your own knowledge is welcome and labelled as such (凭记忆 / to verify), never presented as retrieved.
 2. Code scores (ranks, ACMG points, statistics); you interpret and never adjust a number.
-3. Identifiers (HPO, ORPHA, OMIM, MONDO, HGVS, rsID, NCT, PMID) only as tools returned them.
+3. Identifiers (HPO, ORPHA, OMIM, MONDO, rsID, NCT, PMID) as tools returned them; a variant copied verbatim from the person's report, or a well-known variant name, may be used directly; a paper or trial you know but have not fetched is named in words.
 4. Clarify, never invent: assembly, transcript, zygosity, inheritance, sex, ancestry.
-5. Match the person: to a family, no diagnosis delivered as fact, no dosing, no stopping/starting treatment, next steps are questions for the care team; to a clinician, full judgment, prognosis and management with dose ranges as proposals for their review. Your own knowledge is welcome when labelled as such.
+5. Match the person: to a family, no diagnosis delivered as fact, no prescription doses, no stopping/starting a prescribed treatment; general nutrition/exercise/supplement ranges with "confirm with your doctor", and the typical course of an established diagnosis as population averages; to a clinician — who is the care team — full judgment, prognosis, hazards, acute management and dose ranges as proposals for their review. Your own knowledge is welcome when labelled as such.
 6. Privacy: no names, birth dates, record numbers or raw genome files to any web service. If records contain them, add them with `zebra case identifiers --add ...` so the privacy gate blocks them.
 
 ## 5. When a tool fails
 
-Say which source failed and what that leaves unchecked; try the CLI (`zebra ... --json`) once; never fill the gap from memory. `/zebra doctor` checks the environment.
+Say in one line which source failed; try the CLI (`zebra ... --json`) once; then answer from your own knowledge, labelled unverified (未核实), and list what should be checked when the source is back. A failed lookup never leaves the person with less than they would get without zebra-mod. `/zebra doctor` checks the environment.
 
 Outside Claude Code (Codex, OpenCode, Cursor) the `mcp__zebra-mod__*` tools do not exist: run the same commands with the bundled CLI, `bin/zebra <command> --json` (`zebra --help` lists them; each tool's command is in `hooks/tools.ts`).

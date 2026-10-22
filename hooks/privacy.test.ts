@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 
-import { guardInput, isLocalPath, isOutboundShell, outboundText, sendsVariantList, shellSegments, shellWords, uploadedPaths, uploadsGenome } from './privacy'
+import { guardCheck, guardInput, invokesZebra, isLocalPath, isOutboundShell, outboundText, sendsVariantList, shellSegments, shellWords, uploadedPaths, uploadsGenome } from './privacy'
 
 const IDS = ['张小明', 'Zhang Xiaoming', '2019-03-02', 'MRN0042317']
 
@@ -253,3 +253,44 @@ describe('privacy gate', () => {
   })
 })
 
+
+describe('two-character Chinese names', () => {
+  const IDS2 = ['张力', 'MRN0042317']
+  test('inside a longer Chinese word it is asked about, never refused or passed silently', () => {
+    for (const q of ['肌张力减退', '肌张力低下 SCN1A', 'https://www.google.com/search?q=%E8%82%8C%E5%BC%A0%E5%8A%9B', '张力减退', '低 张力 婴儿']) {
+      expect(guardInput({ q }, IDS2)).toBe(undefined)
+      expect(guardCheck({ q }, IDS2)?.level).toBe('ask')
+    }
+    expect(guardCheck({ q: '肌张力减退' }, IDS2)?.what.includes('张力')).toBe(false)
+  })
+
+  test('standing as a name, or beside a word that puts a person there, it is refused', () => {
+    for (const q of ['患者张力，男', '张力 SCN1A', 'Zhang 张力', '姓名：张力', '患儿张力男', '张力先生', '张·力', '张力']) {
+      expect(guardInput({ q }, IDS2)).toBe('protected identifier #1 from the case')
+    }
+  })
+
+  test('with any other identifier it is refused', () => {
+    expect(guardCheck({ q: '肌张力减退 2019-03-02' }, ['张力', '2019-03-02'])?.level).toBe('deny')
+    expect(guardCheck({ q: '肌张力减退 MRN0042317' }, IDS2)?.level).toBe('deny')
+    // two registered short names, each inside a word: together they point to a person
+    expect(guardCheck({ q: '肌张力 与 小雨伞' }, ['张力', '小雨'])?.level).toBe('deny')
+  })
+
+  test('three characters or more still match anywhere', () => {
+    expect(guardInput({ q: '我是张小明的家长' }, ['张小明'])).toBe('protected identifier #1 from the case')
+  })
+
+  test('an unrelated query is untouched', () => {
+    expect(guardCheck({ q: 'hypotonia SCN1A 婴儿' }, IDS2)).toBe(undefined)
+  })
+})
+
+describe('invokesZebra', () => {
+  test('finds the zebra CLI anywhere in a command', () => {
+    expect(invokesZebra('zebra lit Dravet')).toBe(true)
+    expect(invokesZebra('cd x && python3 bin/zebra case show')).toBe(true)
+    expect(invokesZebra('curl https://example.org')).toBe(false)
+    expect(invokesZebra('ls zebra-cases/')).toBe(false)
+  })
+})

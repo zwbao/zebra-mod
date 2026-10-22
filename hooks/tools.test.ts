@@ -27,6 +27,8 @@ describe('tool → CLI argv', () => {
     expect(await toolArgv(def('repeat_size'), { locus: 'd4z4', fragment_kb: 17, digest: 'EcoRI', haplotype: '4qA', methylation_pct: 16.2 }, null))
       .toEqual(['repeat', 'd4z4', '--fragment-kb', '17', '--digest', 'EcoRI', '--haplotype', '4qA', '--methylation-pct', '16.2'])
     expect(await toolArgv(def('repeat_size'), { locus: 'dmpk', ctg: 600 }, null)).toEqual(['repeat', 'dmpk', '--ctg', '600'])
+    expect(await toolArgv(def('repeat_size'), { locus: 'd4z4', fragment_kb: 20, digest: 'EcoRI/HindIII', array_locus: '4q' }, null))
+      .toEqual(['repeat', 'd4z4', '--fragment-kb', '20', '--digest', 'EcoRI/HindIII', '--locus', '4q'])
   })
 
   test('phenotype_rank', async () => {
@@ -123,3 +125,40 @@ describe('tool → CLI argv', () => {
   })
 })
 
+
+describe('what the model is told', () => {
+  test('literature_search loads with the session; acmg and cnv_interpret are deferred until needed', () => {
+    expect(def('literature_search').deferred).not.toBe(true)
+    expect(def('acmg').deferred).toBe(true)
+    expect(def('cnv_interpret').deferred).toBe(true)
+    for (const core of ['case_status', 'case_update', 'hpo_search', 'phenotype_rank', 'gene_card', 'variant_card', 'disease_card', 'repeat_size', 'access']) {
+      expect(def(core).deferred).not.toBe(true)
+    }
+  })
+
+  test('a laboratory’s diagnostic result is not put in doubt by a reading tool', () => {
+    for (const name of ['cnv_interpret', 'repeat_size']) {
+      expect(/already .*(?:pathogenic|diagnostic)/.test(def(name).description)).toBe(true)
+      expect(def(name).description.includes('never a classification')).toBe(false)
+    }
+  })
+
+  test('the phenotype ranking is framed as one weak input, with candidates added from knowledge', () => {
+    const d = def('phenotype_rank').description
+    expect(d.includes('28%')).toBe(true)
+    expect(d.includes('disease_card')).toBe(true)
+    expect(d.includes('local alone did better')).toBe(true)
+  })
+
+  test('trials_search says where to look before "no trials"', () => {
+    const d = def('trials_search').description
+    expect(d.includes('result.filtered')).toBe(true)
+    expect(d.includes('status ANY')).toBe(true)
+  })
+
+  test('case_update keeps every field and a short description', () => {
+    const props = (def('case_update').inputSchema as { properties: Record<string, unknown> }).properties
+    expect(Object.keys(props).sort()).toEqual(['acmg', 'family', 'hypotheses', 'identifiers', 'leads', 'phenotypes', 'profile', 'questions', 'remove', 'tests', 'timeline', 'variants'])
+    expect(def('case_update').description.length < 600).toBe(true)
+  })
+})

@@ -1131,3 +1131,94 @@ def test_0_3_4_non_sequence_findings_and_what_a_hypothesis_may_cite(tmp_path):
         C.check_variant(kind="repeat_contraction", fragment_kb="seventeen")
     with pytest.raises(C.CaseError):
         C.check_variant(kind="repeat_contraction", haplotype="4qA")  # nothing that identifies it
+
+
+def test_0_3_7_a_hypothesis_may_cite_a_test_or_relative_from_the_same_batch(tmp_path):
+    d = str(tmp_path / "c")
+    C.init(d, role="clinician")
+    ops = {"tests": [{"type": "PFGE/Southern", "result": "17 kb EcoRI, 4qA"}],
+           "family": [{"relation": "mother", "affected": True, "genotype": "same allele"}],
+           "hypotheses": [{"disease": "FSHD1", "status": "leading", "support": ["x1", "f1"]}]}
+    env, code = zebra("case", "apply", d, "--ops", json.dumps(ops))
+    assert code == 0, env
+    assert C.load(d)["hypotheses"][0]["support"] == ["f1", "x1"]
+
+
+def test_0_3_7_unknown_ledger_ids_in_reasons_are_refused(tmp_path):
+    d = str(tmp_path / "c")
+    C.init(d)
+    C.append_ledger(d, "x", {}, [{"db": "HPO"}])  # E1
+    ops = {"hypotheses": [{"disease": "X", "support_reasons": ["E999"]}]}
+    env, code = zebra("case", "apply", d, "--ops", json.dumps(ops))
+    assert code == 2 and "E999 is not in this case's evidence ledger" in env["error"]["message"]
+    assert C.load(d)["hypotheses"] == []
+    ops = {"hypotheses": [{"disease": "X", "against_reasons": ["E1", "a reason in words"]}]}
+    env, code = zebra("case", "apply", d, "--ops", json.dumps(ops))
+    assert code == 0, env
+    h = C.load(d)["hypotheses"][0]
+    assert h["against"] == ["E1"] and h["against_reasons"] == ["a reason in words"]
+
+
+def test_0_3_7_lowercase_ledger_ids_are_read_and_checked(tmp_path):
+    d = str(tmp_path / "c")
+    C.init(d)
+    C.append_ledger(d, "x", {}, [{"db": "HPO"}, {"db": "HPO"}, {"db": "HPO"}])
+    known = C.ledger_ids(d)
+    assert C.split_evidence(["e3", "e2 is the paper"], "support", known) == (["E3"], ["e2 is the paper"])
+    with pytest.raises(C.CaseError, match="E9 is not in"):
+        C.split_evidence(["e9"], "support", known)
+    assert C.check_evidence_ids(["e1"], "evidence", known) == ["E1"]
+
+
+def test_0_3_7_removing_a_cited_item_drops_the_citation_and_says_so(tmp_path):
+    d = str(tmp_path / "c")
+    C.init(d, role="clinician")
+    ops = {"variants": [{"gene": "SCN1A", "hgvs_c": "NM_001165963.4:c.2134C>T"}],
+           "tests": [{"type": "EEG"}],
+           "hypotheses": [{"disease": "Dravet syndrome", "status": "confirmed", "support": ["v1", "x1"]},
+                          {"disease": "GEFS+", "against": ["v1"]}]}
+    assert zebra("case", "apply", d, "--ops", json.dumps(ops))[1] == 0
+    env, code = zebra("case", "apply", d, "--ops", json.dumps({"remove": [{"kind": "variant", "id": "v1"}]}))
+    assert code == 0, env
+    hs = {h["disease"]: h for h in C.load(d)["hypotheses"]}
+    assert hs["Dravet syndrome"]["support"] == ["x1"] and "variant v1" in hs["Dravet syndrome"]["note"]
+    assert hs["GEFS+"]["against"] == [] and "removed from the case" in hs["GEFS+"]["note"]
+    assert sum("v1" in w for w in env["warnings"]) == 2
+    notes = []
+    assert C.remove(d, "test", "x1", notes=notes)
+    assert len(notes) == 1 and "now cites no support" in notes[0] and "[confirmed]" in notes[0]
+    assert C.load(d)["hypotheses"][0]["support"] == []
+
+
+def test_0_3_7_role_default_and_confirmation(tmp_path):
+    d = str(tmp_path / "c")
+    C.init(d)
+    assert C.summary(d)["role"] == "unspecified" and C.summary(d)["role_confirmed"] is False
+    C.set_profile(d, role="clinician")
+    assert C.summary(d)["role_confirmed"] is True
+    # a case written by 0.3.3: role "family" by default, no role_confirmed field
+    path = C.case_file(d)
+    raw = json.loads(path.read_text("utf-8"))
+    raw["role"] = "family"
+    del raw["role_confirmed"]
+    path.write_text(json.dumps(raw), "utf-8")
+    s = C.summary(d)
+    assert s["role"] == "family" and s["role_confirmed"] is False
+    env, code = zebra("case", "summary", d)
+    assert code == 0 and env["result"]["role_confirmed"] is False
+    # a case with no role at all reads as unspecified, not family
+    del raw["role"]
+    path.write_text(json.dumps(raw), "utf-8")
+    assert C.load(d)["role"] == "unspecified"
+    C.set_profile(d, role="family")
+    assert C.summary(d)["role_confirmed"] is True
+
+
+def test_0_3_7_init_language_follows_the_locale(tmp_path):
+    env = {"LC_ALL": "", "LANG": "en_US.UTF-8"}
+    got, code = zebra("case", "init", str(tmp_path / "a"), env_extra=env)
+    assert code == 0 and got["result"]["case"]["language"] == "en"
+    got, code = zebra("case", "init", str(tmp_path / "b"), env_extra={"LC_ALL": "", "LANG": "zh_CN.UTF-8"})
+    assert got["result"]["case"]["language"] == "zh"
+    got, code = zebra("case", "init", str(tmp_path / "c"), "--lang", "zh", env_extra=env)
+    assert got["result"]["case"]["language"] == "zh"

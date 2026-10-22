@@ -30,8 +30,14 @@ def _wrap(fn):
     return run
 
 
+def _env_language() -> str:
+    """zh when the environment's locale is Chinese, else en: the language a case gets when --lang is not given."""
+    locale = os.environ.get("LC_ALL") or os.environ.get("LANG") or ""
+    return "zh" if locale.lower().startswith("zh") else "en"
+
+
 def _init(args: argparse.Namespace) -> Outcome:
-    data = case_mod.init(_dir(args), title=args.title or "", role=args.role, language=args.lang)
+    data = case_mod.init(_dir(args), title=args.title or "", role=args.role, language=args.lang or _env_language())
     path = case_mod.case_file(_dir(args)).parent
     warnings = []
     from zebra import hpo_local
@@ -52,7 +58,8 @@ def _show(args: argparse.Namespace) -> Outcome:
 
 def _summary(args: argparse.Namespace) -> Outcome:
     s = case_mod.summary(_dir(args))
-    lines = [f"{s['title']}  ({s['role']}, {s['path']})"]
+    role = s["role"] if s.get("role_confirmed") or s["role"] == "unspecified" else f"{s['role']}, not confirmed"
+    lines = [f"{s['title']}  ({role}, {s['path']})"]
     present = [p for p in s["phenotypes"] if p["status"] == "present"]
     excluded = [p for p in s["phenotypes"] if p["status"] == "excluded"]
     lines.append(f"phenotypes: {len(present)} present, {len(excluded)} excluded")
@@ -211,8 +218,10 @@ def _demo(args: argparse.Namespace) -> Outcome:
 
 
 def _remove(args: argparse.Namespace) -> Outcome:
-    ok = case_mod.remove(_dir(args), args.kind, args.item)
-    return Outcome({"removed": ok}, text="removed" if ok else "nothing matched")
+    notes: List[str] = []
+    ok = case_mod.remove(_dir(args), args.kind, args.item, notes=notes)
+    return Outcome({"removed": ok, "citations_dropped": notes}, warnings=notes,
+                   text="removed" if ok else "nothing matched")
 
 
 def _positive_int(text: str) -> int:
@@ -374,7 +383,8 @@ def _check_ops(ops: Any, known_evidence: set) -> Dict[str, Any]:
             for field in ("support", "against"):
                 refs, reasons = case_mod.split_evidence(h.get(field), f"hypotheses[{h['disease']}].{field}",
                                                         known_evidence)
-                more = case_mod.split_evidence(h.get(f"{field}_reasons"), f"hypotheses[{h['disease']}].{field}_reasons")
+                more = case_mod.split_evidence(h.get(f"{field}_reasons"), f"hypotheses[{h['disease']}].{field}_reasons",
+                                               known_evidence)
                 h[f"_{field}"] = refs + more[0]
                 h[f"_{field}_reasons"] = reasons + more[1]
         for t in clean.get("leads", []):
@@ -480,6 +490,13 @@ def _apply(args: argparse.Namespace) -> Outcome:
             warnings.extend(v.get("_notes") or [])
             done.setdefault("variants", []).append(
                 case_mod.apply_variant(data, **{k: v.get(k) for k in case_mod.VARIANT_FIELDS}))
+        # the items a hypothesis may cite (v1, x1, f1) are recorded before the hypotheses, so one batch
+        # can record a test or a relative and the hypothesis that rests on it
+        if ops.get("family"):
+            case_mod.apply_family(data, ops["family"])
+            done["family"] = len(ops["family"])
+        for t in ops.get("tests", []):
+            done.setdefault("tests", []).append(case_mod.apply_test(data, t)["id"])
         for h in ops.get("hypotheses", []):
             done.setdefault("hypotheses", []).append(case_mod.apply_hypothesis(
                 data, h["disease"], status=h.get("status"), ids=h["_ids"],
@@ -505,11 +522,6 @@ def _apply(args: argparse.Namespace) -> Outcome:
                 errors.append(f"acmg {a.get('variant_id')}: {err}")
         for q in ops.get("questions", []):
             done["questions"] = case_mod.apply_question(data, q)
-        if ops.get("family"):
-            case_mod.apply_family(data, ops["family"])
-            done["family"] = len(ops["family"])
-        for t in ops.get("tests", []):
-            done.setdefault("tests", []).append(case_mod.apply_test(data, t)["id"])
         for ev in ops.get("timeline", []):
             case_mod.apply_timeline(data, ev)
             done["timeline"] = done.get("timeline", 0) + 1
@@ -517,8 +529,11 @@ def _apply(args: argparse.Namespace) -> Outcome:
             # the count only: the values are protected and never echoed back into a transcript
             done["identifiers"] = {"protected": case_mod.apply_identifiers(data, ops["identifiers"])}
         for r in ops.get("remove", []):
+            dropped: List[str] = []
             done.setdefault("removed", []).append({"kind": r["kind"], "id": r["id"],
-                                                   "ok": case_mod.apply_remove(data, r["kind"], r["id"])})
+                                                   "ok": case_mod.apply_remove(data, r["kind"], r["id"],
+                                                                               notes=dropped)})
+            warnings.extend(dropped)
     if errors:
         warnings.extend(errors)
     summary = case_mod.summary(target)
@@ -646,7 +661,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     q = add("init", _init, "create a case folder")
     q.add_argument("--title")
     q.add_argument("--role", choices=case_mod.ROLES, default="unspecified")
-    q.add_argument("--lang", default="zh", help="report language: zh or en")
+    # no fixed default: a Chinese locale (LANG=zh_…) gives zh, anything else en
+    q.add_argument("--lang", default=None, help="report language: zh or en (default from LANG: zh_* → zh, else en)")
     q = add("demo", _demo, "create (or reopen) the bundled synthetic demo case to try zebra-mod on")
     q.add_argument("--lang", choices=("zh", "en"), default="zh", help="demo in Chinese (zh) or English (en)")
     add("show", _show, "print case.json")

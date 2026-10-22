@@ -51,13 +51,13 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'case_update',
     description:
-      'Record findings in the active case. identifiers FIRST when records name the patient: the name (every spelling: 汉字, pinyin), date of birth, record/ID numbers — the privacy gate then keeps them out of every outgoing call; they are never echoed back. profile: role (family/patient/clinician/researcher), language, proband sex/age, consanguinity. phenotypes: HPO terms present or excluded (labels are verified against HPO; never invent an id — find it with hpo_search). variants of every kind (sequence, CNV, repeat expansion or contraction, methylation — with the laboratory interpretation verbatim), hypotheses (with ORPHA/OMIM/MONDO ids; support/against as ledger ids, case item ids such as v1, or reasons in words; status confirmed when a lab result establishes it), ACMG readings of recorded variants (codes in, class computed by zebra), therapy leads, tests already done (CMA, panel, exome…, with result), family members (relation, affected, genotype — never names), timeline events, questions for the care team, and removals. Several at once.',
+      'Record findings in the active case, several kinds in one call. identifiers FIRST when records name the patient (every spelling of the name, date of birth, record/ID numbers): the privacy gate then keeps them out of every outgoing call. Phenotype ids come from hpo_search; variants of every kind with the laboratory\'s interpretation verbatim; a hypothesis is confirmed when a lab result establishes it; ACMG classes are computed by zebra from your codes. Field notes below.',
     inputSchema: {
       type: 'object',
       properties: {
         profile: {
           type: 'object',
-          description: 'who the case is for and how to write to them; proband basics (no names or birth dates)',
+          description: 'who is asking and proband basics (no names or birth dates)',
           properties: {
             title: { type: 'string' },
             role: { type: 'string', enum: ['family', 'patient', 'clinician', 'researcher'], description: 'from what the person says about themselves, never from their language; someone operating Claude Code on a case is clinician/researcher unless they say otherwise' },
@@ -101,7 +101,7 @@ export const TOOLS: ToolDef[] = [
               kind: {
                 type: 'string',
                 enum: ['small', 'cnv', 'exon_cnv', 'copy_number', 'repeat_expansion', 'repeat_contraction', 'methylation'],
-                description: 'small (default) for an SNV/indel; cnv for a CMA/CNV-seq result; exon_cnv for an exon-level deletion or duplication; copy_number for SMN1-type dosage; repeat_expansion for a repeat expansion; repeat_contraction for a contraction such as FSHD1 D4Z4 (fragment_kb, haplotype); methylation for a methylation result (methylation_pct, locus). A report that sizes a fragment or measures methylation is a finding to record, never "no variant".',
+                description: 'small (default): SNV/indel; cnv: CMA/CNV-seq; exon_cnv: exon-level del/dup; copy_number: SMN1-type dosage; repeat_contraction: e.g. FSHD1 D4Z4 (fragment_kb, haplotype); methylation (methylation_pct, locus). A sized fragment or a methylation result is a finding to record, never "no variant".',
               },
               region: { type: 'string', description: 'cnv: chr15:23123715-28193120' },
               iscn: { type: 'string', description: 'cnv: the ISCN string as reported, e.g. arr[GRCh38] 22q11.21(18648855_21800471)x1' },
@@ -111,7 +111,7 @@ export const TOOLS: ToolDef[] = [
               genes: { type: 'array', items: { type: 'string' }, description: 'genes the finding covers, as a tool returned them' },
               motif: { type: 'string', description: 'repeat: the repeat unit, e.g. CGG' },
               repeat_count: { type: 'number', description: 'repeat: the number of units reported' },
-              method: { type: 'string', description: 'how it was measured: CMA, CNV-seq, MLPA, ddPCR, repeat-primed PCR, PFGE/Southern, optical mapping, bisulfite sequencing …' },
+              method: { type: 'string', description: 'CMA, MLPA, repeat-primed PCR, PFGE/Southern, bisulfite sequencing …' },
               locus: { type: 'string', description: 'a named locus when there are no coordinates: 4q35 D4Z4, D4Z4/PAS, an imprinting centre' },
               fragment_kb: { type: 'number', description: 'repeat_contraction: fragment size in kb as reported (e.g. EcoRI/p13E-11 17.0)' },
               haplotype: { type: 'string', description: 'repeat_contraction: haplotype as reported, e.g. 4qA' },
@@ -151,7 +151,7 @@ export const TOOLS: ToolDef[] = [
         },
         acmg: {
           type: 'array',
-          description: 'store a research-grade ACMG reading on a recorded variant: the codes you justified (classified by zebra, not by you)',
+          description: 'research-grade ACMG reading of a recorded variant: your justified codes; zebra classifies',
           items: {
             type: 'object',
             properties: {
@@ -166,7 +166,7 @@ export const TOOLS: ToolDef[] = [
         identifiers: {
           type: 'array',
           items: { type: 'string' },
-          description: 'protected identifiers to add (name in every spelling, date of birth, record/ID numbers); kept out of every outgoing call, never shown back',
+          description: 'protected identifiers to add; never shown back',
         },
         tests: {
           type: 'array',
@@ -174,7 +174,7 @@ export const TOOLS: ToolDef[] = [
           items: {
             type: 'object',
             properties: {
-              type: { type: 'string', description: 'CMA, karyotype, gene panel, trio exome, genome, MLPA, repeat sizing, metabolic screen, MRI, EEG…' },
+              type: { type: 'string', description: 'CMA, panel, trio exome, genome, MLPA, repeat sizing, metabolic screen, MRI, EEG…' },
               date: { type: 'string' },
               result: { type: 'string', description: 'as reported, e.g. "normal", "VUS SCN1A c.…", "arr[GRCh38] 22q11.21(…)x1"' },
               lab: { type: 'string' },
@@ -187,7 +187,7 @@ export const TOOLS: ToolDef[] = [
         },
         family: {
           type: 'array',
-          description: 'relatives as the records describe them — relation, affected or not, genotype if tested; never names',
+          description: 'relatives as the records describe them; never names',
           items: {
             type: 'object',
             properties: {
@@ -243,7 +243,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'phenotype_rank',
     description:
-      'Phenotype-driven differential diagnosis: rank diseases and genes for a set of HPO terms (present, and excluded). Sources: local (offline Resnik best-match over HPO annotations), monarch (Monarch semantic similarity), pubcasefinder (PubCaseFinder). Each source ranks on its own; agreement across them is the signal. Excluded terms are checked against each disease and listed in `excluded_hits` (a disease that usually has a feature the patient lacks) but do not lower the local score — on the phenopacket-store benchmark that ranked better (docs/BENCHMARK.md); read the hits and weigh them yourself, or set excluded_weight 1 for the 0.1.0 penalty. Ties at the top are reported. Measured accuracy (held-out cases whose own paper is not an HPO annotation source): correct disease in the local top 10 for 28%; all held-out cases 70% (an upper bound). from_case uses the active case\'s phenotypes.',
+      'Phenotype-driven differential diagnosis: rank diseases and genes for a set of HPO terms (present, and excluded). Sources: local (offline Resnik best-match over HPO annotations), monarch (Monarch semantic similarity), pubcasefinder (PubCaseFinder). Each source ranks on its own; agreement across them is the signal. Excluded terms are checked against each disease and listed in `excluded_hits` (a disease that usually has a feature the patient lacks) but do not lower the local score — on the phenopacket-store benchmark that ranked better (docs/BENCHMARK.md); read the hits and weigh them yourself, or set excluded_weight 1 for the 0.1.0 penalty. Ties at the top are reported. from_case uses the active case\'s phenotypes. The ranking is one weak input, not the differential: for a new patient (held-out cases whose own paper is not an HPO annotation source) the correct disease is in the local top 10 for only 28% (70% across all held-out cases, an upper bound), and in docs/BENCHMARK.md local alone did better than a consensus of sources. Add the candidates your clinical knowledge suggests (a mechanism, a hallmark, a test result the ranker cannot see) and check each with disease_card.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -341,6 +341,7 @@ export const TOOLS: ToolDef[] = [
       return ['acmg', 'classify', ...list(i.codes)]
     },
     timeoutMs: 240_000,
+    deferred: true,
   },
   {
     name: 's2f_predict',
@@ -384,7 +385,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'trials_search',
     description:
-      'Clinical trials from ClinicalTrials.gov (v2 API): by condition and optionally a keyword (gene, drug, modality), country and status (default RECRUITING; ANY for all). With a country, only trials with a site there are returned, and those sites are listed. Returns NCT ids, phase, status, interventions, ages, eligibility criteria, contacts, sites and URL, and flags a trial whose status looks stale or inconsistent. ChiCTR (the Chinese registry) is not covered: for China, say so and point to it.',
+      'Clinical trials from ClinicalTrials.gov (v2 API): by condition and optionally a keyword (gene, drug, modality), country and status (default RECRUITING; ANY for all). With a country, only trials with a site there are returned, and those sites are listed. Returns NCT ids, phase, status, interventions, ages, eligibility criteria, contacts, sites and URL, and flags a trial whose status looks stale or inconsistent. ChiCTR (the Chinese registry) is not covered: for China, say so and point to it. Before saying there are no trials, look in result.filtered (trials whose conditions do not name this disease — basket, gene-level and modality trials land there) and search again with status ANY or NOT_YET_RECRUITING / ACTIVE_NOT_RECRUITING, and with the gene as term.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -426,7 +427,6 @@ export const TOOLS: ToolDef[] = [
       ...flag('--gene', str(i.gene)), ...flag('--variant', str(i.variant)), ...flag('--sort', str(i.sort)),
       ...(list(i.abstract).length ? ['--abstract', ...list(i.abstract)] : []), ...flag('--limit', num(i.limit)),
     ],
-    deferred: true,
   },
   {
     name: 'rare_stats',
@@ -486,7 +486,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'repeat_size',
     description:
-      'Read a repeat size by rule, never by memory. d4z4: D4Z4 units from the contracted 4q35 fragment a laboratory reports (EcoRI, EcoRI/BlnI or EcoRI/HindIII — the flank differs by digest), with the sizing-error range and the FSHD1 band (1-3 short, 4-6, 7-10, 11+). dmpk: the DM1 class of a DMPK CTG count. Offline; cite its sources. Use it whenever a reply states repeat units or a repeat class.',
+      'Read a repeat size by rule, never by memory. d4z4: D4Z4 units from the contracted 4q35 fragment a laboratory reports (EcoRI, EcoRI/BlnI or EcoRI/HindIII — the flank differs by digest; a HindIII- or BlnI-only size is refused), with the sizing-error range and the FSHD1 band (1-3 short, 4-6, 7-10, 11+). dmpk: the DM1 class of a DMPK CTG count. Offline; cite its sources. Use it whenever a reply states repeat units or a repeat class. When the laboratory has already reported the result as diagnostic, that is the diagnosis; this reading supports it and never casts doubt on the laboratory.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -494,6 +494,7 @@ export const TOOLS: ToolDef[] = [
         fragment_kb: { type: 'number', description: 'd4z4: contracted fragment size in kb' },
         digest: { type: 'string', enum: ['EcoRI', 'EcoRI/BlnI', 'EcoRI/HindIII'], description: 'd4z4: the digest the size refers to (default EcoRI)' },
         haplotype: { type: 'string', description: 'd4z4: 4qA or 4qB as reported' },
+        array_locus: { type: 'string', enum: ['4q', '10q'], description: 'd4z4: chromosome of the sized array when the laboratory states it (EcoRI and EcoRI/HindIII cannot tell 4q from 10q on their own)' },
         methylation_pct: { type: 'number', description: 'd4z4: D4Z4 methylation % as reported' },
         ctg: { type: 'number', description: 'dmpk: CTG repeat count (larger allele)' },
       },
@@ -502,13 +503,13 @@ export const TOOLS: ToolDef[] = [
     argv: i => {
       if (i.locus === 'dmpk') return ['repeat', 'dmpk', '--ctg', num(i.ctg) ?? '']
       return ['repeat', 'd4z4', '--fragment-kb', num(i.fragment_kb) ?? '', ...flag('--digest', str(i.digest)),
-        ...flag('--haplotype', str(i.haplotype)), ...flag('--methylation-pct', num(i.methylation_pct))]
+        ...flag('--haplotype', str(i.haplotype)), ...flag('--locus', str(i.array_locus)), ...flag('--methylation-pct', num(i.methylation_pct))]
     },
   },
   {
     name: 'cnv_interpret',
     description:
-      'Read the report forms that are not a single sequence variant. A CNV or microarray result (region or ISCN, with build, mosaicism such as x1~2 or 30%, de novo/maternal/paternal) → the genes it spans, every one checked against ClinGen gene dosage, and the ClinGen curated regions it overlaps (22q11.2, 1p36, Williams, PWS/AS, 16p11.2 …) with HI/TS scores, coverage and the ACMG/ClinGen 2020 section-2 row they point to; section 3 by gene count for losses and gains separately — inputs, never a classification (sections 4-5 need the case). An exon-level deletion or duplication (DMD exon 45-50 deletion, NM_004006.3:c.6439-?_7309+?del, intronic breakpoints) → exons, coding bases, whether the frame is kept, and — only when it is not — which additional exon skip restores it. SMN1/SMN2 copy number (clinical exon numbering 1, 2a, 2b, 3-8) read with the SMN2 count, framed as population data, not a prognosis. Repeat expansions (FMR1, HTT, DMPK, FXN, C9orf72) placed in their published size bands with sex-specific wording and what else is needed (methylation, AGG interruptions, the other allele) — a referenced reading, not a classification. Coordinates from Ensembl.',
+      'Read the report forms that are not a single sequence variant. A CNV or microarray result (region or ISCN, with build, mosaicism such as x1~2 or 30%, de novo/maternal/paternal) → the genes it spans, every one checked against ClinGen gene dosage, and the ClinGen curated regions it overlaps (22q11.2, 1p36, Williams, PWS/AS, 16p11.2 …) with HI/TS scores, coverage and the ACMG/ClinGen 2020 section-2 row they point to; section 3 by gene count for losses and gains separately — inputs to a classification, not one (sections 4-5 need the case). An exon-level deletion or duplication (DMD exon 45-50 deletion, NM_004006.3:c.6439-?_7309+?del, intronic breakpoints) → exons, coding bases, whether the frame is kept, and — only when it is not — which additional exon skip restores it. SMN1/SMN2 copy number (clinical exon numbering 1, 2a, 2b, 3-8) read with the SMN2 count, framed as population data, not a prognosis. Repeat expansions (FMR1, HTT, DMPK, FXN, C9orf72) placed in their published size bands with sex-specific wording and what else is needed (methylation, AGG interruptions, the other allele) — a referenced reading. Coordinates from Ensembl. A finding the laboratory has already classified as pathogenic or reported as diagnostic is a diagnosis: this output is supporting inputs to explain and check it, never a reason to doubt the laboratory.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -538,6 +539,7 @@ export const TOOLS: ToolDef[] = [
     ],
     touchesCase: true,
     timeoutMs: 180_000,
+    deferred: true,
   },
   {
     name: 'china_rare',

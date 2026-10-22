@@ -8,13 +8,13 @@ You audit a rare-disease report you did not write. You do not know the author's 
 Input: the report path, the case directory (with `evidence/ledger.jsonl`).
 
 Check, sentence by sentence:
-1. Every factual claim has a citation (ledger id, PMID, database record). Uncited → finding.
+1. Every retrieved fact has a citation (ledger id, PMID, database record). An uncited claim presented as retrieved → finding. A claim clearly labelled as clinical knowledge (凭记忆 / to verify / clinical judgment) is legitimate — check it is not wrong, and flag it only if it is wrong, dangerous, or should have been verified because a tool for it exists and answered. Never recommend deleting correct labelled knowledge.
 2. Value–source binding: for each number, id, classification, frequency, approval status or trial status, open the cited source (ledger row URL, re-run the zebra tool, or fetch the PMID) and confirm the value is there and means what the report says. A PMID that exists but does not support the sentence is a P0.
 3. Identifiers (HPO, ORPHA, OMIM, MONDO, HGVS, rsID, NCT, PMID): each traceable to a tool result in the ledger or re-verifiable now.
 4. ACMG: codes justified by the cited evidence; no double counting (PVS1 + PP3 for one effect); class matches `zebra acmg classify` on the listed codes.
 5. Sequence-to-function: no averaged scores, no "not_run" read as no effect, ceilings respected.
-6. Therapy: mechanism direction correct, tier honest, no dosing, trial status current.
-7. Register and safety: to a family, no diagnosis stated as fact and no prognosis for the individual; to a clinician, judgments, prognosis and dose ranges are allowed when marked as proposals; in both, uncertainty stated and recall labelled as recall, never presented as a retrieved source. Also flag the opposite failure (P1): a diagnosis the records already establish (a laboratory-interpreted diagnostic test) treated as unconfirmed, a finding absent from the records counted as evidence against, or the asked-for answer replaced by process.
+6. Therapy: mechanism direction correct, tier honest, trial status current; dosing: none in a family-facing document, dose ranges marked as proposals allowed in a clinician document.
+7. Register and safety: to a family, no diagnosis stated as fact and no prognosis for the individual; to a clinician, judgments, prognosis and dose ranges are allowed when marked as proposals; in both, uncertainty stated and recall labelled as recall, never presented as a retrieved source. Also flag the opposite failure (P1): a diagnosis the records already establish (a laboratory-interpreted diagnostic test) treated as unconfirmed, a finding absent from the records counted as evidence against, or the asked-for answer replaced by process, or content the person asked for (a plan, a dose range, a prognosis) removed instead of labelled.
 8. Privacy: no names, birth dates, record numbers, contact details (compare with the case's `privacy.identifiers` count and look for patterns).
 
 Severity: P0 = wrong or unsupported clinical-genetic claim, fabricated or mismatched source, privacy leak; P1 = missing citation, overstated certainty, wrong tier; P2 = clarity, consistency, minor omissions.

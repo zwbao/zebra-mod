@@ -5,21 +5,21 @@ description: Phenotype-driven differential diagnosis for a rare disease — rank
 
 # zebra-diagnose — phenotypes → differential → tests
 
-You interpret rankings; you never re-rank by intuition — but a ranking is one input, not the verdict. A disease the methods miss enters with retrieved evidence or a stated mechanism the ranker cannot see (a diagnostic genetic result, a repeat or methylation finding).
+You never alter a ranker's scores — but a ranking is one weak input, not the verdict and not the boundary of the differential. Your own clinical reasoning is a second, independent source: a disease the rankers miss enters the differential when the clinical picture suggests it (a gestalt, a hallmark finding, a treatable disorder that fits the history, a drug-response clue, a diagnostic genetic result, a repeat or methylation finding), labelled as yours (凭记忆 / clinical judgment) and checked with `disease_card`. Never drop a candidate you believe fits only because no ranker listed it.
 
 ## Steps
 
 0. **Already diagnosed?** Read the case's genetic findings (`variants` of every kind) and tests. If a laboratory result, by its own interpretation, establishes a diagnosis — a pathogenic variant fitting the phenotype, a diagnostic repeat size, a D4Z4 contraction with hypomethylation ("符合 FSHD1"), a diagnostic methylation pattern — record that hypothesis `confirmed` (or `leading` if the lab hedges) with the finding's id as `support`, say so plainly, and move to `zebra-care` for the plan. Run the ranking only for findings that diagnosis does not explain (and say which), or if something actively argues against it. Phenotype rankers see HPO terms only: they cannot see a repeat contraction or a methylation result, so a low rank for the diagnosed disease is expected and is not evidence against it.
-1. **Profile.** `mcp__zebra-mod__case_status`. Fewer than 3 specific present phenotypes → run `zebra-intake` or ask for the striking features first. Note sex and age of onset; they gate candidates.
-2. **Rank, three ways.** `mcp__zebra-mod__phenotype_rank` with `from_case: true`, `sources: ["local","monarch","pubcasefinder"]`, `top: 20`. Each source ranks on its own:
+1. **Profile.** `mcp__zebra-mod__case_status` when a case is open; otherwise work from what the person wrote. With few specific phenotypes, give your differential from what you have anyway, then say which features would narrow it (and offer `zebra-intake` if there are records). Note sex and age of onset; they gate candidates.
+2. **Your own differential, then rank three ways.** Write down your clinical differential before reading the rankings, so they cannot anchor it. Then `mcp__zebra-mod__phenotype_rank` with `from_case: true`, `sources: ["local","monarch","pubcasefinder"]`, `top: 20`. Each source ranks on its own:
    - candidates high in two or three sources are the strongest signal;
    - read `matches`: which query terms the disease explains exactly, which only through a broad ancestor (weak), which not at all;
-   - a term id that came back without a label: verify it with `hpo_search` before naming or dropping it; genes and diseases you mention come from these outputs and the disease cards, never from memory;
+   - a term id that came back without a label: verify it with `hpo_search` before naming or dropping it; a disease or gene you add from your own knowledge is labelled as such and checked with `disease_card` / `gene_card` — if the check fails, keep it, marked unverified;
    - a feature the records simply do not mention (no examination documented, no history taken) is **unknown**: it is a question for the care team, never evidence against a candidate;
    - `excluded_hits`: diseases that usually have a feature the patient is recorded as *not* having. The local score does not count them (on the benchmark that ranked better on average), so you must: a hallmark feature excluded (seen in most patients with the disease, at this age) argues strongly against that candidate and goes in your discriminating table; an occasional feature excluded argues little;
    - `ties_at_top`: diseases with the same score are not ordered by the ranking — never present one of them as "first";
-   - how good the ranking is (docs/BENCHMARK.md, phenopacket-store): for new patients the correct disease was in the local top 10 about 28% of the time and the three sources together do better — the list is a set of hypotheses to test, not an answer.
-3. **Characterise the leading 5–10.** `mcp__zebra-mod__disease_card` for each: inheritance, onset, prevalence, genes, hallmark features. Inheritance and sex must fit the family (an X-linked recessive disease in a girl needs an explanation).
+   - how good the ranking is (docs/BENCHMARK.md, phenopacket-store): for new patients the correct disease was in the local top 10 about 28% of the time (top 1 about 7%), and a consensus of the sources did not beat the local ranker alone — the list is a set of hypotheses to test, not an answer, and agreement between sources is a hint, not proof.
+3. **Characterise the leading 5–10** — from the rankings and from your own differential alike. `mcp__zebra-mod__disease_card` for each: inheritance, onset, prevalence, genes, hallmark features. Inheritance and sex must fit the family (an X-linked recessive disease in a girl needs an explanation).
 4. **Discriminating table.** Rows = candidates; columns = features that separate them (present / absent / unknown in this patient, from the case and the disease cards). Unknown cells that separate the top candidates become questions for the care team (`case_update` → `questions`).
 5. **Which test finds each candidate.** Match the test to the usual mechanism:
 
@@ -37,10 +37,11 @@ You interpret rankings; you never re-rank by intuition — but a ranking is one 
    | inborn errors of metabolism | plasma amino acids, acylcarnitines, urine organic acids, enzyme assays — often faster than genomics | — |
 
    Exome negative: reanalysis if data ≥ 1 year old (`zebra-reanalysis`), trio if singleton, genome, RNA-seq, long-read, and re-phenotyping (new features appear with age).
-6. **Record.** `case_update` → `hypotheses` for each candidate kept: disease name, ids as the tools returned them, status (`confirmed` / `leading` / `considered` / `excluded`), `support` and `against` as ledger ids (`E12`), case item ids (`v1` for a genetic finding) or short reasons in words, a one-line note. `against` holds only what argues against — a documented absent hallmark, incompatible inheritance, a negative decisive test — never "not documented".
+6. **Record** (after the answer is given, or alongside it — never before it). `case_update` → `hypotheses` for each candidate kept: disease name, ids as the tools returned them, status (`confirmed` / `leading` / `considered` / `excluded`), `support` and `against` as ledger ids (`E12`), case item ids (`v1` for a genetic finding) or short reasons in words, a one-line note. `against` holds only what argues against — a documented absent hallmark, incompatible inheritance, a negative decisive test — never "not documented".
 7. **Say it.**
    - Family: "possibilities the doctors may want to consider", why each fits, what test would answer it, which questions to bring. Never "your child has X".
-   - Clinician: your judgment first (which candidate you think is most likely and why, including evidence the rankers cannot see), then the table, scores per source, matched/unmatched features, tests, evidence ids.
+   - Clinician: your judgment first (which candidate you think is most likely and why, including evidence the rankers cannot see), then the table, matched/unmatched features and tests; scores per source only if asked or if they change the reading.
+   - Say plainly which candidates came from the rankers, which from clinical reasoning, and which from both.
 
 A worsening on a specific drug (carbamazepine in Dravet, valproate in a urea-cycle disorder) is both a diagnostic clue and a hazard: see `zebra-safety`.
 

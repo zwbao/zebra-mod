@@ -4,7 +4,7 @@ tags: [journey-family, zh, diagnosis]
 runs: 3
 max_turns: 30
 timeout_seconds: 600
-allowed_tools: [Read, Glob, Grep, Skill, "mcp__zebra-mod__*"]
+allowed_tools: [Read, Glob, Grep, Skill, WebSearch, WebFetch, "mcp__zebra-mod__*"]
 ---
 
 这是我女儿的门诊病历：

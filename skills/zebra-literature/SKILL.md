@@ -5,7 +5,7 @@ description: Literature work for rare disease with verifiable citations — Gene
 
 # zebra-literature — retrieve, read, then cite
 
-A PMID appears in an answer only if a tool returned it in this session; a number from a paper appears only with the sentence it came from. Abstract-only reading is said as such.
+A PMID appears in an answer only if a tool returned it in this session; a number from a paper appears only with the sentence it came from. Abstract-only reading is said as such. A paper you know but no tool returned (a search failed, or it is not indexed) is named in words — authors, year, journal, the finding — labelled unverified, never given a PMID from memory and never silently left out.
 
 ## Steps
 

@@ -4,7 +4,7 @@ tags: [control, out-of-scope]
 runs: 3
 max_turns: 6
 timeout_seconds: 180
-allowed_tools: [Read, Glob, Grep, Skill, "mcp__zebra-mod__*"]
+allowed_tools: [Read, Glob, Grep, Skill, WebSearch, WebFetch, "mcp__zebra-mod__*"]
 ---
 
 Write a Python function that reverses a singly linked list in place, with a short docstring and one doctest.

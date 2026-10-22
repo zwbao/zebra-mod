@@ -11,9 +11,9 @@ Output: an updated case (via `mcp__zebra-mod__case_update`) and a short summary 
 
 ## Steps
 
-1. **Case.** `mcp__zebra-mod__case_status`. No case → ask the person to run `/zebra new <folder>` and put files in `<folder>/records/`.
+1. **Case.** `mcp__zebra-mod__case_status`. No case → still read what the person gave you and answer; then offer to keep it as a case (`/zebra new <folder>`, files in `<folder>/records/`). Never make the answer wait for the case.
 2. **Profile.** Set the case `profile` (via `case_update`): `role` from what the person says about themselves — not from their language or writing style. Someone operating Claude Code on a case folder is a clinician/researcher unless they say they are the patient or a relative ("我妈妈的报告", "我的孩子"); when unclear and it matters, ask once. `language` from how they write; proband sex and age band. No names or birth dates.
-3. **Inventory.** List `records/`. More than 6 files → fan out: one `zebra-mod:phenotype-curator` subagent per ~5 files, all in one message, each returning its JSON; otherwise read them yourself (Read handles PDF and images).
+3. **Inventory.** List `records/`. Read them yourself (Read handles PDF and images) unless the set is too large for one context (roughly more than 20 files, or very long documents) or the person asked for a full intake — then fan out: one `zebra-mod:phenotype-curator` subagent per ~5 files, all in one message, each returning its JSON. Answer the person's question from your own reading before or while the subagents run.
 4. **Protect identifiers first** — before any lookup. What points to a person: patients' and relatives' names (汉字 and pinyin, each spelling), birth dates, national ID numbers, phone, address, insurance numbers, hospital record/admission/outpatient numbers → `case_update` with `identifiers: [...]` (the result shows only a count). Exam numbers, barcodes and report serials do not identify a person on their own and need not be registered. From the shell the same is `zebra case identifiers --add "<value>" ... --case <case dir>`. Never send them in any other tool call; in replies to a family do not repeat them.
 5. **Phenotypes.** For each clinical finding:
    - phrase it in English clinical terms, `mcp__zebra-mod__hpo_search`, choose the most specific term the record supports (not more specific);
@@ -26,7 +26,7 @@ Output: an updated case (via `mcp__zebra-mod__case_update`) and a short summary 
    - an exon-level deletion or duplication (`DMD exon 45-50 deletion`, `NM_004006.3:c.6439-?_7309+?del`) — it also says whether the reading frame is kept and, only when it is not, which exon would restore it; SMN1/SMN2 results are copy numbers (give the SMN2 count too);
    - SMN1-type copy number (`SMN1 exon 7 copy number 0`);
    - a repeat expansion (`FMR1 CGG 230`).
-   It returns the genes covered, dosage sensitivity and the ACMG/ClinGen CNV evidence inputs — never a classification; that judgement belongs to `zebra-variant` and the laboratory.
+   It returns the genes covered, dosage sensitivity and the ACMG/ClinGen CNV evidence inputs — not a classification of its own. When the laboratory has already classified the finding as pathogenic or diagnostic (an established 22q11.2 deletion, an out-of-frame DMD deletion, SMN1 0 copies), that is a diagnosis: record the lab's classification and a `confirmed` hypothesis; the tool's output supports it, it is not a reason to doubt it.
 
    Some diagnostic results are neither sequence variants nor CNVs, and must still be recorded as genetic findings (`variants`), not dropped as "no variant":
    - a **repeat contraction** (`kind: repeat_contraction`): FSHD1's D4Z4 — locus, fragment size in kb (`fragment_kb`), repeat units if the lab gives them (otherwise `mcp__zebra-mod__repeat_size` with the digest, never by hand), haplotype (4qA/4qB), method (PFGE/Southern, optical mapping);

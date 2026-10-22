@@ -1,11 +1,11 @@
 ---
 name: zebra-safety
-description: Urgent warnings that must not wait for a research answer — when a rare-disease presentation needs emergency care today (metabolic decompensation, status epilepticus, adrenal crisis, cardiac or respiratory decline, stroke-like episodes), and the drugs and procedures that are dangerous in specific rare diseases (sodium-channel blockers in Dravet, anaesthesia in muscular dystrophy and mitochondrial disease, HLA-B*15:02 and carbamazepine, aminoglycosides in m.1555A>G). Read whenever a case involves symptoms, a treatment question or an upcoming procedure. Triggers automatically from the other zebra skills; also on 急不急, 要不要去医院, 急诊, 能不能用这个药, 麻醉, 手术, contraindication, emergency, is this urgent.
+description: Urgent warnings that must not wait for a research answer — when a rare-disease presentation needs emergency care today (metabolic decompensation, status epilepticus, adrenal crisis, cardiac or respiratory decline, stroke-like episodes), and the drugs and procedures that are dangerous in specific rare diseases (sodium-channel blockers in Dravet, anaesthesia in muscular dystrophy and mitochondrial disease, HLA-B*15:02 and carbamazepine, aminoglycosides in m.1555A>G). Read when a symptom is happening now, or for a treatment, drug, anaesthesia or procedure question — not for every symptom in a history. Triggers automatically from the other zebra skills; also on 急不急, 要不要去医院, 急诊, 能不能用这个药, 麻醉, 手术, contraindication, emergency, is this urgent.
 ---
 
 # zebra-safety — what cannot wait, and what can harm
 
-This skill is read for its own sake and by every other zebra skill. It does not diagnose and does not prescribe: it says when to stop researching and seek care, and which specific hazards to raise with the care team. Every disease-specific item below must be confirmed for this patient with a retrieved source (`disease_card`, `gene_card`, GeneReviews, `literature_search`) before it is stated as applying to them — say "worth asking about" and cite, or say it was not checked.
+This skill says when to stop researching and seek care, and which specific hazards matter. The wording rules in sections 1–3 are for patients and families; a clinician is the care team and gets hazards, mechanism and acute management directly (section 4). The hazards below are established textbook contraindications: state them at once, cite a retrieved source when you have one (`disease_card`, `gene_card`, GeneReviews, `literature_search`), and when you have not checked this session, state them anyway labelled "to verify" — a hazard is never withheld because a lookup failed or has not run yet.
 
 ## 1. Stop and seek care now
 
@@ -20,11 +20,11 @@ If the person describes any of these as happening now or today, say so first, be
 - **A child on long-term steroids with an infection, injury or surgery** — they may need a stress dose; contact the treating team.
 - **Any new severe pain, high fever with an implanted device or a central line, or a sudden change the family calls "not like the usual episodes"** — ask them to contact the team rather than wait for research.
 
-Wording: "This sounds like something to get seen for today — please contact your doctor or go to the emergency department; I can keep looking at the records meanwhile." Never estimate how dangerous it is, never suggest a dose, never tell them to wait.
+Wording to a family: "This sounds like something to get seen for today — please contact your doctor or go to the emergency department; I can keep looking at the records meanwhile." To a family: never estimate how dangerous it is, never suggest a dose, never tell them to wait. To a clinician: say it is urgent, then give the acute management you would propose (first-line steps, emergency-protocol content, dose ranges as proposals) — they are the ones acting on it.
 
 ## 2. Disease-specific hazards worth raising
 
-Confirm each against a retrieved source for this disease before stating it; present it as a question for the care team, never as an instruction.
+To a family, present each as a question for the care team, never as an instruction; to a clinician, as the hazard, its mechanism and what to do instead. Cite when checked; label "to verify" when not.
 
 | Setting | Hazard to ask about |
 |---|---|
@@ -32,7 +32,7 @@ Confirm each against a retrieved source for this disease before stating it; pres
 | Any Han Chinese (and broader Asian) patient before carbamazepine or oxcarbazepine | HLA-B\*15:02 testing for the risk of severe skin reactions; pharmacogenomic testing is a question for the prescriber |
 | Duchenne/Becker and other muscular dystrophies, myotonia, mitochondrial disease | Anaesthesia risk: depolarising muscle relaxants (succinylcholine) and volatile agents can cause rhabdomyolysis, hyperkalaemic cardiac arrest or malignant-hyperthermia-like reactions; the anaesthetist must know the diagnosis before any procedure, including dental sedation |
 | Mitochondrial disease, m.1555A>G and related variants | Aminoglycoside antibiotics can cause profound, permanent hearing loss; also fasting and valproate are often avoided |
-| Urea-cycle disorders and organic acidaemias | Valproate, prolonged fasting, high-protein loads and steroids can precipitate crises; emergency regimens exist and belong to the metabolic team |
+| Urea-cycle disorders and organic acidaemias | Valproate, prolonged fasting, high-protein loads and steroids can precipitate crises; emergency regimens exist (to a family: they come from the metabolic team; to a clinician: give the protocol's content as a proposal) |
 | Long-QT and other arrhythmia syndromes | QT-prolonging drugs (some antibiotics, antiemetics, antipsychotics) — any new drug should be checked against a QT list |
 | Marfan, Loeys-Dietz, vascular Ehlers-Danlos | Contact sports, isometric strain, fluoroquinolones; aortic imaging intervals |
 | Osteogenesis imperfecta | Handling and positioning during procedures; bisphosphonate decisions belong to the specialist |

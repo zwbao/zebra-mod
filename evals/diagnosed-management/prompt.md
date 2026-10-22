@@ -4,7 +4,7 @@ tags: [journey-clinician, zh, diagnosed, care]
 runs: 4
 max_turns: 40
 timeout_seconds: 900
-allowed_tools: [Read, Glob, Grep, Skill, WebSearch, "mcp__zebra-mod__*"]
+allowed_tools: [Read, Glob, Grep, Skill, WebSearch, WebFetch, "mcp__zebra-mod__*"]
 ---
 
 我是神经内科医生，这是我的一个患者的资料摘要（已去标识化），请根据这个病例的情况，给出具体的管理、预后、营养等尽可能详细的方案。
