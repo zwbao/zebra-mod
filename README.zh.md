@@ -1,119 +1,182 @@
+<div align="center">
+
 # 🦓 zebra-mod
 
-**zebra-mod 是一个 Claude Code mod，把 Claude Code 改造成罕见病研究与分析工作台**，服务对象包括正在寻求诊断的患者和家属、临床医生与科研人员。
+**装进 Claude Code 的罕见病研究工作站**
 
-> 医学教育有一句格言："听到马蹄声，先想到马，而不是斑马。"罕见病患者自称"斑马"，因为他们的答案往往不在常见路径上。zebra-mod 的目标正是在这些路径之外寻找答案，并为每一步给出可核查的证据。
+从症状到鉴别诊断，从变异到 ACMG 分级，从序列到功能，从基因型到治疗——每一条结论都附有可以打开核对的来源。
 
-[English → README.md](README.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0f5c6e.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.3.9-0f5c6e.svg)](CHANGELOG.md)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-%E2%89%A5%202.1.289-1b2430.svg)](https://claude.com/claude-code)
+[![Python](https://img.shields.io/badge/python-%E2%89%A5%203.9%20·%20stdlib%20only-1b2430.svg)](zebra/)
 
----
+[English](README.md) · **中文**
 
-## 功能
+</div>
 
-| 任务 | 做法 |
-|---|---|
-| **鉴别诊断**：根据表型推断可能的疾病 | 病历 → HPO 表型档案（术语经核验，区分存在/排除，记录起病时间与出处页码）→ 三种相互独立的排序方法（基于 HPO 注释的离线 Resnik 相似度、Monarch 语义相似度、PubCaseFinder），各自保留排名，以方法间的一致性作为信号 → 鉴别特征表 → 每个候选疾病应采用何种检测（外显子组、基因组、染色体微阵列、重复扩增检测、甲基化、线粒体 DNA、代谢筛查） |
-| **变异解读**：ACMG/AMP 框架 | VEP（MANE 转录本、AlphaMissense、REVEL、CADD）+ ±4,999 nt 范围的 SpliceAI + gnomAD（grpmax、faf95；线粒体变异的异质性计数）+ ClinVar（四星制审核星级）+ ClinGen 基因-疾病有效性与剂量敏感性 + MaveDB 功能实验分数（按数据集自身校准）+ LitVar（排除同一位点的其他等位变异）+ 中国人群频率 → 按 ClinGen 校准阈值给出数据驱动的证据条目，以及 PVS1、PS1/PM5 的**判断依据** → 由模型论证的判断类条目 → **由代码计算积分**（Tavtigian 2020），并与 2015 年组合规则的结论并列呈现；GRCh37 输入自动换算至 GRCh38 |
-| **序列到功能（S2F）**：剪接、非编码与调控变异 | SpliceAI/Pangolin（Broad 在线查询），GPN-MSA（作者公开的 hg38 分数表）、Evo 2 与 AlphaGenome（托管服务，需自备密钥），每次运行留有凭证；逐轴解读并标注结论上限，以逻辑一致性综合，不做数值平均；由机制推导验证方案（RNA 检测，依据 GTEx 选择该基因有表达的组织）；剪接调控型反义寡核苷酸初筛（`aso_screen`：在患者序列上核对异常剪接事件、列出候选靶向窗口与已发表的 N-of-1 先例） |
-| **外显子组/基因组重分析**，在本机完成 | `zebra qc`：性别核对、KING 亲缘系数（样本对调、非亲生）、纯合片段、孟德尔错误与单亲二体、嵌合新发变异。VCF 分诊：质量过滤、遗传模式（新发、纯合、复合杂合、X 连锁半合子）、支持 PED 家系文件、按表型基因限定范围、对靠前的剪接/非编码候选运行 SpliceAI；全外显子组可经 MyVariant 频率预过滤。VCF 文件留在本机；变异位点会发往注释服务——默认只发过滤后的候选，开启预过滤则发送全部位点（会先征得同意） |
-| **基因型到治疗（G2T）** | 先判定致病机制（功能丧失、功能获得、显性负效应、剪接异常、重复扩增）→ 已上市与在研药物（Open Targets / ChEMBL）、**可及性**：FDA 与 EMA 以监管机构自身记录为准，国内批准情况依据国家药监局/药审中心官方文件，2025 版国家医保目录含限定支付范围原文，以及在中国设有中心的临床试验；文献证据、个体化治疗可行性初筛（反义寡核苷酸、基因替代、**碱基编辑可行性**）→ 按 A–E 分级，并逐条核对机制方向 |
-| **经典统计方法** | 共分离似然比与 PP1 强度、最大可信等位基因频率（BS1）、携带者频率与遗传患病率、再发风险（含 X 连锁贝叶斯计算）、Fisher 精确检验与负荷检验、新发变异富集、Kaplan–Meier 自然史分析与对数秩检验、N-of-1 试验设计与分析 |
-| **文献** | Europe PMC、PubTator3、LitVar2；PMID 仅使用工具返回的结果，结论引用原文语句 |
-| **面向家庭** | 通俗书面语解释（中文用户默认中文）、如实说明意义不明变异（VUS）、复诊问题清单、再发风险与家系筛查、患者组织、国家罕见病目录及各省罕见病诊疗协作网医院 |
-| **长期随访** | `case_recheck` 重新查询病例的关键问题——各变异的 ClinVar 分类与星级、相关基因的 ClinGen 有效性、各待定诊断的在招试验与新发表文献——报告自上次复查以来的变化，并记入病例时间线 |
-| **报告** | 临床医生摘要、家属信与就诊准备单，每条结论附出处，定稿前由**独立的对抗式审查**核对，再导出为中文排版的 **HTML、Word 与 PDF**——医生或志愿者可替家庭完成分析，把文件交给家属 |
+> *"听到马蹄声，先想到马，而不是斑马。"* 医学教育让人优先考虑常见病；罕见病患者自称"斑马"，因为答案往往不在常规路径上。zebra-mod 专门往那里找，并且每一步都给出证据。
 
-## 原则（由机制保证，而非仅写在文档中）
+zebra-mod 是一个 [Claude Code](https://claude.com/claude-code) mod，面向**在求诊路上的患者与家庭、临床医生和研究者**。它为 Claude 提供 22 个工具，实时查询公共数据库（HPO、Monarch、Orphanet、ClinVar、gnomAD、Ensembl VEP、ClinGen、PanelApp、Open Targets、ClinicalTrials.gov、Europe PMC 等），提供带证据账本的病例工作区，以及诊断、变异解读、治疗检索和报告撰写的规范流程。你像平常一样用中文或英文与 Claude 对话，它会自行调用这些工具。
 
-0. **mod 只做加法，不做减法。** 工具、数据和病例工作区的作用，是让 Claude 的回答比没有 mod 时更好，而不是更窄、更慢、更畏手畏脚。如果某条规则会让回答变差，说明它被用错了。
-1. **证据优先，凭记忆的内容必须标明。** 优先引用本次会话中检索到的证据账本编号、PMID 或数据库记录；Claude 自身的医学知识可以使用，但要标明是"凭记忆"，不能冒充检索结果。每个病例维护一份只追加的**证据账本**（`E1、E2……`），记录用到的全部来源。
-2. **代码计分，模型解读。** 排名、ACMG 积分与统计量均由 `zebra` 引擎计算；模型不编写、不修改任何数值。但排名只是参考之一：排序工具看不到的证据（如诊断性的重复序列或甲基化结果）可以公开推翻排名，并说明理由。
-3. **信息缺失时先澄清，绝不编造。** 基因组版本、转录本、合子状态、遗传方式、性别等关键信息缺失时，先询问，或以条件句给出结论。
-4. **按使用者调整。** 对医生和研究者：给出诊断判断、预后和管理方案，剂量以"供审核的建议"形式给出。对患者和家属：不以确定口吻告知诊断，不提供用药剂量，后续步骤以"供医疗团队考虑的问题"形式呈现。角色根据使用者自述判断，不根据使用的语言推断。
-5. **隐私：如实说明边界。** 病例文件只写在本机；zebra 向公共数据库发出的查询只携带生物学信息（HPO 编号、基因、变异、疾病名），不含姓名、出生日期或病历号。mod 内置**隐私闸门**：外发调用若包含病例中登记的受保护标识，或身份证号、手机号、电子邮箱格式的内容，一律拒绝；病例目录内的文件或原始基因组文件（VCF/BAM/CRAM/FASTQ）外传前须经确认；若读不到病例的标识清单，闸门会关闭并拒绝所有外发调用。**闸门做不到的事**：你让 Claude 阅读的每一份病历（PDF、照片、报告）都会作为对话内容发送给模型服务商，这与在 Claude Code 中打开任何文件相同；闸门检查的是工具调用，不是对话本身。建议尽早登记受保护标识（病历中出现患者姓名时，模型会通过 `case_update` 的 `identifiers` 登记），如有顾虑请在提供文件前自行脱敏。导出 Word/PDF 时，报告中若仍含已登记的标识或身份证号，导出会被拒绝。标识匹配已覆盖常见编码与写法变体，但属尽力而为，不构成保证。
+## 主要能力
 
-## 效果如何
+- **从病历到鉴别诊断。** 门诊记录、化验单和照片整理为经核验的 HPO 表型；三套独立的排序（离线、Monarch、PubCaseFinder）并列呈现，与 Claude 自己的临床推理放在一起，而不是取而代之。
+- **变异解读，ACMG 分值由代码计算。** VEP、gnomAD、ClinVar、ClinGen、SpliceAI、AlphaMissense、REVEL 与 MaveDB 提供证据；证据条目由你判断，分值由 zebra 计算（Tavtigian 2020 分值与 2015 组合规则并列）。
+- **不止单核苷酸变异。** 拷贝数变异与芯片结果对照 ClinGen 剂量敏感性，外显子缺失给出读码框计算，SMN1/SMN2 拷贝数，重复扩增（D4Z4、DMPK、FMR1、HTT 等）按规则换算。
+- **序列到功能模型在 mod 内运行。** SpliceAI、Pangolin、GPN-MSA、Evo 2 与 AlphaGenome 各自按所属维度报告，并标注结论上限；以一致性综合，从不取平均。
+- **从基因型到治疗，并说明可及性。** 按机制检索已批准与在研药物，FDA/EMA 状态取自监管机构记录，国内获批与医保目录情况，有中国研究中心的在招试验，以及个体化治疗路径（反义寡核苷酸、碱基编辑）。
+- **家属拿得到手的报告。** 临床医生摘要与通俗版家属资料，经独立子代理审查后，导出为中文排版的 HTML、Word 与 PDF。
+- **隐私内建。** 病例文件只保存在本机；隐私闸门阻止已登记的姓名、出生日期和病历号出现在任何对外调用中。
 
-以测量结果为准，不做宣称——方法、数据校验和与置信区间见 [docs/BENCHMARK.md](docs/BENCHMARK.md)。
+## 快速开始
 
-- **表型排序**：在 GA4GH phenopacket-store 0.1.27（10,374 个已发表病例、780 种疾病）上按疾病划分开发集与留出集。对留出集中"病例本身的论文不是 HPO 注释来源"的病例（最接近新患者的公平测试），正确疾病进入本地排序前 10 的比例为 **28%**（0.1.0 为 15%），致病基因为 40%。全部留出病例为 70%，只能视为上限：多数已发表病例的疾病注释正是从该论文整理而来。在 100 例联网抽样中，本地 + Monarch + PubCaseFinder 合并后前 10 命中 75%。排序结果是待检验的假设清单，不是答案。
-- 一项如实披露的代价：PRD 中的示例查询（热性惊厥、局灶性与强直阵挛发作、发育落后；排除肌张力低下）在本地排序中，Dravet 综合征现排第 16（0.1.0 为第 6），原因是排除表型改为标注而不计分——这一选择在留出集上测得更好。
-- `evals/` 收录 12 个端到端评测用例，供 `claude plugin eval` 使用（中文家长病历、急症优先、VUS、CNV、线粒体变异、治疗与试验、隐私、超出范围的请求，以及医生为两位已确诊患者要管理方案：由 D4Z4 片段检测确诊的 FSHD1，和合并传导阻滞、即将手术并计划怀孕的 DM1）。
-
-## mod 为 Claude Code 增加的能力
-
-- **22 个工具**，模型可直接调用（`mcp__zebra-mod__*`）：`case_status`、`case_update`、`case_recheck`、`hpo_search`、`phenotype_rank`、`gene_card`、`variant_card`、`disease_card`、`acmg`、`cnv_interpret`、`repeat_size`（按公式把 D4Z4 片段换算成重复单位、给出 DMPK CTG 分级，不靠记忆）、`s2f_predict`、`therapy_landscape`、`trials_search`、`literature_search`、`rare_stats`、`edit_check`、`china_rare`、`access`、`expression`、`aso_screen`、`report_export`。每次调用都经过你的权限规则与隐私闸门；只读查询默认无需确认（除非你的规则另有要求），写入病例遵循当前权限模式（可选择"本次会话内允许"）。
-- **研究守则**写入系统提示词（即上述原则），并附当前病例信息。
-- **看得见它在工作**（全部为增量挂载，与罕见病无关的工作照常显示）：它的工具调用有自己的行（`🦓 变异卡  NM_001165963.4:c.2134C>T`，随后 `⎿ 证据 15 条（E39–E53）· 来源 Ensembl VEP、gnomAD、ClinVar、LitVar2 · 3 条来自缓存`），取代原始 JSON；登记身份信息的 case_update 行只显示条数，不显示内容；等待动画写明正在查询哪些数据库；查询进行时，输入框上方有一匹奔跑的小斑马，隐私闸门拦下调用后，这里改为盾牌提示；底部状态区有 `🦓` 标签（打开病例时显示病例标题）；用到 zebra-mod 的一轮结束时，留下一行小结：调用次数、数据源、新增证据、被拦截的调用。中英文随病例语言或你的提问切换。选项 `interface`：`full`（默认）、`quiet`（无动画、不改等待动画文字）或 `off`。
-- **病例看板**面板（`/zebra board`），底部标签显示当前病例（`interface` 为 `off` 时改用固定状态行）：表型、变异及其研究级分类、诊断假设、治疗线索、待解决问题、证据条数，随病例更新实时刷新。
-- **`/zebra`** 命令：不带参数时显示使用指南（怎么用、能做什么）；`demo`（合成示例病例，第一个问题已备好）、`new <目录> [标题]`、`case <目录>`、`board`、`ledger`、`doctor`、`close`。
-- **13 个技能**（由 `/zebra-mod:zebra-start` 统一分流）：`zebra-safety`（急症红旗与特定罕见病的用药、麻醉、操作禁忌）、`zebra-intake`、`zebra-diagnose`、`zebra-variant`、`zebra-reanalysis`、`zebra-s2f`、`zebra-therapy`、`zebra-care`（已确诊患者的管理方案：随访、预后、康复、营养、试验准备）、`zebra-stats`、`zebra-literature`、`zebra-family`、`zebra-report`。
-- **6 个子代理**：`phenotype-curator`、`variant-curator`、`s2f-analyst`、`therapy-scout`、`literature-scout`、`evidence-auditor`。
-- **`zebra` 命令行工具**（仅依赖 Python 标准库，Python ≥ 3.9）：所有工具背后的唯一实现，可在任意终端、笔记本或其他 agent 中使用。
-
-## 安装
-
-前置条件：Claude Code ≥ 2.1.289（支持函数钩子 mod）；Python ≥ 3.9。无需 sudo，无需 pip 安装任何依赖。
-
-**一句话安装。** 在 Claude Code 里说：
+**1. 安装。** 在 Claude Code 中输入：
 
 ```text
-帮我安装 https://github.com/zwbao/zebra-mod
+安装 https://github.com/zwbao/zebra-mod
 ```
 
-Claude Code 会读取仓库中的 [INSTALL.md](INSTALL.md) 并逐步完成：检查版本与 Python、注册并安装插件、下载 HPO 数据（约 80 MB）、运行 `zebra doctor` 自检。装好后在新会话中输入 `/zebra-mod:zebra-start` 即可开始（已打开的会话可输入 `/reload-plugins`）。
-
-**一条命令安装**（效果相同）：
+Claude 会按 [INSTALL.md](INSTALL.md) 完成其余步骤：检查 Claude Code（≥ 2.1.289）与 Python（≥ 3.9），安装插件，下载 HPO 数据（约 80 MB），并运行环境自检。也可以在终端执行：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zwbao/zebra-mod/main/install.sh | sh
-# 仓库为私有时，先克隆再运行：
-git clone https://github.com/zwbao/zebra-mod ~/zebra-mod && ~/zebra-mod/install.sh
 ```
 
-**手动安装**：
+**2. 试用演示病例。** 新开一个会话，输入 `/zebra demo`。它会打开一个合成病例（一份门诊记录和一份基因报告），第一个问题已填好；按回车，即可看到它读病历、做鉴别诊断、解读变异的全过程。
 
-```bash
-claude plugin marketplace add zwbao/zebra-mod
-claude plugin install zebra-mod@zebra-mod
-python3 <安装目录>/bin/zebra hpo fetch     # 可选：离线表型排序与即时术语检索
-# 仅对当前会话试用：claude --plugin-dir ~/zebra-mod
-```
-
-可选的重型 S2F 模型：GPN-MSA 无需任何设置；另可设置 `ALPHAGENOME_API_KEY`（AlphaGenome：仅限非商业用途，不得用于临床决策；另需 `pip install alphagenome`）和/或 `NVCF_RUN_KEY`（NVIDIA 托管的 Evo 2）。可用 `/zebra doctor` 检查全部环境。
-
-插件选项（`/config` → zebra-mod，或 settings 中的 `pluginConfigs`）：`python`（解释器）、`doctrine`（默认 `auto`：打开病例时注入完整规则，否则只放一段仅对罕见病问题生效的简短说明，你在 Claude Code 里的其它工作不受影响；也可选 `always` | `case` | `off`）、`privacyGate`（默认开启；未打开病例时，其它工具调用中出现邮箱或手机号会先询问，而不直接拒绝）、`interface`（默认 `full`：工具专属行、等待动画文字、奔跑的斑马与每轮小结；`quiet` 不显示动画和等待动画文字；`off` 完全使用 Claude Code 自己的显示）。
-
-## 快速上手
-
-**直接提问。** 用中文或英文描述症状、贴检查结果或基因报告，或者问某个变异、疾病、药物、临床试验，Claude 会自己调用 zebra-mod 的工具，不需要记命令；`/zebra` 可以查看它能做什么。
-
-**先试一下：** `/zebra demo` 打开一个合成示例病例（一份门诊病历和一份基因检测报告，身份信息已登记；安装时已创建在 `~/zebra-cases/demo-xiaoyu` 或 `demo-lily`），并把第一个问题放进输入框。按回车，看它整理病历、做鉴别诊断、解读变异。
-
-用你自己的资料：
+**3. 问你自己的情况。** 无需记任何命令：
 
 ```text
-/zebra new ~/cases/lily "Lily：6 月龄起反复抽搐"
-# 将检查报告、化验单、基因检测报告放入 ~/cases/lily/records/
-/zebra-mod:zebra-intake
-/zebra-mod:zebra-diagnose
-/zebra-mod:zebra-variant   NM_001165963.4:c.2134C>T
-/zebra-mod:zebra-therapy
-/zebra-mod:zebra-report    中文家属信
+我女儿6个月开始发热抽搐，基因报告说 SCN1A NM_001165963.4:c.2134C>T，
+这是什么意思？下次见神经科医生该问什么？
 ```
 
-也可以直接用自己的话提问，例如："我女儿 6 个月开始发热抽搐，基因报告显示 SCN1A 有一个变异，这意味着什么？"分流技能会接手后续流程。
+`/zebra` 查看 mod 能做什么；`/zebra new <文件夹>` 为一位患者新建病例，把资料集中管理。
 
-## 数据来源与使用条款
+## 可以这样问
 
-zebra-mod 实时查询公共资源并保留出处，各资源适用其自身许可（见 [docs/DATA-SOURCES.md](docs/DATA-SOURCES.md)）。需特别注意：AlphaGenome 的输出仅限非商业用途且不得用于临床决策；SpliceAI 模型权重采用 CC BY-NC 许可；OMIM 内容不做转载分发。
+| 你是 | 示例 |
+|---|---|
+| **患者或家属** | "跑了好几家医院都没查出来，这是孩子的检查单，可能是什么病？" · "VUS 对我儿子意味着什么？" · "国内有没有 FSHD 的临床试验？" · "帮我列一页下次复诊要问的问题。" |
+| **临床医生** | "按这些 HPO 术语给出鉴别诊断排序，以及每个候选该用什么检测确认。" · "结合这个家系的共分离，对该变异做 ACMG 解读。" · "DM1 合并传导阻滞患者的管理与随访方案。" · "血管型 EDS 患者能做导管血管造影吗？" |
+| **研究者** | "结合表型重新分析这份三人家系 VCF。" · "对这个深部内含子变异跑 SpliceAI、Pangolin 和 AlphaGenome。" · "计算这些减数分裂的共分离似然比。" · "DMD 第 45–50 外显子缺失，跳读哪个外显子能恢复读码框？" |
 
-## 非医疗器械
+每项能力的详细说明（按工具逐一列出）见 [docs/FEATURES.md](docs/FEATURES.md)。
 
-zebra-mod 提供研究级分析和供医生审阅的草稿。它不自行做出诊断或处方，也不能替代临床医生或遗传咨询师。
+## 工作原理
 
-## 渊源
+```
+你
+└─► Claude Code
+      ├─ 研究准则（系统提示）· 13 个技能 · 6 个子代理
+      └─► zebra-mod 钩子
+            ├─ 隐私闸门
+            └─► 22 个工具（mcp__zebra-mod__*）
+                  └─► zebra 引擎（Python，仅标准库）
+                        ├─► 公共数据库与模型：HPO · Monarch · ClinVar · gnomAD · VEP · ClinGen …
+                        └─► 本机病例文件夹：case.json · evidence/ledger.jsonl（E1、E2…）· reports/
+```
 
-输入框上方奔跑的斑马，取自埃德沃德·迈布里奇 1878 年的连续摄影《运动中的马》（公有领域）：一个步幅的 11 个姿态，去掉骑手、按马背对齐使身体保持平稳后，用盲文点阵绘制（`tools/zebra_sprite/build.py` 可重新生成）。
+- **代码计算，模型解读。** 排序、ACMG 分值、重复单位数与统计量均由 `zebra` 引擎算出；模型从不编写或改动数字。当排序器看不到的证据才是决定因素时，模型会公开地推翻排序并说明理由。
+- **每个来源都留档。** 每次工具结果连同数据库、记录号和检索时间写入病例的证据账本，报告引用这些来源。
+- **欢迎 Claude 自身的知识，但要标注。** 本次检索所得与凭记忆的内容分开标示，读者能分辨哪些已核实。
+- **mod 只做加法，不做减法。** 它不设任何先决关卡：先回答问题，病例整理等工作随后或同时进行。
 
-MIT 许可 © 2026 zwbao
+同一个引擎也是命令行工具，可在任何终端、笔记本或其他智能体中使用：
+
+```bash
+zebra phenotype rank --present HP:0002373 HP:0001263 --sources local,monarch,pubcasefinder
+zebra acmg suggest NM_001165963.4:c.2134C>T --inheritance AD
+zebra acmg classify PVS1 PS2 PM2_Supporting
+zebra s2f predict 12-25245350-C-T --models spliceai,pangolin,gpn_msa
+zebra vcf triage trio.vcf.gz --proband P --mother M --father F --sex female --hpo-genes
+zebra stats maxaf --prevalence 0.0000625 --allelic 0.05 --penetrance 0.9
+```
+
+## 效果如何
+
+均有实测，方法与置信区间见 [docs/BENCHMARK.md](docs/BENCHMARK.md)：
+
+- **表型排序**（GA4GH phenopacket-store，10,374 例已发表病例，按疾病划分开发集与留出集）。在"本身论文未被用于构建 HPO 注释"的留出病例上（这才是对新患者的公平检验），正确疾病进入离线排序前 10 的比例为 **28%**，致病基因为 **40%**。排序只是待验证的假设清单，所以 Claude 自己的鉴别诊断与它并列。
+- **装与不装 mod 的对比**（6 个留出的端到端病例，由未接触 mod 说明的独立代理编写，每组 8 次，按指南逐项评分）。合并后两组持平（差值 −0.02，95% 置信区间 −0.16 至 +0.12）：长病历中夹带急症、VUS 共分离两例中装 mod 更好，另有两例更差。"装了不会更差"尚未得到证实，基准文档如实记录。
+- [`evals/`](evals/) 中有 **19 个端到端评测**，用 `claude plugin eval` 运行，涵盖从中文家长上传的病历，到应按肿瘤学而非罕见病思路解读的体细胞肿瘤报告。
+
+## 隐私与安全
+
+- **只留本机：** 病例文件、病历和证据账本只写在你的电脑上。
+- **zebra 从不发送：** 姓名、出生日期和病历号。数据库查询只携带生物学信息（HPO 编号、基因、变异）；外发调用若含已登记的标识，或身份证号、手机号、电子邮箱格式的内容，隐私闸门会拒绝；病例文件或原始基因组文件外传前会先询问。
+- **闸门做不到的事：** 你让 Claude 阅读的每份病历都会作为对话内容发送给模型服务商，与在 Claude Code 中打开任何文件相同。如有顾虑，请先自行脱敏。
+- **急症优先：** 需要当天就医的症状，会在任何分析之前先说明。
+- **研究级：** zebra-mod 产出供医生审阅的分析草稿。它不是医疗器械，不自行做出诊断或处方，不能替代临床医生或遗传咨询师。
+
+## 配置
+
+在 `/config` → zebra-mod 中设置（或 settings 中的 `pluginConfigs`）：
+
+| 选项 | 默认 | 作用 |
+|---|---|---|
+| `doctrine` | `auto` | 打开病例时启用完整研究准则，否则只在罕见病问题上生效的简版；也可设为 `always`、`case`、`off` |
+| `privacyGate` | 开 | 上文所述的外发调用检查 |
+| `interface` | `full` | 工具行、提示文字与奔跑的斑马；`quiet` 不显示动画；`off` 只用 Claude Code 自身的界面 |
+| `python` | `python3` | 引擎使用的 Python 解释器 |
+
+可选的序列模型（`/zebra doctor` 会逐项检查）：
+
+| 模型 | 需要 |
+|---|---|
+| SpliceAI、Pangolin、GPN-MSA | 无需设置 |
+| Evo 2 | `NVCF_RUN_KEY`（NVIDIA 托管服务） |
+| AlphaGenome | `ALPHAGENOME_API_KEY` 与 `pip install alphagenome`（或设置 `ZEBRA_ALPHAGENOME_PYTHON`）；仅限非商业用途，不得用于临床决策 |
+
+## 文档
+
+| | |
+|---|---|
+| [docs/FEATURES.md](docs/FEATURES.md) | 全部能力、工具、技能与子代理 |
+| [docs/BENCHMARK.md](docs/BENCHMARK.md) | 排序基准与装/不装 mod 的对比评测 |
+| [docs/DATA-SOURCES.md](docs/DATA-SOURCES.md) | 各数据库与模型的使用条款和许可 |
+| [docs/PRD.md](docs/PRD.md) · [docs/ROADMAP.md](docs/ROADMAP.md) | 设计与后续计划 |
+| [INSTALL.md](INSTALL.md) · [CHANGELOG.md](CHANGELOG.md) | 安装步骤与版本说明 |
+
+## 开发
+
+```
+hooks/        mod 本体：工具、准则、隐私闸门、病例面板、/zebra      （TypeScript）
+skills/       13 个流程，由 zebra-start 分派
+agents/       6 个子代理（整理、检索、证据审查）
+zebra/        引擎：数据源、ACMG、统计、VCF、S2F、报告导出          （Python，仅标准库）
+evals/        `claude plugin eval` 端到端评测
+tests/        pytest（默认离线；设置 ZEBRA_NETWORK_TESTS=1 运行联网测试）
+```
+
+```bash
+python3 -m pytest -q            # 引擎
+claude plugin test .            # mod 钩子
+claude plugin validate .        # 清单、技能、子代理
+claude --plugin-dir .           # 用当前代码运行一次会话
+```
+
+欢迎提交 issue 和 pull request。修改准则或技能时，请附上装/不装 mod 的对比评测（`claude plugin eval --ablation with-without`）；`evals/heldout-*` 中的留出评分标准不得为迎合结果而修改。
+
+## 数据来源与许可
+
+zebra-mod 实时查询公共资源并记录每个答案的出处，各资源保留其自身条款（见 [docs/DATA-SOURCES.md](docs/DATA-SOURCES.md)）。特别注意：AlphaGenome 输出仅限非商业用途且不得用于临床决策；SpliceAI 权重为 CC BY-NC；不转载 OMIM 内容。
+
+## 引用
+
+```bibtex
+@software{zebra_mod,
+  author  = {zwbao},
+  title   = {zebra-mod: a rare-disease research workstation for Claude Code},
+  year    = {2026},
+  version = {0.3.9},
+  url     = {https://github.com/zwbao/zebra-mod}
+}
+```
+
+## 致谢
+
+本项目建立在 HPO、Monarch、Orphanet、ClinGen、ClinVar、gnomAD、Ensembl、PanelApp、Open Targets、Europe PMC、PubTator、LitVar 与 PubCaseFinder 团队的工作之上，也感谢 SpliceAI、Pangolin、GPN-MSA、Evo 2 与 AlphaGenome 的作者。输入框上方奔跑的斑马，取自埃德沃德·迈布里奇 1878 年的连续摄影《运动中的马》（公有领域）。
+
+MIT 许可 © 2026 zwbao。

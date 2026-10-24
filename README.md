@@ -1,149 +1,182 @@
+<div align="center">
+
 # 🦓 zebra-mod
 
-**A Claude Code mod that turns Claude Code into a rare-disease research workstation** — for patients and families on a diagnostic odyssey, for clinicians, and for researchers.
+**A rare-disease research workstation inside Claude Code**
 
-> *"When you hear hoofbeats, think horses, not zebras."* Medicine is taught to expect the common. People with rare diseases call themselves zebras because their answers lie off the beaten path. zebra-mod is built to look there — and to show its evidence for every step.
+From symptoms to a differential, from a variant to an ACMG class, from a sequence to its function, from a genotype to a therapy — every claim tied to a source you can open.
 
-[中文说明 → README.zh.md](README.zh.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0f5c6e.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.3.9-0f5c6e.svg)](CHANGELOG.md)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-%E2%89%A5%202.1.289-1b2430.svg)](https://claude.com/claude-code)
+[![Python](https://img.shields.io/badge/python-%E2%89%A5%203.9%20·%20stdlib%20only-1b2430.svg)](zebra/)
 
----
+**English** · [中文](README.zh.md)
 
-## What it does
+</div>
 
-| Job | How zebra-mod does it |
-|---|---|
-| **"What could this be?"** — phenotype-driven differential diagnosis | Records → HPO profile (verified terms, present/excluded, onset, source page) → three independent rankings (offline Resnik over HPO annotations, Monarch semantic similarity, PubCaseFinder) kept separate, agreement as signal → discriminating features → which test finds each candidate (exome, genome, CMA, repeat assays, methylation, mtDNA, metabolic) |
-| **"What does this variant mean?"** — ACMG/AMP interpretation | VEP (MANE, AlphaMissense, REVEL, CADD) + SpliceAI at ±4,999 nt + gnomAD (grpmax, faf95; mtDNA heteroplasmy counts) + ClinVar (n of 4 stars) + ClinGen validity and dosage + MaveDB scores under their own calibration + LitVar (other alleles at the position excluded) + Chinese-cohort frequencies → data-driven codes with ClinGen-calibrated thresholds, PVS1 and PS1/PM5 **inputs** → your judged codes → **points computed by code** (Tavtigian 2020) and the 2015 combining rules side by side; GRCh37 input mapped to GRCh38 |
-| **Sequence-to-function (S2F)** — splicing, non-coding, regulatory | SpliceAI/Pangolin (Broad lookup), GPN-MSA (published hg38 table), Evo 2 and AlphaGenome (hosted, with your keys), each run with a receipt; axis by axis with claim ceilings, combined by agreement, never averaged; mechanism → how to confirm with RNA, in a tissue GTEx shows the gene is expressed in; a splice-switching antisense screen (`aso_screen`: the aberrant event checked in the patient sequence, candidate target windows, published N-of-1 precedents) |
-| **The other report forms** — microarray/CNV, exon-level deletions, SMN1 copy number, repeat expansions | `cnv_interpret`: genes covered, ClinGen dosage sensitivity, ACMG/ClinGen CNV evidence inputs (never a classification), and for an out-of-frame exon deletion the frame arithmetic that says which exon skipping would restore it |
-| **Exome/genome reanalysis** on your own machine | `zebra qc`: sex check, KING kinship (swaps, non-paternity), runs of homozygosity, Mendelian errors and uniparental disomy, mosaic de novo calls. VCF triage: quality, inheritance models (de novo, homozygous, compound het, X-hemizygous), PED input, phenotype-gene restriction, SpliceAI on the top splice/non-coding candidates; a whole exome through a MyVariant frequency prefilter. The VCF file stays on the computer; variant positions go to the annotation services — by default only the filtered candidates, with the prefilter every variant (the mod asks first) |
-| **Genotype → therapy (G2T)** | Mechanism first (LoF / GoF / DN / splicing / repeat) → approved and investigational drugs (Open Targets / ChEMBL), **access**: FDA and EMA status from the agencies' own records, approval in China from official NMPA/CDE documents, China's 2025 reimbursement list with its restriction text, trials with sites in China; literature, N-of-1 screens (antisense, gene replacement, **base editing feasibility**) → leads tiered A–E with a mechanism-fit check |
-| **Classical statistics** | Cosegregation LR → PP1, maximum credible allele frequency (BS1), carrier frequency and genetic prevalence, recurrence risk (incl. Bayesian X-linked), Fisher/burden, de novo enrichment, Kaplan–Meier natural history + log-rank, N-of-1 trial design and analysis |
-| **Literature** | Europe PMC, PubTator3, LitVar2 — PMIDs only as returned, findings quoted from the paper |
-| **For families** | Plain-language explanations (Chinese by default for Chinese speakers), VUS explained honestly, visit preparation, recurrence and cascade testing, patient organisations, China's national rare disease lists and the collaboration-network hospitals by province |
-| **Over months and years** | `case_recheck` asks the case's questions again — ClinVar class and stars of each variant, ClinGen validity of its genes, recruiting trials and new papers for each open hypothesis — and reports what changed since the last check, into the case timeline |
-| **Reports** | Clinician summary, family letter and visit-preparation sheet, every claim cited, an **independent adversarial audit** before it is final, then exported to **HTML, Word and PDF** with Chinese typography — so a clinician or volunteer can run zebra-mod for a family and hand them the files |
+> *"When you hear hoofbeats, think horses, not zebras."* Medicine is taught to expect the common. People with rare diseases call themselves zebras because their answers lie off the beaten path. zebra-mod is built to look there, and to show its evidence at every step.
 
-## Principles (enforced, not just written)
+zebra-mod is a [Claude Code](https://claude.com/claude-code) mod for **families on a diagnostic odyssey, clinicians, and researchers**. It gives Claude 22 tools over live public databases (HPO, Monarch, Orphanet, ClinVar, gnomAD, Ensembl VEP, ClinGen, PanelApp, Open Targets, ClinicalTrials.gov, Europe PMC and more), a case workspace with an evidence ledger, and a set of procedures for diagnosis, variant interpretation, therapy search and reporting. You talk to Claude as usual, in English or Chinese; it reaches for the tools itself.
 
-0. **The mod adds, it never subtracts.** Its tools, data and case workspace exist to make Claude's answer better than it would be without them — never narrower, slower or more timid. A rule that would leave the person with a worse answer is being misapplied.
-1. **Evidence, not recall passed off as retrieved.** Tool results and sources fetched in the session are preferred and cited (ledger id, PMID, database record); Claude's own knowledge is welcome when labelled as such. Each case keeps an append-only **evidence ledger** (`E1, E2, …`) of every source used.
-2. **Code scores, the model interprets.** Rankings, ACMG points and statistics are computed by the `zebra` engine; the model never writes or adjusts a number — but a ranking is one input, and evidence the ranker cannot see (a diagnostic repeat or methylation result) overrides it openly.
-3. **Clarify, never invent.** Assembly, transcript, zygosity, inheritance, sex — missing and material means ask, or conclude conditionally.
-4. **Matched to the person.** With a clinician or researcher: diagnostic judgment, prognosis and a management plan, with dose ranges as proposals for their review. With a patient or family: no diagnosis delivered as fact, no dosing; next steps are questions for the care team. The role comes from what the person says, never from the language they write in.
-5. **Privacy, stated exactly.** Case files are written only on your machine, and zebra's own database queries carry biology (HPO ids, genes, variants, disease names), never a name, a date of birth or a record number: a **privacy gate** in the mod refuses an outgoing call that carries the case's registered identifiers or an ID-number/phone/email pattern, asks before a file from the case folder or a raw genome file (VCF/BAM/CRAM/FASTQ) leaves the machine, and closes (refusing outgoing calls) if it cannot read the case's identifier list. **What the gate cannot do:** every record you ask Claude to read — every PDF, photo and report — is sent to the model provider as part of the conversation, like any other file you open in Claude Code; the gate inspects tool calls, not the conversation. Register identifiers early (the model does it with `case_update` → `identifiers` when records name the patient), and redact before sharing if that matters to you. Exports to Word/PDF refuse a report that still holds a registered identifier or an ID number. Matching is best effort over encodings and spellings, not a guarantee.
+## Highlights
 
-## How good is it
+- **Differential diagnosis from records.** Clinic notes, lab sheets and photos become a verified HPO profile; three independent rankers (offline, Monarch, PubCaseFinder) are reported side by side, next to Claude's own clinical reasoning, never instead of it.
+- **Variant interpretation with code-computed ACMG points.** VEP, gnomAD, ClinVar, ClinGen, SpliceAI, AlphaMissense, REVEL and MaveDB feed the evidence; you justify the codes, zebra does the arithmetic (Tavtigian 2020 points beside the 2015 rules).
+- **Beyond SNVs.** CNVs and microarray results against ClinGen dosage maps, exon deletions with reading-frame arithmetic, SMN1/SMN2 copy number, repeat expansions (D4Z4, DMPK, FMR1, HTT…) sized by rule.
+- **Sequence-to-function, run in the mod.** SpliceAI, Pangolin, GPN-MSA, Evo 2 and AlphaGenome, each reported on its own axis with the highest claim it supports, combined by agreement and never averaged.
+- **Genotype to therapy, with access.** Approved and investigational drugs by mechanism, FDA/EMA status from the agencies' records, approval and reimbursement in China, recruiting trials with sites in China, N-of-1 routes (antisense, base editing).
+- **Reports a family can hold.** Clinician summaries and plain-language family sheets, audited by an independent subagent, exported to HTML, Word and PDF with Chinese typography.
+- **Private by construction.** Case files stay on your machine; a privacy gate keeps registered names, birth dates and record numbers out of every outgoing call.
 
-Measured, not claimed — [docs/BENCHMARK.md](docs/BENCHMARK.md) has the method, the data digests and the confidence intervals.
+## Quick start
 
-- **Phenotype ranking** on GA4GH phenopacket-store 0.1.27 (10,374 published cases, 780 diseases), split by disease into development and held-out halves. On held-out cases whose own paper is **not** one of the HPO annotation sources — the fair test for a new patient — the correct disease is in the local top 10 for **28%** (0.1.0: 15%) and the causal gene for 40%. Across all held-out cases it is 70%, an upper bound: for most published cases the disease's annotations were curated from that very paper. On a 100-case web sample, local + Monarch + PubCaseFinder together put the correct disease in the top 10 for 75%. A ranking is a list of hypotheses to test.
-- One honest cost: the PRD's own example (febrile, focal and tonic-clonic seizures, developmental delay; hypotonia excluded) now ranks Dravet syndrome 16th locally (6th in 0.1.0), because excluded terms are flagged rather than scored — the choice that measured better on the held-out half.
-- `evals/` holds 12 end-to-end cases for `claude plugin eval` (a Chinese parent's records, urgent symptoms first, a VUS, a CNV, mtDNA, therapy and trials, privacy, an out-of-scope request, and clinicians' management plans for two diagnosed patients — FSHD1 by D4Z4 sizing, DM1 with conduction disease, surgery and pregnancy ahead).
-
-## What the mod adds to Claude Code
-
-- **22 tools** the model calls directly (`mcp__zebra-mod__*`): `case_status`, `case_update`, `case_recheck`, `hpo_search`, `phenotype_rank`, `gene_card`, `variant_card`, `disease_card`, `acmg`, `cnv_interpret`, `repeat_size` (D4Z4 units from a fragment size, DMPK CTG classes — by rule, not memory), `s2f_predict`, `therapy_landscape`, `trials_search`, `literature_search`, `rare_stats`, `edit_check`, `china_rare`, `access`, `expression`, `aso_screen`, `report_export`. Every call goes through your permission rules and the privacy gate; read-only lookups skip the prompt unless a rule of yours says otherwise, and case writes follow your permission mode (with an "allow for this session" choice).
-- **A research doctrine** in the system prompt (the rules above), with the active case.
-- **You can see it at work** (all additive; unrelated work draws as before): its tool calls get their own rows (`🦓 Variant card  NM_001165963.4:c.2134C>T`, then `⎿ 15 evidence rows (E39–E53) · from Ensembl VEP, gnomAD, ClinVar, LitVar2 · 3 cached`) instead of a JSON envelope, and a case_update row never shows the identifiers it registers; the spinner names the databases being queried; a small galloping zebra above the prompt while a query runs, a shield there after the privacy gate stops a call; a `🦓` label in the footer (with the open case's title); and one line at the end of a turn that used it — calls, databases, evidence rows, calls stopped. Chinese or English, from the case's language or your prompts. Option `interface`: `full` (default), `quiet` (no animation, no spinner text) or `off`.
-- **A case board** pane (`/zebra board`) and the case in the footer label (a pinned status line when `interface` is `off`): phenotypes, variants and their research class, hypotheses, therapy leads, open questions, evidence count — live as the case changes.
-- **`/zebra`** command: with no argument, the guide (how to use it, what it does); `demo` (the synthetic demo case, first question ready), `new <dir> [title]`, `case <dir>`, `board`, `ledger`, `doctor`, `close`.
-- **13 skills** (`/zebra-mod:zebra-start` routes): `zebra-safety` (urgent red flags and disease-specific drug, anaesthesia and procedure hazards), `zebra-intake`, `zebra-diagnose`, `zebra-variant`, `zebra-reanalysis`, `zebra-s2f`, `zebra-therapy`, `zebra-care` (a diagnosed patient's care plan: surveillance, prognosis, rehabilitation, nutrition, trial readiness), `zebra-stats`, `zebra-literature`, `zebra-family`, `zebra-report`.
-- **6 subagents**: `phenotype-curator`, `variant-curator`, `s2f-analyst`, `therapy-scout`, `literature-scout`, `evidence-auditor`.
-- **The `zebra` CLI** (Python standard library only, Python ≥ 3.9): the single implementation behind every tool, usable from any shell, notebook or other agent.
-
-## Install
-
-Requirements: Claude Code ≥ 2.1.289 (function-hook mods) and Python ≥ 3.9. No sudo, no pip installs.
-
-**One sentence.** In Claude Code, say:
+**1. Install.** In Claude Code, say:
 
 ```text
 Install https://github.com/zwbao/zebra-mod
 ```
 
-Claude Code reads [INSTALL.md](INSTALL.md) and does the rest: checks versions and Python, registers and installs the plugin, downloads the HPO release (~80 MB), and runs `zebra doctor`. Then start a new session (or type `/reload-plugins`) and run `/zebra-mod:zebra-start`.
-
-**One command** (the same steps):
+Claude reads [INSTALL.md](INSTALL.md) and does the rest: checks Claude Code (≥ 2.1.289) and Python (≥ 3.9), installs the plugin, fetches the HPO release (~80 MB) and runs a health check. Or from a shell:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zwbao/zebra-mod/main/install.sh | sh
-# while the repository is private, clone it first:
-git clone https://github.com/zwbao/zebra-mod ~/zebra-mod && ~/zebra-mod/install.sh
 ```
 
-**By hand:**
+**2. Try the demo.** Start a new session and type `/zebra demo`. It opens a synthetic case (a clinic note and a genetic report) with the first question ready; press Enter and watch it read the records, build the differential and interpret the variant.
 
-```bash
-claude plugin marketplace add zwbao/zebra-mod
-claude plugin install zebra-mod@zebra-mod
-python3 <installPath>/bin/zebra hpo fetch     # optional: offline phenotype ranking, instant HPO search
-# one session only, no install: claude --plugin-dir ~/zebra-mod
-```
-
-Optional heavy S2F models: GPN-MSA needs nothing. Set `ALPHAGENOME_API_KEY` (AlphaGenome: non-commercial, not for clinical decisions; also `pip install alphagenome`) and/or `NVCF_RUN_KEY` (Evo 2 on NVIDIA). Check everything with `/zebra doctor`.
-
-Options (`/config` → zebra-mod, or `pluginConfigs` in settings): `python` (interpreter), `doctrine` (`auto` by default: the full rules while a case is open, otherwise a short section that only applies to rare-disease questions, so the rest of your work in Claude Code is untouched; or `always` | `case` | `off`), `privacyGate` (on by default; with no case open, an email or phone number in another tool's call is asked about rather than refused), `interface` (`full` by default: its own tool rows, the spinner text, the galloping zebra and the end-of-turn line; `quiet` without the animation and spinner text; `off` for Claude Code's own drawing only).
-
-## Quick start
-
-**Just ask.** Describe symptoms, paste test results or a genetic report, or ask about a variant, a disease, a treatment or a trial, in English or Chinese: Claude calls zebra-mod's tools by itself. There are no commands to learn; `/zebra` shows what it does.
-
-**Try it first:** `/zebra demo` opens a synthetic demo case (a clinic note and a genetic report, identifiers already registered; the installer creates it at `~/zebra-cases/demo-lily` or `demo-xiaoyu`) and puts the first question in the prompt box. Press Enter and watch it read the records, rank a differential and interpret the variant.
-
-With your own records:
+**3. Ask about your own case.** No commands to learn:
 
 ```text
-/zebra new ~/cases/lily "Lily — seizures since 6 months"
-# put reports, lab sheets, the genetic report in ~/cases/lily/records/
-/zebra-mod:zebra-intake
-/zebra-mod:zebra-diagnose
-/zebra-mod:zebra-variant   NM_001165963.4:c.2134C>T
-/zebra-mod:zebra-therapy
-/zebra-mod:zebra-report    family letter in Chinese
+My daughter started having fever-triggered seizures at 6 months. The genetic report says
+SCN1A NM_001165963.4:c.2134C>T. What does it mean, and what should we ask the neurologist?
 ```
 
-Or just ask in your own words — "我女儿6个月开始发热抽搐，基因报告说SCN1A有个变异，这是什么意思？" — the router skill takes it from there.
+`/zebra` shows what the mod can do; `/zebra new <folder>` starts a case for a patient whose records you want to keep together.
 
-Researchers can drive the engine directly:
+## What you can ask
+
+| You are | For example |
+|---|---|
+| **A patient or family** | "跑了好几家医院都没查出来，这是孩子的检查单，可能是什么病？" · "What does a VUS mean for my son?" · "Are there trials for FSHD in China?" · "Write a one-page list of questions for our next visit." |
+| **A clinician** | "Ranked differential for these HPO terms, and which test finds each candidate." · "ACMG reading of this variant with the segregation in this pedigree." · "Management and surveillance plan for a patient with DM1 and conduction disease." · "Is a catheter angiogram safe in vascular EDS?" |
+| **A researcher** | "Re-analyse this trio VCF with the phenotype." · "SpliceAI, Pangolin and AlphaGenome for this deep-intronic variant." · "Cosegregation likelihood ratio for these meioses." · "Which exon skip restores the frame for a DMD exon 45–50 deletion?" |
+
+A full list of what each capability does, tool by tool, is in [docs/FEATURES.md](docs/FEATURES.md).
+
+## How it works
+
+```
+you
+└─► Claude Code
+      ├─ research doctrine (system prompt) · 13 skills · 6 subagents
+      └─► zebra-mod hooks
+            ├─ privacy gate
+            └─► 22 tools (mcp__zebra-mod__*)
+                  └─► zebra engine (Python, stdlib only)
+                        ├─► public databases and models: HPO · Monarch · ClinVar · gnomAD · VEP · ClinGen …
+                        └─► case folder on your machine: case.json · evidence/ledger.jsonl (E1, E2, …) · reports/
+```
+
+- **The engine computes, the model interprets.** Rankings, ACMG points, repeat sizes and statistics come from the `zebra` engine; the model never writes or adjusts a number, and openly overrides a ranking when evidence the ranker cannot see decides the question.
+- **Every source is kept.** Each tool result is appended to the case's evidence ledger with its database, record and retrieval time; reports cite those sources.
+- **Claude's own knowledge is welcome, labelled.** What was retrieved this session and what comes from recall are marked apart, so a reader can tell which is which.
+- **The mod adds, it never subtracts.** Nothing in it is a gate the person must pass before getting an answer: the answer comes first, the case work around it.
+
+The same engine is a command-line tool you can use from any shell, notebook or agent:
 
 ```bash
-zebra hpo rank HP:0002373 HP:0007359 HP:0002133 HP:0001263 --exclude HP:0001252
 zebra phenotype rank --present HP:0002373 HP:0001263 --sources local,monarch,pubcasefinder
-zebra variant NM_000492.4:c.1652G>A --json
 zebra acmg suggest NM_001165963.4:c.2134C>T --inheritance AD
 zebra acmg classify PVS1 PS2 PM2_Supporting
-zebra s2f predict 7-117559590-ATCT-A --models spliceai,pangolin
-zebra vcf triage trio.vcf.gz --proband P --mother M --father F --sex female --hpo-genes --case ~/cases/lily
-zebra stats maxaf --prevalence 0.0000625 --allelic 0.05 --penetrance 0.9 --faf95 0.00012
-zebra edit 1-12345678-T-C --assembly GRCh38
+zebra s2f predict 12-25245350-C-T --models spliceai,pangolin,gpn_msa
+zebra vcf triage trio.vcf.gz --proband P --mother M --father F --sex female --hpo-genes
+zebra stats maxaf --prevalence 0.0000625 --allelic 0.05 --penetrance 0.9
 ```
 
-## Layout
+## How well it works
+
+Measured, with the method and confidence intervals in [docs/BENCHMARK.md](docs/BENCHMARK.md):
+
+- **Phenotype ranking** (GA4GH phenopacket-store, 10,374 published cases, split by disease). On held-out cases whose own paper was not used to build the HPO annotations — the fair test for a new patient — the correct disease is in the offline top 10 for **28%** and the causal gene for **40%**. A ranking is a list of hypotheses, which is why Claude's own differential stands beside it.
+- **With vs without the mod** (six held-out end-to-end cases written without access to the mod's instructions, 8 runs per arm, graded item by item against guideline ground truth). Pooled, the two arms are level (difference −0.02, 95% CI −0.16 to +0.12): the mod was better on an emergency buried in long records and on a VUS with segregation, worse on two cases. "Never worse" is not yet established, and the benchmark says so.
+- **19 end-to-end evals** in [`evals/`](evals/) run with `claude plugin eval`, from a Chinese parent's records to a somatic tumour report that must be read on oncology's terms, not as a rare disease.
+
+## Privacy and safety
+
+- **Stays local:** case files, records and the evidence ledger are written only on your machine.
+- **Never sent by zebra:** names, birth dates and record numbers. Database queries carry biology (HPO ids, genes, variants); a privacy gate refuses an outgoing call that contains a registered identifier or an ID-number, phone or email pattern, and asks before a case file or raw genome file leaves the machine.
+- **What the gate cannot do:** any record you ask Claude to read is sent to the model provider as part of the conversation, as with any file in Claude Code. Redact first if that matters to you.
+- **Urgent first:** a symptom that needs care today is said first, before any analysis.
+- **Research-grade:** zebra-mod drafts analyses for a clinician's review. It is not a medical device, does not diagnose or prescribe on its own authority, and does not replace a clinician or genetic counsellor.
+
+## Configuration
+
+Options live under `/config` → zebra-mod (or `pluginConfigs` in settings):
+
+| Option | Default | What it does |
+|---|---|---|
+| `doctrine` | `auto` | Full research rules while a case is open, a short rare-disease-only section otherwise; or `always`, `case`, `off` |
+| `privacyGate` | on | The outgoing-call check described above |
+| `interface` | `full` | Tool rows, spinner text and the galloping zebra; `quiet` without animation; `off` for Claude Code's own drawing |
+| `python` | `python3` | Interpreter for the engine |
+
+Optional sequence models (`/zebra doctor` checks them all):
+
+| Model | Needs |
+|---|---|
+| SpliceAI, Pangolin, GPN-MSA | nothing |
+| Evo 2 | `NVCF_RUN_KEY` (NVIDIA hosted) |
+| AlphaGenome | `ALPHAGENOME_API_KEY` and `pip install alphagenome` (or `ZEBRA_ALPHAGENOME_PYTHON`); non-commercial, not for clinical decisions |
+
+## Documentation
+
+| | |
+|---|---|
+| [docs/FEATURES.md](docs/FEATURES.md) | Every capability, tool, skill and subagent |
+| [docs/BENCHMARK.md](docs/BENCHMARK.md) | Ranking benchmark and with/without-mod evaluations |
+| [docs/DATA-SOURCES.md](docs/DATA-SOURCES.md) | Each database and model, its terms and licence |
+| [docs/PRD.md](docs/PRD.md) · [docs/ROADMAP.md](docs/ROADMAP.md) | Design and what comes next |
+| [INSTALL.md](INSTALL.md) · [CHANGELOG.md](CHANGELOG.md) | Installation steps and release notes |
+
+## Development
 
 ```
-.claude-plugin/plugin.json      manifest (+ marketplace.json)
-hooks/register.tsx              the mod: tools, doctrine, case board, /zebra, privacy gate
-hooks/{tools,doctrine,privacy}.ts
-types/index.d.ts                the mod's state contract
-skills/<name>/SKILL.md          12 skills (vercel-labs/skills layout)
-agents/*.md                     6 subagents
-zebra/                          Python engine (stdlib only): sources/, commands/, acmg, stats, hpo_local, vcf, s2f, editing, case
-bin/zebra                       CLI launcher
-tests/                          pytest (offline + live-marked) and mod tests
-docs/                           PRD, architecture, data sources and terms
+hooks/        the mod: tools, doctrine, privacy gate, case board, /zebra   (TypeScript)
+skills/       13 procedures, routed by zebra-start
+agents/       6 subagents (curators, scouts, evidence auditor)
+zebra/        the engine: sources, ACMG, statistics, VCF, S2F, reports    (Python, stdlib only)
+evals/        end-to-end cases for `claude plugin eval`
+tests/        pytest (offline; live network with ZEBRA_NETWORK_TESTS=1)
 ```
 
-## Data sources and terms
+```bash
+python3 -m pytest -q            # engine
+claude plugin test .            # mod hooks
+claude plugin validate .        # manifest, skills, agents
+claude --plugin-dir .           # run this checkout for one session
+```
 
-zebra-mod queries public resources live and keeps their provenance; each keeps its own licence (see [docs/DATA-SOURCES.md](docs/DATA-SOURCES.md)). Notably: AlphaGenome outputs are non-commercial and not for clinical decision-making; SpliceAI weights are CC BY-NC; OMIM content is not redistributed.
+Issues and pull requests are welcome. A change to the doctrine or a skill should come with a with/without-mod eval run (`claude plugin eval --ablation with-without`); held-out rubrics in `evals/heldout-*` are never edited to fit a result.
 
-## Not a medical device
+## Data sources and licences
 
-zebra-mod produces research-grade analyses and drafts for a clinician's review. It does not diagnose or prescribe on its own authority, and does not replace a clinician or genetic counsellor.
+zebra-mod queries public resources live and records where each answer came from; every resource keeps its own terms ([docs/DATA-SOURCES.md](docs/DATA-SOURCES.md)). Notably: AlphaGenome outputs are non-commercial and not for clinical decision-making, SpliceAI weights are CC BY-NC, and OMIM content is not redistributed.
 
-## Lineage
+## Citation
 
-The galloping zebra above the prompt is traced from Eadweard Muybridge's *The Horse in Motion* (1878, public domain): eleven positions of one stride, the rider removed, aligned on the back so the body stays level, drawn in braille (`tools/zebra_sprite/build.py` rebuilds it).
+```bibtex
+@software{zebra_mod,
+  author  = {zwbao},
+  title   = {zebra-mod: a rare-disease research workstation for Claude Code},
+  year    = {2026},
+  version = {0.3.9},
+  url     = {https://github.com/zwbao/zebra-mod}
+}
+```
+
+## Acknowledgements
+
+Built on the work of the HPO, Monarch, Orphanet, ClinGen, ClinVar, gnomAD, Ensembl, PanelApp, Open Targets, Europe PMC, PubTator, LitVar and PubCaseFinder teams, and of the authors of SpliceAI, Pangolin, GPN-MSA, Evo 2 and AlphaGenome. The galloping zebra above the prompt is traced from Eadweard Muybridge's *The Horse in Motion* (1878, public domain).
 
 MIT licence © 2026 zwbao.
