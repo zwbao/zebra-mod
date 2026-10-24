@@ -1,13 +1,14 @@
 """zebra.s2f: parsers on real captured responses, model gating, and live calls.
 
-Fixtures under tests/fixtures/spliceai/ and tests/fixtures/s2f/ are real responses
-and real `s2f run --json` receipts, trimmed to the fields the parsers read.
+Fixtures under tests/fixtures/spliceai/ are real lookup responses, and those under
+tests/fixtures/s2f/ real run summaries of the heavy models, trimmed to the fields read.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import struct
 from pathlib import Path
 
 import pytest
@@ -196,7 +197,6 @@ def test_pangolin_and_spliceai_are_never_merged(monkeypatch):
         return load(name), {"db": tool, "record": "fixture", "url": "https://example.invalid/f"}
 
     monkeypatch.setattr(s2f, "lookup", _lookup)
-    monkeypatch.setattr(s2f, "s2f_bin", lambda: None)
     out = s2f.predict("17-7674291-C-T", models=["spliceai", "pangolin"])
     assert calls == ["spliceai", "pangolin"]
     rows = {r["model"]: r for r in out.result["models"]}
@@ -207,7 +207,7 @@ def test_pangolin_and_spliceai_are_never_merged(monkeypatch):
     assert "consensus" not in json.dumps(out.result).lower()
 
 
-# -------------------------------------------------------------- s2f CLI
+# ------------------------------------------------------- summaries -> rows
 
 
 def test_headline_value_top_level_and_per_head():
@@ -220,25 +220,24 @@ def test_headline_value_top_level_and_per_head():
 
 @pytest.mark.parametrize(
     "fixture,model,name,value",
-    [("s2f/gpn_msa_variant_manifest.json", "gpn_msa", "score", -6.77),
-     ("s2f/evo2_score_manifest.json", "evo2", "delta_loglik", -40.10391114001686)],
+    [("s2f/gpn_msa_variant_summary.json", "gpn_msa", "score", -6.77),
+     ("s2f/evo2_score_summary.json", "evo2", "delta_loglik", -40.10391114001686)],
 )
-def test_receipt_parsing(fixture, model, name, value):
-    call = {"manifest": load(fixture), "exit_code": 0, "wall_s": 1.0, "timed_out": False,
-            "stdout_tail": "", "stderr_tail": "", "command": "s2f run ..."}
-    row = s2f._from_receipt(model, call, Path("/tmp/ws"), 240.0)
+def test_summary_becomes_a_row_with_a_receipt(fixture, model, name, value, tmp_path):
+    row = s2f._from_summary(model, load(fixture), tmp_path, 1.0, 240.0)
     assert row["status"] == "ran"
     assert row["headline"] == {"name": name, "value": value}
-    assert row["receipt"].endswith("manifest.json") and row["url"].startswith("file://")
+    receipt = Path(row["receipt"])
+    assert receipt.name == "receipt.json" and receipt.is_file() and row["url"].startswith("file://")
+    body = json.loads(receipt.read_text())
+    assert body["run_id"] == row["run_id"] and body["summary"]["headline_score"] == name
     assert row["units"] and row["definitions"] and name in row["definitions"]
     assert row["declared_claim_level"] in ("molecular", "cellular")
     assert row["model_id"]
 
 
-def test_alphagenome_receipt_reports_the_head_it_answered_for():
-    call = {"manifest": load("s2f/alphagenome_variant_manifest.json"), "exit_code": 0, "wall_s": 8.0,
-            "timed_out": False, "stdout_tail": "", "stderr_tail": "", "command": "s2f run ..."}
-    row = s2f._from_receipt("alphagenome", call, Path("/tmp/ws"), 240.0)
+def test_alphagenome_row_reports_the_head_it_answered_for(tmp_path):
+    row = s2f._from_summary("alphagenome", load("s2f/alphagenome_variant_summary.json"), tmp_path, 8.0, 240.0)
     assert row["status"] == "ran"
     assert row["headline"]["name"] == "log2fc"
     assert row["headline"]["value"]["head"] == "RNA_SEQ"
@@ -246,99 +245,280 @@ def test_alphagenome_receipt_reports_the_head_it_answered_for():
     assert row["inputs"]["ontology"] == ["UBERON:0000955"]
 
 
-def test_receipt_lookup_status_other_than_scored_is_flagged():
-    manifest = load("s2f/gpn_msa_variant_manifest.json")
-    manifest["summary"]["lookup_status"] = "not_in_table"
-    manifest["summary"].pop("score", None)
-    call = {"manifest": manifest, "exit_code": 0, "wall_s": 1.0, "timed_out": False,
-            "stdout_tail": "", "stderr_tail": "", "command": "c"}
-    row = s2f._from_receipt("gpn_msa", call, Path("/tmp/ws"), 240.0)
-    assert row["lookup_status"] == "not_in_table"
+def test_lookup_status_other_than_scored_is_flagged(tmp_path):
+    summary = load("s2f/gpn_msa_variant_summary.json")
+    summary["lookup_status"] = "absent"
+    summary.pop("score", None)
+    row = s2f._from_summary("gpn_msa", summary, tmp_path, 1.0, 240.0)
+    assert row["lookup_status"] == "absent"
     assert "never read as 'no effect'" in row["lookup_status_note"]
+    assert "absent" in row["reason"]
 
 
-def test_timeout_is_reported_as_an_error():
-    call = {"manifest": None, "exit_code": -9, "wall_s": 240.0, "timed_out": True,
-            "stdout_tail": "", "stderr_tail": "", "command": "c"}
-    row = s2f._from_receipt("evo2", call, Path("/tmp/ws"), 240.0)
+def test_timeout_is_reported_as_an_error_without_a_receipt(tmp_path):
+    row = s2f._from_summary("alphagenome", {"timed_out": True}, tmp_path, 240.0, 240.0)
     assert row["status"] == "error" and "timed out after 240s" in row["reason"]
+    assert "receipt" not in row and not any(tmp_path.iterdir())
 
 
-def test_missing_receipt_is_an_error_with_the_tail():
-    call = {"manifest": None, "exit_code": 2, "wall_s": 0.4, "timed_out": False,
-            "stdout_tail": "stack 's2f-core' is not installed", "stderr_tail": "", "command": "c"}
-    row = s2f._from_receipt("gpn_msa", call, Path("/tmp/ws"), 240.0)
-    assert row["status"] == "error" and "not installed" in row["reason"]
-
-
-def test_script_level_failure_in_the_receipt_is_an_error():
-    manifest = load("s2f/evo2_score_manifest.json")
-    manifest["summary"]["status"] = "error"
-    manifest["summary"]["error"] = "RuntimeError: endpoint refused the key"
-    call = {"manifest": manifest, "exit_code": 1, "wall_s": 3.0, "timed_out": False,
-            "stdout_tail": "", "stderr_tail": "", "command": "c"}
-    row = s2f._from_receipt("evo2", call, Path("/tmp/ws"), 240.0)
+def test_backend_failure_is_an_error_and_keeps_its_receipt(tmp_path):
+    summary = load("s2f/evo2_score_summary.json")
+    summary["status"] = "error"
+    summary["error"] = "RuntimeError: endpoint refused the key"
+    row = s2f._from_summary("evo2", summary, tmp_path, 3.0, 240.0)
     assert row["status"] == "error" and "endpoint refused" in row["reason"]
+    assert Path(row["receipt"]).is_file()
+
+
+# ------------------------------------------------------------ GPN-MSA table
+
+
+def _bgzf_block(payload: bytes) -> bytes:
+    """One BGZF block (gzip member with the BC extra field), as bgzip writes it."""
+    import zlib as _z
+
+    comp = _z.compressobj(6, _z.DEFLATED, -15)
+    deflated = comp.compress(payload) + comp.flush()
+    bsize = 12 + 6 + len(deflated) + 8 - 1
+    head = b"\x1f\x8b\x08\x04" + b"\x00" * 4 + b"\x00\xff" + struct.pack("<H", 6) + b"BC" + struct.pack("<HH", 2, bsize)
+    return head + deflated + struct.pack("<II", _z.crc32(payload) & 0xFFFFFFFF, len(payload))
+
+
+BGZF_EOF = bytes.fromhex("1f8b08040000000000ff0600424302001b0003000000000000000000")
+
+
+def _table_and_index(lines):
+    """A bgzipped table (chrom pos ref alt score) in one block, and its parsed tabix index."""
+    payload = "".join(l + "\n" for l in lines).encode()
+    table = _bgzf_block(payload) + BGZF_EOF
+    names = b"12\x00"
+    pos0 = int(lines[0].split("\t")[1]) - 1
+    leaf = 4681 + (pos0 >> 14)
+    raw = b"TBI\x01" + struct.pack("<8i", 1, 0, 1, 2, 2, ord("#"), 0, len(names)) + names
+    raw += struct.pack("<i", 1) + struct.pack("<Ii", leaf, 1) + struct.pack("<QQ", 0, len(payload))
+    n_intv = (pos0 >> 14) + 1
+    raw += struct.pack("<i", n_intv) + struct.pack(f"<{n_intv}Q", *([0] * n_intv))
+    return table, raw
+
+
+def test_bgzf_and_tbi_readers_find_the_row(monkeypatch):
+    from zebra import s2f_backends as B
+
+    lines = ["12\t25245350\tC\tA\t-10.1", "12\t25245350\tC\tT\t-12.05", "12\t25245351\tC\tG\t-3.2"]
+    table, raw = _table_and_index(lines)
+    text, blocks = B.bgzf_decompress(table)
+    assert text.decode().splitlines() == lines and blocks[0] == (0, 0)
+    idx = B.parse_tbi(raw)
+    assert idx["names"] == ["12"] and idx["col_beg"] == 2 and idx["meta"] == "#"
+    monkeypatch.setattr(B, "_tbi", lambda url, timeout: idx)
+    monkeypatch.setattr(B, "http_range", lambda url, a, b, timeout: table[a:b + 1])
+    rows = B.tabix_rows("https://x.invalid/t.bgz", "12", 25245350)
+    assert [r[3] for r in rows] == ["A", "T"]
+    assert B.tabix_rows("https://x.invalid/t.bgz", "3", 1) == []
+    got = B.gpn_msa_score("12", 25245350, "C", "T")
+    assert got["status"] == "ok" and got["lookup_status"] == "scored" and got["score"] == -12.05
+    assert got["self_check"]["variant"] == "KRAS G12D" and got["self_check"]["agrees"] is True
+    assert B.gpn_msa_score("12", 25245350, "C", "G")["lookup_status"] == "present_but_null"
+    assert B.gpn_msa_score("12", 25245352, "C", "G")["lookup_status"] == "absent"
+
+
+def test_gpn_transport_failure_is_an_error_not_absent(monkeypatch):
+    from zebra import s2f_backends as B
+
+    def boom(url, timeout):
+        raise B.RangeError("connection reset")
+
+    monkeypatch.setattr(B, "_tbi", boom)
+    got = B.gpn_msa_score("12", 25245350, "C", "T")
+    assert got["status"] == "error" and got["lookup_status"] == "error"
+    assert "not evidence that the variant is absent" in got["error"]
+
+
+def test_reg2bins_covers_root_and_leaf():
+    from zebra import s2f_backends as B
+
+    bins = B.reg2bins(25245349, 25245350)
+    assert bins[0] == 0 and 4681 + (25245349 >> 14) in bins and len(bins) == 6
+
+
+# ------------------------------------------------------------------ Evo 2
+
+
+def _npy(shape, values, descr="<f4"):
+    header = repr({"descr": descr, "fortran_order": False, "shape": tuple(shape)}).encode()
+    header += b" " * (-(len(header) + 11) % 16) + b"\n"
+    if descr == "<f4":
+        body = struct.pack(f"<{len(values)}f", *values)
+    else:  # bfloat16 as 2-byte void: the upper half of each float32
+        body = struct.pack(f"<{len(values)}H", *[struct.unpack("<I", struct.pack("<f", v))[0] >> 16 for v in values])
+    return b"\x93NUMPY\x01\x00" + struct.pack("<H", len(header)) + header + body
+
+
+def test_read_npy_float32_and_bfloat16():
+    from zebra import s2f_backends as B
+
+    assert B.read_npy(_npy((1, 2, 2), [1.0, -2.0, 0.5, 4.0])) == ((1, 2, 2), [1.0, -2.0, 0.5, 4.0])
+    shape, vals = B.read_npy(_npy((2, 2), [1.0, -2.0, 0.5, 4.0], descr="|V2"))
+    assert shape == (2, 2) and vals == [1.0, -2.0, 0.5, 4.0]
+
+
+def test_token_logprobs_is_a_causal_log_softmax():
+    import math as _m
+    from zebra import s2f_backends as B
+
+    seq = "ACG"
+    flat = [0.0] * (3 * 512)
+    lp = B.token_logprobs((1, 3, 512), flat, seq)
+    assert lp[0] == 0.0 and lp[1] == pytest.approx(-_m.log(512)) and lp[2] == pytest.approx(-_m.log(512))
+
+
+def _evo2_logits(seq):
+    """Logits that favour the reference: the next base of REF scores 5, everything else 0."""
+    ref = "ACGT" * 16
+    flat = [0.0] * (len(seq) * 512)
+    for i in range(len(seq) - 1):
+        flat[i * 512 + ord(ref[i + 1])] = 5.0
+    return (1, len(seq), 512), flat
+
+
+def test_evo2_score_alt_is_less_likely_and_the_answering_model_is_reported(monkeypatch):
+    from zebra import s2f_backends as B
+
+    monkeypatch.setenv("NVCF_RUN_KEY", "k")
+    monkeypatch.delenv("ZEBRA_EVO2_MODEL", raising=False)
+    asked = []
+
+    def forward(seq, model, key, timeout):
+        asked.append(model)
+        if model == "evo2-7b":
+            raise RuntimeError("HTTP 503: degraded")
+        return _evo2_logits(seq)
+
+    monkeypatch.setattr(B, "evo2_forward", forward)
+    ref = "ACGT" * 16
+    # window 64 centred so that the variant sits at index 31: pos - 32 + 1 = start
+    got = B.evo2_score("1", 1031, ref[31], "A" if ref[31] != "A" else "C", window=64,
+                       reference=lambda c, a, b: ref)
+    assert got["status"] == "ok" and got["delta_loglik"] < 0
+    assert got["model"]["id"] == "evo2-40b" and got["fallback_from"] == "evo2-7b"
+    assert asked[0] == "evo2-7b"
+    step = next(s for s in got["preflight_steps"] if s["step"] == "model")
+    assert step["ok"] is False and "answered by evo2-40b" in step["detail"]
+
+
+def test_evo2_ref_mismatch_is_an_error(monkeypatch):
+    from zebra import s2f_backends as B
+
+    monkeypatch.setenv("NVCF_RUN_KEY", "k")
+    ref = "ACGT" * 16
+    wrong = "A" if ref[31] != "A" else "C"
+    got = B.evo2_score("1", 1031, wrong, "G", window=64, reference=lambda c, a, b: ref)
+    assert got["status"] == "error" and "REF mismatch" in got["error"]
+
+
+# ------------------------------------------------------------- AlphaGenome
+
+
+def _fake_python(tmp_path, body, sleep=0):
+    exe = tmp_path / "py"
+    exe.write_text("#!/bin/sh\n"
+                   'if [ "$1" = "-c" ]; then exit 0; fi\n'
+                   f"sleep {sleep}\n"
+                   f"echo '{body}'\n")
+    exe.chmod(0o755)
+    return str(exe)
+
+
+def test_alphagenome_runner_output_becomes_a_row(monkeypatch, tmp_path):
+    from zebra import s2f_backends as B
+
+    body = json.dumps({"status": "ok", "model": {"id": "alphagenome hosted API", "version": "0.9.0"},
+                       "head_stats": {"RNA_SEQ": {"num_tracks": 2, "log2fc": -0.01, "local_max_abs_log2fc": -0.8,
+                                                  "local_track": "brain", "local_offset_bp": 12}}})
+    monkeypatch.setenv("ZEBRA_ALPHAGENOME_PYTHON", _fake_python(tmp_path, body))
+    monkeypatch.setenv("ALPHAGENOME_API_KEY", "k")
+    monkeypatch.setattr(s2f, "_ref_mismatch", lambda v: None)
+    assert B.alphagenome_importable()
+    row = s2f.run_alphagenome(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", tmp_path / "ws", 30.0,
+                              ontology="UBERON:0000955")
+    assert row["status"] == "ran" and row["headline"] == {"name": "log2fc", "value": {"head": "RNA_SEQ", "value": -0.01}}
+    assert row["head_stats"]["RNA_SEQ"]["local_max_abs_log2fc"] == -0.8
+    assert row["inputs"]["ontology"] == ["UBERON:0000955"] and "clinical decision-making" in row["terms"]
+
+
+def test_alphagenome_ref_mismatch_never_calls_the_api(monkeypatch, tmp_path):
+    monkeypatch.setenv("ZEBRA_ALPHAGENOME_PYTHON", _fake_python(tmp_path, "{}"))
+    monkeypatch.setenv("ALPHAGENOME_API_KEY", "k")
+    monkeypatch.setattr(s2f, "_ref_mismatch", lambda v: "C")
+    row = s2f.run_alphagenome(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", tmp_path / "ws", 30.0,
+                              ontology="UBERON:0000955")
+    assert row["status"] == "error" and "genome has C" in row["reason"]
+
+
+def test_alphagenome_without_the_client_is_not_run(monkeypatch, tmp_path):
+    exe = tmp_path / "py"
+    exe.write_text("#!/bin/sh\nexit 1\n")
+    exe.chmod(0o755)
+    monkeypatch.setenv("ZEBRA_ALPHAGENOME_PYTHON", str(exe))
+    monkeypatch.setenv("ALPHAGENOME_API_KEY", "k")
+    row = s2f.run_alphagenome(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", tmp_path, 10.0,
+                              ontology="UBERON:0000955")
+    assert row["status"] == "not_run" and "pip install alphagenome" in row["reason"]
 
 
 # -------------------------------------------------------- gating / defaults
 
 
-def test_no_s2f_cli_is_not_run_with_the_install_hint(monkeypatch):
-    monkeypatch.setattr(s2f, "s2f_bin", lambda: None)
-    for fn in (s2f.run_gpn_msa, s2f.run_evo2):
-        row = fn(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", None, Path("/tmp/ws"), 10.0)
-        assert row["status"] == "not_run" and "s2f-penguin" in row["reason"]
-
-
 def test_alphagenome_without_a_key_never_runs(monkeypatch, tmp_path):
     monkeypatch.delenv("ALPHAGENOME_API_KEY", raising=False)
-    row = s2f.run_alphagenome(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", "/bin/false",
+    row = s2f.run_alphagenome(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38",
                               tmp_path, 10.0, ontology="UBERON:0000955")
     assert row["status"] == "not_run" and "ALPHAGENOME_API_KEY" in row["reason"]
 
 
 def test_alphagenome_without_an_ontology_never_runs(monkeypatch, tmp_path):
-    """The family script's default ontology is transverse colon; silence would be wrong science."""
+    """Without a tissue the answer would be for an arbitrary one; silence would be wrong science."""
     monkeypatch.setenv("ALPHAGENOME_API_KEY", "x")
-    row = s2f.run_alphagenome(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", "/bin/false",
+    row = s2f.run_alphagenome(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38",
                               tmp_path, 10.0, ontology=None)
     assert row["status"] == "not_run"
-    assert "--ontology" in row["reason"] and "UBERON:0001157" in row["reason"]
+    assert "--ontology" in row["reason"] and "UBERON:0000955" in row["reason"]
 
 
 def test_evo2_without_a_key_never_runs(monkeypatch, tmp_path):
     monkeypatch.delenv("NVCF_RUN_KEY", raising=False)
     monkeypatch.delenv("EVO2_API_KEY", raising=False)
-    row = s2f.run_evo2(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", "/bin/false", tmp_path, 10.0)
+    row = s2f.run_evo2(s2f.normalise_variant("2-166042334-G-A").result, "GRCh38", tmp_path, 10.0)
     assert row["status"] == "not_run" and "NVCF_RUN_KEY" in row["reason"]
 
 
 def test_gpn_msa_refuses_grch37_and_indels(tmp_path):
     snv = s2f.normalise_variant("2-166042334-G-A").result
-    assert "hg38" in s2f.run_gpn_msa(snv, "GRCh37", "/bin/false", tmp_path, 10.0)["reason"]
+    assert "hg38" in s2f.run_gpn_msa(snv, "GRCh37", tmp_path, 10.0)["reason"]
     indel = s2f.normalise_variant("7-117559590-ATCT-A").result
-    row = s2f.run_gpn_msa(indel, "GRCh38", "/bin/false", tmp_path, 10.0)
+    row = s2f.run_gpn_msa(indel, "GRCh38", tmp_path, 10.0)
     assert row["status"] == "not_run" and "SNVs only" in row["reason"]
 
 
-def test_default_models_without_the_cli_are_the_two_splice_models(monkeypatch):
+def test_default_models_without_keys_are_the_splice_models_and_gpn_msa(monkeypatch):
     monkeypatch.delenv("ALPHAGENOME_API_KEY", raising=False)
     monkeypatch.delenv("NVCF_RUN_KEY", raising=False)
     monkeypatch.delenv("EVO2_API_KEY", raising=False)
     v = s2f.normalise_variant("2-166042334-G-A").result
-    chosen, skipped = s2f._select(None, v, "GRCh38", None, None)
-    assert chosen == ["spliceai", "pangolin"]
-    assert {s["model"] for s in skipped} == {"gpn_msa", "evo2", "alphagenome"}
+    chosen, skipped = s2f._select(None, v, "GRCh38", None)
+    assert chosen == ["spliceai", "pangolin", "gpn_msa"]
+    assert {s["model"] for s in skipped} == {"evo2", "alphagenome"}
     assert all(s["reason"] for s in skipped)
+    indel = s2f.normalise_variant("7-117559590-ATCT-A").result
+    assert s2f._select(None, indel, "GRCh38", None)[0] == ["spliceai", "pangolin"]
 
 
 def test_explicit_models_are_honoured_and_validated():
     v = s2f.normalise_variant("2-166042334-G-A").result
-    chosen, skipped = s2f._select(["evo2", "evo2", "spliceai"], v, "GRCh38", None, None)
+    chosen, skipped = s2f._select(["evo2", "evo2", "spliceai"], v, "GRCh38", None)
     assert chosen == ["evo2", "spliceai"] and skipped == []
     with pytest.raises(UsageError):
-        s2f._select(["alphafold"], v, "GRCh38", None, None)
+        s2f._select(["alphafold"], v, "GRCh38", None)
 
 
 def test_distance_and_assembly_are_validated():
@@ -358,7 +538,6 @@ def test_an_unexpected_error_in_one_model_does_not_sink_the_others(monkeypatch):
     monkeypatch.setattr(s2f, "run_pangolin", lambda *a, **k: {"model": "pangolin", "status": "ran",
                                                               "headline": {"name": "x", "value": 1.0},
                                                               "claim_ceiling": "molecular"})
-    monkeypatch.setattr(s2f, "s2f_bin", lambda: None)
     out = s2f.predict("17-7674291-C-T", models=["spliceai", "pangolin"])
     rows = {r["model"]: r for r in out.result["models"]}
     assert rows["spliceai"]["status"] == "error" and "socket closed" in rows["spliceai"]["reason"]
@@ -375,19 +554,10 @@ def test_workspace_goes_into_the_case_when_there_is_one(tmp_path, monkeypatch):
     assert s2f.workspace_dir(workspace=str(tmp_path / "ws")) == tmp_path / "ws"
 
 
-def test_s2f_bin_prefers_the_env_variable(monkeypatch, tmp_path):
-    fake = tmp_path / "s2f"
-    fake.write_text("#!/bin/sh\n")
-    fake.chmod(0o755)
-    monkeypatch.setenv("S2F_BIN", str(fake))
-    assert s2f.s2f_bin() == str(fake)
-    monkeypatch.setenv("S2F_BIN", str(tmp_path / "missing"))
-    assert s2f.s2f_bin() != str(tmp_path / "missing")
-
-
 def test_render_reports_not_run_rows_and_ceilings(monkeypatch):
     monkeypatch.setattr(s2f, "lookup", fake_lookup(load("spliceai/spliceai_tp53_acceptor_loss.json")))
-    monkeypatch.setattr(s2f, "s2f_bin", lambda: None)
+    monkeypatch.delenv("NVCF_RUN_KEY", raising=False)
+    monkeypatch.delenv("EVO2_API_KEY", raising=False)
     out = s2f.predict("17-7674291-C-T", models=["spliceai", "evo2"])
     text = s2f.render(out.result)
     assert "evo2" in text and "not_run" in text
@@ -482,7 +652,6 @@ def test_lookup_refuses_an_assembly_it_has_no_service_for():
 
 def test_render_states_the_service_terms(monkeypatch):
     monkeypatch.setattr(s2f, "lookup", fake_lookup(load("spliceai/spliceai_tp53_acceptor_loss.json")))
-    monkeypatch.setattr(s2f, "s2f_bin", lambda: None)
     text = s2f.render(s2f.predict("17-7674291-C-T", models=["spliceai"]).result)
     assert "CC BY-NC" in text and "research use" in text
 
@@ -494,12 +663,18 @@ def test_render_states_the_service_terms(monkeypatch):
 import time  # noqa: E402
 
 
-def _fake_s2f(tmp_path, seconds=30):
+def _slow_alphagenome(monkeypatch, tmp_path, seconds=30):
+    """A child interpreter that answers the import check at once and then sleeps through the run."""
     marker = tmp_path / "ran"
-    exe = tmp_path / "s2f"
-    exe.write_text(f"#!/bin/sh\ntouch '{marker}'\nsleep {seconds}\n")
+    exe = tmp_path / "py"
+    exe.write_text("#!/bin/sh\n"
+                   'if [ "$1" = "-c" ]; then exit 0; fi\n'
+                   f"touch '{marker}'\nsleep {seconds}\n")
     exe.chmod(0o755)
-    return str(exe), marker
+    monkeypatch.setenv("ZEBRA_ALPHAGENOME_PYTHON", str(exe))
+    monkeypatch.setenv("ALPHAGENOME_API_KEY", "fake")
+    monkeypatch.setattr(s2f, "_ref_mismatch", lambda v: None)
+    return marker
 
 
 def _deadline(monkeypatch, total):
@@ -508,45 +683,41 @@ def _deadline(monkeypatch, total):
 
 
 def test_c_p2_9_a_model_is_cut_to_what_is_left_of_the_deadline(monkeypatch, tmp_path):
-    exe, marker = _fake_s2f(tmp_path)
-    monkeypatch.setenv("S2F_BIN", exe)
-    monkeypatch.setenv("NVCF_RUN_KEY", "fake")
-    _deadline(monkeypatch, 5.0)
+    marker = _slow_alphagenome(monkeypatch, tmp_path)
+    _deadline(monkeypatch, 6.0)
     t0 = time.monotonic()
-    out = s2f.predict("2-166042334-G-A", models=["evo2"], timeout=240, workspace=str(tmp_path / "ws"))
+    out = s2f.predict("2-166042334-G-A", models=["alphagenome"], ontology="UBERON:0000955", timeout=240,
+                      workspace=str(tmp_path / "ws"))
     wall = time.monotonic() - t0
     row = out.result["models"][0]
     assert marker.exists(), "the model must have started"
-    assert wall < 10, f"--timeout 240 must be cut to the deadline, took {wall:.1f}s"
+    assert wall < 12, f"--timeout 240 must be cut to the deadline, took {wall:.1f}s"
     assert row["status"] == "error" and "overall time budget" in row["reason"]
     assert "raise --timeout" not in row["reason"]
 
 
 def test_c_p2_9_a_model_that_cannot_fit_is_not_started(monkeypatch, tmp_path):
-    exe, marker = _fake_s2f(tmp_path)
-    monkeypatch.setenv("S2F_BIN", exe)
-    monkeypatch.setenv("NVCF_RUN_KEY", "fake")
+    marker = _slow_alphagenome(monkeypatch, tmp_path)
     _deadline(monkeypatch, 3.0)
-    out = s2f.predict("2-166042334-G-A", models=["evo2"], timeout=240, workspace=str(tmp_path / "ws"))
+    out = s2f.predict("2-166042334-G-A", models=["alphagenome"], ontology="UBERON:0000955", timeout=240,
+                      workspace=str(tmp_path / "ws"))
     row = out.result["models"][0]
     assert row["status"] == "not_run" and "ran out before this model started" in row["reason"]
     assert not marker.exists()
 
 
 def test_c_p2_9_a_plain_timeout_still_says_raise_timeout(monkeypatch, tmp_path):
-    exe, marker = _fake_s2f(tmp_path)
+    marker = _slow_alphagenome(monkeypatch, tmp_path)
     monkeypatch.setattr(s2f, "deadline_seconds", lambda: None)
-    call = s2f._s2f_call(exe, ["evo2"], tmp_path / "ws", 1.0)
-    assert call["timed_out"] is True and call["deadline_limited"] is False
-    row = s2f._from_receipt("evo2", call, tmp_path / "ws", 1.0)
-    assert "raise --timeout" in row["reason"]
+    out = s2f.predict("2-166042334-G-A", models=["alphagenome"], ontology="UBERON:0000955", timeout=1,
+                      workspace=str(tmp_path / "ws"))
+    row = out.result["models"][0]
+    assert marker.exists() and row["status"] == "error" and "raise --timeout" in row["reason"]
 
 
-def test_review_b_deadline_label_follows_whether_the_deadline_cut_the_timeout(monkeypatch, tmp_path):
-    exe, marker = _fake_s2f(tmp_path)
-    # 2 s of deadline left after a run that --timeout (1 s) stopped: --timeout, not the deadline
-    monkeypatch.setattr(s2f, "deadline_seconds", lambda: 2.0)
-    call = s2f._s2f_call(exe, ["evo2"], tmp_path / "ws", 1.0)
-    assert call["deadline_limited"] is False
-    call = s2f._s2f_call(exe, ["evo2"], tmp_path / "ws", 1.0, deadline_cut=True)
-    assert call["deadline_limited"] is True
+@pytest.mark.live
+def test_live_gpn_msa_published_table_matches_the_published_value():
+    from zebra import s2f_backends as B
+
+    got = B.gpn_msa_score("12", 25245350, "C", "T")
+    assert got["lookup_status"] == "scored" and got["self_check"]["agrees"] is True

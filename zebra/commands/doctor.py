@@ -5,8 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
-import subprocess
 import sys
 import threading
 import time
@@ -138,21 +136,6 @@ def _probe(name: str, url: str, method: str, body: Optional[Any], accept: str,
     return _check(f"network: {name}", True, f"HTTP {resp.status} in {took:.1f} s" + (f"; {extra}" if extra else ""))
 
 
-def _tool(name: str, exe: str, args: List[str], missing_hint: str) -> Dict[str, Any]:
-    path = shutil.which(exe)
-    if not path:
-        return _check(name, False, f"not on PATH — {missing_hint}", optional=missing_hint.startswith("optional"))
-    try:
-        ran = subprocess.run([path] + args, capture_output=True, text=True, timeout=10)
-        out = (ran.stdout or ran.stderr or "").strip().splitlines()
-        version = out[0].strip() if out else f"exit {ran.returncode}"
-        return _check(name, ran.returncode == 0, f"{version} ({path})")
-    except subprocess.TimeoutExpired:
-        return _check(name, False, f"{path} did not answer {' '.join(args)} within 10 s")
-    except OSError as err:
-        return _check(name, False, f"{path}: {err}")
-
-
 def _python() -> Dict[str, Any]:
     v = sys.version_info
     return _check("Python ≥ 3.9", v >= (3, 9), f"{v.major}.{v.minor}.{v.micro} ({sys.executable})")
@@ -221,6 +204,16 @@ def _keys() -> List[Dict[str, Any]]:
     return out
 
 
+def _alphagenome_client() -> Dict[str, Any]:
+    from zebra import s2f_backends
+
+    python = s2f_backends.alphagenome_python()
+    if s2f_backends.alphagenome_importable(python):
+        return _check("AlphaGenome client", True, f"alphagenome importable from {python}")
+    return _check("AlphaGenome client", False,
+                  f"optional: pip install alphagenome (for {python}), or set ZEBRA_ALPHAGENOME_PYTHON", optional=True)
+
+
 def run_checks(case_dir: Optional[str] = None, deadline: float = DEADLINE,
                network: Optional[List[Tuple[str, str, str, Optional[Any], str, Callable[[str], str]]]] = None
                ) -> Dict[str, Any]:
@@ -230,9 +223,7 @@ def run_checks(case_dir: Optional[str] = None, deadline: float = DEADLINE,
     jobs: List[Tuple[str, Callable[[], Dict[str, Any]]]] = []
     for item in network:
         jobs.append((f"network: {item[0]}", (lambda it=item: _probe(*it))))
-    jobs.append(("s2f CLI", lambda: _tool("s2f CLI", "s2f", ["--version"],
-                                          'optional: uv tool install "git+https://github.com/zwbao/s2f-penguin"')))
-    jobs.append(("tabix", lambda: _tool("tabix", "tabix", ["--version"], "optional: htslib, needed by GPN-MSA in s2f")))
+    jobs.append(("AlphaGenome client", _alphagenome_client))
     jobs.append(("HPO local files", _hpo))
     results: Dict[str, Dict[str, Any]] = {}
     lock = threading.Lock()
@@ -268,7 +259,7 @@ def run_checks(case_dir: Optional[str] = None, deadline: float = DEADLINE,
     def got(label: str) -> Dict[str, Any]:
         return done.get(label) or _check(label, False, f"timed out (no answer within the {deadline:.0f} s budget)")
 
-    checks = local[:3] + [got("HPO local files")] + local[3:] + keys + [got("s2f CLI"), got("tabix")]
+    checks = local[:3] + [got("HPO local files")] + local[3:] + keys + [got("AlphaGenome client")]
     checks += [got(lbl) for lbl, _ in jobs if lbl.startswith("network: ")]
     seconds = round(time.monotonic() - t0, 1)
     n_ok = sum(1 for c in checks if c["ok"])

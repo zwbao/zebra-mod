@@ -11,13 +11,14 @@ Backends
                        cached here for 30 days and live calls are paced. The SpliceAI
                        weights are CC BY-NC 4.0 (Illumina), the hosted lookup is for
                        research use.
-  alphagenome, evo2,
-  gpn_msa              the `s2f` CLI from s2f-penguin (receipt per run). Found through
-                       $S2F_BIN, else on PATH. alphagenome needs ALPHAGENOME_API_KEY
-                       (non-commercial, explicitly not for clinical decision-making),
-                       evo2 needs NVCF_RUN_KEY or EVO2_API_KEY, gpn_msa needs `tabix`
-                       and answers hg38 SNVs only. A missing key is `not_run`; this
-                       module never calls a hosted model without its key.
+  gpn_msa, evo2,
+  alphagenome          run by zebra itself (zebra.s2f_backends), one receipt per run in
+                       the case's evidence folder. gpn_msa reads the authors' published
+                       hg38 table over HTTP (no key); evo2 needs NVCF_RUN_KEY or
+                       EVO2_API_KEY (NVIDIA hosted); alphagenome needs ALPHAGENOME_API_KEY
+                       (non-commercial, explicitly not for clinical decision-making) and
+                       the official `alphagenome` client. A missing key is `not_run`;
+                       this module never calls a hosted model without its key.
 """
 
 from __future__ import annotations
@@ -25,13 +26,12 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
-import signal
-import subprocess
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from zebra import __version__
+from zebra import s2f_backends as backends
 from zebra.core import Outcome, UsageError
 from zebra.http import deadline_seconds, get_json, source_record
 from zebra.sources import ensembl
@@ -64,7 +64,7 @@ PRIORITY_LABEL = {
     "C": "Ensembl canonical",
     "N": "other transcript",
 }
-INSTALL_HINT = 'uv tool install "git+https://github.com/zwbao/s2f-penguin"'
+ALPHAGENOME_INSTALL = "pip install alphagenome"
 DEFAULT_TIMEOUT = 240.0
 
 CLAIM_CEILINGS = {
@@ -453,21 +453,11 @@ def run_pangolin(v: Dict[str, Any], assembly: str, distance: int, mask: int = 0,
     return out
 
 
-# ------------------------------------------------------------------ s2f CLI
-
-
-def s2f_bin() -> Optional[str]:
-    """$S2F_BIN if it is runnable, else `s2f` on PATH."""
-    env = os.environ.get("S2F_BIN")
-    if env:
-        p = Path(os.path.expanduser(env))
-        if p.is_file() and os.access(str(p), os.X_OK):
-            return str(p)
-    return shutil.which("s2f")
+# --------------------------------------------------- heavy models (zebra.s2f_backends)
 
 
 def workspace_dir(case: Optional[str] = None, workspace: Optional[str] = None) -> Path:
-    """Where s2f run directories and receipts go."""
+    """Where run receipts go: the case's evidence folder, else a cache folder."""
     if workspace:
         return Path(os.path.expanduser(workspace))
     case = case or os.environ.get("ZEBRA_CASE")
@@ -476,39 +466,18 @@ def workspace_dir(case: Optional[str] = None, workspace: Optional[str] = None) -
     return Path(os.path.expanduser("~")) / ".cache" / "zebra-mod" / "s2f-runs"
 
 
-def _s2f_call(binary: str, args: Sequence[str], ws: Path, timeout: float,
-              deadline_cut: bool = False) -> Dict[str, Any]:
-    """Run `s2f run --json --workspace <ws> <args>`; cwd=ws so stray index files land there."""
-    ws.mkdir(parents=True, exist_ok=True)
-    cmd = [binary, "run", "--json", "--workspace", str(ws)] + list(args)
-    started = time.time()
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                            errors="replace", cwd=str(ws), start_new_session=True)
-    try:
-        stdout, stderr = proc.communicate(timeout=timeout)
-        timed_out = False
-    except subprocess.TimeoutExpired:
-        try:
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-        except (ProcessLookupError, PermissionError, OSError):
-            proc.kill()
-        stdout, stderr = proc.communicate()
-        timed_out = True
-    wall = round(time.time() - started, 2)
-    # C-P2-9: say which limit stopped the run. `predict` passes deadline_cut=True when it had to shrink
-    # --timeout to what was left of the caller's deadline; only then was it the deadline.
-    deadline_limited = bool(timed_out and deadline_cut)
-    manifest: Optional[Dict[str, Any]] = None
-    text = stdout or ""
-    brace = text.find("{")
-    if brace >= 0:
-        try:
-            manifest = json.loads(text[brace:])
-        except ValueError:
-            manifest = None
-    return {"manifest": manifest, "exit_code": proc.returncode, "wall_s": wall, "timed_out": timed_out,
-            "deadline_limited": deadline_limited, "stdout_tail": " ".join(text.split())[-400:], "stderr_tail": " ".join((stderr or "").split())[-400:],
-            "command": " ".join(cmd)}
+def write_receipt(model: str, summary: Dict[str, Any], ws: Path, wall_s: float) -> Tuple[str, Path]:
+    """Write one run's summary as a receipt: <ws>/<run_id>/receipt.json."""
+    stamp = time.strftime("%Y%m%dT%H%M%S", time.gmtime())
+    run_id = f"{model}-{stamp}-{os.getpid()}-{int(time.time() * 1000) % 100000:05d}"
+    run_dir = ws / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    receipt = run_dir / "receipt.json"
+    body = {"run_id": run_id, "model_family": model, "zebra_version": __version__,
+            "finished_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "wall_s": wall_s,
+            "summary": summary}
+    receipt.write_text(json.dumps(body, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return run_id, receipt
 
 
 def _headline_value(summary: Dict[str, Any], name: Optional[str]) -> Any:
@@ -525,35 +494,26 @@ def _headline_value(summary: Dict[str, Any], name: Optional[str]) -> Any:
     return None
 
 
-def _from_receipt(model: str, call: Dict[str, Any], ws: Path, timeout: float) -> Dict[str, Any]:
-    out: Dict[str, Any] = {"model": model, "claim_ceiling": CLAIM_CEILINGS[model],
-                           "wall_s": call["wall_s"], "s2f_command": call["command"]}
-    if call["timed_out"]:
-        if call.get("deadline_limited"):
-            # C-P2-9: the caller's deadline (ZEBRA_DEADLINE_MS, the tool's own timeout) cut the run,
-            # not --timeout: raising --timeout would change nothing.
+def _from_summary(model: str, summary: Dict[str, Any], ws: Path, wall_s: float, timeout: float,
+                  deadline_cut: bool = False) -> Dict[str, Any]:
+    """A model row from a backend summary; every run that reached the backend leaves a receipt."""
+    out: Dict[str, Any] = {"model": model, "claim_ceiling": CLAIM_CEILINGS[model], "wall_s": wall_s}
+    if summary.get("timed_out"):
+        if deadline_cut:
             out.update(status="error", reason=(
                 f"stopped after {timeout:g}s because the call's overall time budget (the tool deadline) ran out, "
                 "not because of --timeout; run this model on its own, in the background if it is slow"))
         else:
             out.update(status="error", reason=f"timed out after {timeout:g}s (raise --timeout or run it in the background)")
         return out
-    manifest = call["manifest"]
-    if not isinstance(manifest, dict):
-        detail = call["stderr_tail"] or call["stdout_tail"] or f"exit {call['exit_code']}"
-        out.update(status="error", reason=f"s2f run produced no receipt: {detail}")
-        return out
-    summary = manifest.get("summary") if isinstance(manifest.get("summary"), dict) else {}
-    receipt = Path(manifest.get("run_dir") or (ws / "output" / "s2f" / str(manifest.get("run_id")))) / "manifest.json"
-    name = summary.get("headline_score")
+    run_id, receipt = write_receipt(model, summary, ws, wall_s)
+    model_info = summary.get("model") if isinstance(summary.get("model"), dict) else {}
     out.update(
-        run_id=manifest.get("run_id"),
+        run_id=run_id,
         receipt=str(receipt),
         url=f"file://{receipt}",
-        model_id=(summary.get("model") or {}).get("id"),
-        model_version=(summary.get("model") or {}).get("version"),
-        stack=manifest.get("stack"),
-        exit_code=manifest.get("exit_code", call["exit_code"]),
+        model_id=model_info.get("id"),
+        model_version=model_info.get("version"),
         units=summary.get("units"),
         definitions=summary.get("score_definitions"),
         readout_class=summary.get("readout_class"),
@@ -567,87 +527,107 @@ def _from_receipt(model: str, call: Dict[str, Any], ws: Path, timeout: float) ->
         if summary["lookup_status"] != "scored":
             out["lookup_status_note"] = "not a score; never read as 'no effect'"
     if summary.get("status") != "ok":
-        out.update(status="error", reason=str(summary.get("error") or f"s2f reported status {summary.get('status')!r}"))
+        out.update(status="error", reason=str(summary.get("error") or f"the run reported status {summary.get('status')!r}"))
         return out
+    name = summary.get("headline_score")
     value = _headline_value(summary, name)
     out.update(status="ran", headline={"name": name, "value": value})
     if value is None:
-        out["reason"] = f"the receipt carries no value for its declared headline score {name!r}"
+        out["reason"] = f"no value for the headline score {name!r}" + (
+            f" (lookup_status={summary['lookup_status']})" if summary.get("lookup_status") else "")
     return out
 
 
-def run_gpn_msa(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, timeout: float,
+def _timed(fn, *args, **kw) -> Tuple[Dict[str, Any], float]:
+    started = time.time()
+    summary = fn(*args, **kw)
+    return summary, round(time.time() - started, 2)
+
+
+def _ref_mismatch(v: Dict[str, Any]) -> Optional[str]:
+    """The genome's base at the variant when it is not the given REF (hg38), else None."""
+    try:
+        base = str(ensembl.sequence(v["chrom"], v["pos"], v["pos"], assembly="GRCh38").result).upper()
+    except Exception:
+        return None  # an unreachable reference is not a mismatch; the model still checks its own input
+    return base if base and base != v["ref"].upper() else None
+
+
+def run_gpn_msa(v: Dict[str, Any], assembly: str, ws: Path, timeout: float,
                 deadline_cut: bool = False) -> Dict[str, Any]:
     base = {"model": "gpn_msa", "claim_ceiling": CLAIM_CEILINGS["gpn_msa"]}
-    if not binary:
-        return dict(base, status="not_run", reason=f"the s2f CLI was not found ($S2F_BIN or PATH); install: {INSTALL_HINT}")
     if assembly != "GRCh38":
         return dict(base, status="not_run", reason="GPN-MSA is published for hg38 only; lift the variant over first")
     if not is_snv(v):
         return dict(base, status="not_run", reason="GPN-MSA's published table holds SNVs only (this is an indel)")
-    if not shutil.which("tabix"):
-        return dict(base, status="not_run", reason="gpn_msa reads the published table with `tabix`, which is not on PATH (brew install htslib)")
-    args = ["gpn_msa", "variant", "--chrom", f"chr{v['chrom']}", "--pos", str(v["pos"]), "--ref", v["ref"], "--alt", v["alt"]]
-    out = _from_receipt("gpn_msa", _s2f_call(binary, args, ws, timeout, deadline_cut), ws, timeout)
-    out["note"] = ("log-likelihood ratio from the authors' published hg38 table (not a model call). "
-                   "The suggested -7 cutoff is not a pathogenicity test.")
+    summary, wall = _timed(backends.gpn_msa_score, v["chrom"], v["pos"], v["ref"], v["alt"], timeout=timeout)
+    out = _from_summary("gpn_msa", summary, ws, wall, timeout, deadline_cut)
+    out["note"] = ("log-likelihood ratio from the authors' published hg38 table (the model run with its "
+                   "89-vertebrate alignment). The suggested -7 cutoff is not a pathogenicity test.")
+    if out.get("lookup_status") == "absent":
+        out["reason"] = "this position is not in the published table: no score, which is not a benign call"
     return out
 
 
-def run_evo2(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, timeout: float,
-             window: int = 2048, deadline_cut: bool = False) -> Dict[str, Any]:
+def run_evo2(v: Dict[str, Any], assembly: str, ws: Path, timeout: float, window: int = 2048,
+             deadline_cut: bool = False) -> Dict[str, Any]:
     base = {"model": "evo2", "claim_ceiling": CLAIM_CEILINGS["evo2"]}
-    if not binary:
-        return dict(base, status="not_run", reason=f"the s2f CLI was not found ($S2F_BIN or PATH); install: {INSTALL_HINT}")
-    if not (os.environ.get("NVCF_RUN_KEY") or os.environ.get("EVO2_API_KEY")):
+    if not backends.evo2_key():
         return dict(base, status="not_run", reason="Evo 2 runs on NVIDIA's hosted endpoint: set NVCF_RUN_KEY (or EVO2_API_KEY) in the environment")
     if assembly != "GRCh38":
-        return dict(base, status="not_run", reason="the Evo 2 runner takes hg38 coordinates only")
+        return dict(base, status="not_run", reason="Evo 2 is scored on hg38 windows only; lift the variant over first")
     if not is_snv(v):
-        return dict(base, status="not_run", reason="the Evo 2 variant runner scores single-base substitutions only")
-    args = ["evo2", "score", "--chrom", f"chr{v['chrom']}", "--pos", str(v["pos"]), "--ref", v["ref"],
-            "--alt", v["alt"], "--variant-window-len", str(int(window))]
-    out = _from_receipt("evo2", _s2f_call(binary, args, ws, timeout, deadline_cut), ws, timeout)
+        return dict(base, status="not_run", reason="the Evo 2 variant score here covers single-base substitutions only")
+    summary, wall = _timed(backends.evo2_score, v["chrom"], v["pos"], v["ref"], v["alt"], window=int(window),
+                           timeout=timeout)
+    out = _from_summary("evo2", summary, ws, wall, timeout, deadline_cut)
     out["note"] = ("delta_loglik is ALT minus REF summed over the window, in nats: negative = the ALT window is less "
                    "likely under the model. A constraint hypothesis, with no tissue and no direction of effect. "
-                   "Known upstream defect: the runner can fall back between evo2-7b and 40b while reporting 7b.")
+                   "model_id is the model that answered (evo2-7b first, evo2-40b if 7b fails).")
     return out
 
 
-def run_alphagenome(v: Dict[str, Any], assembly: str, binary: Optional[str], ws: Path, timeout: float,
-                    ontology: Optional[str] = None, outputs: str = "RNA_SEQ", deadline_cut: bool = False) -> Dict[str, Any]:
+def run_alphagenome(v: Dict[str, Any], assembly: str, ws: Path, timeout: float, ontology: Optional[str] = None,
+                    outputs: str = "RNA_SEQ", deadline_cut: bool = False) -> Dict[str, Any]:
     base = {"model": "alphagenome", "claim_ceiling": CLAIM_CEILINGS["alphagenome"]}
-    if not binary:
-        return dict(base, status="not_run", reason=f"the s2f CLI was not found ($S2F_BIN or PATH); install: {INSTALL_HINT}")
     if not os.environ.get("ALPHAGENOME_API_KEY"):
         return dict(base, status="not_run", reason="AlphaGenome is a hosted API: set ALPHAGENOME_API_KEY in the environment")
     if not ontology:
         return dict(base, status="not_run", reason=(
             "AlphaGenome needs the tissue or cell type to answer for: pass --ontology with a UBERON/CL CURIE "
-            "(brain UBERON:0000955, liver UBERON:0002107, skeletal muscle UBERON:0001134, heart UBERON:0000948). "
-            "Left out, the runner silently defaults to UBERON:0001157 (transverse colon) and would answer for the wrong tissue."))
+            "(brain UBERON:0000955, liver UBERON:0002107, skeletal muscle UBERON:0001134, heart UBERON:0000948)."))
     if assembly != "GRCh38":
         return dict(base, status="not_run", reason="the AlphaGenome API refuses hg19; lift the variant over to hg38 first")
     if not is_snv(v):
-        return dict(base, status="not_run", reason="this AlphaGenome runner scores single-base substitutions only")
-    args = ["alphagenome", "variant", "--assembly", "hg38", "--chrom", f"chr{v['chrom']}", "--position", str(v["pos"]),
-            "--ref", v["ref"], "--alt", v["alt"], "--ontology", ontology, "--outputs", outputs]
-    out = _from_receipt("alphagenome", _s2f_call(binary, args, ws, timeout, deadline_cut), ws, timeout)
+        return dict(base, status="not_run", reason="this AlphaGenome call scores single-base substitutions only")
+    if not backends.alphagenome_importable():
+        return dict(base, status="not_run", reason=(
+            f"the AlphaGenome client is not installed for {backends.alphagenome_python()}: "
+            f"{ALPHAGENOME_INSTALL}, or point ZEBRA_ALPHAGENOME_PYTHON at an interpreter that has it"))
+    genome_base = _ref_mismatch(v)
+    if genome_base:
+        return dict(base, status="error", reason=f"REF mismatch at chr{v['chrom']}:{v['pos']} (hg38): given {v['ref']}, genome has {genome_base}")
+    summary, wall = _timed(backends.alphagenome_variant, v["chrom"], v["pos"], v["ref"], v["alt"], ontology,
+                           outputs=outputs, timeout=timeout)
+    out = _from_summary("alphagenome", summary, ws, wall, timeout, deadline_cut)
     out["ontology"] = ontology
     out["requested_outputs"] = outputs
     out["terms"] = ("AlphaGenome's hosted API is for non-commercial use and, in Google DeepMind's own terms, "
                     "must not be used for clinical decision-making.")
     out["note"] = ("log2fc is a mean over the whole 16,384 bp window and all tracks for the ontology term: a value "
-                   "near 0 means no window-wide shift, not no effect. Look at the local change in the tracks.")
+                   "near 0 means no window-wide shift, not no effect. Read local_max_abs_log2fc (+/-500 bp) in "
+                   "head_stats of the receipt for the local change.")
+    if out.get("status") == "ran":
+        out["head_stats"] = summary.get("head_stats")
     return out
 
 
 # ------------------------------------------------------------------- predict
 
 
-def _select(models: Optional[Sequence[str]], v: Dict[str, Any], assembly: str, ontology: Optional[str],
-            binary: Optional[str]) -> Tuple[List[str], List[Dict[str, str]]]:
-    """Which models to run. Default: the two splice models plus every s2f model ready here."""
+def _select(models: Optional[Sequence[str]], v: Dict[str, Any], assembly: str,
+            ontology: Optional[str]) -> Tuple[List[str], List[Dict[str, str]]]:
+    """Which models to run. Default: the two splice models plus every heavy model ready here."""
     if models:
         unknown = [m for m in models if m not in MODELS]
         if unknown:
@@ -656,13 +636,13 @@ def _select(models: Optional[Sequence[str]], v: Dict[str, Any], assembly: str, o
     chosen = ["spliceai", "pangolin"]
     skipped: List[Dict[str, str]] = []
     snv38 = assembly == "GRCh38" and is_snv(v)
+    ag_ready = snv38 and bool(os.environ.get("ALPHAGENOME_API_KEY")) and bool(ontology)
     checks = (
-        ("gpn_msa", bool(binary) and snv38 and bool(shutil.which("tabix")),
-         "needs the s2f CLI, `tabix`, and an hg38 SNV"),
-        ("evo2", bool(binary) and snv38 and bool(os.environ.get("NVCF_RUN_KEY") or os.environ.get("EVO2_API_KEY")),
-         "needs the s2f CLI, NVCF_RUN_KEY or EVO2_API_KEY, and an hg38 SNV"),
-        ("alphagenome", bool(binary) and snv38 and bool(os.environ.get("ALPHAGENOME_API_KEY")) and bool(ontology),
-         "needs the s2f CLI, ALPHAGENOME_API_KEY, --ontology (the disease tissue), and an hg38 SNV"),
+        ("gpn_msa", snv38, "needs an hg38 SNV"),
+        ("evo2", snv38 and bool(backends.evo2_key()), "needs NVCF_RUN_KEY or EVO2_API_KEY, and an hg38 SNV"),
+        ("alphagenome", ag_ready and backends.alphagenome_importable(),
+         f"needs ALPHAGENOME_API_KEY, the alphagenome client ({ALPHAGENOME_INSTALL}), --ontology (the disease "
+         "tissue), and an hg38 SNV"),
     )
     for name, ready, why in checks:
         if ready:
@@ -686,8 +666,7 @@ def predict(variant: str, assembly: str = "GRCh38", models: Optional[Sequence[st
     warnings: List[str] = list(norm.warnings)
     sources: List[Dict[str, Any]] = list(norm.sources)
 
-    binary = s2f_bin()
-    chosen, skipped = _select(models, v, assembly, ontology, binary)
+    chosen, skipped = _select(models, v, assembly, ontology)
     ws = workspace_dir(case=case, workspace=workspace)
 
     # The models run one after another, and a hosted one can take minutes. The caller's
@@ -714,11 +693,11 @@ def predict(variant: str, assembly: str = "GRCh38", models: Optional[Sequence[st
             elif name == "pangolin":
                 row = run_pangolin(v, assembly, int(distance), mask, timeout=lookup_timeout)
             elif name == "gpn_msa":
-                row = run_gpn_msa(v, assembly, binary, ws, budget, deadline_cut=budget < float(timeout))
+                row = run_gpn_msa(v, assembly, ws, budget, deadline_cut=budget < float(timeout))
             elif name == "evo2":
-                row = run_evo2(v, assembly, binary, ws, budget, window=evo2_window, deadline_cut=budget < float(timeout))
+                row = run_evo2(v, assembly, ws, budget, window=evo2_window, deadline_cut=budget < float(timeout))
             else:
-                row = run_alphagenome(v, assembly, binary, ws, budget, ontology=ontology,
+                row = run_alphagenome(v, assembly, ws, budget, ontology=ontology,
                                       deadline_cut=budget < float(timeout))
         except UsageError:
             raise
@@ -730,8 +709,8 @@ def predict(variant: str, assembly: str = "GRCh38", models: Optional[Sequence[st
             sources.append(http_source)
         receipt = row.get("receipt")
         if isinstance(receipt, str):
-            sources.append(source_record(f"s2f-penguin {name}", row.get("run_id"), url=f"file://{receipt}",
-                                         note=f"run receipt; model {row.get('model_id')}"))
+            sources.append(source_record(f"{name} run receipt", row.get("run_id"), url=f"file://{receipt}",
+                                         note=f"zebra run receipt; model {row.get('model_id')}"))
         if row.get("status") in ("error", "not_run"):
             warnings.append(f"{name} {row['status']}: {row.get('reason')}")
         rows.append(row)
@@ -743,7 +722,10 @@ def predict(variant: str, assembly: str = "GRCh38", models: Optional[Sequence[st
         "models_requested": chosen,
         "models_not_selected": skipped,
         "workspace": str(ws),
-        "s2f_cli": binary or f"not found; install with: {INSTALL_HINT}",
+        "backends": {"gpn_msa": "published hg38 table over HTTP (no key)",
+                     "evo2": "ready" if backends.evo2_key() else "no NVCF_RUN_KEY / EVO2_API_KEY",
+                     "alphagenome": "ALPHAGENOME_API_KEY set" if os.environ.get("ALPHAGENOME_API_KEY")
+                     else "no ALPHAGENOME_API_KEY"},
         "claim_ceilings": {r["model"]: r.get("claim_ceiling") for r in rows},
         "how_to_combine": COMBINE_RULE,
         "ceiling_note": NO_CLINICAL,

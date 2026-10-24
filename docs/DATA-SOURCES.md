@@ -26,9 +26,9 @@ zebra queries these resources live (no key unless stated) and records each respo
 | Therapy | **Open Targets Platform** GraphQL | drugs and clinical candidates, tractability | none | CC0 |
 | Therapy | **EMA orphan designations** (JSON report) | EU orphan designations (the FDA OOPD database blocks automated access) | none | EMA terms |
 | S2F | **SpliceAI / Pangolin** Broad lookup backends | splice deltas | none; the hosted service is a courtesy — cache, do not hammer | SpliceAI weights CC BY-NC 4.0; research use |
-| S2F (optional) | **AlphaGenome** API via `s2f` CLI | expression/splicing/chromatin effects by tissue | `ALPHAGENOME_API_KEY` | non-commercial only; not for clinical decision-making; outputs not to train other models |
-| S2F (optional) | **Evo 2** on NVIDIA NIM via `s2f` CLI | zero-shot sequence likelihood | `NVCF_RUN_KEY` | NVIDIA terms |
-| S2F (optional) | **GPN-MSA** precomputed scores via `s2f` CLI | conservation/constraint (hg38 SNVs) | none; needs `tabix` | provider licence |
+| S2F (optional) | **AlphaGenome** API via its official Python client | expression/splicing/chromatin effects by tissue | `ALPHAGENOME_API_KEY` | non-commercial only; not for clinical decision-making; outputs not to train other models |
+| S2F (optional) | **Evo 2** on NVIDIA NIM (`forward` endpoint, called directly) | zero-shot sequence likelihood | `NVCF_RUN_KEY` | NVIDIA terms |
+| S2F (optional) | **GPN-MSA** published hg38 score table (byte-range reads) | conservation/constraint (hg38 SNVs) | none | provider licence |
 | Variant (China) | **NyuWa** (`bigdata.ibp.ac.cn`), **WBBC** (Westlake), **1000 Genomes** CHB/CHS/CDX (via Ensembl), **Taiwan Biobank** (`taiwanview.twbiobank.org.tw`) | allele frequencies in Chinese cohorts; a cohort without a record is "not found in", never AF 0 | none; NyuWa answers over plain HTTP only (the result says so) | provider terms |
 | Variant | **MyVariant.info** (BioThings) | whole-exome frequency prefilter for `vcf triage --prefilter myvariant` (gnomAD v2.1.1 exomes / v3 genomes as served, ClinVar) | none; ≤ 1,000 ids per request | sends every quality-passing variant position — the mod asks first |
 | Variant (mtDNA) | **MITOMAP** via the MITOMASTER web service | disease associations of mtDNA variants (curation status not returned) | none; the MITOMAP pages themselves refuse scripts | MITOMAP terms |

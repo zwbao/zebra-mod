@@ -15,8 +15,8 @@ Three rules carried over from s2f-agent:
 | Axis | Question | Models (zebra) | Ceiling |
 |---|---|---|---|
 | splicing | does it create/destroy a splice site; which exon/intron? | SpliceAI, Pangolin (`s2f_predict`); AlphaGenome splice tracks | molecular |
-| regulation | does it change expression / accessibility in the relevant tissue? | AlphaGenome (needs key + s2f CLI) | cellular |
-| constraint | is the position conserved across vertebrates? | GPN-MSA (s2f CLI), phyloP/GERP when VEP returns them | molecular |
+| regulation | does it change expression / accessibility in the relevant tissue? | AlphaGenome (needs key + `alphagenome` client) | cellular |
+| constraint | is the position conserved across vertebrates? | GPN-MSA (published table, no key), phyloP/GERP when VEP returns them | molecular |
 | sequence likelihood | is ALT less likely than REF under a genome language model? | Evo 2 (needs key) | molecular |
 | missense function | does the residue change damage the protein? | AlphaMissense, REVEL, CADD (`variant_card`) | molecular |
 | evidence | what is observed in people? | ClinVar, gnomAD, literature (`variant_card`, `zebra-literature`) | the only route to clinical claims |
@@ -27,7 +27,7 @@ No prediction reaches "causes the disease". The highest a model speaks to is a c
 
 1. **Anchor**: `mcp__zebra-mod__variant_card` → consequence on the MANE transcript, exon/intron number, the intronic offset in the c. notation (c.3718-2477 lies 2,477 nt upstream of the exon that begins at c.3718), gene, assembly.
 2. **Choose axes** by variant class: splice region / deep intronic / synonymous → splicing first; promoter / UTR / enhancer → regulation (the disease tissue's ontology: take it from `mcp__zebra-mod__expression`, which lists each GTEx tissue with its UBERON/EFO id and where the gene is expressed — e.g. brain `UBERON:0000955`, liver `UBERON:0002107`, skeletal muscle `UBERON:0001134`, heart `UBERON:0000948`; ask if unclear); missense → missense function + splicing (exonic variants can break splicing too).
-3. **Run**: `mcp__zebra-mod__s2f_predict` (`models` as chosen). Several slow axes (Evo 2, AlphaGenome in several tissues) or several variants → one `zebra-mod:s2f-analyst` subagent per variant or axis, all in one message, each returning its agreement rows. Heavy models report `not_run` with the reason when keys or the `s2f` CLI are missing — say so; offer setup (below) instead of guessing.
+3. **Run**: `mcp__zebra-mod__s2f_predict` (`models` as chosen). Several slow axes (Evo 2, AlphaGenome in several tissues) or several variants → one `zebra-mod:s2f-analyst` subagent per variant or axis, all in one message, each returning its agreement rows. Heavy models report `not_run` with the reason when a key or the AlphaGenome client is missing — say so; offer setup (below) instead of guessing.
 4. **Read each output** before combining:
    - SpliceAI Δ: ≥ 0.2 supports a splice effect (PP3, Walker 2023), ≥ 0.5 high confidence, ≤ 0.1 supports no effect (BP4/BP7). Read *which* score (acceptor/donor gain/loss) and the position → predict the transcript: exon skipping, intron retention, cryptic exon (pseudoexon), shifted site; is the change a multiple of 3 (in-frame) or does it create a premature stop → NMD?
    - AlphaGenome: a window-wide mean near 0 is not "no effect"; look at the local change in the relevant tissue's tracks.
@@ -39,13 +39,13 @@ No prediction reaches "causes the disease". The highest a model speaks to is a c
 ## Setting up the heavy models
 
 What each needs (a missing piece gives `not_run` with the reason, never a guess):
-- AlphaGenome: `ontology` is required — the tissue the disease acts in; without it zebra does not run it (the upstream script would silently use transverse colon). ~5 s.
-- GPN-MSA: GRCh38 SNVs only; needs `tabix` (htslib). ~1 min.
-- Evo 2: hosted, 3–10 minutes per variant; ask before running it, or run it in the background via Bash (`zebra s2f predict ... --models evo2 --timeout 900`).
+- AlphaGenome: `ontology` is required — the tissue the disease acts in; without it zebra does not run it (an unstated tissue would answer for an arbitrary one). The result carries a window-wide mean (headline) and the largest local change within ±500 bp with its track. ~5 s.
+- GPN-MSA: GRCh38 SNVs only; zebra reads the authors' published table over HTTP (no key, no download; the first call fetches its 2.8 MB index once). ~30 s.
+- Evo 2: hosted, 3–10 minutes per variant; zebra asks evo2-7b and, if it fails, evo2-40b, and reports the model that answered; ask before running it, or run it in the background via Bash (`zebra s2f predict ... --models evo2 --timeout 900`).
 - GRCh37 inputs: SpliceAI/Pangolin only.
 
-- `s2f` CLI from s2f-penguin: `uv tool install "git+https://github.com/zwbao/s2f-penguin"`, set `S2F_DEPLOY_ROOT` (where its model environments live; and `S2F_S2F_CORE_PYTHON` for a standalone install), then `s2f doctor`. zebra finds it on `PATH` or via `S2F_BIN`.
-- AlphaGenome: `ALPHAGENOME_API_KEY` (Google DeepMind; non-commercial use only, not for clinical decision-making). Evo 2: `NVCF_RUN_KEY` (NVIDIA). Keys go in the environment, never in a file in the case.
+- All three heavy models run inside zebra; every run leaves a receipt (`evidence/s2f/<run_id>/receipt.json` in the case) with inputs, model, version and scores.
+- AlphaGenome: `ALPHAGENOME_API_KEY` (Google DeepMind; non-commercial use only, not for clinical decision-making) and the official client, `pip install alphagenome`, in the interpreter zebra uses or in one named by `ZEBRA_ALPHAGENOME_PYTHON`. Evo 2: `NVCF_RUN_KEY` (NVIDIA). Keys go in the environment, never in a file in the case.
 - SpliceAI/Pangolin come from the Broad SpliceAI-lookup service (research use; the SpliceAI weights are CC BY-NC).
 
 ## What would make this wrong

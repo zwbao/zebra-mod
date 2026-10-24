@@ -23,7 +23,7 @@ General-purpose AI assistants answer rare-disease questions from memory — flue
 2. **Code scores, the model interprets** — rankings, ACMG points, statistics come from deterministic code (g2t-harness: "the LLM never writes a rank").
 3. **Clarify, never invent** — missing assembly/transcript/zygosity/inheritance → ask or condition.
 4. **Judgement in prose, verification in code** — the skills hold the judgement criteria (ACMG codes, mechanism fit, test choice); code holds arithmetic, structure and provenance.
-5. **Axes combine by logic, not arithmetic** — S2F models and phenotype rankers are reported separately; agreement is the signal (s2f-penguin).
+5. **Axes combine by logic, not arithmetic** — S2F models and phenotype rankers are reported separately; agreement is the signal.
 6. **Research-grade, honest** — no diagnosis as fact, no dosing; every lead tiered.
 7. **Privacy by construction** — local cases, a privacy gate on outgoing calls, genome files never uploaded silently.
 8. **Zero-install core** — Python standard library only; heavy models optional.
@@ -47,7 +47,7 @@ Claude Code
     ├─ hpo_local (offline Resnik BMA ranking from HPO release files)
     ├─ acmg (Tavtigian points + Richards rules + ClinGen-calibrated suggestions)
     ├─ stats (segregation, maxaf, carrier, recurrence, Fisher/burden, de novo, KM/log-rank, N-of-1)
-    ├─ vcf (inspect, trio triage), s2f (SpliceAI/Pangolin lookup; s2f-penguin bridge), editing (ABE/CBE screen)
+    ├─ vcf (inspect, trio triage), s2f (SpliceAI/Pangolin lookup; GPN-MSA table, Evo 2 and AlphaGenome backends with run receipts), editing (ABE/CBE screen)
     └─ case (case.json, evidence/ledger.jsonl, records/, reports/)
 ```
 
@@ -69,7 +69,7 @@ Every command returns one envelope: `{ok, command, query, result, sources[], war
 
 ## 6. Out of scope (v0.1)
 
-Clinical reporting; CNV calling from BAM; long-read/repeat calling; local deep-learning model execution (delegated to s2f-penguin); writing to external matchmaking services (summaries are prepared for humans to submit).
+Clinical reporting; CNV calling from BAM; long-read/repeat calling; local deep-learning model execution (heavy models are hosted APIs or published tables); writing to external matchmaking services (summaries are prepared for humans to submit).
 
 ## 7. Roadmap
 

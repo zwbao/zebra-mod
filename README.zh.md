@@ -14,7 +14,7 @@
 |---|---|
 | **鉴别诊断**：根据表型推断可能的疾病 | 病历 → HPO 表型档案（术语经核验，区分存在/排除，记录起病时间与出处页码）→ 三种相互独立的排序方法（基于 HPO 注释的离线 Resnik 相似度、Monarch 语义相似度、PubCaseFinder），各自保留排名，以方法间的一致性作为信号 → 鉴别特征表 → 每个候选疾病应采用何种检测（外显子组、基因组、染色体微阵列、重复扩增检测、甲基化、线粒体 DNA、代谢筛查） |
 | **变异解读**：ACMG/AMP 框架 | VEP（MANE 转录本、AlphaMissense、REVEL、CADD）+ ±4,999 nt 范围的 SpliceAI + gnomAD（grpmax、faf95；线粒体变异的异质性计数）+ ClinVar（四星制审核星级）+ ClinGen 基因-疾病有效性与剂量敏感性 + MaveDB 功能实验分数（按数据集自身校准）+ LitVar（排除同一位点的其他等位变异）+ 中国人群频率 → 按 ClinGen 校准阈值给出数据驱动的证据条目，以及 PVS1、PS1/PM5 的**判断依据** → 由模型论证的判断类条目 → **由代码计算积分**（Tavtigian 2020），并与 2015 年组合规则的结论并列呈现；GRCh37 输入自动换算至 GRCh38 |
-| **序列到功能（S2F）**：剪接、非编码与调控变异 | SpliceAI/Pangolin（Broad 在线查询），AlphaGenome、Evo 2 与 GPN-MSA 通过 [s2f-penguin](https://github.com/zwbao/s2f-penguin) 的 `s2f` 命令行调用；逐轴解读并标注结论上限，以逻辑一致性综合，不做数值平均；由机制推导验证方案（RNA 检测，依据 GTEx 选择该基因有表达的组织）；剪接调控型反义寡核苷酸初筛（`aso_screen`：在患者序列上核对异常剪接事件、列出候选靶向窗口与已发表的 N-of-1 先例） |
+| **序列到功能（S2F）**：剪接、非编码与调控变异 | SpliceAI/Pangolin（Broad 在线查询），GPN-MSA（作者公开的 hg38 分数表）、Evo 2 与 AlphaGenome（托管服务，需自备密钥），每次运行留有凭证；逐轴解读并标注结论上限，以逻辑一致性综合，不做数值平均；由机制推导验证方案（RNA 检测，依据 GTEx 选择该基因有表达的组织）；剪接调控型反义寡核苷酸初筛（`aso_screen`：在患者序列上核对异常剪接事件、列出候选靶向窗口与已发表的 N-of-1 先例） |
 | **外显子组/基因组重分析**，在本机完成 | `zebra qc`：性别核对、KING 亲缘系数（样本对调、非亲生）、纯合片段、孟德尔错误与单亲二体、嵌合新发变异。VCF 分诊：质量过滤、遗传模式（新发、纯合、复合杂合、X 连锁半合子）、支持 PED 家系文件、按表型基因限定范围、对靠前的剪接/非编码候选运行 SpliceAI；全外显子组可经 MyVariant 频率预过滤。VCF 文件留在本机；变异位点会发往注释服务——默认只发过滤后的候选，开启预过滤则发送全部位点（会先征得同意） |
 | **基因型到治疗（G2T）** | 先判定致病机制（功能丧失、功能获得、显性负效应、剪接异常、重复扩增）→ 已上市与在研药物（Open Targets / ChEMBL）、**可及性**：FDA 与 EMA 以监管机构自身记录为准，国内批准情况依据国家药监局/药审中心官方文件，2025 版国家医保目录含限定支付范围原文，以及在中国设有中心的临床试验；文献证据、个体化治疗可行性初筛（反义寡核苷酸、基因替代、**碱基编辑可行性**）→ 按 A–E 分级，并逐条核对机制方向 |
 | **经典统计方法** | 共分离似然比与 PP1 强度、最大可信等位基因频率（BS1）、携带者频率与遗传患病率、再发风险（含 X 连锁贝叶斯计算）、Fisher 精确检验与负荷检验、新发变异富集、Kaplan–Meier 自然史分析与对数秩检验、N-of-1 试验设计与分析 |
@@ -80,7 +80,7 @@ python3 <安装目录>/bin/zebra hpo fetch     # 可选：离线表型排序与�
 # 仅对当前会话试用：claude --plugin-dir ~/zebra-mod
 ```
 
-可选的重型 S2F 模型：安装 [s2f-penguin](https://github.com/zwbao/s2f-penguin) 的 `s2f` 命令行（`uv tool install "git+https://github.com/zwbao/s2f-penguin"`），并设置 `ALPHAGENOME_API_KEY`（AlphaGenome：仅限非商业用途，不得用于临床决策）和/或 `NVCF_RUN_KEY`（NVIDIA 托管的 Evo 2）。可用 `/zebra doctor` 检查全部环境。
+可选的重型 S2F 模型：GPN-MSA 无需任何设置；另可设置 `ALPHAGENOME_API_KEY`（AlphaGenome：仅限非商业用途，不得用于临床决策；另需 `pip install alphagenome`）和/或 `NVCF_RUN_KEY`（NVIDIA 托管的 Evo 2）。可用 `/zebra doctor` 检查全部环境。
 
 插件选项（`/config` → zebra-mod，或 settings 中的 `pluginConfigs`）：`python`（解释器）、`doctrine`（默认 `auto`：打开病例时注入完整规则，否则只放一段仅对罕见病问题生效的简短说明，你在 Claude Code 里的其它工作不受影响；也可选 `always` | `case` | `off`）、`privacyGate`（默认开启；未打开病例时，其它工具调用中出现邮箱或手机号会先询问，而不直接拒绝）、`interface`（默认 `full`：工具专属行、等待动画文字、奔跑的斑马与每轮小结；`quiet` 不显示动画和等待动画文字；`off` 完全使用 Claude Code 自己的显示）。
 
@@ -113,8 +113,6 @@ zebra-mod 实时查询公共资源并保留出处，各资源适用其自身许�
 zebra-mod 提供研究级分析和供医生审阅的草稿。它不自行做出诊断或处方，也不能替代临床医生或遗传咨询师。
 
 ## 渊源
-
-本项目的序列到功能（S2F）能力建立在 [s2f-penguin](https://github.com/zwbao/s2f-penguin) 之上：带运行凭证的序列到功能模型、结论上限、以逻辑而非算术综合多轴证据。重型序列模型由 zebra-mod 调用 s2f-penguin 的 `s2f` 命令行完成。
 
 输入框上方奔跑的斑马，取自埃德沃德·迈布里奇 1878 年的连续摄影《运动中的马》（公有领域）：一个步幅的 11 个姿态，去掉骑手、按马背对齐使身体保持平稳后，用盲文点阵绘制（`tools/zebra_sprite/build.py` 可重新生成）。
 

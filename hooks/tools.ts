@@ -346,7 +346,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 's2f_predict',
     description:
-      'Sequence-to-function predictions for one variant, each model reported separately with its claim ceiling (never averaged): spliceai and pangolin (Broad lookup service; GRCh38 and GRCh37) — the default; and, through the s2f CLI when installed with keys, gpn_msa (conservation, hg38 SNVs, ~1 min), alphagenome (expression/splicing/chromatin in one tissue: needs ontology, e.g. UBERON:0000955 brain; ~5 s) and evo2 (zero-shot likelihood; 3–10 min). A model that cannot run is not_run with the reason. Use for splice-region, deep intronic, UTR, promoter and other non-coding variants, and to test a mechanism.',
+      'Sequence-to-function predictions for one variant, each model reported separately with its claim ceiling (never averaged): spliceai and pangolin (Broad lookup service; GRCh38 and GRCh37) — the default; gpn_msa (conservation from the published hg38 table, SNVs, no key, ~30 s; in the default set for hg38 SNVs); and, with their keys, alphagenome (expression/splicing/chromatin in one tissue: needs ontology, e.g. UBERON:0000955 brain; ~5 s) and evo2 (zero-shot likelihood; 3–10 min). A model that cannot run is not_run with the reason. Use for splice-region, deep intronic, UTR, promoter and other non-coding variants, and to test a mechanism.',
     inputSchema: {
       type: 'object',
       properties: {

@@ -1,0 +1,44 @@
+{
+ "inputs": {
+  "chrom": "2",
+  "pos": 166042334,
+  "ref": "G",
+  "alt": "A",
+  "assembly": "hg38"
+ },
+ "status": "ok",
+ "error": null,
+ "model": {
+  "id": "songlab/gpn-msa-sapiens",
+  "checkpoint": "published genome-wide score table",
+  "version": "hg38 scores.tsv.bgz"
+ },
+ "lookup_status": "scored",
+ "score_definitions": {
+  "score": "log P(ALT) - log P(REF) under GPN-MSA, both strands averaged; negative = alternate less likely than reference. Effective range about [-13.7, +11]."
+ },
+ "headline_score": "score",
+ "readout_class": "function_measured_proxy",
+ "claim_level": "molecular",
+ "higher_is_better": false,
+ "units": "nats (log-likelihood ratio)",
+ "self_check": null,
+ "score": -6.77,
+ "preflight_steps": [
+  {
+   "step": "assembly",
+   "ok": true,
+   "detail": "hg38 SNV as required by the table"
+  },
+  {
+   "step": "lookup_status",
+   "ok": true,
+   "detail": "scored"
+  },
+  {
+   "step": "published_value_self_check",
+   "ok": false,
+   "detail": "no published calibration value for this variant"
+  }
+ ]
+}

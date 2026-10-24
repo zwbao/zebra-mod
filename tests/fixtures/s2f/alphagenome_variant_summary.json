@@ -1,0 +1,56 @@
+{
+ "inputs": {
+  "assembly": "hg38",
+  "chrom": "chr2",
+  "position": 166042334,
+  "alt": "A",
+  "interval_start": 166034142,
+  "interval_end": 166050526,
+  "outputs": [
+   "RNA_SEQ"
+  ],
+  "ontology": [
+   "UBERON:0000955"
+  ]
+ },
+ "status": "ok",
+ "error": null,
+ "model": {
+  "id": "alphagenome hosted API",
+  "checkpoint": null,
+  "version": "0.9.0"
+ },
+ "head_stats": {
+  "RNA_SEQ": {
+   "num_tracks": 2,
+   "mean_diff": -2.8135687990982206e-05,
+   "log2fc": -4.0095980538422445e-05
+  }
+ },
+ "preflight_steps": [
+  {
+   "step": "reference_base",
+   "ok": true,
+   "detail": "--ref verified against UCSC"
+  },
+  {
+   "step": "ontology_terms",
+   "ok": true,
+   "detail": "tracks restricted to ['UBERON:0000955']"
+  },
+  {
+   "step": "aggregation",
+   "ok": true,
+   "detail": "log2fc / mean_diff are full-window means over all positions x tracks (see score_definitions)"
+  }
+ ],
+ "readout_class": "cellular_annotation",
+ "claim_level": "cellular",
+ "higher_is_better": null,
+ "units": "log2((ALT+1)/(REF+1)), pseudocount 1 in model-native track units",
+ "headline_score": "log2fc",
+ "score_definitions": {
+  "log2fc": "mean over ALL positions of the 16,384-bp window and ALL tracks returned for the ontology term(s) of log2((ALT+1)/(REF+1)). A full-window mean dilutes a local effect (the Borzoi SAD lesson); a value near 0 means no window-wide shift, not no effect.",
+  "mean_diff": "mean over the same positions x tracks of (ALT - REF) in model-native RNA_SEQ coverage units. Positive = ALT predicted higher."
+ }
+}

@@ -41,7 +41,7 @@ anything: zebra-mod needs neither.
 
 6. **Check.** `python3 ROOT/bin/zebra doctor`. Keep what you tell the person about it to one or two
    lines: everything passed, or which sources failed and what that leaves unavailable (a failure
-   usually means a firewall or proxy). Optional keys (AlphaGenome, Evo 2, NCBI, OMIM, `s2f`) are
+   usually means a firewall or proxy). Optional keys and clients (AlphaGenome, Evo 2, NCBI, OMIM) are
    not failures: mention them only if the person does research.
 
 7. **The demo case.** `python3 ROOT/bin/zebra case demo --lang zh` for a person who writes Chinese,

@@ -40,11 +40,11 @@ def register(sub: argparse._SubParsersAction) -> None:
     a = p.add_subparsers(dest="action", metavar="<action>")
     q = a.add_parser(
         "predict",
-        help="run SpliceAI/Pangolin (Broad lookup) and, when available, AlphaGenome/Evo 2/GPN-MSA via the s2f CLI",
+        help="run SpliceAI/Pangolin (Broad lookup) and, when available, GPN-MSA (published table), Evo 2 and AlphaGenome (hosted, with their keys)",
     )
     q.add_argument("variant", help="chrom-pos-ref-alt, transcript HGVS (NM_...:c....) or an rsID")
     q.add_argument("--assembly", choices=("GRCh38", "GRCh37"), default="GRCh38")
-    q.add_argument("--models", help=f"comma-separated subset of {', '.join(s2f.MODELS)} (default: the splice models plus every s2f model ready here)")
+    q.add_argument("--models", help=f"comma-separated subset of {', '.join(s2f.MODELS)} (default: the splice models plus every heavy model ready here)")
     q.add_argument("--distance", type=int, default=500, help="SpliceAI/Pangolin window around the variant, 1-10000 (default 500)")
     q.add_argument("--mask", type=int, choices=(0, 1), default=0,
                    help="0 (default) = raw delta scores, the scale the ClinGen thresholds (Walker et al. 2023) were "
@@ -54,5 +54,5 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--ontology", help="UBERON/CL CURIE for AlphaGenome's tissue or cell type, e.g. UBERON:0000955 (brain)")
     q.add_argument("--timeout", type=float, default=s2f.DEFAULT_TIMEOUT, help=f"per-model wall-clock limit in seconds (default {s2f.DEFAULT_TIMEOUT:g})")
     q.add_argument("--evo2-window", type=int, default=2048, help="Evo 2 variant window in bases (default 2048)")
-    q.add_argument("--workspace", help="where s2f run directories go (default: <case>/evidence/s2f, else ~/.cache/zebra-mod/s2f-runs)")
+    q.add_argument("--workspace", help="where run receipts go (default: <case>/evidence/s2f, else ~/.cache/zebra-mod/s2f-runs)")
     q.set_defaults(func=_predict)
