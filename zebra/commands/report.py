@@ -75,11 +75,11 @@ def register(sub: argparse._SubParsersAction) -> None:
     rs = p.add_subparsers(dest="action", metavar="<action>")
     q = rs.add_parser("export", help="write <report>.html/.docx/.pdf next to the report (or in --out)")
     q.add_argument("report", help="the Markdown report, e.g. <case>/reports/family-letter-2026-10-06.md")
-    q.add_argument("--to", type=_formats, default=["docx", "pdf"],
-                   help="html, docx (Word), pdf — comma-separated (default docx,pdf)")
+    q.add_argument("--to", type=_formats, default=["html", "docx", "pdf"],
+                   help="html, docx (Word), pdf — comma-separated (default html,docx,pdf)")
     q.add_argument("--out", help="directory for the files (default: next to the report)")
     q.add_argument("--title", help="document title (default: the report's first heading)")
     q.add_argument("--allow-identifiers", action="store_true",
                    help="export even if the report contains the case's protected identifiers (an internal copy only)")
     q.set_defaults(func=_export, no_ledger=True)
-    p.set_defaults(func=lambda a: (_ for _ in ()).throw(UsageError("zebra report export <report.md> [--to docx,pdf]")))
+    p.set_defaults(func=lambda a: (_ for _ in ()).throw(UsageError("zebra report export <report.md> [--to html,docx,pdf]")))

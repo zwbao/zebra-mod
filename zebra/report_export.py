@@ -353,41 +353,140 @@ def identifier_hits(text: str, identifiers: Sequence[str]) -> Tuple[Optional[str
 # ------------------------------------------------------------------ HTML
 
 _CSS = """
-:root { color-scheme: light; }
-@page { size: A4; margin: 18mm 16mm; }
-body { margin: 0 auto; max-width: 46rem; padding: 2rem 1.25rem; color: #1d2329; background: #fff;
-  font: 15px/1.75 "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei",
-  -apple-system, "Segoe UI", Roboto, sans-serif; }
-h1 { font-size: 1.6rem; line-height: 1.35; margin: 0 0 .4rem; }
-h2 { font-size: 1.22rem; margin: 1.8rem 0 .5rem; padding-bottom: .25rem; border-bottom: 1px solid #d9dee3; }
-h3 { font-size: 1.05rem; margin: 1.3rem 0 .4rem; }
-h4, h5, h6 { font-size: 1rem; margin: 1rem 0 .3rem; }
-p { margin: .55rem 0; }
-ul, ol { margin: .4rem 0 .6rem; padding-left: 1.5rem; }
-li { margin: .2rem 0; }
-.table { overflow-x: auto; margin: .7rem 0; }
-table { border-collapse: collapse; width: 100%; font-size: .92rem; }
-th, td { border: 1px solid #c9d0d6; padding: .35rem .55rem; text-align: left; vertical-align: top; }
-th { background: #f1f4f6; font-weight: 600; }
-blockquote { margin: .8rem 0; padding: .5rem .9rem; border-left: 4px solid #8aa4b8; background: #f5f8fa; }
-code { font: .88em/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: #f1f3f5; padding: .05em .3em;
-  border-radius: 3px; }
-pre { background: #f1f3f5; padding: .7rem .9rem; overflow-x: auto; border-radius: 4px; }
+:root { color-scheme: light;
+  --ink: #1b2430; --muted: #5d6b78; --faint: #8b97a3; --rule: #dfe5ea; --rule-strong: #c5cfd8;
+  --accent: #0f5c6e; --accent-soft: #e8f2f4; --paper: #ffffff; --wash: #f6f8f9; --stripe: #f8fafb;
+  --ok: #1d6b45; --ok-bg: #e7f4ec; --src: #2a5d8f; --src-bg: #e8f0f8; --warn: #8a5a00; --warn-bg: #fdf3dc;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei",
+          -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+* { box-sizing: border-box; }
+html { background: var(--wash); }
+body { margin: 0; color: var(--ink); background: var(--wash); font: 15px/1.72 var(--sans);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.page { max-width: 60rem; margin: 2rem auto; background: var(--paper); padding: 2.6rem 3rem 2rem;
+  border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.doc-head { border-bottom: 3px solid var(--accent); padding-bottom: 1rem; margin-bottom: 1.4rem; }
+.kicker { font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+  font-weight: 600; margin-bottom: .35rem; }
+h1 { font-size: 1.75rem; line-height: 1.3; margin: 0; font-weight: 700; letter-spacing: -.01em; }
+.subtitle { color: var(--muted); font-size: .92rem; margin: .5rem 0 0; }
+h2 { font-size: 1.22rem; line-height: 1.4; margin: 2.2rem 0 .7rem; padding: 0 0 .35rem; color: var(--accent);
+  border-bottom: 1px solid var(--rule-strong); font-weight: 700; }
+h3 { font-size: 1.04rem; margin: 1.5rem 0 .45rem; font-weight: 700; }
+h4, h5, h6 { font-size: .97rem; margin: 1.1rem 0 .3rem; font-weight: 600; color: var(--muted); }
+p { margin: .5rem 0; }
+ul, ol { margin: .35rem 0 .7rem; padding-left: 1.4rem; }
+li { margin: .18rem 0; }
+li::marker { color: var(--accent); }
+strong { font-weight: 650; }
+a { color: var(--src); text-decoration: none; border-bottom: 1px solid rgba(42,93,143,.25); overflow-wrap: anywhere; }
+.table { margin: .8rem 0 1.1rem; overflow-x: auto; }
+table { border: 1px solid var(--rule-strong); border-collapse: collapse; width: 100%; font-size: .86rem; line-height: 1.55; table-layout: fixed; }
+th, td { padding: .42rem .6rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; word-break: normal; }
+thead th { background: var(--accent-soft); color: #134451; font-weight: 650; border-bottom: 1px solid var(--rule-strong);
+  font-size: .8rem; }
+tbody td { border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+tbody tr:nth-child(even) td { background: var(--stripe); }
+td + td, th + th { border-left: 1px solid var(--rule); }
+table.wide { font-size: .8rem; }
+blockquote { margin: 1rem 0; padding: .7rem 1rem; border-left: 4px solid var(--accent); background: var(--accent-soft);
+  border-radius: 0 6px 6px 0; font-size: .92rem; }
+blockquote p { margin: .25rem 0; }
+code { font: .86em/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: #eef1f4; padding: .05em .3em;
+  border-radius: 3px; overflow-wrap: anywhere; }
+pre { background: #eef1f4; padding: .7rem .9rem; overflow-x: auto; border-radius: 6px; white-space: pre-wrap; }
 pre code { background: none; padding: 0; }
-hr { border: 0; border-top: 1px solid #d9dee3; margin: 1.4rem 0; }
-a { color: #1f5f8b; }
-.ev { color: #6b7780; font-size: .8em; white-space: nowrap; }
-.meta { color: #6b7780; font-size: .85rem; margin-bottom: 1.2rem; }
-@media print { body { max-width: none; padding: 0; } a { color: inherit; text-decoration: none; }
-  a.ext::after { content: " (" attr(href) ")"; font-size: .85em; color: #4a5560; word-break: break-all; }
-  h2, h3 { break-after: avoid; } tr, blockquote { break-inside: avoid; } }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 1.6rem 0; }
+.ev { color: var(--faint); font-size: .78em; white-space: nowrap; }
+.tag { display: inline-block; font-size: .72em; line-height: 1.5; padding: 0 .42em; margin: 0 .12em; border-radius: 4px;
+  font-weight: 600; white-space: nowrap; vertical-align: .08em; }
+.tag-ok { color: var(--ok); background: var(--ok-bg); }
+.tag-src { color: var(--src); background: var(--src-bg); }
+.tag-warn { color: var(--warn); background: var(--warn-bg); }
+.tag-note { color: var(--faint); font-size: .8em; overflow-wrap: anywhere; }
+.toc { background: var(--wash); border: 1px solid var(--rule); border-radius: 8px; padding: .8rem 1.1rem; margin: 0 0 1.6rem;
+  font-size: .88rem; }
+.toc-title { font-weight: 650; color: var(--muted); font-size: .76rem; letter-spacing: .08em; margin-bottom: .3rem; }
+.toc ol { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 2rem; }
+.toc li { margin: .1rem 0; break-inside: avoid; }
+.toc a { border: 0; color: var(--ink); }
+.toc a:hover { color: var(--accent); }
+.doc-foot { margin-top: 1.6rem; color: var(--faint); font-size: .8rem; }
+.urgent { margin: 1.6rem 0; padding: .2rem 1.1rem .6rem; border: 1px solid #f0c4c0; border-left: 5px solid #b42318;
+  background: #fef4f3; border-radius: 0 8px 8px 0; break-inside: avoid; }
+.urgent h2 { color: #b42318; border-bottom-color: #f0c4c0; margin-top: .9rem; }
+.urgent li::marker { color: #b42318; }
+@media (max-width: 720px) {
+  .page { margin: 0; border: 0; border-radius: 0; padding: 1.4rem 16px; }
+  table { table-layout: auto; min-width: 36rem; } .toc ol { columns: 1; } h1 { font-size: 1.45rem; } }
+@page { size: A4; margin: 16mm 14mm 18mm; }
+@media print {
+  html, body { background: #fff; }
+  body { font-size: 10.2pt; line-height: 1.62; }
+  .page { max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; }
+  .toc { display: none; }
+  h1 { font-size: 19pt; } h2 { font-size: 13pt; margin-top: 1.4rem; } h3 { font-size: 11pt; }
+  table { font-size: 8.6pt; } table.wide { font-size: 8pt; } thead th { font-size: 8pt; }
+  th, td { padding: .3rem .45rem; }
+  thead { display: table-header-group; }
+  tr, blockquote, .tag { break-inside: avoid; }
+  h2, h3, h4 { break-after: avoid; }
+  p, li { orphans: 2; widows: 2; }
+  a { color: inherit; border: 0; }
+  .table { overflow: visible; border-radius: 0; }
+  tbody tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  thead th, blockquote, .tag, .doc-head, .urgent { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 """
+
+# provenance labels the report skills write in square brackets: [已检索：source] [凭记忆] [原始报告] ...
+_TAGS = [
+    (re.compile(r"^(已检索|retrieved|checked this session)", re.I), "tag-ok"),
+    (re.compile(r"^(原始报告|报告原文|original report|from the report)", re.I), "tag-src"),
+    (re.compile(r"^(凭记忆|未核实|需核实|待核实|from memory|unverified|to verify|not checked)", re.I), "tag-warn"),
+]
+_TAG_RE = re.compile(r"\[(已检索|原始报告|报告原文|凭记忆|未核实|需核实|待核实|retrieved|original report|from the report|"
+                     r"from memory|unverified|to verify|not checked this session)([：:，,；;][^\[\]]*)?\]", re.I)
+_BARE_URL = re.compile(r"(?<![(<\"'=])\bhttps?://[^\s\]\)）\"'<>，。；]+", re.I)
+
+
+def _short_url(url: str) -> str:
+    s = re.sub(r"^https?://(www\.)?", "", url, flags=re.I).rstrip("/")
+    return s if len(s) <= 48 else s[:30] + "…" + s[-14:]
+
+
+def _text_html(text: str) -> str:
+    """Escape plain text, turning bare URLs into short links and provenance labels into tags."""
+    out: List[str] = []
+    pos = 0
+    for m in _TAG_RE.finditer(text):
+        out.append(_urls_html(text[pos:m.start()]))
+        label = m.group(1)
+        cls = next((c for rx, c in _TAGS if rx.match(label)), "tag-warn")
+        note = (m.group(2) or "")[1:].strip()
+        out.append(f'<span class="tag {cls}">{html.escape(label)}</span>'
+                   + (f'<span class="tag-note">{_urls_html(note)}</span>' if note else ""))
+        pos = m.end()
+    out.append(_urls_html(text[pos:]))
+    return "".join(out)
+
+
+def _urls_html(text: str) -> str:
+    out: List[str] = []
+    pos = 0
+    for m in _BARE_URL.finditer(text):
+        url = m.group(0).rstrip(".,;:")
+        out.append(html.escape(text[pos:m.start()]))
+        out.append(f'<a href="{html.escape(url, quote=True)}">{html.escape(_short_url(url))}</a>')
+        pos = m.start() + len(url)
+    out.append(html.escape(text[pos:]))
+    return "".join(out)
 
 
 def _html_runs(runs: Sequence[Run]) -> str:
     out = []
     for text, f in runs:
-        s = html.escape(text)
+        s = html.escape(text) if (f.get("code") or f.get("href")) else _text_html(text)
         if f.get("code"):
             s = f"<code>{s}</code>"
         if f.get("ev"):
@@ -397,9 +496,8 @@ def _html_runs(runs: Sequence[Run]) -> str:
         if f.get("b"):
             s = f"<strong>{s}</strong>"
         if f.get("href"):
-            # on paper a link is only useful with its address: print it after the text
-            ext = ' class="ext"' if text.strip() != f["href"] else ""
-            s = f'<a href="{html.escape(f["href"], quote=True)}"{ext}>{s}</a>'
+            shown = _short_url(text) if text.strip() == f["href"] else None
+            s = f'<a href="{html.escape(f["href"], quote=True)}">{html.escape(shown) if shown else s}</a>'
         out.append(s)
     return "".join(out)
 
@@ -424,32 +522,143 @@ def _html_list(items: Sequence[Tuple[int, bool, str, str]]) -> str:
     return "".join(out)
 
 
+def _plain(cell: str) -> str:
+    return "".join(t for t, _ in inline(cell))
+
+
+def _display_len(s: str) -> float:
+    """Width in Latin-character units: a CJK character is about two, a URL breaks anywhere."""
+    s = _BARE_URL.sub("x" * 24, s)
+    return sum(2.0 if _CJK.match(ch) else 1.0 for ch in s)
+
+
+def col_widths(header: Sequence[str], rows: Sequence[Sequence[str]]) -> List[float]:
+    """Column widths in percent from the content: wide enough for the header and the longest
+    unbreakable word, the rest shared by how much text each column holds."""
+    n = len(header)
+    if n == 0:
+        return []
+    floors, weights = [], []
+    for c in range(n):
+        cells = [_plain(r[c]) for r in rows if c < len(r)]
+        head = _plain(header[c])
+        word = max([len(w) for x in cells + [head] for w in re.findall(r"[A-Za-z0-9.+\-/%≤≥<>]+", x)] + [0])
+        cjk_head = _display_len(head)
+        floor = max(min(word, 16), min(cjk_head, 12), 3.5) + 2.0
+        lens = sorted(_display_len(x) for x in cells) or [0.0]
+        mean = sum(lens) / len(lens)
+        p90 = lens[min(len(lens) - 1, int(len(lens) * .9))]
+        if lens[-1] <= 16:  # a column of short labels: wide enough that none of them wraps
+            floor = max(floor, lens[-1] + 2.0)
+        floors.append(floor)
+        weights.append(max(floor, .55 * mean + .45 * p90))
+    # each column first gets its floor (as a share of a ~95-character line), then the rest of the
+    # width is shared by how much more text it holds, damped so a long column cannot starve the others
+    line = 95.0 if n < 5 else 105.0
+    base = [100.0 * f / line for f in floors]
+    if sum(base) >= 100.0:
+        pct = [100.0 * x / sum(base) for x in base]
+    else:
+        extra = [max(0.0, w - f) ** .75 for w, f in zip(weights, floors)]
+        room = 100.0 - sum(base)
+        total = sum(extra) or 1.0
+        pct = [x + room * e / total for x, e in zip(base, extra)]
+    return [round(p, 1) for p in pct]
+
+
+def _table_html(header: Sequence[str], rows: Sequence[Sequence[str]]) -> str:
+    widths = col_widths(header, rows)
+    cols = "".join(f'<col style="width:{w}%">' for w in widths)
+    head = "".join(f"<th>{_html_runs(inline(c))}</th>" for c in header)
+    body = "".join("<tr>" + "".join(f"<td>{_html_runs(inline(c))}</td>" for c in r) + "</tr>" for r in rows)
+    cls = ' class="wide"' if len(header) >= 5 else ""
+    return (f'<div class="table"><table{cls}><colgroup>{cols}</colgroup><thead><tr>{head}</tr></thead>'
+            f"<tbody>{body}</tbody></table></div>")
+
+
+# a section that tells the reader when to seek care now is drawn as a warning box
+_URGENT = re.compile(r"马上就医|立即就医|立刻就医|急诊|紧急|危险信号|红旗|emergency|urgent|red flags|seek care now|call 120|call 911",
+                     re.I)
+
+
+def _slug(i: int) -> str:
+    return f"s{i}"
+
+
+def _css_string(s: str) -> str:
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ") + '"'
+
+
 def to_html(blocks: Sequence[Block], title: str, lang: str, generated: str) -> str:
+    zh = lang.startswith("zh")
+    blocks = list(blocks)
+    # the H1 and a short line right under it (date, audience) make the header
+    head_title = title
+    subtitle = None
+    if blocks and blocks[0][0] == "h" and blocks[0][1] == 1:
+        head_title = blocks[0][2]
+        blocks = blocks[1:]
+        if blocks and blocks[0][0] == "p" and len(blocks[0][1]) <= 240:
+            subtitle = blocks[0][1]
+            blocks = blocks[1:]
+    sections = [(i, b[2]) for i, b in enumerate(blocks) if b[0] == "h" and b[1] == 2]
     body: List[str] = []
-    for b in blocks:
+    in_urgent = False
+    for i, b in enumerate(blocks):
         kind = b[0]
+        if kind == "h" and b[1] <= 2 and in_urgent:
+            body.append("</section>")
+            in_urgent = False
         if kind == "h":
-            body.append(f"<h{b[1]}>{_html_runs(inline(b[2]))}</h{b[1]}>")
+            anchor = f' id="{_slug(i)}"' if b[1] == 2 else ""
+            if b[1] == 2 and _URGENT.search(_plain(b[2])):
+                body.append('<section class="urgent">')
+                in_urgent = True
+            body.append(f"<h{b[1]}{anchor}>{_html_runs(inline(b[2]))}</h{b[1]}>")
         elif kind == "p":
             body.append(f"<p>{_html_runs(inline(b[1]))}</p>")
         elif kind == "list":
             body.append(_html_list(b[1]))
         elif kind == "table":
-            head = "".join(f"<th>{_html_runs(inline(c))}</th>" for c in b[1])
-            rows = "".join("<tr>" + "".join(f"<td>{_html_runs(inline(c))}</td>" for c in r) + "</tr>" for r in b[2])
-            body.append(f'<div class="table"><table><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>')
+            body.append(_table_html(b[1], b[2]))
         elif kind == "quote":
             body.append("<blockquote>" + "".join(f"<p>{_html_runs(inline(p))}</p>" for p in b[1].split("\n") if p.strip())
                         + "</blockquote>")
         elif kind == "code":
             body.append(f"<pre><code>{html.escape(b[1])}</code></pre>")
         elif kind == "hr":
-            body.append("<hr>")
-    meta = ("生成于 " if lang.startswith("zh") else "Generated ") + generated + " · zebra-mod"
+            # a rule just before a section heading only doubles the heading's own line
+            nxt = blocks[i + 1] if i + 1 < len(blocks) else None
+            if not (nxt and nxt[0] == "h" and nxt[1] <= 2):
+                if in_urgent:
+                    body.append("</section>")
+                    in_urgent = False
+                body.append("<hr>")
+    if in_urgent:
+        body.append("</section>")
+    toc = ""
+    if len(sections) >= 4:
+        items = "".join(f'<li><a href="#{_slug(i)}">{_html_runs(inline(t))}</a></li>' for i, t in sections)
+        toc = f'<nav class="toc"><div class="toc-title">{"目录" if zh else "CONTENTS"}</div><ol>{items}</ol></nav>'
+    kicker = "zebra-mod"
+    plain_title = "".join(t for t, _ in inline(head_title))
+    page_word = ("第 ", " 页 / 共 ", " 页") if zh else ("Page ", " of ", "")
+    margin_css = (
+        "@page { @top-left { content: " + _css_string(plain_title[:60]) + "; font: 7.5pt sans-serif; color: #8b97a3; }"
+        " @bottom-left { content: " + _css_string(("生成于 " if zh else "Generated ") + generated) + "; font: 7.5pt sans-serif; color: #8b97a3; }"
+        f' @bottom-right {{ content: "{page_word[0]}" counter(page) "{page_word[1]}" counter(pages) "{page_word[2]}";'
+        " font: 7.5pt sans-serif; color: #8b97a3; } }"
+        " @page :first { @top-left { content: none; } }"
+    )
+    head = (f'<header class="doc-head"><div class="kicker">{html.escape(kicker)}</div>'
+            f"<h1>{_html_runs(inline(head_title))}</h1>"
+            + (f'<p class="subtitle">{_html_runs(inline(subtitle))}</p>' if subtitle else "") + "</header>")
+    meta = ("生成于 " if zh else "Generated ") + generated + " · zebra-mod"
     return (f'<!doctype html>\n<html lang="{lang}">\n<head>\n<meta charset="utf-8">\n'
             f'<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-            f"<title>{html.escape(title)}</title>\n<style>{_CSS}</style>\n</head>\n<body>\n"
-            + "\n".join(body) + f'\n<p class="meta">{html.escape(meta)}</p>\n</body>\n</html>\n')
+            f"<title>{html.escape(plain_title)}</title>\n<style>{_CSS}\n{margin_css}</style>\n</head>\n<body>\n"
+            f'<main class="page">\n{head}\n{toc}\n' + "\n".join(body)
+            + f'\n<footer class="doc-foot meta">{html.escape(meta)}</footer>\n</main>\n</body>\n</html>\n')
 
 
 # ------------------------------------------------------------------ Word
@@ -517,17 +726,17 @@ class _Docx:
                                          f'<w:tabs><w:tab w:val="left" w:pos="{left}"/></w:tabs>'
                                          f'<w:ind w:left="{left}" w:hanging="300"/>'))
             elif kind == "table":
-                ncols = max(len(b[1]), 1)
-                width = 9638 // ncols
-                grid = "".join(f'<w:gridCol w:w="{width}"/>' for _ in range(ncols))
+                pcts = col_widths(b[1], b[2]) or [100.0]
+                widths = [max(400, int(9638 * p / 100)) for p in pcts]
+                grid = "".join(f'<w:gridCol w:w="{w}"/>' for w in widths)
 
                 def row(cells: Sequence[str], header: bool) -> str:
                     tr = '<w:trPr><w:tblHeader/></w:trPr>' if header else ""
                     tcs = "".join(
-                        f'<w:tc><w:tcPr><w:tcW w:w="{width}" w:type="dxa"/>'
-                        + ('<w:shd w:val="clear" w:color="auto" w:fill="F1F4F6"/>' if header else "")
+                        f'<w:tc><w:tcPr><w:tcW w:w="{w}" w:type="dxa"/>'
+                        + ('<w:shd w:val="clear" w:color="auto" w:fill="E8F2F4"/>' if header else "")
                         + f"</w:tcPr>{self.para(inline(c), 'TableText', bold=header)}</w:tc>"
-                        for c in cells)
+                        for c, w in zip(cells, widths))
                     return f"<w:tr>{tr}{tcs}</w:tr>"
 
                 # borders on the table itself, not only in its style: WPS, Pages and previewers
@@ -535,7 +744,7 @@ class _Docx:
                 borders = "".join(f'<w:{e} w:val="single" w:sz="4" w:space="0" w:color="C9D0D6"/>'
                                   for e in ("top", "left", "bottom", "right", "insideH", "insideV"))
                 out.append('<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/>'
-                           f'<w:tblBorders>{borders}</w:tblBorders><w:tblLayout w:type="autofit"/></w:tblPr>'
+                           f'<w:tblBorders>{borders}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr>'
                            f"<w:tblGrid>{grid}</w:tblGrid>{row(b[1], True)}"
                            + "".join(row(r, False) for r in b[2]) + "</w:tbl>")
                 out.append(self.para([], ppr='<w:spacing w:after="0"/>'))

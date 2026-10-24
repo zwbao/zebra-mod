@@ -635,12 +635,12 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'report_export',
     description:
-      'Turn a Markdown report from the case (family letter, visit-preparation sheet, clinician summary) into Word (.docx) and PDF — and HTML — with Chinese typography, for a family that does not use a terminal: the person running zebra-mod hands them the files. Written next to the report. Refuses a report that still contains the case\'s protected identifiers or a resident ID number. PDF is printed by a browser on this machine (Chrome, Edge, Chromium, Brave) or LibreOffice; without one the result says so and the other formats are still made.',
+      'Turn a Markdown report from the case (family letter, visit-preparation sheet, clinician summary) into an HTML page, Word (.docx) and PDF with Chinese typography (tables sized to their content, page numbers, provenance tags, an urgent-care section drawn as a warning box), for a family that does not use a terminal: the person running zebra-mod hands them the files. Written next to the report. Refuses a report that still contains the case\'s protected identifiers or a resident ID number. PDF is printed by a browser on this machine (Chrome, Edge, Chromium, Brave) or LibreOffice; without one the result says so and the other formats are still made.',
     inputSchema: {
       type: 'object',
       properties: {
         report: { type: 'string', description: 'the .md report: an absolute path, or relative to the case folder (reports/family-letter-2026-10-06.md)' },
-        formats: { type: 'array', items: { type: 'string', enum: ['docx', 'pdf', 'html'] }, description: 'default docx and pdf' },
+        formats: { type: 'array', items: { type: 'string', enum: ['docx', 'pdf', 'html'] }, description: 'default html, docx and pdf' },
         title: { type: 'string', description: 'document title (default: the first heading)' },
       },
       required: ['report'],

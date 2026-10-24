@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.9 — 2026-10-24
+
+**Reports that look like documents.** Exported PDFs had tables running off the page (five-column trial tables lost their last column), raw URLs that would not wrap, large blank gaps and no page numbers.
+- Tables are sized from their content: every column first gets room for its header, its longest word and, for a column of short labels, the whole label; the rest of the width goes to the columns that hold the text. Fixed layout, words and URLs wrap inside their cell, so nothing overflows; the same widths go into the Word file.
+- New look for HTML and PDF: a header with the title and the line under it, numbered teal section headings, striped tables with repeated header rows, provenance labels ([已检索], [原始报告], [凭记忆] and their English forms) drawn as small coloured tags with their source in grey, bare URLs shortened to their address, a section about when to seek care now drawn as a red warning box, page header and "第 n 页 / 共 m 页" footer in print.
+- HTML is exported by default with Word and PDF: it opens in any browser or phone, with a contents list for reports of four or more sections. The FSHD clinician summary went from 14 pages with clipped tables to 10.
+
 ## 0.3.8 — 2026-10-24
 
 **Sequence-to-function models run inside zebra.** The heavy models no longer need an external command-line tool; `zebra/s2f_backends.py` runs them and every run writes its own receipt (`<case>/evidence/s2f/<run_id>/receipt.json`: inputs, model, version, scores, preflight checks).

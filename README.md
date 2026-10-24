@@ -22,7 +22,7 @@
 | **Literature** | Europe PMC, PubTator3, LitVar2 — PMIDs only as returned, findings quoted from the paper |
 | **For families** | Plain-language explanations (Chinese by default for Chinese speakers), VUS explained honestly, visit preparation, recurrence and cascade testing, patient organisations, China's national rare disease lists and the collaboration-network hospitals by province |
 | **Over months and years** | `case_recheck` asks the case's questions again — ClinVar class and stars of each variant, ClinGen validity of its genes, recruiting trials and new papers for each open hypothesis — and reports what changed since the last check, into the case timeline |
-| **Reports** | Clinician summary, family letter and visit-preparation sheet, every claim cited, an **independent adversarial audit** before it is final, then exported to **Word and PDF** with Chinese typography — so a clinician or volunteer can run zebra-mod for a family and hand them the files |
+| **Reports** | Clinician summary, family letter and visit-preparation sheet, every claim cited, an **independent adversarial audit** before it is final, then exported to **HTML, Word and PDF** with Chinese typography — so a clinician or volunteer can run zebra-mod for a family and hand them the files |
 
 ## Principles (enforced, not just written)
 

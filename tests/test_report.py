@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import zipfile
 import xml.dom.minidom
 
@@ -144,3 +145,44 @@ def test_review_export_links_with_parentheses_and_wide_rows():
     blocks = rx.parse("| a | b |\n|---|---|\n| 1 | 2 | 3 |\n")
     table = next(b for b in blocks if b[0] == "table")
     assert table[2][0] == ["1", "2", "3"] and len(table[1]) == 3
+
+
+# ---------------------------------------------------------------- layout (0.3.8)
+
+
+def test_column_widths_fit_the_page_and_follow_the_content():
+    header = ["级别", "方案", "机制", "证据与状态", "对本例"]
+    rows = [["B", "del-brax（delpacibart braxlosiran）", "抗 TfR1 抗体偶联 DUX4 siRNA",
+             "III 期 FORTITUDE-3 招募中；研究点在加、丹、法、德、意、日、荷、西、英、美 [已检索：https://clinicaltrials.gov/study/NCT07038200]"
+             * 2, "首要关注"],
+            ["✗", "losmapimod", "p38α/β 抑制", "III 期已终止", "不推荐"]]
+    w = rx.col_widths(header, rows)
+    assert len(w) == 5 and abs(sum(w) - 100) < 0.6
+    assert w[3] == max(w), "the column holding the most text gets the most room"
+    assert w[0] >= 4.5, "a short label column keeps room for its header"
+    labels = rx.col_widths(["指标", "结果"], [["同型半胱氨酸", "x" * 300], ["尿酸", "y" * 200]])
+    assert labels[0] >= 100 * 14 / 95 - 0.1, "short labels never wrap"
+
+
+def test_provenance_tags_urls_and_urgent_sections_in_html():
+    md = ("# 标题\n\n整理日期：2026-10-24\n\n## 治疗\n\n有氧运动 [凭记忆] 与指南一致 "
+          "[已检索：https://clinicaltrials.gov/study/NCT07038200/very/long/path/that/keeps/going]。\n\n"
+          "## 出现这些情况，请马上就医\n\n- 胸痛\n- 晕倒\n\n## 家人\n\n遗传 50%。\n")
+    page = rx.to_html(rx.parse(md), "标题", "zh-CN", "2026-10-24 19:00")
+    assert '<span class="tag tag-warn">凭记忆</span>' in page
+    assert '<span class="tag tag-ok">已检索</span>' in page
+    assert 'href="https://clinicaltrials.gov/study/NCT07038200/very/long/path/that/keeps/going"' in page
+    assert ">clinicaltrials.gov/study/NCT07038200/very/long/path/that/keeps/going<" not in page, "long URLs are shortened"
+    assert '<section class="urgent">' in page and page.index("胸痛") < page.index("</section>") < page.index("家人")
+    assert 'class="subtitle"' in page and "counter(pages)" in page
+    assert page.count("<h1>") == 1
+
+
+def test_docx_table_columns_follow_the_content(tmp_path):
+    md = tmp_path / "r.md"
+    md.write_text("# R\n\n| 时间 | 项目 |\n|---|---|\n| 2–4 周 | " + "心脏超声、动态心电图；" * 20 + " |\n", "utf-8")
+    rx.export(str(md), ["docx"], identifiers=[], engine=None)
+    import zipfile
+    doc = zipfile.ZipFile(tmp_path / "r.docx").read("word/document.xml").decode()
+    cols = [int(x) for x in re.findall(r'<w:gridCol w:w="(\d+)"/>', doc)]
+    assert len(cols) == 2 and cols[1] > 3 * cols[0]
