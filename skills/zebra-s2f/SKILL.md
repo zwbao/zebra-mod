@@ -39,9 +39,9 @@ No prediction reaches "causes the disease". The highest a model speaks to is a c
 ## Setting up the heavy models
 
 What each needs (a missing piece gives `not_run` with the reason, never a guess):
-- AlphaGenome: `ontology` is required — the tissue the disease acts in; without it zebra does not run it (an unstated tissue would answer for an arbitrary one). The result carries a window-wide mean (headline) and the largest local change within ±500 bp with its track. ~5 s.
+- AlphaGenome: `ontology` is required — the tissue the disease acts in; without it zebra does not run it (an unstated tissue would answer for an arbitrary one). The result carries a window-wide mean (headline) and the largest local change within ±500 bp with its track. 1–3 minutes (client start-up dominates).
 - GPN-MSA: GRCh38 SNVs only; zebra reads the authors' published table over HTTP (no key, no download; the first call fetches its 2.8 MB index once). ~30 s.
-- Evo 2: hosted, 3–10 minutes per variant; zebra asks evo2-7b and, if it fails, evo2-40b, and reports the model that answered; ask before running it, or run it in the background via Bash (`zebra s2f predict ... --models evo2 --timeout 900`).
+- Evo 2: hosted, about 1 minute per variant (up to 10 when the endpoint is queued); zebra asks evo2-7b and, if it fails, evo2-40b, and reports the model that answered; ask before running it, or run it in the background via Bash (`zebra s2f predict ... --models evo2 --timeout 900`).
 - GRCh37 inputs: SpliceAI/Pangolin only.
 
 - All three heavy models run inside zebra; every run leaves a receipt (`evidence/s2f/<run_id>/receipt.json` in the case) with inputs, model, version and scores.
