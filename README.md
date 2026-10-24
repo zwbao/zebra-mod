@@ -19,6 +19,13 @@ From symptoms to a differential, from a variant to an ACMG class, from a sequenc
 
 zebra-mod is a [Claude Code](https://claude.com/claude-code) mod for **families on a diagnostic odyssey, clinicians, and researchers**. It gives Claude 22 tools over live public databases (HPO, Monarch, Orphanet, ClinVar, gnomAD, Ensembl VEP, ClinGen, PanelApp, Open Targets, ClinicalTrials.gov, Europe PMC and more), a case workspace with an evidence ledger, and a set of procedures for diagnosis, variant interpretation, therapy search and reporting. You talk to Claude as usual, in English or Chinese; it reaches for the tools itself.
 
+<p align="center">
+  <a href="docs/media/zebra-mod-promo.mp4">
+    <img src="docs/media/zebra-mod-promo.gif" alt="zebra-mod in 30 seconds" width="100%">
+  </a>
+  <br><sub><a href="docs/media/zebra-mod-promo.mp4">▶ Watch in HD (MP4, 30 s)</a></sub>
+</p>
+
 ## Highlights
 
 - **Differential diagnosis from records.** Clinic notes, lab sheets and photos become a verified HPO profile; three independent rankers (offline, Monarch, PubCaseFinder) are reported side by side, next to Claude's own clinical reasoning, never instead of it.

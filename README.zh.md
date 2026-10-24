@@ -19,6 +19,13 @@
 
 zebra-mod 是 [Claude Code](https://claude.com/claude-code) 的扩展模块（mod），服务对象包括**尚未明确诊断的患者及其家庭、临床医生与科研人员**。该模块为 Claude 提供 22 个工具，用于实时查询公共数据库（HPO、Monarch、Orphanet、ClinVar、gnomAD、Ensembl VEP、ClinGen、PanelApp、Open Targets、ClinicalTrials.gov、Europe PMC 等），并提供附带证据台账的病例工作区，以及诊断、变异解读、治疗检索与报告撰写的标准流程。用户以中文或英文正常提问即可，Claude 将根据问题自动调用相应工具。
 
+<p align="center">
+  <a href="docs/media/zebra-mod-promo.mp4">
+    <img src="docs/media/zebra-mod-promo.gif" alt="zebra-mod in 30 seconds" width="100%">
+  </a>
+  <br><sub><a href="docs/media/zebra-mod-promo.mp4">▶ 观看高清版（MP4，30 秒）</a></sub>
+</p>
+
 ## 主要能力
 
 - **基于病历的鉴别诊断。** 将门诊记录、检验单与影像照片整理为经核验的 HPO 表型；三种相互独立的排序方法（离线、Monarch、PubCaseFinder）并列呈现，作为 Claude 临床推理的补充，而非替代。

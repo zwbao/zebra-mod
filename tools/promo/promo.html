@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>zebra-mod promo</title>
+<!-- A 30-second promo rendered frame by frame: render(t) draws the frame at t seconds.
+     tools/promo/render.mjs captures it with headless Chrome; tools/promo/build.sh encodes.
+     The case on screen is the mod's synthetic demo (examples/demo): SCN1A p.Arg712Ter, de novo;
+     PVS1 + PS2 + PM2_Supporting = 13 points, as `zebra acmg classify` computes it. -->
+<style>
+:root {
+  --bg: #070b10; --ink: #f2f7fa; --muted: #93a6b2; --faint: #5a6a74;
+  --accent: #5eead4; --accent2: #22d3ee; --deep: #0f5c6e; --hot: #f472b6; --gold: #fbbf24; --red: #fb7185;
+  --line: rgba(255,255,255,.09);
+  --sans: -apple-system, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+  --mono: "SF Mono", Menlo, ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+#glow { position: absolute; inset: -20%; background:
+  radial-gradient(900px 600px at var(--gx, 65%) var(--gy, 30%), rgba(45,212,191,.20), transparent 60%),
+  radial-gradient(800px 600px at 15% 85%, rgba(34,211,238,.10), transparent 60%); }
+.layer { position: absolute; inset: 0; opacity: 0; }
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.stripes { position: absolute; inset: -60%; transform: rotate(-24deg);
+  background: repeating-linear-gradient(90deg, #fff 0 60px, transparent 60px 140px); }
+.huge { font-size: 230px; font-weight: 800; letter-spacing: -9px; line-height: .95; }
+.big { font-size: 112px; font-weight: 800; letter-spacing: -4px; line-height: 1.02; }
+.mid { font-size: 60px; font-weight: 600; letter-spacing: -1.2px; color: var(--muted); }
+.zh { font-family: "PingFang SC", var(--sans); font-weight: 500; color: var(--muted); font-size: 38px; letter-spacing: 2px; margin-top: 26px; }
+.grad { background: linear-gradient(95deg, #ffffff 0%, var(--accent) 55%, var(--accent2) 100%); -webkit-background-clip: text; color: transparent; }
+.hotgrad { background: linear-gradient(95deg, #fff 0%, var(--gold) 50%, var(--hot) 100%); -webkit-background-clip: text; color: transparent; }
+.num { font-variant-numeric: tabular-nums; }
+.kicker { font-size: 26px; font-weight: 700; letter-spacing: 8px; text-transform: uppercase; color: var(--accent); }
+.arrow { color: var(--accent); }
+.chip { position: absolute; padding: 18px 30px; border-radius: 999px; font-size: 34px; font-weight: 600; white-space: nowrap;
+  background: rgba(94,234,212,.10); border: 1.5px solid rgba(94,234,212,.35); color: #dcfdf6; }
+.chip.ex { background: rgba(251,113,133,.09); border-color: rgba(251,113,133,.4); color: #fecdd3; }
+.lock { position: absolute; left: 50%; top: 610px; transform: translateX(-50%); padding: 34px 64px; border-radius: 28px;
+  background: linear-gradient(180deg, rgba(20,40,46,.95), rgba(10,22,28,.95)); border: 2px solid rgba(94,234,212,.6);
+  box-shadow: 0 0 80px rgba(94,234,212,.35); text-align: center; white-space: nowrap; }
+.lock .d { font-size: 72px; font-weight: 800; letter-spacing: -2px; }
+.lock .g { font: 600 34px var(--mono); color: var(--accent); margin-top: 8px; }
+.db { position: absolute; font-weight: 700; white-space: nowrap; color: var(--ink); }
+.code { display: inline-block; font: 700 46px var(--mono); padding: 16px 30px; border-radius: 16px; margin: 0 12px;
+  background: rgba(255,255,255,.06); border: 1.5px solid var(--line); }
+.verdict { display: inline-block; padding: 18px 54px; border-radius: 20px; font-size: 76px; font-weight: 800; letter-spacing: -1px;
+  background: rgba(251,113,133,.15); color: #fda4af; border: 2px solid rgba(251,113,133,.55); box-shadow: 0 0 70px rgba(251,113,133,.3); }
+.model { position: absolute; top: 470px; width: 320px; height: 260px; border-radius: 28px; padding: 34px 30px;
+  background: linear-gradient(180deg, rgba(22,36,44,.97), rgba(10,18,24,.97)); border: 1.5px solid var(--line); text-align: left; }
+.model .n { font-size: 42px; font-weight: 800; letter-spacing: -1px; }
+.model .ax { font-size: 25px; color: var(--accent); margin-top: 12px; font-weight: 600; }
+.model .who { position: absolute; left: 30px; bottom: 30px; font-size: 21px; color: var(--muted); letter-spacing: 1px; }
+.badge { display: inline-block; font-size: 38px; font-weight: 800; padding: 16px 34px; border-radius: 18px; margin: 0 12px;
+  background: rgba(255,255,255,.05); border: 1.5px solid var(--line); }
+.drug { display: inline-block; font-size: 40px; font-weight: 700; padding: 18px 36px; border-radius: 999px; margin: 0 12px;
+  background: rgba(94,234,212,.10); border: 1.5px solid rgba(94,234,212,.4); color: #dcfdf6; }
+.doc { position: absolute; top: 400px; width: 400px; height: 520px; border-radius: 22px; background: #fbfdfe; color: #1b2430;
+  padding: 34px; box-shadow: 0 40px 120px rgba(0,0,0,.6); }
+.doc .tag { font: 800 30px var(--sans); color: #fff; display: inline-block; padding: 8px 20px; border-radius: 10px; }
+.doc .l { height: 14px; border-radius: 7px; background: #dfe7ec; margin-top: 18px; }
+.doc .h { height: 22px; width: 70%; border-radius: 8px; background: #0f5c6e; margin-top: 30px; }
+.shieldbig { font-size: 190px; line-height: 1; filter: drop-shadow(0 0 60px rgba(94,234,212,.5)); }
+.install { font: 700 46px var(--mono); padding: 30px 50px; border-radius: 22px; background: rgba(255,255,255,.05);
+  border: 2px solid rgba(94,234,212,.5); box-shadow: 0 0 80px rgba(94,234,212,.18); }
+.caret { display: inline-block; width: 16px; height: 46px; background: var(--accent); vertical-align: -6px; margin-left: 4px; }
+.cta { display: inline-flex; gap: 22px; margin-top: 50px; }
+.cta span { font-size: 30px; font-weight: 700; padding: 16px 32px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--ink); }
+.cta .star { background: var(--ink); color: var(--bg); }
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.progress { position: absolute; left: 0; bottom: 0; height: 5px; background: linear-gradient(90deg, var(--deep), var(--accent), var(--accent2)); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div>
+
+  <!-- 1 · the problem -->
+  <div class="layer center" id="a1">
+    <div class="huge grad num" id="a1n">300,000,000</div>
+    <div class="mid" style="margin-top:34px">people live with a rare disease.</div>
+    <div class="zh">全球罕见病患者约 3 亿</div>
+  </div>
+  <div class="layer center" id="a2">
+    <div class="huge hotgrad">~5 years</div>
+    <div class="mid" style="margin-top:34px">to get a diagnosis. On average.</div>
+    <div class="zh">平均确诊历时近 5 年</div>
+  </div>
+  <div class="layer center" id="a3">
+    <div class="big">What if it took<br><span class="grad">one conversation?</span></div>
+    <div class="zh">倘若，只需一次对话</div>
+  </div>
+  <div class="layer" id="wipe"><div class="stripes" id="wipeS"></div></div>
+
+  <!-- 2 · the product -->
+  <div class="layer center" id="a4">
+    <div style="font-size:170px;line-height:1" id="a4z">🦓</div>
+    <div style="font-size:190px;font-weight:800;letter-spacing:-7px;line-height:1.05" id="a4n">zebra-mod</div>
+    <div class="mid" style="color:var(--ink);font-size:52px;margin-top:20px" id="a4t">Your rare-disease research team, <span class="grad">inside Claude Code.</span></div>
+    <div class="zh" id="a4zh">Claude Code 中的罕见病研究团队</div>
+  </div>
+
+  <!-- 3 · scale -->
+  <div class="layer" id="a5">
+    <div id="dbcloud"></div>
+    <div class="layer center" style="opacity:1">
+      <div style="display:flex;gap:120px;align-items:flex-end">
+        <div><div class="huge grad num" id="a5t">0</div><div class="mid" style="font-size:46px">tools</div></div>
+        <div><div class="huge grad num" id="a5s">0</div><div class="mid" style="font-size:46px">live data sources</div></div>
+      </div>
+      <div class="zh">22 个专业工具，实时连接 35 个以上权威数据源</div>
+    </div>
+  </div>
+
+  <!-- 4 · diagnose -->
+  <div class="layer" id="a6">
+    <div class="center" style="position:absolute;left:0;right:0;top:110px">
+      <div class="big">Records <span class="arrow">→</span> <span class="grad">Diagnosis</span></div>
+      <div class="zh">从病历直达诊断方向</div>
+    </div>
+    <div id="chips"></div>
+    <div class="lock" id="a6lock"><div class="d">Dravet syndrome</div><div class="g">SCN1A · leading diagnosis</div></div>
+  </div>
+
+  <!-- 5 · interpret -->
+  <div class="layer center" id="a7">
+    <div class="big">Variant <span class="arrow">→</span> <span class="grad">Verdict</span></div>
+    <div class="zh" style="margin-top:18px">ACMG 变异分级，由代码精确计算</div>
+    <div style="margin-top:56px" id="a7codes"><span class="code">PVS1</span><span class="code">PS2</span><span class="code">PM2_Supporting</span></div>
+    <div style="margin-top:44px;display:flex;align-items:center;gap:56px">
+      <div style="display:flex;align-items:baseline;gap:18px"><div class="huge grad num" style="font-size:200px" id="a7n">0</div><div class="mid" style="font-size:44px">points</div></div>
+      <div id="a7v"><span class="verdict">Pathogenic</span></div>
+    </div>
+  </div>
+
+  <!-- 6 · S2F -->
+  <div class="layer" id="a8">
+    <div class="center" style="position:absolute;left:0;right:0;top:120px">
+      <div class="big"><span class="grad">5</span> genome AI models.<br>One question.</div>
+      <div class="zh">五大基因组 AI 模型，一次调用</div>
+    </div>
+    <div id="models"></div>
+  </div>
+
+  <!-- 7 · therapy -->
+  <div class="layer center" id="a9">
+    <div class="big">Genotype <span class="arrow">→</span> <span class="grad">Therapy</span></div>
+    <div class="zh" style="margin-top:18px">从基因型到治疗，覆盖全球与中国</div>
+    <div style="margin-top:60px" id="a9d"><span class="drug">stiripentol</span><span class="drug">fenfluramine</span><span class="drug">cannabidiol</span><span class="drug" style="border-color:rgba(251,191,36,.5);color:#fde68a;background:rgba(251,191,36,.08)">SCN1A antisense · in trials</span></div>
+    <div style="margin-top:44px" id="a9b"><span class="badge">FDA</span><span class="badge">EMA</span><span class="badge">NMPA</span><span class="badge">医保目录</span><span class="badge">Trials in China</span></div>
+  </div>
+
+  <!-- 8 · reports -->
+  <div class="layer" id="a10">
+    <div class="center" style="position:absolute;left:0;right:0;top:110px">
+      <div class="big">Doctor-ready reports.</div>
+      <div class="zh">一键生成供医生审阅的专业报告</div>
+    </div>
+    <div class="doc" id="d1"><span class="tag" style="background:#0f5c6e">HTML</span><div class="h"></div><div class="l"></div><div class="l" style="width:85%"></div><div class="l"></div><div class="l" style="width:60%"></div><div class="h" style="width:50%"></div><div class="l"></div><div class="l" style="width:75%"></div><div class="l"></div></div>
+    <div class="doc" id="d2"><span class="tag" style="background:#2b579a">Word</span><div class="h"></div><div class="l"></div><div class="l" style="width:70%"></div><div class="l"></div><div class="l" style="width:90%"></div><div class="h" style="width:55%"></div><div class="l"></div><div class="l"></div><div class="l" style="width:65%"></div></div>
+    <div class="doc" id="d3"><span class="tag" style="background:#c0392b">PDF</span><div class="h"></div><div class="l" style="width:90%"></div><div class="l"></div><div class="l" style="width:80%"></div><div class="l"></div><div class="h" style="width:45%"></div><div class="l" style="width:70%"></div><div class="l"></div><div class="l"></div></div>
+  </div>
+
+  <!-- 9 · trust -->
+  <div class="layer center" id="a11">
+    <div class="shieldbig" id="a11s">🛡️</div>
+    <div class="big" style="margin-top:30px">Every claim <span class="grad">cited.</span><br>Every name <span class="grad">protected.</span></div>
+    <div class="zh">每条结论皆有出处，患者隐私不出本机</div>
+  </div>
+
+  <!-- 10 · end -->
+  <div class="layer center" id="a12">
+    <div class="stripes" id="endS" style="opacity:.035"></div>
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center">
+      <div class="kicker">Think zebras</div>
+      <div style="font-size:150px;font-weight:800;letter-spacing:-5px;margin-top:18px">🦓 zebra-mod</div>
+      <div class="zh" style="margin-top:6px;color:var(--ink)">让每一位罕见病患者都被看见</div>
+      <div class="install" style="margin-top:46px"><span style="color:var(--accent)">›</span> <span id="a12t"></span><span class="caret" id="a12c"></span></div>
+      <div class="cta" id="a12cta"><span class="star">★ Star on GitHub</span><span>Open source · MIT</span><span>English · 中文</span></div>
+    </div>
+  </div>
+
+  <div class="flash" id="flash"></div>
+  <div class="progress" id="progress"></div>
+</div>
+
+<script>
+const DURATION = 30;
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const out = x => 1 - Math.pow(1 - clamp(x), 4);
+const back = x => { x = clamp(x); const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const p = (t, a, b) => clamp((t - a) / (b - a));
+const env = (t, a, b, fi = .3, fo = .3) => Math.min(out(p(t, a, a + fi)), 1 - ease(p(t, b - fo, b)));
+
+// scene windows (seconds), on the score's grid: 144 BPM, one shot = 6 beats = 2.5 s
+const S = { a1: [0, 2.6], a2: [2.4, 5.1], a3: [4.9, 7.4], a4: [7.5, 10.1], a5: [9.9, 12.6], a6: [12.4, 15.1],
+            a7: [14.9, 17.6], a8: [17.4, 20.1], a9: [19.9, 22.6], a10: [22.4, 25.1], a11: [24.9, 27.6], a12: [27.4, 30.0] };
+// every cut gets a short white flash, on the beat
+const FLASHES = [2.5, 5.0, 10.0, 12.5, 15.0, 17.5, 20.0, 22.5, 25.0, 27.5];
+
+const DBS = ['HPO', 'Monarch', 'Orphanet', 'ClinVar', 'gnomAD', 'Ensembl VEP', 'ClinGen', 'PanelApp', 'UniProt', 'AlphaFold',
+  'Open Targets', 'ClinicalTrials.gov', 'Europe PMC', 'PubTator3', 'LitVar2', 'GeneReviews', 'MaveDB', 'GTEx', 'MONDO',
+  'PubCaseFinder', 'SpliceAI', 'Pangolin', 'AlphaGenome', 'Evo 2', 'GPN-MSA', 'openFDA', 'EMA', 'NMPA', 'NRDL', 'MITOMAP',
+  'NyuWa', 'WBBC', 'Taiwan Biobank', 'MyVariant', 'AlphaMissense', 'REVEL'];
+const CHIPS = [['Febrile seizures', 300, 330], ['Focal seizures', 1280, 360], ['Afebrile seizures', 220, 560],
+  ['Prolonged seizures', 1360, 580], ['Delayed walking', 330, 790], ['Delayed speech', 1300, 800], ['Hypotonia — excluded', 760, 900, 'ex']];
+const MODELS = [['SpliceAI', 'splicing', 'Illumina'], ['Pangolin', 'splicing', 'tissue-aware'], ['GPN-MSA', 'conservation', '89 vertebrates'],
+  ['Evo 2', 'DNA language model', 'NVIDIA · Arc'], ['AlphaGenome', 'regulation', 'Google DeepMind']];
+
+function rnd(i) { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }
+
+function build() {
+  const cloud = $('dbcloud');
+  DBS.forEach((name, i) => {
+    const d = document.createElement('div');
+    d.className = 'db';
+    d.dataset.i = i;
+    d.textContent = name;
+    cloud.appendChild(d);
+  });
+  const chips = $('chips');
+  CHIPS.forEach(([n, x, y, ex]) => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (ex ? ' ex' : '');
+    c.textContent = n;
+    c.dataset.x = x; c.dataset.y = y;
+    chips.appendChild(c);
+  });
+  const models = $('models');
+  MODELS.forEach(([n, ax, who], i) => {
+    const m = document.createElement('div');
+    m.className = 'model';
+    m.style.left = (110 + i * 350) + 'px';
+    m.innerHTML = `<div class="n">${n}</div><div class="ax">${ax}</div><div class="who">${who}</div>`;
+    models.appendChild(m);
+  });
+}
+
+function show(id, t) { const [a, b] = S[id]; const v = env(t, a, b); $(id).style.opacity = v; return v; }
+function rise(el, q, dy = 40, s0 = .96) { el.style.opacity = q; el.style.transform = `translateY(${(1 - q) * dy}px) scale(${s0 + (1 - s0) * q})`; }
+function type(el, text, t, a, cps) { const n = Math.floor(clamp((t - a) * cps, 0, text.length)); el.textContent = text.slice(0, n); return n >= text.length; }
+
+function render(t) {
+  $('glow').style.setProperty('--gx', (55 + 20 * Math.sin(t * .35)) + '%');
+  $('glow').style.setProperty('--gy', (30 + 12 * Math.cos(t * .27)) + '%');
+
+  // 1 · the first frame is already the finished opening (platforms take it as the thumbnail)
+  { const v = 1 - ease(p(t, 2.4, 2.6)); $('a1').style.opacity = v;
+    $('a1n').textContent = '300,000,000';
+    $('a1').style.transform = `scale(${1 + .05 * p(t, 0, 2.6)})`; }
+  if (show('a2', t)) $('a2').style.transform = `scale(${1.1 - .1 * out(p(t, 2.5, 3.2))})`;
+  if (show('a3', t)) $('a3').style.transform = `translateY(${(1 - out(p(t, 5.0, 5.6))) * 40}px)`;
+
+  // stripe wipe into the logo, its densest frame on the 7.5 s hit
+  const w = p(t, 7.05, 7.95);
+  $('wipe').style.opacity = w > 0 && w < 1 ? 1 : 0;
+  $('wipeS').style.transform = `rotate(-24deg) translateX(${-2600 + 5200 * ease(w)}px)`;
+  $('wipeS').style.opacity = .9 * Math.sin(Math.PI * w);
+
+  if (show('a4', t)) {
+    rise($('a4z'), back(p(t, 7.55, 8.1)), 80, .6);
+    rise($('a4n'), out(p(t, 7.65, 8.25)), 30, .9);
+    rise($('a4t'), out(p(t, 8.3, 8.8)), 20);
+    rise($('a4zh'), out(p(t, 8.6, 9.1)), 20);
+  }
+  if (show('a5', t)) {
+    $('a5t').textContent = Math.round(22 * out(p(t, 10.0, 11.0)));
+    $('a5s').textContent = Math.round(35 * out(p(t, 10.0, 11.2))) + (p(t, 10.0, 11.2) >= 1 ? '+' : '');
+    [...document.querySelectorAll('.db')].forEach(d => {
+      const i = +d.dataset.i, r1 = rnd(i), r2 = rnd(i + 99), r3 = rnd(i + 7);
+      const speed = 120 + 220 * r3, size = 22 + 30 * r1;
+      d.style.left = (((r2 * 2400 + (t - 9.9) * speed) % 2400) - 240) + 'px';
+      d.style.top = (60 + (i * 197 % 960)) + 'px';
+      d.style.fontSize = size + 'px';
+      d.style.opacity = (.10 + .22 * r1) * out(p(t, 9.9, 10.4));
+    });
+  }
+  if (show('a6', t)) {
+    const gather = ease(p(t, 14.0, 14.55));
+    [...document.querySelectorAll('.chip')].forEach((c, i) => {
+      const q = back(p(t, 12.6 + i * .2083, 12.95 + i * .2083));   // one chip per half beat
+      const x = +c.dataset.x, y = +c.dataset.y, cx = 960 - 180, cy = 680;
+      c.style.left = (x + (cx - x) * gather) + 'px';
+      c.style.top = (y + (cy - y) * gather) + 'px';
+      c.style.opacity = Math.min(clamp(q), 1 - gather);
+      c.style.transform = `scale(${.6 + .4 * clamp(q)})`;
+    });
+    const l = back(p(t, 14.375, 14.8));
+    $('a6lock').style.opacity = clamp(l);
+    $('a6lock').style.transform = `translateX(-50%) scale(${.7 + .3 * l})`;
+  }
+  if (show('a7', t)) {
+    rise($('a7codes'), out(p(t, 15.2, 15.6)), 30);
+    $('a7n').textContent = Math.round(13 * out(p(t, 15.6, 16.45)));
+    const v = back(p(t, 16.45, 16.85));
+    $('a7v').style.opacity = clamp(v); $('a7v').style.transform = `scale(${.5 + .5 * v}) rotate(${(1 - clamp(v)) * -8}deg)`;
+  }
+  if (show('a8', t)) {
+    [...document.querySelectorAll('.model')].forEach((m, i) => {
+      const q = back(p(t, 17.6 + i * .2083, 18.05 + i * .2083));
+      m.style.opacity = clamp(q);
+      m.style.transform = `translateY(${(1 - q) * 120}px)`;
+      const lit = p(t, 18.95 + i * .1, 19.15 + i * .1);
+      m.style.borderColor = `rgba(94,234,212,${.09 + .5 * lit})`;
+      m.style.boxShadow = `0 0 ${60 * lit}px rgba(94,234,212,${.3 * lit})`;
+    });
+  }
+  if (show('a9', t)) {
+    [...$('a9d').children].forEach((c, i) => rise(c, back(p(t, 20.2 + i * .2083, 20.6 + i * .2083)), 40, .8));
+    [...$('a9b').children].forEach((c, i) => rise(c, out(p(t, 21.1 + i * .1, 21.4 + i * .1)), 20, .9));
+  }
+  if (show('a10', t)) {
+    const f = out(p(t, 22.6, 23.4));
+    [['d1', -1], ['d2', 0], ['d3', 1]].forEach(([id, k]) => {
+      const el = $(id);
+      el.style.left = (760 + k * 430 * f) + 'px';
+      el.style.transform = `rotate(${k * 6 * f}deg) translateY(${(1 - f) * 200 + Math.abs(k) * 30 * f}px)`;
+      el.style.opacity = out(p(t, 22.5, 22.8));
+    });
+  }
+  if (show('a11', t)) rise($('a11s'), back(p(t, 25.0, 25.5)), 60, .5);
+  if (show('a12', t)) {
+    const done = type($('a12t'), 'Install https://github.com/zwbao/zebra-mod', t, 27.75, 44);
+    $('a12c').style.opacity = done ? (Math.floor(t * 2.5) % 2 ? 0 : 1) : 1;
+    rise($('a12cta'), out(p(t, 28.85, 29.2)), 20);
+    $('endS').style.transform = `rotate(-24deg) translateX(${(t - 27) * 50}px)`;
+  }
+  let fl = 0;
+  FLASHES.forEach(f => { if (t >= f) fl = Math.max(fl, .10 * (1 - p(t, f, f + .2))); });
+  $('flash').style.opacity = fl;
+  $('progress').style.width = (100 * t / DURATION) + '%';
+}
+
+build();
+window.render = render;
+window.DURATION = DURATION;
+const q = new URLSearchParams(location.search);
+if (q.has('t')) render(parseFloat(q.get('t')));
+else if (!q.has('capture')) { const t0 = performance.now(); (function loop() { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(loop); })(); }
+</script>
+</body>
+</html>
