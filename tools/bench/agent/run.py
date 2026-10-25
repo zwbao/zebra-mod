@@ -145,7 +145,7 @@ def main() -> None:
         cv = subprocess.run([str(Path.home() / ".local/bin/claude"), "--version"], capture_output=True, text=True).stdout.strip()
         meta.write_text(json.dumps({"zebra_mod": pj["version"], "commit": head, "claude_code": cv, "model": a.model, "provider": a.provider,
                                     "prompt": PROMPT, "started": time.strftime("%Y-%m-%dT%H:%M:%S%z")}, indent=1), "utf-8")
-    done = cost = fail = 0
+    done = cost = fail = streak = 0
     t0 = time.time()
     with ThreadPoolExecutor(a.jobs) as ex:
         futs = {ex.submit(run_one, c, a.out, a.model, a.timeout, a.provider): c for c in cases}
@@ -154,9 +154,14 @@ def main() -> None:
             done += 1
             cost += r.get("cost_usd") or 0
             fail += r["differential"] is None
+            streak = streak + 1 if r["differential"] is None else 0
             print(f"[{done}/{len(cases)}] {r['id']} turns={r['turns']} ${r.get('cost_usd') or 0:.2f} "
                   f"{r['wall_s']}s parsed={r['differential'] is not None} | total ${cost:.2f} fail={fail} "
                   f"{time.time()-t0:.0f}s", flush=True)
+            if streak >= 5:  # an API or usage-limit outage: stop rather than burn through the list
+                print(f"STOPPED: {streak} failures in a row; rerun the same command to resume", flush=True)
+                ex.shutdown(wait=False, cancel_futures=True)
+                break
 
 
 if __name__ == "__main__":
