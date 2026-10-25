@@ -5,6 +5,9 @@
 
 strict  the first rank whose id is a truth id, or is joined to one by a MONDO skos:exactMatch
         (tools/bench/mapping, the pinned SSSOM); a broader or narrower class is a miss.
+lenient the first rank whose MONDO class is the truth's or a descendant of it (is_a in the pinned
+        mondo-base.obo), as Reese et al. count a close descendant: a subtype ("Noonan syndrome 1") for a
+        group truth ("Noonan syndrome", ORPHA:648) is a hit; a parent or a sibling is a miss.
 judge   an LLM reads the truth (names + ids) and the ranked list and returns the first rank that
         names the same disease ("same disease or a subtype/synonym of it"), as DeepRare scored
         with GPT-4o. Batches of 20 cases, blind to which system produced the list; verdicts are
@@ -47,6 +50,28 @@ def mondo_of():
     from tools.bench.mapping import rows_by_object
     rows = rows_by_object()
     return lambda i: {r["subject"] for r in rows.get(i, [])} | ({i} if i and i.startswith("MONDO:") else set())
+
+
+def ancestors_of():
+    from functools import lru_cache
+    from tools.bench.mapping import sssom_path
+    parents = {}
+    cur = None
+    for line in open(sssom_path().parent / "mondo-base.obo", encoding="utf-8"):
+        if line.startswith("id: MONDO:"):
+            cur = line[4:].strip()
+        elif line.startswith("[") :
+            cur = None if not line.startswith("[Term]") else cur
+        elif cur and line.startswith("is_a: MONDO:"):
+            parents.setdefault(cur, []).append(line[6:19])
+
+    @lru_cache(maxsize=None)
+    def anc(x):
+        out = {x}
+        for p in parents.get(x, []):
+            out |= anc(p)
+        return frozenset(out)
+    return anc
 
 
 def wilson(k, n, z=1.96):
@@ -142,6 +167,7 @@ def main() -> None:
     a = ap.parse_args()
     cases = {c["id"]: c for c in (json.loads(l) for l in open(a.cases, encoding="utf-8"))}
     m = mondo_of()
+    anc = ancestors_of()
     results, failed = [], []
     for d in sorted((a.run / "cases").iterdir()):
         if (d / "result.json").exists():
@@ -153,14 +179,16 @@ def main() -> None:
         c = cases[r["id"]]
         truth = {norm_id(t) for t in c["truth"]} - {None}
         tm = set().union(*(m(t) for t in truth)) if truth else set()
-        strict, bad_ids = 0, 0
+        strict, lenient, bad_ids = 0, 0, 0
         for i, p in enumerate(r["differential"][:10]):
             pid = norm_id(p.get("id"))
             if p.get("id") and not pid:
                 bad_ids += 1
             if pid and (pid in truth or (m(pid) & tm)) and not strict:
                 strict = i + 1
-        per.append({"id": r["id"], "dataset": r["dataset"], "strict": strict, "pred": r["differential"],
+            if pid and not lenient and (pid in truth or any(anc(x) & tm for x in m(pid))):
+                lenient = i + 1
+        per.append({"id": r["id"], "dataset": r["dataset"], "strict": strict, "lenient": lenient, "pred": r["differential"],
                     "truth": c["truth"], "truth_names": c["truth_names"], "cost": r.get("cost_usd") or 0,
                     "wall": r.get("wall_s") or 0, "turns": r.get("turns"), "malformed_ids": bad_ids,
                     "n_tools": len(r.get("tools") or [])})
@@ -180,7 +208,7 @@ def main() -> None:
              "mean_cost_usd": round(sum(p["cost"] for p in rows) / n, 3),
              "mean_wall_s": round(sum(p["wall"] for p in rows) / n, 1),
              "mean_tool_calls": round(sum(p["n_tools"] for p in rows) / n, 1)}
-        for meth in ["strict"] + (["judge"] if a.judge else []) + (["deeprare"] if a.deeprare else []):
+        for meth in ["strict", "lenient"] + (["judge"] if a.judge else []) + (["deeprare"] if a.deeprare else []):
             for k in (KS if meth != "deeprare" else (1, 3, 5)):
                 hit = sum(1 for p in rows if 0 < p[meth] <= k)
                 e[f"{meth}_R@{k}"] = round(100 * hit / n, 1)

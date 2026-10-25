@@ -54,12 +54,32 @@ def parse_final(text: str):
     return None
 
 
-def run_one(case: dict, out: Path, model: str, timeout: int) -> dict:
+PROVIDERS = {
+    # Claude Code pointed at MiniMax's Anthropic-compatible endpoint; key from $MINIMAX_API_KEY.
+    # Every model slot (main, small/fast, subagents) goes to the same MiniMax model.
+    "minimax": {"ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic"},
+}
+
+
+def provider_env(provider: str, model: str) -> dict:
+    if provider == "anthropic":
+        return {}
+    env = dict(PROVIDERS[provider])
+    env["ANTHROPIC_AUTH_TOKEN"] = os.environ["MINIMAX_API_KEY"]
+    for k in ("ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL",
+              "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL", "CLAUDE_CODE_SUBAGENT_MODEL"):
+        env[k] = model
+    env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1"
+    return env
+
+
+def run_one(case: dict, out: Path, model: str, timeout: int, provider: str = "anthropic") -> dict:
     d = out / "cases" / case["id"]
     if (d / "result.json").exists():
         return json.loads((d / "result.json").read_text("utf-8"))
     d.mkdir(parents=True, exist_ok=True)
-    env = {k: v for k, v in os.environ.items() if not k.startswith("ZEBRA_CASE")}
+    env = {k: v for k, v in os.environ.items() if not k.startswith("ZEBRA_CASE") and k != "ANTHROPIC_API_KEY"}
+    env.update(provider_env(provider, model))
     cmd = [shutil.which("claude", path=str(Path.home() / ".local/bin")) or "claude", "-p", prompt_for(case),
            "--model", model, "--plugin-dir", str(ROOT),
            "--settings", json.dumps({"enabledPlugins": {"zebra-mod@zebra-mod": False}}),
@@ -108,6 +128,7 @@ def main() -> None:
     ap.add_argument("--jobs", type=int, default=6)
     ap.add_argument("--model", default="claude-opus-5-5")
     ap.add_argument("--timeout", type=int, default=1200)
+    ap.add_argument("--provider", choices=["anthropic", *PROVIDERS], default="anthropic")
     a = ap.parse_args()
     cases = [json.loads(l) for l in open(a.cases, encoding="utf-8")]
     if a.only:
@@ -122,12 +143,12 @@ def main() -> None:
         pj = json.loads((ROOT / ".claude-plugin/plugin.json").read_text("utf-8"))
         head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
         cv = subprocess.run([str(Path.home() / ".local/bin/claude"), "--version"], capture_output=True, text=True).stdout.strip()
-        meta.write_text(json.dumps({"zebra_mod": pj["version"], "commit": head, "claude_code": cv, "model": a.model,
+        meta.write_text(json.dumps({"zebra_mod": pj["version"], "commit": head, "claude_code": cv, "model": a.model, "provider": a.provider,
                                     "prompt": PROMPT, "started": time.strftime("%Y-%m-%dT%H:%M:%S%z")}, indent=1), "utf-8")
     done = cost = fail = 0
     t0 = time.time()
     with ThreadPoolExecutor(a.jobs) as ex:
-        futs = {ex.submit(run_one, c, a.out, a.model, a.timeout): c for c in cases}
+        futs = {ex.submit(run_one, c, a.out, a.model, a.timeout, a.provider): c for c in cases}
         for f in as_completed(futs):
             r = f.result()
             done += 1
