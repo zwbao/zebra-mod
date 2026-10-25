@@ -13,7 +13,8 @@ goes to the model.
   phenopacket-store: the 240-case stratified held-out sample of tools/bench/results/sample.json
     (one case per disease, release 0.1.27), present and excluded terms as curated.
   RDguru: the 238-case test set released with RDguru (present terms only, as the paper ran it).
-  MyGene2: optional, a jsonl with the same fields as RareBench.
+  MyGene2: optional, a jsonl with the same fields as RareBench (+ name), converted from the SHEPHERD
+    release mygene2_5.7.22.txt (Harvard Dataverse doi:10.7910/DVN/TZTPFL), which DeepRare cites.
 """
 
 from __future__ import annotations
@@ -74,7 +75,8 @@ def main() -> None:
         for i, line in enumerate(open(path, encoding="utf-8")):
             r = json.loads(line)
             truth = r["RareDisease"]
-            add(ds, i, r["Phenotype"], [], truth, sorted({dmap.get(t) or dnames.get(t) or t for t in truth}))
+            names = {dmap.get(t) or dnames.get(t) or t for t in truth} | ({r["name"]} if r.get("name") else set())
+            add(ds, i, r["Phenotype"], [], truth, sorted(names))
 
     if a.rdguru:  # RDguru (Yang et al., JBHI 2024): 238 case reports, truth ORPHA, present terms only
         import csv

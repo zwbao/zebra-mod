@@ -9,6 +9,9 @@ judge   an LLM reads the truth (names + ids) and the ranked list and returns the
         names the same disease ("same disease or a subtype/synonym of it"), as DeepRare scored
         with GPT-4o. Batches of 20 cases, blind to which system produced the list; verdicts are
         cached in RUN_DIR/judge.jsonl.
+deeprare  DeepRare's own judge prompt (github MAGIC-AI4Med/DeepRare eval.py, = SI Prompt 2), verbatim,
+        one call per case on the top 5 names, so R@1/3/5 are scored as DeepRare scored them (the
+        judge model here is Claude, not GPT-4o). Cached in RUN_DIR/judge_deeprare.jsonl.
 Writes RUN_DIR/scores.json: Recall@1/3/5/10 per dataset and method, Wilson 95% intervals,
 cost and wall time.
 """
@@ -93,12 +96,49 @@ def run_judge(items, model, cache: Path):
     return done
 
 
+DR_SYSTEM = "You are a specialist in the field of rare diseases."
+DR_USER = ('I will now give you five predicted diseases if the predicted diagnosis is in the standard diagnosis. '
+           'Please output the predicted rank, otherwise output "No", only output "No" or "1-5" numbers, if the '
+           'predicted disease has multiple conditions, only output the top rank. Output only "No" or one number, '
+           'no additional output.\nPredicted diseases: {pred}\nStandard diagnosis: {gold}')
+
+
+def run_judge_deeprare(items, model, cache: Path, jobs=8):
+    from concurrent.futures import ThreadPoolExecutor
+    import threading
+    done, lock = {}, threading.Lock()
+    if cache.exists():
+        for l in open(cache, encoding="utf-8"):
+            r = json.loads(l)
+            done[r["id"]] = r["rank"]
+
+    def one(it):
+        pred = "\n".join(f"{i+1}. {p.get('name')}" for i, p in enumerate(it["pred"][:5]))
+        gold = "; ".join(it["truth_names"])
+        out = subprocess.run([str(Path.home() / ".local/bin/claude"), "-p", DR_USER.format(pred=pred, gold=gold),
+                              "--system-prompt", DR_SYSTEM, "--model", model, "--tools", "",
+                              "--no-session-persistence", "--output-format", "json"],
+                             capture_output=True, text=True, cwd=str(cache.parent), timeout=300)
+        res = next((m.get("result") or "" for m in json.loads(out.stdout) if m.get("type") == "result"), "")
+        m = re.search(r"\b([1-5])\b", res)
+        r = int(m.group(1)) if m and "no" != res.strip().lower() else 0
+        with lock:
+            done[it["id"]] = r
+            with open(cache, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"id": it["id"], "rank": r, "raw": res.strip()[:40]}) + "\n")
+
+    with ThreadPoolExecutor(jobs) as ex:
+        list(ex.map(one, [it for it in items if it["id"] not in done]))
+    return done
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--cases", type=Path, required=True)
     ap.add_argument("--run", type=Path, required=True)
     ap.add_argument("--judge", action="store_true")
     ap.add_argument("--judge-model", default="claude-sonnet-5-5")
+    ap.add_argument("--deeprare", action="store_true", help="also score with DeepRare's judge prompt (top 5)")
     a = ap.parse_args()
     cases = {c["id"]: c for c in (json.loads(l) for l in open(a.cases, encoding="utf-8"))}
     m = mondo_of()
@@ -128,6 +168,10 @@ def main() -> None:
         j = run_judge(per, a.judge_model, a.run / "judge.jsonl")
         for p in per:
             p["judge"] = j.get(p["id"], 0)
+    if a.deeprare:
+        j = run_judge_deeprare(per, a.judge_model, a.run / "judge_deeprare.jsonl")
+        for p in per:
+            p["deeprare"] = j.get(p["id"], 0)
     out = {"n_results": len(results), "n_failed": len(failed), "failed_ids": [f["id"] for f in failed], "datasets": {}}
     for ds in sorted({p["dataset"] for p in per}) + ["ALL"]:
         rows = [p for p in per if ds == "ALL" or p["dataset"] == ds]
@@ -136,8 +180,8 @@ def main() -> None:
              "mean_cost_usd": round(sum(p["cost"] for p in rows) / n, 3),
              "mean_wall_s": round(sum(p["wall"] for p in rows) / n, 1),
              "mean_tool_calls": round(sum(p["n_tools"] for p in rows) / n, 1)}
-        for meth in ("strict", "judge") if a.judge else ("strict",):
-            for k in KS:
+        for meth in ["strict"] + (["judge"] if a.judge else []) + (["deeprare"] if a.deeprare else []):
+            for k in (KS if meth != "deeprare" else (1, 3, 5)):
                 hit = sum(1 for p in rows if 0 < p[meth] <= k)
                 e[f"{meth}_R@{k}"] = round(100 * hit / n, 1)
                 e[f"{meth}_R@{k}_ci"] = wilson(hit, n)
