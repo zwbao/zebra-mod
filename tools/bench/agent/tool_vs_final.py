@@ -45,7 +45,7 @@ def tool_lists(transcript):
                 r = json.loads(s)["result"]
             except Exception:
                 continue
-            if "per_source" not in r:
+            if not isinstance(r, dict) or "per_source" not in r:
                 continue
             ps = r["per_source"]
             out = {"local": [d["id"] for d in ps.get("local", {}).get("diseases", [])],
