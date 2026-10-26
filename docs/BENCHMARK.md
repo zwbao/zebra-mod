@@ -321,6 +321,83 @@ How to read it:
 - MyGene2 is the public SHEPHERD file DeepRare cites; DeepRare's processed copy is not released, so the 146 cases
   may not be identical to theirs.
 
+### Where it goes wrong (error analysis of the 1,348 cases)
+
+A miss here is a case whose truth is not first in the final answer (exact id or MONDO descendant): **632 of 1,348**.
+Tables from `tools/bench/agent/errors.py` (`tools/bench/results/agent/errors_opus55.json`); failure modes from an
+independent reviewer pass over every miss (8 Opus 5.5 subagents told to judge neutrally, phenotypes and the system's
+top 10 and reasoning only, no web; `miss_modes_opus55.jsonl.gz`, one line per case with a short note). The modes are
+one model's reading, not a clinician panel's; spot checks of each mode agreed with it.
+
+**Where the truth was** (632 misses):
+
+| | n | share |
+|---|---|---|
+| in the final top 2–10 (near miss) | 368 | 58% |
+| not in the final top 10 | 264 | 42% |
+| first in a tool's list, moved down by the agent | 64 | 10% |
+| ranks 2–10 in a tool's list | 234 | 37% |
+| ranks 11–50 in a tool's list | 65 | 10% |
+| in no tool's top 50 (local, Monarch, PubCaseFinder) | 269 | 43% |
+
+Every truth disease has HPO annotations, so none of these is a disease the ranker cannot see. Against the local
+ranker alone, the agent moved a correct first answer down in 41 cases and promoted the truth to first in 359 (net +318).
+
+**Failure modes** (one per miss):
+
+| mode | what it means | MME | HMS | LIRICAL | RAMEDIS | MyGene2 | RDguru | phenopacket | all |
+|---|---|---|---|---|---|---|---|---|---|
+| MIMIC | a distinct disease with overlapping phenotype (MCAD vs CPT2, Noonan vs CFC) | 5 | 9 | 64 | 99 | 7 | 7 | 2 | **193** |
+| LABEL | the truth contradicts or is ill-defined by the given phenotypes | 1 | 5 | 5 | 140 | 8 | 0 | 0 | **159** |
+| SPARSE | too few or non-specific terms for anyone | 0 | 8 | 28 | 67 | 15 | 7 | 5 | **130** |
+| SUBTYPE | a sibling subtype of the same entity (DA2A vs DA2B, RTS1 vs RTS2) | 0 | 6 | 40 | 8 | 9 | 4 | 2 | **69** |
+| WEIGHING | a distinctive finding was given and outweighed by non-specific ones | 1 | 12 | 10 | 29 | 6 | 2 | 2 | **62** |
+| KNOWLEDGE | phenotypes fit, truth never considered | 0 | 2 | 7 | 8 | 1 | 0 | 1 | **19** |
+
+What would most plausibly have fixed each: more input, i.e. a genotype or other data (324), nothing (a label problem,
+168), the reasoning rule (92), similar-case retrieval (31), the ranking (17).
+
+**The concrete patterns**
+
+1. *RAMEDIS phenylketonuria* (148 cases, 11 first). 115 are coded with **hypertyrosinemia** next to
+   hyperphenylalaninemia; classic PKU lowers tyrosine, and with both raised the agent reasons to liver failure:
+   tyrosinemia type I is the top answer in 107 of the PKU misses (and in 119 RAMEDIS misses overall). The reviewer
+   classed these as LABEL. A system that retrieves near-identical RAMEDIS records learns the dataset's coding and
+   scores them; reasoning from the biochemistry does not.
+2. *Fatty-acid oxidation and organic acid disorders* (RAMEDIS): MCAD deficiency (36 cases, 2 first) answered as CPT2
+   (18) or LCHAD (12) deficiency; biotinidase deficiency (26, 1) usually second behind holocarboxylase synthetase
+   deficiency; 3-methylcrotonyl-CoA carboxylase deficiency 0 of 11. The records are lab profiles ("abnormal circulating
+   carnitine", "elevated urinary carboxylic acid") that do not name the discriminating metabolite (C8 acylcarnitine,
+   3-hydroxyisovalerylcarnitine), so MIMIC or SPARSE.
+3. *Distinctive finding outweighed* (WEIGHING, 62): dark urine with alkaptonuria answered as tyrosinemia; tubulo-
+   interstitial nephritis with uveitis (TINU) put first by the local ranker and moved below Takayasu arteritis;
+   an undervirilised male with salt wasting (3β-HSD deficiency) answered as 21-hydroxylase deficiency; a galactose-
+   enzyme term outweighed by a porphyrin term. These are the cases a reasoning rule can fix.
+4. *HMS (real outpatient records)*: the misses are immune and inflammatory diseases — sarcoidosis, antisynthetase
+   syndrome, IgG4-related disease, spondyloarthropathy, familial Mediterranean fever — and long, noisy term lists:
+   R@1 41.8% with more than 10 terms against 89.5% with 7–10.
+5. *LIRICAL and MyGene2*: sibling subtypes and gene-defined neighbours (spastic paraplegia 76 vs 7, retinitis
+   pigmentosa 78 vs a UBAP1L dystrophy, distal arthrogryposis 1A/2A/2B, Rubinstein–Taybi 2 vs 1) that HPO terms alone
+   rarely separate; 4 of 4 "autism susceptibility 1" cases (ID only) answered as fragile X.
+6. *Few terms*: RAMEDIS R@1 18.6% with 1–3 terms and 28.6% with 4–6, against 61.9% with more than 10.
+
+**What this says to change, by priority**
+
+- P0 — a discriminating-feature check before the final ranking: every high-information present term (a metabolite, a
+  pathognomonic sign) must be explained by the first answer, or the answer that explains it moves up; aimed at
+  WEIGHING (62) and part of MIMIC. Measure on the same cases; the 359 promotions must not fall.
+- P0 — report the benchmark with LABEL cases shown separately (159 of 632 misses; 140 in RAMEDIS) next to the
+  headline, so a dataset's coding is not read as a reasoning failure, and say that a case bank closes that gap by
+  matching the coding.
+- P1 — metabolic-profile support: map biochemical HPO terms to the disorders whose screening profile they define
+  (newborn-screening tables), so FAOD and organic-acid records rank by marker, not by "death in infancy".
+- P1 — inflammatory and immune diseases (HMS): rank against Orphanet's non-Mendelian annotations as well; the
+  local ranker had the truth first in 15 of 88 HMS cases.
+- P1 — similar published cases as a tool, de-duplicated by PMID; the reviewer credits it with 31 misses here, fewer
+  than DeepRare's ablation would suggest, because the near-identical records it exploits are LABEL cases.
+- P2 — name both the clinical group and the genetic subtype when they differ (SUBTYPE, 69).
+- Out of scope for phenotype-only input: 324 misses need a genotype; zebra's VCF path is not part of this benchmark.
+
 Reproduce (cases are built from RareBench on HuggingFace, the RDguru test-set repo, the MyGene2 Dataverse file and
 the phenopacket sample above):
 
