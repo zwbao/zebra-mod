@@ -127,7 +127,7 @@ def main() -> None:
     ap.add_argument("--limit", type=int)
     ap.add_argument("--jobs", type=int, default=6)
     ap.add_argument("--model", default="claude-opus-5-5")
-    ap.add_argument("--timeout", type=int, default=1200)
+    ap.add_argument("--timeout", type=int, default=2400)
     ap.add_argument("--provider", choices=["anthropic", *PROVIDERS], default="anthropic")
     a = ap.parse_args()
     cases = [json.loads(l) for l in open(a.cases, encoding="utf-8")]
