@@ -275,6 +275,64 @@ python3 -I tools/bench/metrics.py base010 v02     # the tables above, as markdow
 configuration and fails if any recorded position moves, so a change to the ranker has to come with a new
 benchmark run. The web results depend on the services' state on the day; answers are cached for seven days.
 
+## End to end against published systems (Opus 5.5 + zebra-mod, 2026-10-26)
+
+What the *agent* gets right — Claude Code with zebra-mod 0.3.6 (measured before 0.3.7 changed the differential doctrine; not re-run since), model Opus 5.5, given only HPO ids and labels,
+tools limited to zebra-mod's (no web search, no shell), no case open — on the public test sets other rare-disease
+AI papers report. Every published number is quoted with its source in `tools/bench/results/agent/BASELINES.md`;
+scores in `tools/bench/results/agent/scores_opus55.json`, per case in `per_case_opus55.jsonl.gz`.
+
+R@k, percent. **DR** = DeepRare's own judge prompt (its `eval.py`, = SI Prompt 2) on our top 5, judged by Claude
+Sonnet 5.5 instead of GPT-4o; 95% Wilson interval on R@1. At R@1 the other scorings (exact id; MONDO descendant;
+an LLM judge on names) are within 2.3 points of DR on every set below; at R@5 exact ids run lower on HMS (73.9 vs 80.7).
+
+| set (all cases) | n | zebra-mod + Opus 5.5, DR R@1 / R@3 / R@5 | R@1 95% CI | DeepRare, best host per set | DeepRare, case search off (GPT-4o host) |
+|---|---|---|---|---|---|
+| RareBench MME | 40 | 82.5 / 87.5 / 87.5 | 68.0–91.3 | 77.5 / 85.0 / 90.0 (Gemini-2) | 42.5 / 57.5 / 57.7 |
+| RareBench HMS | 88 | 53.4 / 72.7 / 80.7 | 43.1–63.5 | 57.0 / 65.1 / 70.9 (DS-V3) | 50.0 / 62.5 / 64.8 |
+| RareBench LIRICAL | 370 | 58.6 / 75.4 / 79.2 | 53.6–63.6 | 56.0 / 65.2 / 67.6 (DS-V3) | 39.5 / 49.2 / 52.4 |
+| RareBench RAMEDIS | 624 | 44.4 / 55.9 / 62.2 | 40.5–48.3 | 73.2 / 81.6 / 85.3 (GPT-4o) | 36.9 / 46.4 / 55.4 |
+| MyGene2 (SHEPHERD release) | 146 | 67.1 / 77.4 / 82.2 | 59.1–74.2 | 75.9 / 80.0 / 80.7 (GPT-4o) | not reported |
+| mean of the 5 sets | | 61.2 / 73.8 / 78.4 | | 67.9 / 75.4 / 78.9 (DS-V3 alone: 65.6 R@1) | |
+
+| set | n | zebra-mod + Opus 5.5, R@1 / R@5 / R@10 | published |
+|---|---|---|---|
+| RDguru test set (random 40 of 238), MONDO-descendant / LLM judge | 40 | 50.0 / 70.0 / 72.5 · 57.5 / 75.0 / 77.5 | RDguru 41.6 / 63.9 / 69.3 (ORPHA via name retriever) |
+| phenopacket-store 0.1.27 (40 of the 240-case held-out sample) | 40 | 70.0 / 80.0 / 85.0 | Exomiser 35.5 / — / 58.5 on 0.1.14, 5,213 cases (Reese 2026) — not like-for-like |
+
+How to read it:
+- **Against DeepRare as published**: ahead on MME and LIRICAL, level on HMS (ahead at R@3/R@5), behind on MyGene2
+  at R@1, far behind on RAMEDIS; behind on the 5-set mean at R@1 (61.2 vs 67.9), level at R@5.
+- **RAMEDIS** (72 diseases) is where the gap is: three diseases account for 196 of its 347 misses —
+  phenylketonuria (148 cases, 11 first; 115 of them coded with *hypertyrosinemia*), MCAD deficiency (36, 2) and
+  biotinidase deficiency (26, 1; usually second behind holocarboxylase synthetase deficiency). These are lab-profile
+  records with near-identical cases. DeepRare's case bank (67,795 cases, 13,265 from public datasets, only identical
+  matches removed) holds "substantially similar typical cases" for MME and RAMEDIS, and its case search adds
+  +34.56 R@1 on RAMEDIS and +60.00 on MME (its SI §1.5); with case search off it scores below zebra-mod on all four
+  RareBench sets. zebra-mod has no case bank.
+- **The agent, not the ranker, does most of the work**: on the 280-case first batch the local ranker alone had the
+  truth first in 111 cases and the final answer in 183 (78 promoted to first, 6 demoted).
+- Not separated: mod vs model. There is no Opus-without-mod arm here; the 0.3.4–0.3.6 ablations in `evals/` are the
+  only mod-on/off comparison.
+- Contamination both ways: every case is published before every model's cutoff; zebra ranks with HPO annotations
+  partly curated from these papers, DeepRare searches a case bank built from the same literature and datasets.
+- PubCaseFinder was rate-limited (100 requests/hour per machine) in most runs, so the agent ranked with local +
+  Monarch. Per case: mean 109 s, 3.5 zebra tool calls, $0.55 at API prices ($737 for 1,348 cases).
+- MyGene2 is the public SHEPHERD file DeepRare cites; DeepRare's processed copy is not released, so the 146 cases
+  may not be identical to theirs.
+
+Reproduce (cases are built from RareBench on HuggingFace, the RDguru test-set repo, the MyGene2 Dataverse file and
+the phenopacket sample above):
+
+```
+python3 -I tools/bench/agent/prepare.py --rarebench DIR --rdguru DIR --mygene2 FILE --out cases.jsonl
+tools/bench/agent/supervise.sh run.log 1348 RUN -- --cases cases.jsonl --only MME HMS LIRICAL RAMEDIS MyGene2 --jobs 6
+python3 -I tools/bench/agent/score.py --cases cases.jsonl --run RUN --judge --deeprare
+python3 -I tools/bench/agent/tool_vs_final.py --cases cases.jsonl --run RUN
+```
+`run.py --provider minimax --model MiniMax-M3.1-Flash` runs the same cases with Claude Code on MiniMax's
+Anthropic-compatible endpoint (results to follow).
+
 ## End-to-end evals (`evals/`, zebra-mod 0.2.1)
 
 > 0.3.4: ranking accuracy is only one of two things to measure. The other is whether the mod makes the answer better than Claude without it. A real FSHD1 case (diagnosed by D4Z4 sizing and methylation) showed it could make it worse — the diagnosis ranked below other myopathies, an exome suggested to confirm it, the requested care plan never written. `evals/diagnosed-management` covers that shape. First run on 0.3.4 (`claude plugin eval --ablation with-without`, model Opus 5.5, judge Sonnet 5.5, 3 runs per arm, $4.89): with the mod 1.00 (3/3), without 0.57 (0/3). A blind re-grade of the six replies by an independent model found the rubric's recall-labelling item drove most of that gap (all six pass the rubric read strictly); on clinical quality it scored the mod's replies 8.3/10 against 7.0/10 — they asked about nitrous-oxide myelopathy and worked up the AFP for a germ-cell tumour where the plain replies mostly did not — while both arms made the same recall errors (D4Z4 units, a uric-acid target). 0.3.5 (both diagnosed cases, same setup, $8.45): DM1 0.93 with vs 0.60 without; FSHD 0.625 in both arms — the stricter accuracy item failed every reply; an itemised re-grade credits the mod's replies with correct D4Z4 units and a timely AFP work-up, and finds a uric-acid target error in two of them. 0.3.6 (rewritten rubrics, 4 runs per arm, $11.70): FSHD 0.83 with vs 0.61 without; DM1 0.70 vs 0.55. Compare the mod on and off, on the same model, before and after each doctrine change.

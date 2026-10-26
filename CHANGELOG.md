@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — 2026-10-26 (benchmark only; the plugin is unchanged)
+
+**End to end against published systems.** `tools/bench/agent/`: build HPO-only cases from RareBench, the RDguru
+test set, MyGene2 and the phenopacket sample (`prepare.py`); run each through headless Claude Code with this
+checkout's plugin, no case open, zebra tools only (`run.py`, `supervise.sh` resumes across usage-limit windows,
+`--provider minimax` for a MiniMax arm); score by id, by MONDO descendant, by an LLM judge and by DeepRare's own
+judge prompt (`score.py`); compare the tools' lists with the final answer (`tool_vs_final.py`). Opus 5.5 on 1,348
+cases: MME 82.5, HMS 53.4, LIRICAL 58.6, RAMEDIS 44.4, MyGene2 67.1 R@1 (DeepRare 77.5 / 57.0 / 56.0 / 73.2 / 75.9);
+RDguru set 57.5 vs 41.6. Measured on 0.3.6; 0.3.7's differential doctrine (rankings as a weak input) is not re-measured. Published baselines with sources in `tools/bench/results/agent/BASELINES.md`; reading and
+caveats in `docs/BENCHMARK.md`.
+
 ## 0.3.9 — 2026-10-24
 
 **Reports that look like documents.** Exported PDFs had tables running off the page (five-column trial tables lost their last column), raw URLs that would not wrap, large blank gaps and no page numbers.
