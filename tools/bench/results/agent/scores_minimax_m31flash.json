@@ -1,0 +1,663 @@
+{
+ "n_results": 280,
+ "n_failed": 0,
+ "failed_ids": [],
+ "datasets": {
+  "HMS": {
+   "n": 40,
+   "cost_usd": 58.14,
+   "mean_cost_usd": 1.454,
+   "mean_wall_s": 442.9,
+   "mean_tool_calls": 22.3,
+   "strict_R@1": 47.5,
+   "strict_R@1_ci": [
+    32.9,
+    62.5
+   ],
+   "strict_R@3": 62.5,
+   "strict_R@3_ci": [
+    47.0,
+    75.8
+   ],
+   "strict_R@5": 70.0,
+   "strict_R@5_ci": [
+    54.6,
+    81.9
+   ],
+   "strict_R@10": 80.0,
+   "strict_R@10_ci": [
+    65.2,
+    89.5
+   ],
+   "lenient_R@1": 52.5,
+   "lenient_R@1_ci": [
+    37.5,
+    67.1
+   ],
+   "lenient_R@3": 67.5,
+   "lenient_R@3_ci": [
+    52.0,
+    79.9
+   ],
+   "lenient_R@5": 70.0,
+   "lenient_R@5_ci": [
+    54.6,
+    81.9
+   ],
+   "lenient_R@10": 80.0,
+   "lenient_R@10_ci": [
+    65.2,
+    89.5
+   ],
+   "judge_R@1": 57.5,
+   "judge_R@1_ci": [
+    42.2,
+    71.5
+   ],
+   "judge_R@3": 70.0,
+   "judge_R@3_ci": [
+    54.6,
+    81.9
+   ],
+   "judge_R@5": 75.0,
+   "judge_R@5_ci": [
+    59.8,
+    85.8
+   ],
+   "judge_R@10": 85.0,
+   "judge_R@10_ci": [
+    70.9,
+    92.9
+   ],
+   "deeprare_R@1": 52.5,
+   "deeprare_R@1_ci": [
+    37.5,
+    67.1
+   ],
+   "deeprare_R@3": 70.0,
+   "deeprare_R@3_ci": [
+    54.6,
+    81.9
+   ],
+   "deeprare_R@5": 75.0,
+   "deeprare_R@5_ci": [
+    59.8,
+    85.8
+   ]
+  },
+  "LIRICAL": {
+   "n": 40,
+   "cost_usd": 49.91,
+   "mean_cost_usd": 1.248,
+   "mean_wall_s": 488.4,
+   "mean_tool_calls": 21.9,
+   "strict_R@1": 55.0,
+   "strict_R@1_ci": [
+    39.8,
+    69.3
+   ],
+   "strict_R@3": 67.5,
+   "strict_R@3_ci": [
+    52.0,
+    79.9
+   ],
+   "strict_R@5": 80.0,
+   "strict_R@5_ci": [
+    65.2,
+    89.5
+   ],
+   "strict_R@10": 80.0,
+   "strict_R@10_ci": [
+    65.2,
+    89.5
+   ],
+   "lenient_R@1": 55.0,
+   "lenient_R@1_ci": [
+    39.8,
+    69.3
+   ],
+   "lenient_R@3": 67.5,
+   "lenient_R@3_ci": [
+    52.0,
+    79.9
+   ],
+   "lenient_R@5": 80.0,
+   "lenient_R@5_ci": [
+    65.2,
+    89.5
+   ],
+   "lenient_R@10": 80.0,
+   "lenient_R@10_ci": [
+    65.2,
+    89.5
+   ],
+   "judge_R@1": 57.5,
+   "judge_R@1_ci": [
+    42.2,
+    71.5
+   ],
+   "judge_R@3": 70.0,
+   "judge_R@3_ci": [
+    54.6,
+    81.9
+   ],
+   "judge_R@5": 82.5,
+   "judge_R@5_ci": [
+    68.0,
+    91.3
+   ],
+   "judge_R@10": 82.5,
+   "judge_R@10_ci": [
+    68.0,
+    91.3
+   ],
+   "deeprare_R@1": 60.0,
+   "deeprare_R@1_ci": [
+    44.6,
+    73.7
+   ],
+   "deeprare_R@3": 72.5,
+   "deeprare_R@3_ci": [
+    57.2,
+    83.9
+   ],
+   "deeprare_R@5": 85.0,
+   "deeprare_R@5_ci": [
+    70.9,
+    92.9
+   ]
+  },
+  "MME": {
+   "n": 40,
+   "cost_usd": 47.73,
+   "mean_cost_usd": 1.193,
+   "mean_wall_s": 504.7,
+   "mean_tool_calls": 21.9,
+   "strict_R@1": 80.0,
+   "strict_R@1_ci": [
+    65.2,
+    89.5
+   ],
+   "strict_R@3": 87.5,
+   "strict_R@3_ci": [
+    73.9,
+    94.5
+   ],
+   "strict_R@5": 90.0,
+   "strict_R@5_ci": [
+    76.9,
+    96.0
+   ],
+   "strict_R@10": 90.0,
+   "strict_R@10_ci": [
+    76.9,
+    96.0
+   ],
+   "lenient_R@1": 80.0,
+   "lenient_R@1_ci": [
+    65.2,
+    89.5
+   ],
+   "lenient_R@3": 87.5,
+   "lenient_R@3_ci": [
+    73.9,
+    94.5
+   ],
+   "lenient_R@5": 90.0,
+   "lenient_R@5_ci": [
+    76.9,
+    96.0
+   ],
+   "lenient_R@10": 92.5,
+   "lenient_R@10_ci": [
+    80.1,
+    97.4
+   ],
+   "judge_R@1": 80.0,
+   "judge_R@1_ci": [
+    65.2,
+    89.5
+   ],
+   "judge_R@3": 87.5,
+   "judge_R@3_ci": [
+    73.9,
+    94.5
+   ],
+   "judge_R@5": 90.0,
+   "judge_R@5_ci": [
+    76.9,
+    96.0
+   ],
+   "judge_R@10": 90.0,
+   "judge_R@10_ci": [
+    76.9,
+    96.0
+   ],
+   "deeprare_R@1": 80.0,
+   "deeprare_R@1_ci": [
+    65.2,
+    89.5
+   ],
+   "deeprare_R@3": 87.5,
+   "deeprare_R@3_ci": [
+    73.9,
+    94.5
+   ],
+   "deeprare_R@5": 90.0,
+   "deeprare_R@5_ci": [
+    76.9,
+    96.0
+   ]
+  },
+  "MyGene2": {
+   "n": 40,
+   "cost_usd": 44.21,
+   "mean_cost_usd": 1.105,
+   "mean_wall_s": 243.2,
+   "mean_tool_calls": 23.9,
+   "strict_R@1": 65.0,
+   "strict_R@1_ci": [
+    49.5,
+    77.9
+   ],
+   "strict_R@3": 70.0,
+   "strict_R@3_ci": [
+    54.6,
+    81.9
+   ],
+   "strict_R@5": 70.0,
+   "strict_R@5_ci": [
+    54.6,
+    81.9
+   ],
+   "strict_R@10": 75.0,
+   "strict_R@10_ci": [
+    59.8,
+    85.8
+   ],
+   "lenient_R@1": 65.0,
+   "lenient_R@1_ci": [
+    49.5,
+    77.9
+   ],
+   "lenient_R@3": 72.5,
+   "lenient_R@3_ci": [
+    57.2,
+    83.9
+   ],
+   "lenient_R@5": 72.5,
+   "lenient_R@5_ci": [
+    57.2,
+    83.9
+   ],
+   "lenient_R@10": 77.5,
+   "lenient_R@10_ci": [
+    62.5,
+    87.7
+   ],
+   "judge_R@1": 65.0,
+   "judge_R@1_ci": [
+    49.5,
+    77.9
+   ],
+   "judge_R@3": 72.5,
+   "judge_R@3_ci": [
+    57.2,
+    83.9
+   ],
+   "judge_R@5": 72.5,
+   "judge_R@5_ci": [
+    57.2,
+    83.9
+   ],
+   "judge_R@10": 77.5,
+   "judge_R@10_ci": [
+    62.5,
+    87.7
+   ],
+   "deeprare_R@1": 65.0,
+   "deeprare_R@1_ci": [
+    49.5,
+    77.9
+   ],
+   "deeprare_R@3": 72.5,
+   "deeprare_R@3_ci": [
+    57.2,
+    83.9
+   ],
+   "deeprare_R@5": 72.5,
+   "deeprare_R@5_ci": [
+    57.2,
+    83.9
+   ]
+  },
+  "RAMEDIS": {
+   "n": 40,
+   "cost_usd": 67.48,
+   "mean_cost_usd": 1.687,
+   "mean_wall_s": 370.6,
+   "mean_tool_calls": 24.6,
+   "strict_R@1": 35.0,
+   "strict_R@1_ci": [
+    22.1,
+    50.5
+   ],
+   "strict_R@3": 60.0,
+   "strict_R@3_ci": [
+    44.6,
+    73.7
+   ],
+   "strict_R@5": 65.0,
+   "strict_R@5_ci": [
+    49.5,
+    77.9
+   ],
+   "strict_R@10": 80.0,
+   "strict_R@10_ci": [
+    65.2,
+    89.5
+   ],
+   "lenient_R@1": 37.5,
+   "lenient_R@1_ci": [
+    24.2,
+    53.0
+   ],
+   "lenient_R@3": 60.0,
+   "lenient_R@3_ci": [
+    44.6,
+    73.7
+   ],
+   "lenient_R@5": 65.0,
+   "lenient_R@5_ci": [
+    49.5,
+    77.9
+   ],
+   "lenient_R@10": 80.0,
+   "lenient_R@10_ci": [
+    65.2,
+    89.5
+   ],
+   "judge_R@1": 35.0,
+   "judge_R@1_ci": [
+    22.1,
+    50.5
+   ],
+   "judge_R@3": 60.0,
+   "judge_R@3_ci": [
+    44.6,
+    73.7
+   ],
+   "judge_R@5": 65.0,
+   "judge_R@5_ci": [
+    49.5,
+    77.9
+   ],
+   "judge_R@10": 80.0,
+   "judge_R@10_ci": [
+    65.2,
+    89.5
+   ],
+   "deeprare_R@1": 35.0,
+   "deeprare_R@1_ci": [
+    22.1,
+    50.5
+   ],
+   "deeprare_R@3": 60.0,
+   "deeprare_R@3_ci": [
+    44.6,
+    73.7
+   ],
+   "deeprare_R@5": 65.0,
+   "deeprare_R@5_ci": [
+    49.5,
+    77.9
+   ]
+  },
+  "RDguru": {
+   "n": 40,
+   "cost_usd": 51.31,
+   "mean_cost_usd": 1.283,
+   "mean_wall_s": 565.2,
+   "mean_tool_calls": 22.5,
+   "strict_R@1": 30.0,
+   "strict_R@1_ci": [
+    18.1,
+    45.4
+   ],
+   "strict_R@3": 37.5,
+   "strict_R@3_ci": [
+    24.2,
+    53.0
+   ],
+   "strict_R@5": 37.5,
+   "strict_R@5_ci": [
+    24.2,
+    53.0
+   ],
+   "strict_R@10": 40.0,
+   "strict_R@10_ci": [
+    26.3,
+    55.4
+   ],
+   "lenient_R@1": 52.5,
+   "lenient_R@1_ci": [
+    37.5,
+    67.1
+   ],
+   "lenient_R@3": 65.0,
+   "lenient_R@3_ci": [
+    49.5,
+    77.9
+   ],
+   "lenient_R@5": 67.5,
+   "lenient_R@5_ci": [
+    52.0,
+    79.9
+   ],
+   "lenient_R@10": 70.0,
+   "lenient_R@10_ci": [
+    54.6,
+    81.9
+   ],
+   "judge_R@1": 57.5,
+   "judge_R@1_ci": [
+    42.2,
+    71.5
+   ],
+   "judge_R@3": 70.0,
+   "judge_R@3_ci": [
+    54.6,
+    81.9
+   ],
+   "judge_R@5": 72.5,
+   "judge_R@5_ci": [
+    57.2,
+    83.9
+   ],
+   "judge_R@10": 75.0,
+   "judge_R@10_ci": [
+    59.8,
+    85.8
+   ],
+   "deeprare_R@1": 62.5,
+   "deeprare_R@1_ci": [
+    47.0,
+    75.8
+   ],
+   "deeprare_R@3": 75.0,
+   "deeprare_R@3_ci": [
+    59.8,
+    85.8
+   ],
+   "deeprare_R@5": 77.5,
+   "deeprare_R@5_ci": [
+    62.5,
+    87.7
+   ]
+  },
+  "phenopacket": {
+   "n": 40,
+   "cost_usd": 54.31,
+   "mean_cost_usd": 1.358,
+   "mean_wall_s": 621.3,
+   "mean_tool_calls": 25.0,
+   "strict_R@1": 50.0,
+   "strict_R@1_ci": [
+    35.2,
+    64.8
+   ],
+   "strict_R@3": 62.5,
+   "strict_R@3_ci": [
+    47.0,
+    75.8
+   ],
+   "strict_R@5": 70.0,
+   "strict_R@5_ci": [
+    54.6,
+    81.9
+   ],
+   "strict_R@10": 75.0,
+   "strict_R@10_ci": [
+    59.8,
+    85.8
+   ],
+   "lenient_R@1": 50.0,
+   "lenient_R@1_ci": [
+    35.2,
+    64.8
+   ],
+   "lenient_R@3": 62.5,
+   "lenient_R@3_ci": [
+    47.0,
+    75.8
+   ],
+   "lenient_R@5": 70.0,
+   "lenient_R@5_ci": [
+    54.6,
+    81.9
+   ],
+   "lenient_R@10": 75.0,
+   "lenient_R@10_ci": [
+    59.8,
+    85.8
+   ],
+   "judge_R@1": 50.0,
+   "judge_R@1_ci": [
+    35.2,
+    64.8
+   ],
+   "judge_R@3": 62.5,
+   "judge_R@3_ci": [
+    47.0,
+    75.8
+   ],
+   "judge_R@5": 70.0,
+   "judge_R@5_ci": [
+    54.6,
+    81.9
+   ],
+   "judge_R@10": 75.0,
+   "judge_R@10_ci": [
+    59.8,
+    85.8
+   ],
+   "deeprare_R@1": 50.0,
+   "deeprare_R@1_ci": [
+    35.2,
+    64.8
+   ],
+   "deeprare_R@3": 65.0,
+   "deeprare_R@3_ci": [
+    49.5,
+    77.9
+   ],
+   "deeprare_R@5": 70.0,
+   "deeprare_R@5_ci": [
+    54.6,
+    81.9
+   ]
+  },
+  "ALL": {
+   "n": 280,
+   "cost_usd": 373.09,
+   "mean_cost_usd": 1.332,
+   "mean_wall_s": 462.3,
+   "mean_tool_calls": 23.2,
+   "strict_R@1": 51.8,
+   "strict_R@1_ci": [
+    45.9,
+    57.6
+   ],
+   "strict_R@3": 63.9,
+   "strict_R@3_ci": [
+    58.2,
+    69.3
+   ],
+   "strict_R@5": 68.9,
+   "strict_R@5_ci": [
+    63.3,
+    74.1
+   ],
+   "strict_R@10": 74.3,
+   "strict_R@10_ci": [
+    68.9,
+    79.1
+   ],
+   "lenient_R@1": 56.1,
+   "lenient_R@1_ci": [
+    50.2,
+    61.8
+   ],
+   "lenient_R@3": 68.9,
+   "lenient_R@3_ci": [
+    63.3,
+    74.1
+   ],
+   "lenient_R@5": 73.6,
+   "lenient_R@5_ci": [
+    68.1,
+    78.4
+   ],
+   "lenient_R@10": 79.3,
+   "lenient_R@10_ci": [
+    74.2,
+    83.6
+   ],
+   "judge_R@1": 57.5,
+   "judge_R@1_ci": [
+    51.6,
+    63.2
+   ],
+   "judge_R@3": 70.4,
+   "judge_R@3_ci": [
+    64.8,
+    75.4
+   ],
+   "judge_R@5": 75.4,
+   "judge_R@5_ci": [
+    70.0,
+    80.0
+   ],
+   "judge_R@10": 80.7,
+   "judge_R@10_ci": [
+    75.7,
+    84.9
+   ],
+   "deeprare_R@1": 57.9,
+   "deeprare_R@1_ci": [
+    52.0,
+    63.5
+   ],
+   "deeprare_R@3": 71.8,
+   "deeprare_R@3_ci": [
+    66.2,
+    76.7
+   ],
+   "deeprare_R@5": 76.4,
+   "deeprare_R@5_ci": [
+    71.1,
+    81.0
+   ]
+  }
+ }
+}

@@ -1,0 +1,9 @@
+{
+ "zebra_mod": "0.3.6",
+ "commit": "64a2e0ce3ae0c11ee52805071f596628af6e284e",
+ "claude_code": "2.1.310 (Claude Code)",
+ "model": "MiniMax-M3.1-Flash",
+ "provider": "minimax",
+ "prompt": "I am a clinical geneticist. A patient with a suspected rare disease has these phenotypes (HPO):\n\nPresent:\n{present}\n{excluded}\nPlease give a ranked differential diagnosis of the 10 most likely rare diseases.\n\nWhen you are done, end your reply with a fenced ```json block, exactly in this shape (10 entries, most likely first; \"id\" is an OMIM or ORPHA identifier as a tool returned it, or null if you have none):\n{{\"differential\": [{{\"rank\": 1, \"name\": \"...\", \"id\": \"OMIM:123456\"}}]}}",
+ "started": "2026-10-26T00:11:12+0800"
+}

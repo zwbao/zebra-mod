@@ -408,7 +408,37 @@ python3 -I tools/bench/agent/score.py --cases cases.jsonl --run RUN --judge --de
 python3 -I tools/bench/agent/tool_vs_final.py --cases cases.jsonl --run RUN
 ```
 `run.py --provider minimax --model MiniMax-M3.1-Flash` runs the same cases with Claude Code on MiniMax's
-Anthropic-compatible endpoint (results to follow).
+Anthropic-compatible endpoint (below).
+
+### Same harness, another model: MiniMax-M3.1-Flash (280 cases)
+
+Claude Code with zebra-mod 0.3.6 unchanged, every model slot pointed at MiniMax-M3.1-Flash through MiniMax's
+Anthropic-compatible endpoint (`run.py --provider minimax`), on the 280-case first batch (MME all 40; 40 random
+cases of each other set, seed 20261025), scored exactly as the Opus 5.5 run. Opus 5.5 numbers are the same cases
+from the main run. `tools/bench/results/agent/scores_minimax_m31flash.json`, per case in
+`per_case_minimax_m31flash.jsonl.gz`.
+
+| set | n | MiniMax DR R@1 | Opus 5.5 DR R@1 | MiniMax DR R@5 | Opus 5.5 DR R@5 | MiniMax judge R@10 | Opus 5.5 judge R@10 |
+|---|---|---|---|---|---|---|---|
+| MME | 40 | 32 | 33 | 36 | 35 | 36 | 36 |
+| HMS | 40 | 21 | 28 | 30 | 35 | 34 | 35 |
+| LIRICAL | 40 | 24 | 23 | 34 | 32 | 33 | 33 |
+| RAMEDIS | 40 | 14 | 24 | 26 | 31 | 32 | 35 |
+| MyGene2 | 40 | 26 | 26 | 29 | 33 | 31 | 34 |
+| RDguru set | 40 | 25 | 22 | 31 | 30 | 30 | 31 |
+| phenopacket sample | 40 | 20 | 28 | 28 | 34 | 30 | 33 |
+| **all** | 280 | **162 (57.9%)** | **184 (65.7%)** | 214 (76.4%) | 230 (82.1%) | 226 (80.7%) | 237 (84.6%) |
+
+- R@1 7.8 points below Opus 5.5 overall; level on MME, LIRICAL, MyGene2 and the RDguru set (within 3 cases either
+  way); behind on RAMEDIS (−10), HMS (−7) and the phenopacket sample (−8). Case by case (LLM judge, R@1): both first
+  in 149, MiniMax only in 12, Opus only in 37.
+- The gap narrows down the list: R@10 80.7% vs 84.6%. MiniMax more often has the answer and ranks it lower.
+- It works much harder for it: 25.6 turns and 23.2 zebra tool calls per case against 4.2 and 3.2, and 462 s against
+  118 s. The cost Claude Code reports for the MiniMax run ($373) is priced as if it were an Anthropic model and is
+  not what MiniMax charges; the Token Plan's 5-hour quota allowed about 15–30 cases per window, so the 280 cases took
+  three days.
+- On the five DeepRare sets MiniMax's 200-case R@1 is 58.5% (DeepRare's best host per set averages 67.9%, DS-V3 alone
+  65.6%, on all cases; this is a 40-per-set sample).
 
 ## End-to-end evals (`evals/`, zebra-mod 0.2.1)
 
