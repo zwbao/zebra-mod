@@ -1,0 +1,38 @@
+{
+ "MME": {
+  "n": 40,
+  "matched": 0,
+  "exact": 0,
+  "matched_paper_is_hpoa_source": 0
+ },
+ "HMS": {
+  "n": 88,
+  "matched": 0,
+  "exact": 0,
+  "matched_paper_is_hpoa_source": 0
+ },
+ "LIRICAL": {
+  "n": 370,
+  "matched": 21,
+  "exact": 7,
+  "matched_paper_is_hpoa_source": 5
+ },
+ "RAMEDIS": {
+  "n": 624,
+  "matched": 0,
+  "exact": 0,
+  "matched_paper_is_hpoa_source": 0
+ },
+ "MyGene2": {
+  "n": 146,
+  "matched": 6,
+  "exact": 5,
+  "matched_paper_is_hpoa_source": 4
+ },
+ "RDguru": {
+  "n": 238,
+  "matched": 7,
+  "exact": 7,
+  "matched_paper_is_hpoa_source": 6
+ }
+}

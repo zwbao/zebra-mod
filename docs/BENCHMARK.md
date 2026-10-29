@@ -321,6 +321,24 @@ How to read it:
 - MyGene2 is the public SHEPHERD file DeepRare cites; DeepRare's processed copy is not released, so the 146 cases
   may not be identical to theirs.
 
+### Why the gap to DeepRare differs by dataset
+
+`tools/bench/agent/dataset_structure.py` computes, for each case, the most similar other case of the same dataset
+(Jaccard over HPO sets) and scores that neighbour's truth ids as predictions with the agent's own MONDO rule
+(`results/agent/dataset_structure.json`). This leave-one-out nearest-neighbour baseline needs no model:
+
+| set | cases per disease | in diseases with >=5 cases | near-duplicate, same dx | 1-NN R@1 | DeepRare | zebra-mod |
+|---|---|---|---|---|---|---|
+| RAMEDIS | 8.43 | 88.3% | 20.2% | 72.3 | 73.2 | 44.4 |
+| MyGene2 | 3.32 | 72.6% | 27.4% | 74.0 | 75.9 | 67.1 |
+| MME | 2.35 | 62.5% | 0.0% | 67.5 | 77.5 | 82.5 |
+| LIRICAL | 1.47 | 23.2% | 3.5% | 28.4 | 56.0 | 58.6 |
+| HMS | 1.91 | 18.2% | 0.0% | 26.1 | 57.0 | 53.4 |
+
+Where copying the nearest same-dataset case already reproduces DeepRare (RAMEDIS, MyGene2), DeepRare leads; where it
+fails (LIRICAL, HMS), zebra-mod is level or ahead. `literature_overlap.py` finds 21 LIRICAL, 6 MyGene2 and 7 RDguru
+cases (none in MME, HMS, RAMEDIS) whose HPO set matches a phenopacket-store case; 15 come from HPO annotation sources.
+
 ### Where it goes wrong (error analysis of the 1,348 cases)
 
 A miss here is a case whose truth is not first in the final answer (exact id or MONDO descendant): **632 of 1,348**.

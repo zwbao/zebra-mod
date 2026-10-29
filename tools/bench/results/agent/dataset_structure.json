@@ -1,0 +1,134 @@
+{
+ "MME": {
+  "n": 40,
+  "diseases": 17,
+  "cases_per_disease": 2.35,
+  "share_in_diseases_with_5plus": 62.5,
+  "top_disease": [
+   [
+    "OMIM:117650",
+    "ORPHA:1393"
+   ],
+   11
+  ],
+  "loo_1nn_R1": 67.5,
+  "loo_1nn_R1_exact_id": 67.5,
+  "loo_5nn_R5": 67.5,
+  "near_dup_jacc80": 0.0,
+  "near_dup_same_dx": 0.0,
+  "median_terms": 11
+ },
+ "HMS": {
+  "n": 88,
+  "diseases": 46,
+  "cases_per_disease": 1.91,
+  "share_in_diseases_with_5plus": 18.2,
+  "top_disease": [
+   [
+    "OMIM:608710",
+    "ORPHA:900"
+   ],
+   11
+  ],
+  "loo_1nn_R1": 26.1,
+  "loo_1nn_R1_exact_id": 26.1,
+  "loo_5nn_R5": 46.6,
+  "near_dup_jacc80": 0.0,
+  "near_dup_same_dx": 0.0,
+  "median_terms": 18
+ },
+ "LIRICAL": {
+  "n": 370,
+  "diseases": 252,
+  "cases_per_disease": 1.47,
+  "share_in_diseases_with_5plus": 23.2,
+  "top_disease": [
+   [
+    "OMIM:616900",
+    "ORPHA:488632"
+   ],
+   19
+  ],
+  "loo_1nn_R1": 28.4,
+  "loo_1nn_R1_exact_id": 28.1,
+  "loo_5nn_R5": 37.0,
+  "near_dup_jacc80": 3.5,
+  "near_dup_same_dx": 3.5,
+  "median_terms": 11
+ },
+ "RAMEDIS": {
+  "n": 624,
+  "diseases": 74,
+  "cases_per_disease": 8.43,
+  "share_in_diseases_with_5plus": 88.3,
+  "top_disease": [
+   [
+    "CCRD:90",
+    "OMIM:261600",
+    "ORPHA:716"
+   ],
+   148
+  ],
+  "loo_1nn_R1": 72.3,
+  "loo_1nn_R1_exact_id": 72.3,
+  "loo_5nn_R5": 83.5,
+  "near_dup_jacc80": 21.0,
+  "near_dup_same_dx": 20.2,
+  "median_terms": 9
+ },
+ "MyGene2": {
+  "n": 146,
+  "diseases": 44,
+  "cases_per_disease": 3.32,
+  "share_in_diseases_with_5plus": 72.6,
+  "top_disease": [
+   [
+    "OMIM:108145",
+    "ORPHA:1154"
+   ],
+   24
+  ],
+  "loo_1nn_R1": 74.0,
+  "loo_1nn_R1_exact_id": 74.0,
+  "loo_5nn_R5": 77.4,
+  "near_dup_jacc80": 28.8,
+  "near_dup_same_dx": 27.4,
+  "median_terms": 5
+ },
+ "RDguru": {
+  "n": 238,
+  "diseases": 92,
+  "cases_per_disease": 2.59,
+  "share_in_diseases_with_5plus": 47.9,
+  "top_disease": [
+   [
+    "ORPHA:3463"
+   ],
+   18
+  ],
+  "loo_1nn_R1": 64.7,
+  "loo_1nn_R1_exact_id": 64.7,
+  "loo_5nn_R5": 71.4,
+  "near_dup_jacc80": 19.7,
+  "near_dup_same_dx": 19.7,
+  "median_terms": 10
+ },
+ "phenopacket": {
+  "n": 240,
+  "diseases": 240,
+  "cases_per_disease": 1.0,
+  "share_in_diseases_with_5plus": 0.0,
+  "top_disease": [
+   [
+    "OMIM:620475"
+   ],
+   1
+  ],
+  "loo_1nn_R1": 0.0,
+  "loo_1nn_R1_exact_id": 0.0,
+  "loo_5nn_R5": 0.0,
+  "near_dup_jacc80": 1.7,
+  "near_dup_same_dx": 0.0,
+  "median_terms": 7
+ }
+}
