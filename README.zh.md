@@ -105,6 +105,7 @@ zebra stats maxaf --prevalence 0.0000625 --allelic 0.05 --penetrance 0.9
 
 以下结果均经实测，方法与置信区间详见 [docs/BENCHMARK.md](docs/BENCHMARK.md)：
 
+- **与已发表的罕见病诊断智能体对比**（1,348 例公开病例，仅输入 HPO 表型；数据集即 DeepRare（*Nature* 2026）与 RDguru（*IEEE JBHI* 2024）所用数据集；模型为 Opus 5.5，zebra-mod 0.3.6）。在不训练任何模型、不使用病例库的前提下，DeepRare 所用 5 个数据集上的平均 Recall@5 为 **78.4%**，DeepRare 为 78.9%；其中 3 个数据集的 Recall@3/5 高于 DeepRare（Recall@5：HMS 80.7% 对 70.9%，LIRICAL 79.2% 对 67.6%）。平均 Recall@1 为 61.2%（DeepRare 默认主模型 65.6%，逐数据集取最佳主模型 67.9%），差距集中在 RAMEDIS 与 MyGene2：在这两个数据集上，仅照搬同一数据集中最相似病例的诊断即可达到 72–74%。与关闭病例检索的 DeepRare 相比，zebra-mod 在全部 RareBench 数据集上均更高。在 RDguru 测试集的 40 例抽样上，Recall@1 为 50.0–57.5%（取决于判分规则；RDguru 报告为 41.6%）。将底层模型换为 MiniMax-M3.1-Flash 后，同一插件在 280 例上的 Recall@1 为 57.9%（Opus 5.5 为 65.7%）。
 - **表型排序**（GA4GH phenopacket-store，10,374 例已发表病例，按疾病划分开发集与留出集）。在其来源文献未参与构建 HPO 注释的留出病例上（即对新患者最具代表性的检验），正确疾病进入离线排序前 10 位的比例为 **28%**，致病基因为 **40%**。排序结果仅为待验证的假设，因此与 Claude 的鉴别诊断并列呈现。
 - **启用与未启用模块的对照评测**（6 个留出端到端病例，由未接触模块说明的独立代理编写，每组各运行 8 次，依据临床指南逐项评分）。合并后两组差异不显著（差值 −0.02，95% 置信区间 −0.16 至 +0.12）：在长篇病历中识别急症、结合共分离解读 VUS 两类病例中，启用模块表现更优；另有两例表现较差。"启用模块不会降低回答质量"尚未得到证实，基准文档对此如实记录。
 - [`evals/`](evals/) 中有 **19 个端到端评测**，通过 `claude plugin eval` 运行，涵盖中文家长提交的病历、应按肿瘤学而非罕见病框架解读的体细胞肿瘤报告等场景。
@@ -181,6 +182,9 @@ zebra-mod 实时查询公共资源并记录每项结果的出处，各资源适�
   url     = {https://github.com/zwbao/zebra-mod}
 }
 ```
+
+
+介绍本系统及其与 DeepRare、RDguru 对比评测的论文已投稿 medRxiv（*zebra-mod: turning a general-purpose coding agent into a rare-disease research workstation*），正式发布后将在此补充引用信息。
 
 ## 致谢
 

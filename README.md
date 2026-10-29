@@ -105,6 +105,7 @@ zebra stats maxaf --prevalence 0.0000625 --allelic 0.05 --penetrance 0.9
 
 Measured, with the method and confidence intervals in [docs/BENCHMARK.md](docs/BENCHMARK.md):
 
+- **Against published diagnostic agents** (1,348 public cases with HPO terms as the only input; the datasets used by DeepRare, *Nature* 2026, and RDguru, *IEEE JBHI* 2024; model Opus 5.5, zebra-mod 0.3.6). Without any trained model or case repository, mean Recall@5 over the five DeepRare datasets is **78.4% vs 78.9%** for DeepRare, and zebra-mod is higher at Recall@3/5 on three of five (HMS 80.7% vs 70.9%, LIRICAL 79.2% vs 67.6% at Recall@5). Mean Recall@1 is 61.2% (DeepRare 65.6% with its default host, 67.9% with the best host per dataset); the gap lies in RAMEDIS and MyGene2, where simply copying the diagnosis of the most similar case in the same dataset already reaches 72–74%. Against DeepRare without case retrieval, zebra-mod is higher on every RareBench dataset. On a 40-case sample of RDguru's test set, Recall@1 is 50.0–57.5% depending on the matching rule (RDguru reports 41.6%). With MiniMax-M3.1-Flash in place of Opus 5.5, the same mod scores 57.9% vs 65.7% Recall@1 on 280 cases.
 - **Phenotype ranking** (GA4GH phenopacket-store, 10,374 published cases, split by disease). On held-out cases whose own paper was not used to build the HPO annotations — the fair test for a new patient — the correct disease is in the offline top 10 for **28%** and the causal gene for **40%**. A ranking is a list of hypotheses, which is why Claude's own differential stands beside it.
 - **With vs without the mod** (six held-out end-to-end cases written without access to the mod's instructions, 8 runs per arm, graded item by item against guideline ground truth). Pooled, the two arms are level (difference −0.02, 95% CI −0.16 to +0.12): the mod was better on an emergency buried in long records and on a VUS with segregation, worse on two cases. "Never worse" is not yet established, and the benchmark says so.
 - **19 end-to-end evals** in [`evals/`](evals/) run with `claude plugin eval`, from a Chinese parent's records to a somatic tumour report that must be read on oncology's terms, not as a rare disease.
@@ -181,6 +182,8 @@ zebra-mod queries public resources live and records where each answer came from;
   url     = {https://github.com/zwbao/zebra-mod}
 }
 ```
+
+A preprint describing the system and its evaluation against DeepRare and RDguru has been submitted to medRxiv (*zebra-mod: turning a general-purpose coding agent into a rare-disease research workstation*); the citation will be added here when it is posted.
 
 ## Acknowledgements
 

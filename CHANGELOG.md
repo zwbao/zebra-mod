@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — 2026-10-29 (documentation)
+
+README (English and Chinese): "How well it works" now opens with the comparison against DeepRare and RDguru on 1,348 public cases (Recall@5 78.4% vs 78.9%; Recall@1 61.2% vs 65.6/67.9%; RDguru set 50.0–57.5% vs 41.6%; MiniMax-M3.1-Flash swap), measured on 0.3.6; Citation notes the medRxiv preprint.
+
 ## Unreleased — 2026-10-26 (benchmark only; the plugin is unchanged)
 
 **End to end against published systems.** `tools/bench/agent/`: build HPO-only cases from RareBench, the RDguru
