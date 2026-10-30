@@ -73,7 +73,7 @@ def provider_env(provider: str, model: str) -> dict:
     return env
 
 
-def run_one(case: dict, out: Path, model: str, timeout: int, provider: str = "anthropic") -> dict:
+def run_one(case: dict, out: Path, model: str, timeout: int, provider: str = "anthropic", no_plugin: bool = False) -> dict:
     d = out / "cases" / case["id"]
     if (d / "result.json").exists():
         return json.loads((d / "result.json").read_text("utf-8"))
@@ -81,12 +81,14 @@ def run_one(case: dict, out: Path, model: str, timeout: int, provider: str = "an
     env = {k: v for k, v in os.environ.items() if not k.startswith("ZEBRA_CASE") and k != "ANTHROPIC_API_KEY"}
     env.update(provider_env(provider, model))
     cmd = [shutil.which("claude", path=str(Path.home() / ".local/bin")) or "claude", "-p", prompt_for(case),
-           "--model", model, "--plugin-dir", str(ROOT),
-           "--settings", json.dumps({"enabledPlugins": {"zebra-mod@zebra-mod": False}}),
-           "--allowedTools", "mcp__zebra-mod__*", "Skill",
-           "--disallowedTools", "WebSearch", "WebFetch", "Bash", "Agent",
-           "--permission-mode", "dontAsk", "--max-turns", "40",
-           "--no-session-persistence", "--output-format", "json"]
+           "--model", model,
+           "--settings", json.dumps({"enabledPlugins": {"zebra-mod@zebra-mod": False}})]
+    if no_plugin:  # ablation: same model and prompt, no plugin, no tools, no MCP servers
+        cmd += ["--tools", "", "--strict-mcp-config", "--mcp-config", json.dumps({"mcpServers": {}})]
+    else:
+        cmd += ["--plugin-dir", str(ROOT), "--allowedTools", "mcp__zebra-mod__*", "Skill",
+                "--disallowedTools", "WebSearch", "WebFetch", "Bash", "Agent"]
+    cmd += ["--permission-mode", "dontAsk", "--max-turns", "40", "--no-session-persistence", "--output-format", "json"]
     t0 = time.time()
     try:
         p = subprocess.run(cmd, cwd=d, env=env, capture_output=True, text=True, timeout=timeout)
@@ -129,6 +131,7 @@ def main() -> None:
     ap.add_argument("--model", default="claude-opus-5-5")
     ap.add_argument("--timeout", type=int, default=2400)
     ap.add_argument("--provider", choices=["anthropic", *PROVIDERS], default="anthropic")
+    ap.add_argument("--no-plugin", action="store_true", help="ablation arm: no zebra-mod, no tools, no MCP servers")
     a = ap.parse_args()
     cases = [json.loads(l) for l in open(a.cases, encoding="utf-8")]
     if a.only:
@@ -143,12 +146,12 @@ def main() -> None:
         pj = json.loads((ROOT / ".claude-plugin/plugin.json").read_text("utf-8"))
         head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
         cv = subprocess.run([str(Path.home() / ".local/bin/claude"), "--version"], capture_output=True, text=True).stdout.strip()
-        meta.write_text(json.dumps({"zebra_mod": pj["version"], "commit": head, "claude_code": cv, "model": a.model, "provider": a.provider,
+        meta.write_text(json.dumps({"zebra_mod": pj["version"], "commit": head, "claude_code": cv, "model": a.model, "provider": a.provider, "no_plugin": a.no_plugin,
                                     "prompt": PROMPT, "started": time.strftime("%Y-%m-%dT%H:%M:%S%z")}, indent=1), "utf-8")
     done = cost = fail = streak = 0
     t0 = time.time()
     with ThreadPoolExecutor(a.jobs) as ex:
-        futs = {ex.submit(run_one, c, a.out, a.model, a.timeout, a.provider): c for c in cases}
+        futs = {ex.submit(run_one, c, a.out, a.model, a.timeout, a.provider, a.no_plugin): c for c in cases}
         for f in as_completed(futs):
             r = f.result()
             done += 1
