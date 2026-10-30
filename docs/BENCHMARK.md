@@ -428,6 +428,30 @@ python3 -I tools/bench/agent/tool_vs_final.py --cases cases.jsonl --run RUN
 `run.py --provider minimax --model MiniMax-M3.1-Flash` runs the same cases with Claude Code on MiniMax's
 Anthropic-compatible endpoint (below).
 
+### Plugin ablation: the same model without zebra-mod (280 cases)
+
+Same 280 cases, Claude Code 2.1.310, Opus 5.5, prompt and scoring, but no plugin, all built-in tools disabled and
+no MCP servers (`run.py --no-plugin`): the model answers from its own knowledge in one turn.
+`tools/bench/results/agent/scores_opus55_noplugin.json`, per case in `per_case_opus55_noplugin.jsonl.gz`.
+
+| set (n=40 each) | with zebra-mod | no plugin | difference |
+|---|---|---|---|
+| MME | 33 | 29 | +4 |
+| HMS | 28 | 28 | 0 |
+| LIRICAL | 23 | 15 | +8 |
+| RAMEDIS | 24 | 23 | +1 |
+| MyGene2 | 26 | 20 | +6 |
+| RDguru set | 22 | 17 | +5 |
+| phenopacket sample | 28 | 11 | +17 |
+| **all 280, Recall@1** | **65.7%** | **51.1%** | **+14.6** |
+| Recall@5 | 82.1% | 68.9% | +13.2 |
+| Recall@10 (LLM judge) | 84.6% | 73.6% | +11.0 |
+
+Paired: first only with the plugin in 50 cases, only without it in 9 (exact McNemar P = 5.3e-8; MONDO rule 53 vs 7,
+P = 7.7e-10). The gain is on the literature-derived Mendelian sets, where annotations and disease cards discriminate;
+none on HMS (immune-mediated disorders) and RAMEDIS (label problems). MiniMax-M3.1-Flash with zebra-mod (57.9%)
+outperforms Opus 5.5 without it (51.1%). Without the plugin a case costs $0.09 and 34 s; with it, 3.2 tool calls and 118 s.
+
 ### Same harness, another model: MiniMax-M3.1-Flash (280 cases)
 
 Claude Code with zebra-mod 0.3.6 unchanged, every model slot pointed at MiniMax-M3.1-Flash through MiniMax's

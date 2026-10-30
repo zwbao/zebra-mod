@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — 2026-10-30 (benchmark)
+
+Plugin ablation: Opus 5.5 without zebra-mod (no tools, no MCP servers) on the same 280 cases scores 51.1% Recall@1 against 65.7% with it (50 vs 9 discordant, exact McNemar P = 5.3e-8); MiniMax-M3.1-Flash with the mod scores 57.9%. `run.py --no-plugin`; results in `tools/bench/results/agent/`, `docs/BENCHMARK.md` and both READMEs.
+
 ## Unreleased — 2026-10-29 (documentation)
 
 README (English and Chinese): "How well it works" now opens with the comparison against DeepRare and RDguru on 1,348 public cases (Recall@5 78.4% vs 78.9%; Recall@1 61.2% vs 65.6/67.9%; RDguru set 50.0–57.5% vs 41.6%; MiniMax-M3.1-Flash swap), measured on 0.3.6; Citation notes the medRxiv preprint.
