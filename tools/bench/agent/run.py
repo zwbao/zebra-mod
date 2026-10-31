@@ -63,6 +63,26 @@ def parse_final(text: str):
     return None
 
 
+PROVIDERS = {
+    # Claude Code pointed at another vendor's Anthropic-compatible endpoint; the key comes from the named
+    # environment variable. Every model slot (main, small/fast, subagents) goes to the same model.
+    "minimax": ("https://api.minimaxi.com/anthropic", "MINIMAX_API_KEY"),
+    "deepseek": ("https://api.deepseek.com/anthropic", "DEEPSEEK_API_KEY"),
+}
+
+
+def provider_env(provider: str, model: str) -> dict:
+    if provider == "anthropic":
+        return {}
+    base, key_var = PROVIDERS[provider]
+    env = {"ANTHROPIC_BASE_URL": base, "ANTHROPIC_AUTH_TOKEN": os.environ[key_var]}
+    for k in ("ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL",
+              "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL", "CLAUDE_CODE_SUBAGENT_MODEL"):
+        env[k] = model
+    env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1"
+    return env
+
+
 def run_one(case: dict, out: Path, model: str, timeout: int, provider: str = "anthropic", no_plugin: bool = False) -> dict:
     d = out / "cases" / case["id"]
     if (d / "result.json").exists():
