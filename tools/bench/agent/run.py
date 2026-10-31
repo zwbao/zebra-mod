@@ -42,36 +42,25 @@ def prompt_for(case: dict) -> str:
 
 
 def parse_final(text: str):
+    """The last JSON object in the reply that carries a "differential" list: a ```json block, a bare ``` block,
+    or a raw object at the end of the reply."""
     import re
-    blocks = re.findall(r"```json\s*(\{.*?\})\s*```", text or "", re.S)
-    for b in reversed(blocks):
-        try:
-            d = json.loads(b)
-            if isinstance(d.get("differential"), list):
+    text = text or ""
+    cands = re.findall(r"```(?:json|JSON)?\s*(\{.*?\})\s*```", text, re.S)
+    i = text.rfind('{"differential"')
+    if i < 0:
+        i = text.rfind("{\n  \"differential\"")
+    if i >= 0:
+        cands.append(text[i:])
+    for b in reversed(cands):
+        for cut in (b, b[: b.rfind("}") + 1]):
+            try:
+                d = json.loads(cut)
+            except Exception:
+                continue
+            if isinstance(d, dict) and isinstance(d.get("differential"), list):
                 return d["differential"]
-        except Exception:
-            continue
     return None
-
-
-PROVIDERS = {
-    # Claude Code pointed at another vendor's Anthropic-compatible endpoint; the key comes from the named
-    # environment variable. Every model slot (main, small/fast, subagents) goes to the same model.
-    "minimax": ("https://api.minimaxi.com/anthropic", "MINIMAX_API_KEY"),
-    "deepseek": ("https://api.deepseek.com/anthropic", "DEEPSEEK_API_KEY"),
-}
-
-
-def provider_env(provider: str, model: str) -> dict:
-    if provider == "anthropic":
-        return {}
-    base, key_var = PROVIDERS[provider]
-    env = {"ANTHROPIC_BASE_URL": base, "ANTHROPIC_AUTH_TOKEN": os.environ[key_var]}
-    for k in ("ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL",
-              "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL", "CLAUDE_CODE_SUBAGENT_MODEL"):
-        env[k] = model
-    env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1"
-    return env
 
 
 def run_one(case: dict, out: Path, model: str, timeout: int, provider: str = "anthropic", no_plugin: bool = False) -> dict:
@@ -132,6 +121,7 @@ def main() -> None:
     ap.add_argument("--model", default="claude-opus-5-5")
     ap.add_argument("--timeout", type=int, default=2400)
     ap.add_argument("--provider", choices=["anthropic", *PROVIDERS], default="anthropic")
+    ap.add_argument("--max-streak", type=int, default=5, help="stop after this many consecutive failures")
     ap.add_argument("--no-plugin", action="store_true", help="ablation arm: no zebra-mod, no tools, no MCP servers")
     a = ap.parse_args()
     cases = [json.loads(l) for l in open(a.cases, encoding="utf-8")]
@@ -162,7 +152,7 @@ def main() -> None:
             print(f"[{done}/{len(cases)}] {r['id']} turns={r['turns']} ${r.get('cost_usd') or 0:.2f} "
                   f"{r['wall_s']}s parsed={r['differential'] is not None} | total ${cost:.2f} fail={fail} "
                   f"{time.time()-t0:.0f}s", flush=True)
-            if streak >= 5:  # an API or usage-limit outage: stop rather than burn through the list
+            if streak >= a.max_streak:  # an API or usage-limit outage: stop rather than burn through the list
                 print(f"STOPPED: {streak} failures in a row; rerun the same command to resume", flush=True)
                 ex.shutdown(wait=False, cancel_futures=True)
                 break
