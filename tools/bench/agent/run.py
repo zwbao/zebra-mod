@@ -55,17 +55,18 @@ def parse_final(text: str):
 
 
 PROVIDERS = {
-    # Claude Code pointed at MiniMax's Anthropic-compatible endpoint; key from $MINIMAX_API_KEY.
-    # Every model slot (main, small/fast, subagents) goes to the same MiniMax model.
-    "minimax": {"ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic"},
+    # Claude Code pointed at another vendor's Anthropic-compatible endpoint; the key comes from the named
+    # environment variable. Every model slot (main, small/fast, subagents) goes to the same model.
+    "minimax": ("https://api.minimaxi.com/anthropic", "MINIMAX_API_KEY"),
+    "deepseek": ("https://api.deepseek.com/anthropic", "DEEPSEEK_API_KEY"),
 }
 
 
 def provider_env(provider: str, model: str) -> dict:
     if provider == "anthropic":
         return {}
-    env = dict(PROVIDERS[provider])
-    env["ANTHROPIC_AUTH_TOKEN"] = os.environ["MINIMAX_API_KEY"]
+    base, key_var = PROVIDERS[provider]
+    env = {"ANTHROPIC_BASE_URL": base, "ANTHROPIC_AUTH_TOKEN": os.environ[key_var]}
     for k in ("ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL",
               "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL", "CLAUDE_CODE_SUBAGENT_MODEL"):
         env[k] = model
@@ -78,7 +79,7 @@ def run_one(case: dict, out: Path, model: str, timeout: int, provider: str = "an
     if (d / "result.json").exists():
         return json.loads((d / "result.json").read_text("utf-8"))
     d.mkdir(parents=True, exist_ok=True)
-    env = {k: v for k, v in os.environ.items() if not k.startswith("ZEBRA_CASE") and k != "ANTHROPIC_API_KEY"}
+    env = {k: v for k, v in os.environ.items() if not k.startswith("ZEBRA_CASE") and k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN")}
     env.update(provider_env(provider, model))
     cmd = [shutil.which("claude", path=str(Path.home() / ".local/bin")) or "claude", "-p", prompt_for(case),
            "--model", model,
