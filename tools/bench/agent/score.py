@@ -145,6 +145,8 @@ def run_judge_deeprare(items, model, cache: Path, jobs=8):
                               "--no-session-persistence", "--output-format", "json"],
                              capture_output=True, text=True, cwd=str(cache.parent), timeout=300)
         res = next((m.get("result") or "" for m in json.loads(out.stdout) if m.get("type") == "result"), "")
+        if re.search(r"hit your .*limit|usage limit|rate limit", res, re.I):  # never cache an outage as a verdict
+            raise RuntimeError(f"judge unavailable: {res[:80]}")
         m = re.search(r"\b([1-5])\b", res)
         r = int(m.group(1)) if m and "no" != res.strip().lower() else 0
         with lock:
