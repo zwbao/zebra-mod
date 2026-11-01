@@ -477,8 +477,30 @@ and 67 never did (counted as misses below). With zebra-mod all 280 answered on t
 
 On the 213 cases where both arms answered: Recall@1 66.2% vs 51.2%, first only with the plugin in 44 cases and only
 without it in 12 (exact McNemar P = 2.1e-5). With zebra-mod, DeepSeek-V4.1-Flash comes within 2.8 points of Opus
-5.5 with zebra-mod and is 11.8 points above Opus 5.5 without it. With the plugin it averaged 20.3 turns, 18.3 tool
-calls and 209 s per case.
+5.5 with zebra-mod and is 11.8 points above Opus 5.5 without it. With the plugin it averaged 20.3 turns, 16.5
+zebra-mod tool calls (18.3 tool calls of any kind, including skill loads) and 209 s per case.
+
+### Where the answers come from: ranker, model, agent (280 cases)
+
+`tools/bench/agent/decomposition.py` classifies each batch case by whether the local ranker alone (first
+`phenotype_rank` of the Opus run) and the model alone (its no-plugin arm) put the correct diagnosis first, and counts
+how often the agent did, all with the MONDO rule. Results in `tools/bench/results/agent/decomposition.json`.
+
+| | Opus 5.5 | DeepSeek-V4.1-Flash |
+|---|---|---|
+| ranker alone / model alone / agent | 111 / 137 / 183 | 111 / 92 / 164 |
+| both right → agent right | 68 / 68 | 48 / 48 |
+| ranker only → agent right | 37 / 43 (86%) | 60 / 63 (95%; 25 / 26 where the model gave no answer) |
+| model only → agent right | 62 / 69 (90%) | 33 / 44 (75%) |
+| neither → agent right | 16 / 100 (16%) | 23 / 125 (18%) |
+| agent misses where neither source was right | 84 / 97 | 102 / 116 |
+
+The agent keeps nearly every diagnosis either source holds; its misses are cases with no signal in either. The weaker
+model leans more on the ranker's candidates and gives up more of its own correct answers. Identifiers in the final
+answers appear verbatim in a tool result of the same run for 99.96% (Opus, batch), 99.87% (Opus, all 1,348) and
+99.86% (DeepSeek). The batch is not representative of HMS and RAMEDIS: Opus + zebra-mod scores 70.0% and 60.0% there
+against 39.6% and 43.3% on the other cases of those sets (the ranker alone shows the same gap), so batch numbers are
+for paired comparisons only.
 
 ### Same harness, another model: MiniMax-M3.1-Flash (280 cases)
 

@@ -1,0 +1,166 @@
+{
+ "n": 280,
+ "ranker_alone_R1": 111,
+ "arms": {
+  "Opus 5.5": {
+   "model_alone_R1": 137,
+   "agent_R1": 183,
+   "either_source_R1": 180,
+   "cells": {
+    "ranker_right|model_right": {
+     "n": 68,
+     "agent_right": 68
+    },
+    "ranker_right|model_wrong": {
+     "n": 43,
+     "agent_right": 37
+    },
+    "ranker_wrong|model_right": {
+     "n": 69,
+     "agent_right": 62
+    },
+    "ranker_wrong|model_wrong": {
+     "n": 100,
+     "agent_right": 16
+    }
+   },
+   "agent_misses": 97,
+   "misses_where_neither_source_right": 84,
+   "identifiers": {
+    "identifiers": 2779,
+    "verbatim_in_tool_output": 2778,
+    "pct": 99.96
+   },
+   "process_with_plugin": {
+    "answered": 280,
+    "mean_turns": 4.2,
+    "zebra_calls_per_case": 3.17,
+    "calls_by_tool": {
+     "disease_card": 594,
+     "phenotype_rank": 281,
+     "gene_card": 14
+    },
+    "cases_with_tool": {
+     "phenotype_rank": 280,
+     "disease_card": 172,
+     "gene_card": 8
+    },
+    "skills_loaded": {},
+    "median_seconds": 99
+   }
+  },
+  "DeepSeek-V4.1-Flash": {
+   "model_alone_R1": 92,
+   "agent_R1": 164,
+   "either_source_R1": 155,
+   "cells": {
+    "ranker_right|model_right": {
+     "n": 48,
+     "agent_right": 48
+    },
+    "ranker_right|model_wrong": {
+     "n": 37,
+     "agent_right": 35
+    },
+    "ranker_right|model_no_answer": {
+     "n": 26,
+     "agent_right": 25
+    },
+    "ranker_wrong|model_right": {
+     "n": 44,
+     "agent_right": 33
+    },
+    "ranker_wrong|model_wrong": {
+     "n": 84,
+     "agent_right": 13
+    },
+    "ranker_wrong|model_no_answer": {
+     "n": 41,
+     "agent_right": 10
+    }
+   },
+   "agent_misses": 116,
+   "misses_where_neither_source_right": 102,
+   "identifiers": {
+    "identifiers": 2796,
+    "verbatim_in_tool_output": 2792,
+    "pct": 99.86
+   },
+   "process_with_plugin": {
+    "answered": 280,
+    "mean_turns": 20.3,
+    "zebra_calls_per_case": 16.54,
+    "calls_by_tool": {
+     "disease_card": 3063,
+     "literature_search": 893,
+     "phenotype_rank": 481,
+     "hpo_search": 84,
+     "gene_card": 64,
+     "case_status": 46,
+     "case_update": 1
+    },
+    "cases_with_tool": {
+     "phenotype_rank": 280,
+     "disease_card": 280,
+     "literature_search": 171,
+     "gene_card": 51,
+     "hpo_search": 47,
+     "case_status": 46,
+     "case_update": 1
+    },
+    "skills_loaded": {
+     "zebra-mod:zebra-start": 222,
+     "zebra-mod:zebra-diagnose": 51
+    },
+    "median_seconds": 182
+   }
+  }
+ },
+ "batch_vs_rest": {
+  "HMS|batch": {
+   "n": 40,
+   "agent_R1_deeprare": 70.0,
+   "ranker_R1_mondo": 25.0
+  },
+  "HMS|rest": {
+   "n": 48,
+   "agent_R1_deeprare": 39.6,
+   "ranker_R1_mondo": 10.4
+  },
+  "LIRICAL|batch": {
+   "n": 40,
+   "agent_R1_deeprare": 57.5,
+   "ranker_R1_mondo": 50.0
+  },
+  "LIRICAL|rest": {
+   "n": 330,
+   "agent_R1_deeprare": 58.8,
+   "ranker_R1_mondo": 47.3
+  },
+  "MyGene2|batch": {
+   "n": 40,
+   "agent_R1_deeprare": 65.0,
+   "ranker_R1_mondo": 55.0
+  },
+  "MyGene2|rest": {
+   "n": 106,
+   "agent_R1_deeprare": 67.9,
+   "ranker_R1_mondo": 34.0
+  },
+  "RAMEDIS|batch": {
+   "n": 40,
+   "agent_R1_deeprare": 60.0,
+   "ranker_R1_mondo": 20.0
+  },
+  "RAMEDIS|rest": {
+   "n": 584,
+   "agent_R1_deeprare": 43.3,
+   "ranker_R1_mondo": 15.4
+  }
+ },
+ "ranker_run_identifiers_all_cases": {
+  "identifiers": 13342,
+  "verbatim_in_tool_output": 13324,
+  "pct": 99.87
+ }
+}
