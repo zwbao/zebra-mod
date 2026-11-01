@@ -111,7 +111,7 @@ def run_judge(items, model, cache: Path):
         for m in json.loads(out.stdout):
             if m.get("type") == "result":
                 res = m.get("result") or ""
-        got = json.loads(re.search(r"\{.*\}", res, re.S).group(0))
+        got = json.JSONDecoder().raw_decode(res[res.index("{"):])[0]
         with open(cache, "a", encoding="utf-8") as fh:
             for it in batch:
                 r = int(got.get(it["id"], 0) or 0)
