@@ -452,6 +452,34 @@ P = 7.7e-10). The gain is on the literature-derived Mendelian sets, where annota
 none on HMS (immune-mediated disorders) and RAMEDIS (label problems). MiniMax-M3.1-Flash with zebra-mod (57.9%)
 outperforms Opus 5.5 without it (51.1%). Without the plugin a case costs $0.09 and 34 s; with it, 3.2 tool calls and 118 s.
 
+### Plugin ablation with DeepSeek-V4.1-Flash (280 cases)
+
+Same 280 cases with every model slot of Claude Code on `deepseek-flash` (DeepSeek-V4.1-Flash, DeepSeek's
+Anthropic-compatible endpoint, `run.py --provider deepseek`), with and without zebra-mod; scoring as above.
+Results in `tools/bench/results/agent/scores_deepseek_flash*.json`.
+
+Without tools, DeepSeek-V4.1-Flash often wrote tool calls as text (in its own markup) and stopped without an answer.
+Each failed case was re-sampled up to five times with the same prompt; 213 of 280 then produced a parsable answer
+and 67 never did (counted as misses below). With zebra-mod all 280 answered on the first attempt.
+
+| set (n=40 each) | DeepSeek + zebra-mod | DeepSeek, no plugin (answered) | Opus 5.5 + zebra-mod | Opus 5.5, no plugin |
+|---|---|---|---|---|
+| MME | 31 | 21 (39) | 33 | 29 |
+| HMS | 27 | 27 (35) | 28 | 28 |
+| LIRICAL | 24 | 10 (32) | 23 | 15 |
+| RAMEDIS | 17 | 17 (31) | 24 | 23 |
+| MyGene2 | 27 | 7 (16) | 26 | 20 |
+| RDguru set | 25 | 19 (36) | 22 | 17 |
+| phenopacket sample | 25 | 8 (24) | 28 | 11 |
+| **all 280, Recall@1** | **62.9%** | **38.9%** | 65.7% | 51.1% |
+| Recall@5 | 80.4% | 51.1% | 82.1% | 68.9% |
+| Recall@10 (LLM judge) | 81.8% | 52.9% | 84.6% | 73.6% |
+
+On the 213 cases where both arms answered: Recall@1 66.2% vs 51.2%, first only with the plugin in 44 cases and only
+without it in 12 (exact McNemar P = 2.1e-5). With zebra-mod, DeepSeek-V4.1-Flash comes within 2.8 points of Opus
+5.5 with zebra-mod and is 11.8 points above Opus 5.5 without it. With the plugin it averaged 20.3 turns, 18.3 tool
+calls and 209 s per case.
+
 ### Same harness, another model: MiniMax-M3.1-Flash (280 cases)
 
 Claude Code with zebra-mod 0.3.6 unchanged, every model slot pointed at MiniMax-M3.1-Flash through MiniMax's

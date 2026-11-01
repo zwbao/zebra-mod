@@ -1,0 +1,10 @@
+{
+ "zebra_mod": "0.3.9",
+ "commit": "23fb749d972f76465154d809d3e9a33580465965",
+ "claude_code": "2.1.316 (Claude Code)",
+ "model": "deepseek-flash",
+ "provider": "deepseek",
+ "no_plugin": false,
+ "prompt": "I am a clinical geneticist. A patient with a suspected rare disease has these phenotypes (HPO):\n\nPresent:\n{present}\n{excluded}\nPlease give a ranked differential diagnosis of the 10 most likely rare diseases.\n\nWhen you are done, end your reply with a fenced ```json block, exactly in this shape (10 entries, most likely first; \"id\" is an OMIM or ORPHA identifier as a tool returned it, or null if you have none):\n{{\"differential\": [{{\"rank\": 1, \"name\": \"...\", \"id\": \"OMIM:123456\"}}]}}",
+ "started": "2026-10-31T17:39:09+0800"
+}

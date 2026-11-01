@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — 2026-11-01 (benchmark)
+
+Plugin ablation with DeepSeek-V4.1-Flash (`run.py --provider deepseek`) on the same 280 cases: 62.9% Recall@1 with zebra-mod vs 38.9% without (67 no-plugin cases never produced an answer after five attempts; on the 213 answered by both, 66.2% vs 51.2%, P = 2.1e-5). The DeepRare-prompt judge now refuses to cache usage-limit replies as misses; the final-answer parser accepts bare and unfenced JSON.
+
 ## Unreleased — 2026-10-30 (benchmark)
 
 Plugin ablation: Opus 5.5 without zebra-mod (no tools, no MCP servers) on the same 280 cases scores 51.1% Recall@1 against 65.7% with it (50 vs 9 discordant, exact McNemar P = 5.3e-8); MiniMax-M3.1-Flash with the mod scores 57.9%. `run.py --no-plugin`; results in `tools/bench/results/agent/`, `docs/BENCHMARK.md` and both READMEs.
